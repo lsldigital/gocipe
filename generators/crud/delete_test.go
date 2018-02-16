@@ -1,4 +1,4 @@
-package simple
+package crud
 
 import (
 	"strings"

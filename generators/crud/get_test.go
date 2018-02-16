@@ -1,33 +1,29 @@
-package simple
+package crud
 
 import (
 	"strings"
 	"testing"
 )
 
-func TestGenerateSave(t *testing.T) {
+func TestGenerateGet(t *testing.T) {
 	name := "Person"
 	fields := []string{
 		"id", "name", "email", "gender",
 	}
 
-	output, err := GenerateSave(name, fields)
+	output, err := GenerateGet(name, fields)
 	expected := `
-//Save will persist Person entity to the database
-func (entity *Person) Save(db *sql.DB) error {
-	if entity.id == 0 {
-		error := entity.Insert(db)
-	} else {
-		error := entity.Update(db)
-	}
+//Get returns a single Person from database
+func Get(db *sql.DB, id int) (*Person, error) {
+	var entity = new(Person)
 
-	if error != nil {
-		return error
-	}
+	query := db.QueryRow("SELECT id, name, email, gender FROM ` + "`persons`" + ` WHERE id = ? LIMIT 1", id)
+	err := query.Scan(entity.id, entity.name, entity.email, entity.gender)
 
-	return nil
+	return entity, err
 }
 `
+
 	if err != nil {
 		t.Errorf("Got error: %s", err)
 	} else if strings.Compare(output, expected) != 0 {
