@@ -3,8 +3,10 @@ package crud
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fluxynet/gocipe/generators"
@@ -50,13 +52,14 @@ func Generate(generator Generator) string {
 		os.Exit(1)
 	}
 
-	structInfo, err := generators.ProcessFile(generator.Filename, generator.Structure)
+	structInfo, err := generators.NewStructureInfo(generator.Filename, generator.Structure)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	fmt.Println(structInfo)
 
-	generated := make([]string, 0)
+	generated := make([]string, 1)
+	generated[0] = "package " + structInfo.Package + "\n"
 
 	if generator.GenerateGet {
 		segment, err := GenerateGet(*structInfo)
@@ -98,5 +101,9 @@ func Generate(generator Generator) string {
 		generated = append(generated, segment)
 	}
 
-	return strings.Join(generated, "\n")
+	targetFilename := filepath.Dir(generator.Filename) + "/" + strings.ToLower(structInfo.Name) + "_crud.go"
+	output := strings.Join(generated, "")
+	ioutil.WriteFile(targetFilename, []byte(output), 0644)
+
+	return output
 }

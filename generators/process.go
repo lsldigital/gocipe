@@ -12,8 +12,9 @@ import (
 
 //StructureInfo represents a target structure in a file to be used for generation
 type StructureInfo struct {
-	Name   string
-	Fields []FieldInfo
+	Package string
+	Name    string
+	Fields  []FieldInfo
 }
 
 //FieldInfo represents information about a field
@@ -23,8 +24,8 @@ type FieldInfo struct {
 	Comments string
 }
 
-//ProcessFile process a go file to extract structure information
-func ProcessFile(filename string, structure string) (*StructureInfo, error) {
+//NewStructureInfo process a go file to extract structure information
+func NewStructureInfo(filename string, structure string) (*StructureInfo, error) {
 	src, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Fatalf("Error reading file: %s\n", err)
@@ -41,7 +42,7 @@ func ProcessFile(filename string, structure string) (*StructureInfo, error) {
 		if decl, ok := d.(*ast.GenDecl); ok && decl.Tok == token.TYPE {
 			for _, spec := range decl.Specs {
 				if typ, ok := spec.(*ast.TypeSpec); ok && typ.Name.Name == structure {
-					return ProcessStructure(string(src), typ)
+					return ProcessStructure(node.Name.Name, string(src), typ)
 				}
 			}
 		}
@@ -51,9 +52,10 @@ func ProcessFile(filename string, structure string) (*StructureInfo, error) {
 }
 
 //ProcessStructure creates an returns a structure given a TypeSpec
-func ProcessStructure(src string, typeSpec *ast.TypeSpec) (*StructureInfo, error) {
+func ProcessStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*StructureInfo, error) {
 	structInfo := new(StructureInfo)
 	structInfo.Name = typeSpec.Name.Name
+	structInfo.Package = pkg
 	structInfo.Fields = make([]FieldInfo, 1)
 
 	if struc, ok := typeSpec.Type.(*ast.StructType); ok {
