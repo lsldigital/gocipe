@@ -3,25 +3,28 @@ package crud
 import (
 	"strings"
 	"testing"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
 func TestGenerateDelete(t *testing.T) {
-	name := "Person"
+	structInfo := generators.StructureInfo{
+		Name: "Persons",
+		Fields: []generators.FieldInfo{
+			{Name: "id", Type: "int64", Comments: ""},
+			{Name: "name", Type: "string", Comments: ""},
+			{Name: "email", Type: "string", Comments: ""},
+			{Name: "gender", Type: "string", Comments: ""},
+		},
+	}
 
-	output, err := GenerateDelete(name)
+	output, err := GenerateDelete(structInfo)
 	expected := `
 //Delete delete single Person entity from database
 func Delete(db *sql.DB, id int) error {
-	stmt, err := db.Prepare("DELETE FROM ` + "`persons`" + ` WHERE id = ?")
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec(id)
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err := db.Exec("DELETE FROM ` + "`persons`" + ` WHERE id = ?", id)
+	
+	return err
 }
 `
 

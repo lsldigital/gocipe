@@ -1,25 +1,25 @@
 package generators
 
 import (
-	"go/ast"
+	"errors"
 	"fmt"
-	"go/token"
-	"log"
+	"go/ast"
 	"go/parser"
-	"github.com/pkg/errors"
+	"go/token"
 	"io/ioutil"
+	"log"
 )
 
 //StructureInfo represents a target structure in a file to be used for generation
 type StructureInfo struct {
-	Name string
+	Name   string
 	Fields []FieldInfo
 }
 
 //FieldInfo represents information about a field
 type FieldInfo struct {
-	Name string
-	Type string
+	Name     string
+	Type     string
 	Comments string
 }
 
@@ -40,7 +40,7 @@ func ProcessFile(filename string, structure string) (*StructureInfo, error) {
 	for _, d := range node.Decls {
 		if decl, ok := d.(*ast.GenDecl); ok && decl.Tok == token.TYPE {
 			for _, spec := range decl.Specs {
-				if typ, ok := spec.(*ast.TypeSpec); ok  && typ.Name.Name == structure {
+				if typ, ok := spec.(*ast.TypeSpec); ok && typ.Name.Name == structure {
 					return ProcessStructure(string(src), typ)
 				}
 			}
@@ -61,7 +61,7 @@ func ProcessStructure(src string, typeSpec *ast.TypeSpec) (*StructureInfo, error
 			if len(field.Names) == 0 {
 				continue
 			}
-			fieldtype := src[field.Type.Pos()-1:field.Type.End()-1]
+			fieldtype := src[field.Type.Pos()-1 : field.Type.End()-1]
 			structInfo.Fields = append(structInfo.Fields, FieldInfo{Name: field.Names[0].Name, Type: fieldtype, Comments: field.Comment.Text()})
 		}
 

@@ -3,15 +3,22 @@ package crud
 import (
 	"strings"
 	"testing"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
 func TestGenerateGet(t *testing.T) {
-	name := "Person"
-	fields := []string{
-		"id", "name", "email", "gender",
+	structInfo := generators.StructureInfo{
+		Name: "Persons",
+		Fields: []generators.FieldInfo{
+			{Name: "id", Type: "int64", Comments: ""},
+			{Name: "name", Type: "string", Comments: ""},
+			{Name: "email", Type: "string", Comments: ""},
+			{Name: "gender", Type: "string", Comments: ""},
+		},
 	}
 
-	output, err := GenerateGet(name, fields)
+	output, err := GenerateGet(structInfo)
 	expected := `
 //Get returns a single Person from database
 func Get(db *sql.DB, id int) (*Person, error) {

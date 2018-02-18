@@ -3,15 +3,22 @@ package crud
 import (
 	"strings"
 	"testing"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
 func TestGenerateSave(t *testing.T) {
-	name := "Person"
-	fields := []string{
-		"id", "name", "email", "gender",
+	structInfo := generators.StructureInfo{
+		Name: "Persons",
+		Fields: []generators.FieldInfo{
+			{Name: "id", Type: "int64", Comments: ""},
+			{Name: "name", Type: "string", Comments: ""},
+			{Name: "email", Type: "string", Comments: ""},
+			{Name: "gender", Type: "string", Comments: ""},
+		},
 	}
 
-	output, err := GenerateSave(name, fields)
+	output, err := GenerateSave(structInfo)
 	expected := `
 //Save will persist Person entity to the database
 func (entity *Person) Save(db *sql.DB) error {

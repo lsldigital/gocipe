@@ -3,15 +3,22 @@ package crud
 import (
 	"strings"
 	"testing"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
 func TestGenerateUpdate(t *testing.T) {
-	name := "Person"
-	fields := []string{
-		"id", "name", "email", "gender",
+	structInfo := generators.StructureInfo{
+		Name: "Persons",
+		Fields: []generators.FieldInfo{
+			{Name: "id", Type: "int64", Comments: ""},
+			{Name: "name", Type: "string", Comments: ""},
+			{Name: "email", Type: "string", Comments: ""},
+			{Name: "gender", Type: "string", Comments: ""},
+		},
 	}
 
-	output, err := GenerateUpdate(name, fields)
+	output, err := GenerateUpdate(structInfo)
 	expected := `
 //Update Will execute an SQLUpdate Statement in the database. Prefer using Save instead of Update directly.
 func (entity *Person) Update(db *sql.DB) error {

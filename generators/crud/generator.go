@@ -24,7 +24,7 @@ type Generator struct {
 	GenerateList   bool
 }
 
-//Command the description of the command when used on cli
+//Description the description of the command when used on cli
 const Description = "Generate CRUD functions and methods for an entity"
 
 //NewGenerator returns a new Generator
@@ -42,9 +42,10 @@ func NewGenerator() *Generator {
 	return arguments
 }
 
+//Generate produce the generated code according to options
 func Generate(generator Generator) string {
 	if len(generator.Structure) == 0 || len(generator.Filename) == 0 {
-		fmt.Fprintln(os.Stderr, "Missing arguments: file, struct\n")
+		fmt.Fprintln(os.Stderr, "Missing arguments: file, struct")
 		generator.FlagSet.PrintDefaults()
 		os.Exit(1)
 	}
@@ -96,8 +97,6 @@ func Generate(generator Generator) string {
 
 		generated = append(generated, segment)
 	}
-
-	fmt.Println(generated)
 
 	return strings.Join(generated, "\n")
 }

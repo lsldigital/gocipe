@@ -11,16 +11,9 @@ import (
 var tmplDelete, _ = template.New("GenerateDelete").Parse(`
 //Delete delete single {{.Name}} entity from database
 func Delete(db *sql.DB, id int) error {
-	stmt, err := db.Prepare("DELETE FROM {{.TableName}} WHERE id = ?")
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec(id)
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err := db.Exec("DELETE FROM {{.TableName}} WHERE id = ?", id)
+	
+	return err
 }
 `)
 

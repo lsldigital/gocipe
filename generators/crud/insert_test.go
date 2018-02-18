@@ -3,15 +3,22 @@ package crud
 import (
 	"strings"
 	"testing"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
 func TestGenerateInsert(t *testing.T) {
-	name := "Person"
-	fields := []string{
-		"id", "name", "email", "gender",
+	structInfo := generators.StructureInfo{
+		Name: "Persons",
+		Fields: []generators.FieldInfo{
+			{Name: "id", Type: "int64", Comments: ""},
+			{Name: "name", Type: "string", Comments: ""},
+			{Name: "email", Type: "string", Comments: ""},
+			{Name: "gender", Type: "string", Comments: ""},
+		},
 	}
 
-	output, err := GenerateInsert(name, fields)
+	output, err := GenerateInsert(structInfo)
 	expected := `
 //Insert Will execute an SQLInsert Statement in the database. Prefer using Save instead of Insert directly.
 func (entity *Person) Insert(db *sql.DB) error {

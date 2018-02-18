@@ -3,15 +3,22 @@ package crud
 import (
 	"strings"
 	"testing"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
 func TestGenerateList(t *testing.T) {
-	name := "Person"
-	fields := []string{
-		"id", "name", "email", "gender",
+	structInfo := generators.StructureInfo{
+		Name: "Persons",
+		Fields: []generators.FieldInfo{
+			{Name: "id", Type: "int64", Comments: ""},
+			{Name: "name", Type: "string", Comments: ""},
+			{Name: "email", Type: "string", Comments: ""},
+			{Name: "gender", Type: "string", Comments: ""},
+		},
 	}
 
-	output, err := GenerateList(name, fields)
+	output, err := GenerateList(structInfo)
 	expected := `
 //List returns all Person entities stored in database
 func List(db *sql.DB) ([]Person, error) {
