@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"strings"
 	"text/template"
+	"projects/gocipe/generators"
 )
 
 var tmplUpdate, _ = template.New("GenerateUpdate").Parse(`
@@ -22,7 +23,7 @@ func (entity *{{.Name}}) Update(db *sql.DB) error {
 `)
 
 //GenerateUpdate returns code to update an entity in database
-func GenerateUpdate(name string, fields []string) (string, error) {
+func GenerateUpdate(structInfo generators.StructureInfo) (string, error) {
 	var output bytes.Buffer
 	data := new(struct {
 		Name         string
@@ -31,18 +32,18 @@ func GenerateUpdate(name string, fields []string) (string, error) {
 		StructFields string
 	})
 
-	data.Name = name
-	data.TableName = "`" + strings.ToLower(name) + "s`"
+	data.Name = structInfo.Name
+	data.TableName = "`" + strings.ToLower(structInfo.Name) + "s`"
 	data.SQLFields = ""
 	data.StructFields = ""
 
-	for _, field := range fields {
-		if strings.Compare(field, "id") == 0 {
+	for _, field := range structInfo.Fields {
+		if field.Name == "id" {
 			continue
 		}
 
-		data.SQLFields += field + " = ?, "
-		data.StructFields += "entity." + field + ", "
+		data.SQLFields += field.Name + " = ?, "
+		data.StructFields += "entity." + field.Name + ", "
 	}
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")
 	data.StructFields += "entity.id"

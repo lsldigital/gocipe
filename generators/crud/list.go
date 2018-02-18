@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"strings"
 	"text/template"
+	"projects/gocipe/generators"
 )
 
 var tmplList, _ = template.New("GenerateList").Parse(`
@@ -33,7 +34,7 @@ func List(db *sql.DB) ([]{{.Name}}, error) {
 `)
 
 //GenerateList returns code to return a list of entities from database
-func GenerateList(name string, fields []string) (string, error) {
+func GenerateList(structInfo generators.StructureInfo) (string, error) {
 	var output bytes.Buffer
 	data := new(struct {
 		Name         string
@@ -42,10 +43,18 @@ func GenerateList(name string, fields []string) (string, error) {
 		StructFields string
 	})
 
-	data.Name = name
-	data.TableName = "`" + strings.ToLower(name) + "s`"
-	data.SQLFields = strings.Join(fields, ", ")
-	data.StructFields = "entity." + strings.Join(fields, ", entity.")
+	data.Name = structInfo.Name
+	data.TableName = "`" + strings.ToLower(structInfo.Name) + "s`"
+	data.SQLFields = ""
+	data.StructFields = ""
+
+	for _, field := range structInfo.Fields {
+		data.SQLFields += field.Name + ", "
+		data.StructFields += "entity" + field.Name + ", "
+	}
+
+	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")
+	data.StructFields = strings.TrimSuffix(data.StructFields, ", ")
 
 	err := tmplList.Execute(&output, data)
 

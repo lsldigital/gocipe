@@ -3,6 +3,7 @@ package crud
 import (
 	"bytes"
 	"text/template"
+	"projects/gocipe/generators"
 )
 
 var tmplSave, _ = template.New("GenerateSave").Parse(`
@@ -23,9 +24,9 @@ func (entity *{{.Name}}) Save(db *sql.DB) error {
 `)
 
 //GenerateSave return code to save entity in database
-func GenerateSave(name string, fields []string) (string, error) {
+func GenerateSave(structInfo generators.StructureInfo) (string, error) {
 	var output bytes.Buffer
-	err := tmplSave.Execute(&output, struct{ Name string }{name})
+	err := tmplSave.Execute(&output, struct{ Name string }{structInfo.Name})
 
 	if err != nil {
 		return "", err

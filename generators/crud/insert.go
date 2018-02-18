@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"strings"
 	"text/template"
+	"projects/gocipe/generators"
 )
 
 var tmplInsert, _ = template.New("GenerateInsert").Parse(`
@@ -31,7 +32,7 @@ func (entity *{{.Name}}) Insert(db *sql.DB) error {
 `)
 
 //GenerateInsert generate function to insert an entity in database
-func GenerateInsert(name string, fields []string) (string, error) {
+func GenerateInsert(structInfo generators.StructureInfo) (string, error) {
 	var output bytes.Buffer
 	data := new(struct {
 		Name            string
@@ -41,20 +42,20 @@ func GenerateInsert(name string, fields []string) (string, error) {
 		StructFields    string
 	})
 
-	data.Name = name
-	data.TableName = "`" + strings.ToLower(name) + "s`"
+	data.Name = structInfo.Name
+	data.TableName = "`" + strings.ToLower(structInfo.Name) + "s`"
 	data.SQLFields = ""
 	data.SQLPlaceholders = ""
 	data.StructFields = ""
 
-	for _, field := range fields {
-		if strings.Compare(field, "id") == 0 {
+	for _, field := range structInfo.Fields {
+		if field.Name == "id" {
 			continue
 		}
 
-		data.SQLFields += field + ", "
+		data.SQLFields += field.Name + ", "
 		data.SQLPlaceholders += "?, "
-		data.StructFields += "entity." + field + ", "
+		data.StructFields += "entity." + field.Name + ", "
 	}
 
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")

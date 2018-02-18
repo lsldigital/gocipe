@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"strings"
 	"text/template"
+	"projects/gocipe/generators"
 )
 
 var tmplDelete, _ = template.New("GenerateDelete").Parse(`
@@ -23,15 +24,15 @@ func Delete(db *sql.DB, id int) error {
 `)
 
 //GenerateDelete will generate a function to delete entity from database
-func GenerateDelete(name string) (string, error) {
+func GenerateDelete(structInfo generators.StructureInfo) (string, error) {
 	var output bytes.Buffer
 	data := new(struct {
 		Name      string
 		TableName string
 	})
 
-	data.Name = name
-	data.TableName = "`" + strings.ToLower(name) + "s`"
+	data.Name = structInfo.Name
+	data.TableName = "`" + strings.ToLower(structInfo.Name) + "s`"
 
 	err := tmplDelete.Execute(&output, data)
 
