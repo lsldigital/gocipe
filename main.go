@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"projects/gocipe/generators/crud"
+
+	"github.com/fluxynet/gocipe/generators/crud"
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 
 func listCommands() {
 	commands := map[string]string{
-		crud.Command : crud.Description,
+		crud.Command: crud.Description,
 	}
 
 	for name, command := range commands {

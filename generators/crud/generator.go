@@ -3,10 +3,11 @@ package crud
 import (
 	"flag"
 	"fmt"
-	"os"
 	"log"
-	"projects/gocipe/generators"
+	"os"
 	"strings"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
 //Command the name of the command to start this generator

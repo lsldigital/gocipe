@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"text/template"
-	"projects/gocipe/generators"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
 var tmplList, _ = template.New("GenerateList").Parse(`

@@ -3,7 +3,8 @@ package crud
 import (
 	"bytes"
 	"text/template"
-	"projects/gocipe/generators"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
 var tmplSave, _ = template.New("GenerateSave").Parse(`

@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"text/template"
-	"projects/gocipe/generators"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
 var tmplDelete, _ = template.New("GenerateDelete").Parse(`
