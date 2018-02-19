@@ -33,7 +33,7 @@ func List(db *sql.DB) ([]Person, error) {
 	}
 	defer query.Close()
 
-	entities = make([]Person, 10)
+	entities = []Person
 
 	for query.Next() {
 		entity = new(Person)

@@ -56,7 +56,7 @@ func ProcessStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 	structInfo := new(StructureInfo)
 	structInfo.Name = typeSpec.Name.Name
 	structInfo.Package = pkg
-	structInfo.Fields = make([]FieldInfo, 1)
+	structInfo.Fields = []FieldInfo{}
 
 	if struc, ok := typeSpec.Type.(*ast.StructType); ok {
 		for _, field := range struc.Fields.List {

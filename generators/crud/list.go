@@ -22,7 +22,7 @@ func List(db *sql.DB) ([]{{.Name}}, error) {
 	}
 	defer query.Close()
 
-	entities = make([]{{.Name}}, 10)
+	entities = []{{.Name}}
 
 	for query.Next() {
 		entity = new({{.Name}})

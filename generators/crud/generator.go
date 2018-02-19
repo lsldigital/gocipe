@@ -58,8 +58,8 @@ func Generate(generator Generator) string {
 	}
 	fmt.Println(structInfo)
 
-	generated := make([]string, 1)
-	generated[0] = "package " + structInfo.Package + "\n"
+	var generated []string
+	generated = append(generated, "package "+structInfo.Package+"\n")
 
 	if generator.GenerateGet {
 		segment, err := GenerateGet(*structInfo)
@@ -102,7 +102,7 @@ func Generate(generator Generator) string {
 	}
 
 	targetFilename := filepath.Dir(generator.Filename) + "/" + strings.ToLower(structInfo.Name) + "_crud.go"
-	output := strings.Join(generated, "")
+	output := strings.Join(generated, "\n")
 	ioutil.WriteFile(targetFilename, []byte(output), 0644)
 
 	return output
