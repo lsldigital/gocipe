@@ -42,6 +42,7 @@ func GenerateUpdate(structInfo generators.StructureInfo) (string, error) {
 		data.StructFields += "entity." + field.Name + ", "
 	}
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")
+	data.StructFields = strings.TrimSuffix(data.StructFields, ", ")
 
 	err := tmplUpdate.Execute(&output, data)
 
