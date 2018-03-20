@@ -2,6 +2,7 @@ package crud
 
 import (
 	"bytes"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -9,17 +10,11 @@ import (
 )
 
 var tmplUpdate, _ = template.New("GenerateUpdate").Parse(`
-//Update Will execute an SQLUpdate Statement in the database. Prefer using Save instead of Update directly.
-func (entity *{{.Name}}) Update(db *sql.DB) error {
-	stmt, err := db.Prepare("UPDATE {{.TableName}} SET {{.SQLFields}} WHERE id = ?")
-	if err != nil {
-		return err
-	}
+//Update Will execute an SQLUpdate Statement for {{.Name}} in the database. Prefer using Save instead of Update directly.
+func (entity *{{.Name}}) Update() error {
+	_, err := db.Exec("UPDATE {{.TableName}} SET {{.SQLFields}} WHERE id = $1", {{.StructFields}})
 
-	_, err = stmt.Exec({{.StructFields}})
-	if err != nil {
-		return err
-	}
+	return err
 }
 `)
 
@@ -34,20 +29,19 @@ func GenerateUpdate(structInfo generators.StructureInfo) (string, error) {
 	})
 
 	data.Name = structInfo.Name
-	data.TableName = "`" + strings.ToLower(structInfo.Name) + "s`"
+	data.TableName = "`" + structInfo.TableName + "`"
 	data.SQLFields = ""
-	data.StructFields = ""
+	data.StructFields = "entity.ID, "
 
-	for _, field := range structInfo.Fields {
-		if field.Name == "id" {
+	for i, field := range structInfo.Fields {
+		if field.Name == "ID" {
 			continue
 		}
 
-		data.SQLFields += field.Name + " = ?, "
+		data.SQLFields += strings.ToLower(field.Name) + " = $" + strconv.Itoa(i+1) + ", "
 		data.StructFields += "entity." + field.Name + ", "
 	}
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")
-	data.StructFields += "entity.id"
 
 	err := tmplUpdate.Execute(&output, data)
 

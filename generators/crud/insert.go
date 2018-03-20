@@ -2,6 +2,7 @@ package crud
 
 import (
 	"bytes"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -9,26 +10,23 @@ import (
 )
 
 var tmplInsert, _ = template.New("GenerateInsert").Parse(`
-//Insert Will execute an SQLInsert Statement in the database. Prefer using Save instead of Insert directly.
-func (entity *{{.Name}}) Insert(db *sql.DB) error {
-	stmt, err := db.Prepare("INSERT INTO {{.TableName}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})")
+// Insert performs an SQL insert for {{.Name}} record and update instance with inserted id.
+// Prefer using Save rather than Insert directly.
+func (entity *{{.Name}}) Insert() error {
+	var (
+		id  int64
+		err error
+	)
 
-	if err != nil {
-		return err
+	result, err := db.Exec("INSERT INTO {{.TableName}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})", {{.StructFields}})
+
+	if err == nil {
+		if id, err = result.LastInsertId(); err == nil {
+			entity.ID = &id
+		}
 	}
 
-	result, err := stmt.Exec({{.StructFields}})
-	if err != nil {
-		return err
-	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	entity.id = id
-	return nil
+	return err
 }
 `)
 
@@ -44,18 +42,18 @@ func GenerateInsert(structInfo generators.StructureInfo) (string, error) {
 	})
 
 	data.Name = structInfo.Name
-	data.TableName = "`" + strings.ToLower(structInfo.Name) + "s`"
+	data.TableName = "`" + structInfo.TableName + "`"
 	data.SQLFields = ""
 	data.SQLPlaceholders = ""
 	data.StructFields = ""
 
-	for _, field := range structInfo.Fields {
+	for i, field := range structInfo.Fields {
 		if field.Name == "id" {
 			continue
 		}
 
-		data.SQLFields += field.Name + ", "
-		data.SQLPlaceholders += "?, "
+		data.SQLFields += strings.ToLower(field.Name) + ", "
+		data.SQLPlaceholders += "$" + strconv.Itoa(i+1) + ", "
 		data.StructFields += "entity." + field.Name + ", "
 	}
 

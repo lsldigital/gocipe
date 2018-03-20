@@ -2,17 +2,24 @@ package crud
 
 import (
 	"bytes"
-	"strings"
 	"text/template"
 
 	"github.com/fluxynet/gocipe/generators"
 )
 
 var tmplDelete, _ = template.New("GenerateDelete").Parse(`
-//Delete delete single {{.Name}} entity from database
-func Delete(db *sql.DB, id int) error {
-	_, err := db.Exec("DELETE FROM {{.TableName}} WHERE id = ?", id)
-	
+// Delete deletes a {{.Name}} record from database by id primary key
+func Delete(id int64) error {
+	_, err := db.Exec("DELETE FROM {{.TableName}} WHERE id = $1", id)
+	return err
+}
+
+// Delete deletes a {{.Name}} record from database and sets id to nil
+func (entity *{{.Name}}) Delete() error {
+	_, err := db.Exec("DELETE FROM {{.TableName}} WHERE id = $1", entity.ID)
+	if err != nil {
+		entity.ID = nil
+	}
 	return err
 }
 `)
@@ -26,7 +33,7 @@ func GenerateDelete(structInfo generators.StructureInfo) (string, error) {
 	})
 
 	data.Name = structInfo.Name
-	data.TableName = "`" + strings.ToLower(structInfo.Name) + "s`"
+	data.TableName = "`" + structInfo.TableName + "`"
 
 	err := tmplDelete.Execute(&output, data)
 

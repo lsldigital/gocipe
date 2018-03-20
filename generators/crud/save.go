@@ -8,19 +8,12 @@ import (
 )
 
 var tmplSave, _ = template.New("GenerateSave").Parse(`
-//Save will persist {{.Name}} entity to the database
-func (entity *{{.Name}}) Save(db *sql.DB) error {
-	if entity.id == 0 {
-		error := entity.Insert(db)
-	} else {
-		error := entity.Update(db)
+// Save either inserts or updates a {{.Name}} record based on whether or not id is nil
+func (entity *{{.Name}}) Save() error {
+	if entity.ID == nil {
+		return entity.Insert()
 	}
-
-	if error != nil {
-		return error
-	}
-
-	return nil
+	return entity.Update()
 }
 `)
 

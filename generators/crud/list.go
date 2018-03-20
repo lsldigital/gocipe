@@ -9,28 +9,28 @@ import (
 )
 
 var tmplList, _ = template.New("GenerateList").Parse(`
-//List returns all {{.Name}} entities stored in database
-func List(db *sql.DB) ([]{{.Name}}, error) {
-	var (
-		entity   *{{.Name}}
-		entities []{{.Name}}
-	)
+// List returns a slice containing {{.Name}} records
+func List() ([]*{{.Name}}, error) {
+	var list []*{{.Name}}
 
-	query, err := db.Query("SELECT {{.SQLFields}} FROM {{.TableName}}")
+	rows, err := db.Query("SELECT {{.SQLFields}} FROM {{.TableName}} ORDER BY id ASC")
+
 	if err != nil {
-		return entities, err
-	}
-	defer query.Close()
-
-	entities = []{{.Name}}
-
-	for query.Next() {
-		entity = new({{.Name}})
-		query.Scan({{.StructFields}})
-		entities = append(entities, *entity)
+		return nil, err
 	}
 
-	return entities, nil
+	defer rows.Close()
+	for rows.Next() {
+		entity := new({{.Name}})
+		err := rows.Scan({{.StructFields}})
+		if err != nil {
+			return nil, err
+		}
+
+		list = append(list, entity)
+	}
+
+	return list, nil
 }
 `)
 
@@ -45,13 +45,13 @@ func GenerateList(structInfo generators.StructureInfo) (string, error) {
 	})
 
 	data.Name = structInfo.Name
-	data.TableName = "`" + strings.ToLower(structInfo.Name) + "s`"
+	data.TableName = "`" + structInfo.TableName + "`"
 	data.SQLFields = ""
 	data.StructFields = ""
 
 	for _, field := range structInfo.Fields {
-		data.SQLFields += field.Name + ", "
-		data.StructFields += "entity" + field.Name + ", "
+		data.SQLFields += strings.ToLower(field.Name) + ", "
+		data.StructFields += "entity." + field.Name + ", "
 	}
 
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")

@@ -9,14 +9,25 @@ import (
 )
 
 var tmplGet, _ = template.New("GenerateGet").Parse(`
-//Get returns a single {{.Name}} from database
-func Get(db *sql.DB, id int) (*{{.Name}}, error) {
-	var entity = new({{.Name}})
+//Get returns a single {{.Name}} from database by primary key
+func Get(id int64) (*{{.Name}}, error) {
+	var entity *{{.Name}}
 
-	query := db.QueryRow("SELECT {{.SQLFields}} FROM {{.TableName}} WHERE id = ? LIMIT 1", id)
-	err := query.Scan({{.StructFields}})
+	rows, err := db.Query("SELECT {{.SQLFields}} WHERE id = $1 ORDER BY id ASC", id)
 
-	return entity, err
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		entity = new({{.Name}})
+		err := rows.Scan({{.StructFields}})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return entity, nil
 }
 `)
 
@@ -31,12 +42,12 @@ func GenerateGet(structInfo generators.StructureInfo) (string, error) {
 	})
 
 	data.Name = structInfo.Name
-	data.TableName = "`" + strings.ToLower(structInfo.Name) + "s`"
+	data.TableName = "`" + structInfo.TableName + "`"
 	data.SQLFields = ""
 	data.StructFields = ""
 
 	for _, field := range structInfo.Fields {
-		data.SQLFields += field.Name + ", "
+		data.SQLFields += strings.ToLower(field.Name) + ", "
 		data.StructFields += "entity." + field.Name + ", "
 	}
 

@@ -8,13 +8,17 @@ import (
 	"go/token"
 	"io/ioutil"
 	"log"
+	"strings"
+
+	"github.com/jinzhu/inflection"
 )
 
 //StructureInfo represents a target structure in a file to be used for generation
 type StructureInfo struct {
-	Package string
-	Name    string
-	Fields  []FieldInfo
+	Package   string
+	Name      string
+	TableName string
+	Fields    []FieldInfo
 }
 
 //FieldInfo represents information about a field
@@ -42,7 +46,7 @@ func NewStructureInfo(filename string, structure string) (*StructureInfo, error)
 		if decl, ok := d.(*ast.GenDecl); ok && decl.Tok == token.TYPE {
 			for _, spec := range decl.Specs {
 				if typ, ok := spec.(*ast.TypeSpec); ok && typ.Name.Name == structure {
-					return ProcessStructure(node.Name.Name, string(src), typ)
+					return processStructure(node.Name.Name, string(src), typ)
 				}
 			}
 		}
@@ -51,10 +55,10 @@ func NewStructureInfo(filename string, structure string) (*StructureInfo, error)
 	return nil, errors.New("Could not find structure: " + structure)
 }
 
-//ProcessStructure creates an returns a structure given a TypeSpec
-func ProcessStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*StructureInfo, error) {
+func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*StructureInfo, error) {
 	structInfo := new(StructureInfo)
 	structInfo.Name = typeSpec.Name.Name
+	structInfo.TableName = inflection.Plural(strings.ToLower(structInfo.Name))
 	structInfo.Package = pkg
 	structInfo.Fields = []FieldInfo{}
 

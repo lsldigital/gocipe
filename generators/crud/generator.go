@@ -60,6 +60,14 @@ func Generate(generator Generator) string {
 
 	var generated []string
 	generated = append(generated, "package "+structInfo.Package+"\n")
+	generated = append(generated, `
+var db *sql.DB
+
+// Inject allows injection of services into the package
+func Inject(database *sql.DB) {
+	db = database
+}
+`)
 
 	if generator.GenerateGet {
 		segment, err := GenerateGet(*structInfo)
@@ -92,8 +100,25 @@ func Generate(generator Generator) string {
 	}
 
 	if generator.GenerateSave {
-		segment, err := GenerateSave(*structInfo)
+		var (
+			segment string
+			err     error
+		)
+		segment, err = GenerateInsert(*structInfo)
 
+		if err != nil {
+			log.Fatalf("An error occured during GenerateInsert: %s\n", err)
+		}
+
+		generated = append(generated, segment)
+
+		segment, err = GenerateUpdate(*structInfo)
+		if err != nil {
+			log.Fatalf("An error occured during GenerateUpdate: %s\n", err)
+		}
+
+		generated = append(generated, segment)
+		segment, err = GenerateSave(*structInfo)
 		if err != nil {
 			log.Fatalf("An error occured during GenerateSave: %s\n", err)
 		}
