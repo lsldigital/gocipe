@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/fluxynet/gocipe/generators/crud"
+	"github.com/fluxynet/gocipe/generators/rest"
 )
 
 func main() {
@@ -17,6 +18,10 @@ func main() {
 		crudGenerator := crud.NewGenerator()
 		crudGenerator.FlagSet.Parse(os.Args[2:])
 		crud.Generate(*crudGenerator)
+	case rest.Command:
+		restGenerator := rest.NewGenerator()
+		restGenerator.FlagSet.Parse(os.Args[2:])
+		rest.Generate(*restGenerator)
 	default:
 		listCommands()
 	}
