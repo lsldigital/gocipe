@@ -20,14 +20,16 @@ func Get(id int64) (*{{.Name}}, error) {
 	}
 
 	defer rows.Close()
-	for rows.Next() {
+	if rows.Next() {
 		entity = new({{.Name}})
 		err := rows.Scan({{.StructFields}})
 		if err != nil {
 			return nil, err
 		}
+		return entity, nil
 	}
-	return entity, nil
+	
+	return nil, nil
 }
 `)
 

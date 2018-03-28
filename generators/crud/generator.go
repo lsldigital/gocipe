@@ -61,6 +61,8 @@ func Generate(generator Generator) string {
 	var generated []string
 	generated = append(generated, "package "+structInfo.Package+"\n")
 	generated = append(generated, `
+import "database/sql"
+
 var db *sql.DB
 
 // Inject allows injection of services into the package
