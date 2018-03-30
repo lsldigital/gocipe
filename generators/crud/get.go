@@ -13,7 +13,7 @@ var tmplGet, _ = template.New("GenerateGet").Parse(`
 func Get(id int64) (*{{.Name}}, error) {
 	var entity *{{.Name}}
 
-	rows, err := db.Query("SELECT {{.SQLFields}} WHERE id = $1 ORDER BY id ASC", id)
+	rows, err := db.Query("SELECT {{.SQLFields}} FROM {{.TableName}} WHERE id = $1 ORDER BY id ASC", id)
 
 	if err != nil {
 		return nil, err

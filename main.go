@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/fluxynet/gocipe/generators/crud"
+	"github.com/fluxynet/gocipe/generators/http"
 	"github.com/fluxynet/gocipe/generators/rest"
 )
 
@@ -22,6 +23,11 @@ func main() {
 		restGenerator := rest.NewGenerator()
 		restGenerator.FlagSet.Parse(os.Args[2:])
 		rest.Generate(*restGenerator)
+	case http.Command:
+		httpGenerator := http.NewGenerator()
+		httpGenerator.FlagSet.Parse(os.Args[2:])
+		http.Generate(*httpGenerator)
+
 	default:
 		listCommands()
 	}
@@ -29,7 +35,9 @@ func main() {
 
 func listCommands() {
 	commands := map[string]string{
+		http.Command: http.Description,
 		crud.Command: crud.Description,
+		rest.Command: rest.Description,
 	}
 
 	for name, command := range commands {
