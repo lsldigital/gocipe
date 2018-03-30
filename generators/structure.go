@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"io/ioutil"
 	"log"
+	"reflect"
 	"strings"
 
 	"github.com/jinzhu/inflection"
@@ -23,9 +24,9 @@ type StructureInfo struct {
 
 //FieldInfo represents information about a field
 type FieldInfo struct {
-	Name     string
-	Type     string
-	Comments string
+	Name string
+	Type string
+	Tags reflect.StructTag
 }
 
 //NewStructureInfo process a go file to extract structure information
@@ -63,12 +64,19 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 	structInfo.Fields = []FieldInfo{}
 
 	if struc, ok := typeSpec.Type.(*ast.StructType); ok {
+		var tags reflect.StructTag
+
 		for _, field := range struc.Fields.List {
 			if len(field.Names) == 0 {
 				continue
 			}
 			fieldtype := src[field.Type.Pos()-1 : field.Type.End()-1]
-			structInfo.Fields = append(structInfo.Fields, FieldInfo{Name: field.Names[0].Name, Type: fieldtype, Comments: field.Comment.Text()})
+
+			if field.Tag != nil {
+				tags = reflect.StructTag(field.Tag.Value)
+			}
+
+			structInfo.Fields = append(structInfo.Fields, FieldInfo{Name: field.Names[0].Name, Type: fieldtype, Tags: tags})
 		}
 
 		return structInfo, nil
@@ -80,10 +88,10 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 func (structInfo *StructureInfo) String() string {
 	output := "\n"
 	output += "Structure Name: " + structInfo.Name + "\n\n"
-	output += fmt.Sprintf("\t%10s\t%10s\t%s\n", "Name:", "Type:", "Comments:")
+	output += fmt.Sprintf("\t%10s\t%10s\t%s\n", "Name:", "Type:", "Tags:")
 	output += fmt.Sprintf("\t%10s\t%10s\t%s\n", "-----", "-----", "---------")
 	for _, fieldInfo := range structInfo.Fields {
-		output += fmt.Sprintf("\t%10s\t%10s\t%s\n", fieldInfo.Name, fieldInfo.Type, fieldInfo.Comments)
+		output += fmt.Sprintf("\t%10s\t%10s\t%s\n", fieldInfo.Name, fieldInfo.Type, fieldInfo.Tags)
 	}
 
 	return output
