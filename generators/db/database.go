@@ -36,7 +36,7 @@ func GenerateDatabase(structInfo generators.StructureInfo) (string, error) {
 		Fields    []tableField
 	})
 
-	data.TableName = "`" + structInfo.TableName + "`"
+	data.TableName = structInfo.TableName
 
 	for i, sfield := range structInfo.Fields {
 		var (

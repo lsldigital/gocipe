@@ -44,7 +44,7 @@ func GenerateGet(structInfo generators.StructureInfo) (string, error) {
 	})
 
 	data.Name = structInfo.Name
-	data.TableName = "`" + structInfo.TableName + "`"
+	data.TableName = structInfo.TableName
 	data.SQLFields = ""
 	data.StructFields = ""
 

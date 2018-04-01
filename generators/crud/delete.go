@@ -33,7 +33,7 @@ func GenerateDelete(structInfo generators.StructureInfo) (string, error) {
 	})
 
 	data.Name = structInfo.Name
-	data.TableName = "`" + structInfo.TableName + "`"
+	data.TableName = structInfo.TableName
 
 	err := tmplDelete.Execute(&output, data)
 
