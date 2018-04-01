@@ -1,22 +1,21 @@
 package crud
 
 import (
+	"errors"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/fluxynet/gocipe/generators"
 )
 
-//Command the name of the command to start this generator
-const Command = "crud"
+func init() {
+	generators.AddCommand("crud", "Generate CRUD functions and methods for an entity", factory)
+}
 
-//Generator represent arguments accepted by this generator
-type Generator struct {
+type generator struct {
 	FlagSet        *flag.FlagSet
 	Filename       string
 	Structure      string
@@ -26,37 +25,33 @@ type Generator struct {
 	GenerateList   bool
 }
 
-//Description the description of the command when used on cli
-const Description = "Generate CRUD functions and methods for an entity"
+func factory(args []string) (generators.Command, error) {
+	var g generator
+	flagset := flag.NewFlagSet("crud", flag.ExitOnError)
 
-//NewGenerator returns a new Generator
-func NewGenerator() *Generator {
-	arguments := new(Generator)
-	arguments.FlagSet = flag.NewFlagSet("crud", flag.ExitOnError)
+	flagset.StringVar(&g.Filename, "file", "", "Filename where struct is located")
+	flagset.StringVar(&g.Structure, "struct", "", "Name of the structure to use")
+	flagset.BoolVar(&g.GenerateGet, "g", true, "Generate Get")
+	flagset.BoolVar(&g.GenerateList, "l", true, "Generate List")
+	flagset.BoolVar(&g.GenerateDelete, "d", true, "Generate Delete")
+	flagset.BoolVar(&g.GenerateSave, "s", true, "Generate Save")
 
-	arguments.FlagSet.StringVar(&arguments.Filename, "file", "", "Filename where struct is located")
-	arguments.FlagSet.StringVar(&arguments.Structure, "struct", "", "Name of the structure to use")
-	arguments.FlagSet.BoolVar(&arguments.GenerateGet, "g", true, "Generate Get")
-	arguments.FlagSet.BoolVar(&arguments.GenerateList, "l", true, "Generate List")
-	arguments.FlagSet.BoolVar(&arguments.GenerateDelete, "d", true, "Generate Delete")
-	arguments.FlagSet.BoolVar(&arguments.GenerateSave, "s", true, "Generate Save")
+	flagset.Parse(args)
 
-	return arguments
+	if len(g.Structure) == 0 || len(g.Filename) == 0 {
+		flagset.PrintDefaults()
+		return nil, errors.New("Missing arguments: file, struct")
+	}
+
+	return g, nil
 }
 
 //Generate produce the generated code according to options
-func Generate(generator Generator) string {
-	if len(generator.Structure) == 0 || len(generator.Filename) == 0 {
-		fmt.Fprintln(os.Stderr, "Missing arguments: file, struct")
-		generator.FlagSet.PrintDefaults()
-		os.Exit(1)
-	}
-
-	structInfo, err := generators.NewStructureInfo(generator.Filename, generator.Structure)
+func (g generator) Generate() (string, error) {
+	structInfo, err := generators.NewStructureInfo(g.Filename, g.Structure)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
-	fmt.Println(structInfo)
 
 	var generated []string
 	generated = append(generated, "package "+structInfo.Package+"\n")
@@ -71,7 +66,7 @@ func Inject(database *sql.DB) {
 }
 `)
 
-	if generator.GenerateGet {
+	if g.GenerateGet {
 		segment, err := GenerateGet(*structInfo)
 
 		if err != nil {
@@ -81,7 +76,7 @@ func Inject(database *sql.DB) {
 		generated = append(generated, segment)
 	}
 
-	if generator.GenerateList {
+	if g.GenerateList {
 		segment, err := GenerateList(*structInfo)
 
 		if err != nil {
@@ -91,7 +86,7 @@ func Inject(database *sql.DB) {
 		generated = append(generated, segment)
 	}
 
-	if generator.GenerateDelete {
+	if g.GenerateDelete {
 		segment, err := GenerateDelete(*structInfo)
 
 		if err != nil {
@@ -101,7 +96,7 @@ func Inject(database *sql.DB) {
 		generated = append(generated, segment)
 	}
 
-	if generator.GenerateSave {
+	if g.GenerateSave {
 		var (
 			segment string
 			err     error
@@ -128,9 +123,9 @@ func Inject(database *sql.DB) {
 		generated = append(generated, segment)
 	}
 
-	targetFilename := filepath.Dir(generator.Filename) + "/" + strings.ToLower(structInfo.Name) + "_crud.go"
+	targetFilename := filepath.Dir(g.Filename) + "/" + strings.ToLower(structInfo.Name) + "_crud.go"
 	output := strings.Join(generated, "\n")
-	ioutil.WriteFile(targetFilename, []byte(output), 0644)
+	err = ioutil.WriteFile(targetFilename, []byte(output), 0644)
 
-	return output
+	return output, err
 }

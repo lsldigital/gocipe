@@ -3,34 +3,32 @@ package http
 import (
 	"flag"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 	"strings"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
-//Command the name of the command to start this generator
-const Command = "http"
+func init() {
+	generators.AddCommand("http", "Generate http server", factory)
+}
 
-//Generator represent arguments accepted by this generator
-type Generator struct {
+type generator struct {
 	FlagSet  *flag.FlagSet
 	Filename string
 }
 
-//Description the description of the command when used on cli
-const Description = "Generate http server"
+func factory(args []string) (generators.Command, error) {
+	var g generator
+	flagset := flag.NewFlagSet("http", flag.ExitOnError)
+	flagset.StringVar(&g.Filename, "file", "", "Filename of main.go")
 
-//NewGenerator returns a new Generator
-func NewGenerator() *Generator {
-	arguments := new(Generator)
-	arguments.FlagSet = flag.NewFlagSet("http", flag.ExitOnError)
-	arguments.FlagSet.StringVar(&arguments.Filename, "file", "", "Filename of main.go")
+	flagset.Parse(args)
 
-	return arguments
+	return g, nil
 }
 
-//Generate produce the generated code according to options
-func Generate(generator Generator) string {
+func (g generator) Generate() (string, error) {
 	var generated []string
 	generated = append(generated, `
 package main
@@ -53,18 +51,18 @@ import (
 	if segment, err := GenerateContainer(); err == nil {
 		generated = append(generated, segment)
 	} else {
-		log.Fatalf("An error occured during GenerateContainer: %s\n", err)
+		return "", err
 	}
 
 	if segment, err := GenerateMain(); err == nil {
 		generated = append(generated, segment)
 	} else {
-		log.Fatalf("An error occured during GenerateMain: %s\n", err)
+		return "", err
 	}
 
-	targetFilename := filepath.Dir(generator.Filename) + "/http.go"
+	targetFilename := filepath.Dir(g.Filename) + "/http.go"
 	output := strings.Join(generated, "\n")
-	ioutil.WriteFile(targetFilename, []byte(output), 0644)
+	err := ioutil.WriteFile(targetFilename, []byte(output), 0644)
 
-	return output
+	return output, err
 }

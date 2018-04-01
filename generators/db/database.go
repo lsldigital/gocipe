@@ -2,6 +2,7 @@ package db
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"strings"
 
@@ -19,10 +20,8 @@ type tableField struct {
 var tmplDatabase, _ = template.New("GenerateDatabase").Parse(`
 DROP TABLE IF EXISTS {{.TableName}};
 
-CREATE TABLE {{.Table}} (
-	{{range .Fields}}
-	"{{.Name}}" {{.Type}} {{.Constraints}}{{.Separator}}
-	{{end}}
+CREATE TABLE {{.TableName}} ({{range .Fields}}
+	"{{.Name}}" {{.Type}}{{.Constraints}}{{.Separator}}{{end}}
 );
 `)
 
@@ -45,26 +44,38 @@ func GenerateDatabase(structInfo generators.StructureInfo) (string, error) {
 			constraints []string
 		)
 
-		field.Name = sfield.Tags.Get("json")
-		field.Type = sfield.Tags.Get("dbtype")
+		if val, ok := sfield.Tags.Lookup("json"); ok {
+			field.Name = val
+		} else {
+			return "", fmt.Errorf("struct tag json not found in field: %s", field.Name)
+		}
+
+		if val, ok := sfield.Tags.Lookup("dbtype"); ok {
+			field.Type = strings.Trim(val, " ")
+		} else {
+			return "", fmt.Errorf("struct tag dbtype not found in field: %s", field.Name)
+		}
 
 		if field.Name == "id" {
 			constraints = append(constraints, "PRIMARY KEY")
 		}
 
-		if sfield.Tags.Get("nullable") != "true" {
+		if val, ok := sfield.Tags.Lookup("nullable"); ok && val != "true" {
 			constraints = append(constraints, "NOT NULL")
 		}
 
-		if def := sfield.Tags.Get("default"); def != "" {
-			constraints = append(constraints, "DEFAULT "+def)
+		if val, ok := sfield.Tags.Lookup("default"); ok && val != "" {
+			constraints = append(constraints, "DEFAULT "+val)
 		}
 
 		if i < numFields-1 {
 			field.Separator = ","
 		}
 
-		field.Constraints = strings.Join(constraints, " ")
+		if len(constraints) > 0 {
+			field.Constraints = " " + strings.Join(constraints, " ")
+		}
+
 		data.Fields = append(data.Fields, field)
 	}
 

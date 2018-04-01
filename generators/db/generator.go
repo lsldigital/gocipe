@@ -1,63 +1,57 @@
 package db
 
 import (
+	"errors"
 	"flag"
-	"fmt"
 	"io/ioutil"
-	"log"
-	"os"
-	"path/filepath"
 
 	"github.com/fluxynet/gocipe/generators"
 )
 
-//Command the name of the command to start this generator
-const Command = "db"
+func init() {
+	generators.AddCommand("db", "Generate database schema for a structure", factory)
+}
 
-//Generator represent arguments accepted by this generator
-type Generator struct {
+type generator struct {
 	FlagSet   *flag.FlagSet
 	Filename  string
 	Structure string
 	Output    string
 }
 
-//Description the description of the command when used on cli
-const Description = "Generate database schema for a structure"
+func factory(args []string) (generators.Command, error) {
+	var g generator
 
-//NewGenerator returns a new Generator
-func NewGenerator() *Generator {
-	arguments := new(Generator)
-	arguments.FlagSet = flag.NewFlagSet("crud", flag.ExitOnError)
+	flagset := flag.NewFlagSet("crud", flag.ExitOnError)
+	flagset.StringVar(&g.Filename, "file", "", "Filename where struct is located")
+	flagset.StringVar(&g.Structure, "struct", "", "Name of the structure to use")
+	flagset.StringVar(&g.Output, "output", "", "File to output for the schema definition")
 
-	arguments.FlagSet.StringVar(&arguments.Filename, "file", "", "Filename where struct is located")
-	arguments.FlagSet.StringVar(&arguments.Structure, "struct", "", "Name of the structure to use")
-	arguments.FlagSet.StringVar(&arguments.Output, "output", "", "File to output for the schema definition")
+	flagset.Parse(args)
 
-	return arguments
+	if len(g.Structure) == 0 || len(g.Filename) == 0 || len(g.Output) == 0 {
+		flagset.PrintDefaults()
+		return nil, errors.New("Missing arguments: file, struct, output")
+	}
+
+	return g, nil
 }
 
 //Generate produce the generated code according to options
-func Generate(generator Generator) string {
-	if len(generator.Structure) == 0 || len(generator.Filename) == 0 || len(generator.Output) == 0 {
-		fmt.Fprintln(os.Stderr, "Missing arguments: file, struct, output")
-		generator.FlagSet.PrintDefaults()
-		os.Exit(1)
-	}
+func (g generator) Generate() (string, error) {
 
-	structInfo, err := generators.NewStructureInfo(generator.Filename, generator.Structure)
+	structInfo, err := generators.NewStructureInfo(g.Filename, g.Structure)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
-	fmt.Println(structInfo)
 
 	generated, err := GenerateDatabase(*structInfo)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
-	targetFilename := filepath.Dir(generator.Output)
-	ioutil.WriteFile(targetFilename, []byte(generated), 0644)
+	targetFilename := g.Output
+	err = ioutil.WriteFile(targetFilename, []byte(generated), 0644)
 
-	return generated
+	return generated, err
 }
