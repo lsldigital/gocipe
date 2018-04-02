@@ -52,9 +52,9 @@ func GenerateInsert(structInfo generators.StructureInfo) (string, error) {
 			continue
 		}
 
-		data.SQLFields += strings.ToLower(field.Name) + ", "
+		data.SQLFields += field.Name + ", "
 		data.SQLPlaceholders += "$" + strconv.Itoa(i+1) + ", "
-		data.StructFields += "entity." + field.Name + ", "
+		data.StructFields += "entity." + field.Property + ", "
 	}
 
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")

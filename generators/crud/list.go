@@ -21,7 +21,7 @@ func List() ([]*{{.Name}}, error) {
 
 	defer rows.Close()
 	for rows.Next() {
-		entity := new({{.Name}})
+		entity := New()
 		err := rows.Scan({{.StructFields}})
 		if err != nil {
 			return nil, err
@@ -50,8 +50,8 @@ func GenerateList(structInfo generators.StructureInfo) (string, error) {
 	data.StructFields = ""
 
 	for _, field := range structInfo.Fields {
-		data.SQLFields += strings.ToLower(field.Name) + ", "
-		data.StructFields += "entity." + field.Name + ", "
+		data.SQLFields += field.Name + ", "
+		data.StructFields += "entity." + field.Property + ", "
 	}
 
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")

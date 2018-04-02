@@ -27,12 +27,10 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 
 	err = json.Unmarshal(rawbody, response.Entity)
 	if err != nil {
-		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Failed to decode body"}]}` + "`" + `)
-			return
-		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Failed to decode body"}]}` + "`" + `)
+		return
 	}
 	response.Entity.ID = nil
 

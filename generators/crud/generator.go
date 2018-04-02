@@ -55,16 +55,16 @@ func (g generator) Generate() (string, error) {
 
 	var generated []string
 	generated = append(generated, "package "+structInfo.Package+"\n")
-	generated = append(generated, `
-import "database/sql"
 
-var db *sql.DB
+	{
+		segment, err := GenerateModel(*structInfo)
 
-// Inject allows injection of services into the package
-func Inject(database *sql.DB) {
-	db = database
-}
-`)
+		if err != nil {
+			log.Fatalf("An error occured during GenerateModel: %s\n", err)
+		}
+
+		generated = append(generated, segment)
+	}
 
 	if g.GenerateGet {
 		segment, err := GenerateGet(*structInfo)
@@ -123,9 +123,24 @@ func Inject(database *sql.DB) {
 		generated = append(generated, segment)
 	}
 
-	targetFilename := filepath.Dir(g.Filename) + "/" + strings.ToLower(structInfo.Name) + "_crud.go"
+	targetFilename, err := generators.GetAbsPath(filepath.Dir(g.Filename) + "/" + strings.ToLower(structInfo.Name) + "_crud.go")
+	if err != nil {
+		log.Fatalf("Failed to absolute path: %s\n", err)
+		return "", err
+	}
+
 	output := strings.Join(generated, "\n")
 	err = ioutil.WriteFile(targetFilename, []byte(output), 0644)
+
+	if err != nil {
+		log.Fatalf("Failed to write output to %s: %s", targetFilename, err)
+	}
+
+	// if err, out := exec.Command("goimports -w " + targetFilename).Output(); err != nil {
+	// 	log.Fatalf("An error occurred during goimports: %s\nOutput:\n%s", err, out)
+	// } else {
+	// 	fmt.Println(out)
+	// }
 
 	return output, err
 }

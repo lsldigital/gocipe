@@ -21,7 +21,7 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 	valid := false
 	if _, ok := vars["id"]; ok {
 		id, err = strconv.ParseInt(vars["id"], 10, 64)
-		valid = err != nil && id > 0
+		valid = err == nil && id > 0
 	}
 
 	if !valid {

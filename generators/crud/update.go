@@ -38,8 +38,8 @@ func GenerateUpdate(structInfo generators.StructureInfo) (string, error) {
 			continue
 		}
 
-		data.SQLFields += strings.ToLower(field.Name) + " = $" + strconv.Itoa(i+1) + ", "
-		data.StructFields += "entity." + field.Name + ", "
+		data.SQLFields += field.Name + " = $" + strconv.Itoa(i+1) + ", "
+		data.StructFields += "entity." + field.Property + ", "
 	}
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")
 	data.StructFields = strings.TrimSuffix(data.StructFields, ", ")

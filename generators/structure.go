@@ -24,9 +24,10 @@ type StructureInfo struct {
 
 //FieldInfo represents information about a field
 type FieldInfo struct {
-	Name string
-	Type string
-	Tags reflect.StructTag
+	Name     string
+	Property string
+	Type     string
+	Tags     reflect.StructTag
 }
 
 //NewStructureInfo process a go file to extract structure information
@@ -64,19 +65,29 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 	structInfo.Fields = []FieldInfo{}
 
 	if struc, ok := typeSpec.Type.(*ast.StructType); ok {
-		var tags reflect.StructTag
-
 		for _, field := range struc.Fields.List {
+			var (
+				property = field.Names[0].Name
+				tags     reflect.StructTag
+				name     string
+			)
+
 			if len(field.Names) == 0 {
 				continue
 			}
-			fieldtype := src[field.Type.Pos()-1 : field.Type.End()-1]
 
+			fieldtype := src[field.Type.Pos()-1 : field.Type.End()-1]
 			if field.Tag != nil && field.Tag.Value != "" {
 				tags = reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
+
+				if val, ok := tags.Lookup("json"); ok {
+					name = val
+				} else {
+					name = strings.ToLower(property)
+				}
 			}
 
-			structInfo.Fields = append(structInfo.Fields, FieldInfo{Name: field.Names[0].Name, Type: fieldtype, Tags: tags})
+			structInfo.Fields = append(structInfo.Fields, FieldInfo{Name: name, Property: property, Type: fieldtype, Tags: tags})
 		}
 
 		return structInfo, nil

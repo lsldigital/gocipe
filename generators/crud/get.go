@@ -11,7 +11,7 @@ import (
 var tmplGet, _ = template.New("GenerateGet").Parse(`
 //Get returns a single {{.Name}} from database by primary key
 func Get(id int64) (*{{.Name}}, error) {
-	var entity *{{.Name}}
+	var entity = New()
 
 	rows, err := db.Query("SELECT {{.SQLFields}} FROM {{.TableName}} WHERE id = $1 ORDER BY id ASC", id)
 
@@ -21,7 +21,6 @@ func Get(id int64) (*{{.Name}}, error) {
 
 	defer rows.Close()
 	if rows.Next() {
-		entity = new({{.Name}})
 		err := rows.Scan({{.StructFields}})
 		if err != nil {
 			return nil, err
@@ -49,8 +48,8 @@ func GenerateGet(structInfo generators.StructureInfo) (string, error) {
 	data.StructFields = ""
 
 	for _, field := range structInfo.Fields {
-		data.SQLFields += strings.ToLower(field.Name) + ", "
-		data.StructFields += "entity." + field.Name + ", "
+		data.SQLFields += field.Name + ", "
+		data.StructFields += "entity." + field.Property + ", "
 	}
 
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")

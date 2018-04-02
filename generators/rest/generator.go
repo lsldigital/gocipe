@@ -62,6 +62,12 @@ func (g generator) Generate() (string, error) {
 		return "", err
 	}
 
+	if segment, err := GenerateRoutes(*structInfo, g); err == nil {
+		generated = append(generated, segment)
+	} else {
+		return "", err
+	}
+
 	if g.GenerateGet {
 		segment, err := GenerateGet(*structInfo)
 
