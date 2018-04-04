@@ -18,12 +18,10 @@ func (entity *{{.Name}}) Insert() error {
 		err error
 	)
 
-	result, err := db.Exec("INSERT INTO {{.TableName}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})", {{.StructFields}})
+	err = db.QueryRow("INSERT INTO {{.TableName}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id", {{.StructFields}}).Scan(&id)
 
 	if err == nil {
-		if id, err = result.LastInsertId(); err == nil {
-			entity.ID = &id
-		}
+		entity.ID = &id
 	}
 
 	return err
@@ -53,8 +51,8 @@ func GenerateInsert(structInfo generators.StructureInfo) (string, error) {
 		}
 
 		data.SQLFields += field.Name + ", "
-		data.SQLPlaceholders += "$" + strconv.Itoa(i+1) + ", "
-		data.StructFields += "entity." + field.Property + ", "
+		data.SQLPlaceholders += "$" + strconv.Itoa(i) + ", "
+		data.StructFields += "*entity." + field.Property + ", "
 	}
 
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")

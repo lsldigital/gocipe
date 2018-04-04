@@ -35,7 +35,12 @@ var tmplUnmarshalBool, _ = template.New("GenerateUnmarshalBool").Parse(`
 
 var tmplUnmarshalInt, _ = template.New("GenerateUnmarshalInt").Parse(`
 	if value, ok := raw["{{.Name}}"]; err != nil && ok && value != "null" {
-		*entity.{{.Property}}, err = strconv.ParseInt(value, 10, {{.Size}})
+		var i int64
+		i, err = strconv.ParseInt(value, 10, {{.Size}})
+
+		if err != nil {
+			*entity.{{.Property}} = {{.Type}}(i)
+		}
 	}
 `)
 
@@ -90,27 +95,27 @@ func GenerateUnmarshal(structInfo generators.StructureInfo) (string, error) {
 
 		switch field.Type {
 		case "bool":
-			tmplUnmarshalBool.Execute(&def, fieldMarshalTpl{field.Property, field.Name, ""})
+			tmplUnmarshalBool.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "", field.Type})
 		case "string", "byte":
-			tmplUnmarshalString.Execute(&def, fieldMarshalTpl{field.Property, field.Name, ""})
+			tmplUnmarshalString.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "", field.Type})
 		case "rune":
-			tmplUnmarshalRune.Execute(&def, fieldMarshalTpl{field.Property, field.Name, ""})
+			tmplUnmarshalRune.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "", field.Type})
 		case "int", "uint":
-			tmplUnmarshalInt.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "0"})
+			tmplUnmarshalInt.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "0", field.Type})
 		case "int8", "uint8":
-			tmplUnmarshalInt.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "8"})
+			tmplUnmarshalInt.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "8", field.Type})
 		case "int16", "uint16":
-			tmplUnmarshalInt.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "16"})
+			tmplUnmarshalInt.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "16", field.Type})
 		case "int32", "uint32":
-			tmplUnmarshalInt.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "32"})
+			tmplUnmarshalInt.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "32", field.Type})
 		case "int64", "uint64":
-			tmplUnmarshalInt.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "64"})
+			tmplUnmarshalInt.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "64", field.Type})
 		case "float32":
-			tmplUnmarshalFloat.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "32"})
+			tmplUnmarshalFloat.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "32", field.Type})
 		case "float64":
-			tmplUnmarshalFloat.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "64"})
+			tmplUnmarshalFloat.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "64", field.Type})
 		case "time.Time":
-			tmplUnmarshalTime.Execute(&def, fieldMarshalTpl{field.Property, field.Name, ""})
+			tmplUnmarshalTime.Execute(&def, fieldMarshalTpl{field.Property, field.Name, "", field.Type})
 		default:
 			continue
 		}

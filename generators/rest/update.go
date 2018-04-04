@@ -47,6 +47,14 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rawbody, err = ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Failed to read body"}]}` + "`" + `)
+		return
+	}
+
 	err = json.Unmarshal(rawbody, response.Entity)
 	if err != nil {
 		if err != nil {

@@ -20,7 +20,10 @@ func (entity *{{.Name}}) Update() error {
 
 //GenerateUpdate returns code to update an entity in database
 func GenerateUpdate(structInfo generators.StructureInfo) (string, error) {
-	var output bytes.Buffer
+	var (
+		output bytes.Buffer
+		index  = 2
+	)
 	data := new(struct {
 		Name         string
 		TableName    string
@@ -33,13 +36,14 @@ func GenerateUpdate(structInfo generators.StructureInfo) (string, error) {
 	data.SQLFields = ""
 	data.StructFields = "entity.ID, "
 
-	for i, field := range structInfo.Fields {
+	for _, field := range structInfo.Fields {
 		if field.Name == "ID" {
 			continue
 		}
 
-		data.SQLFields += field.Name + " = $" + strconv.Itoa(i+1) + ", "
-		data.StructFields += "entity." + field.Property + ", "
+		data.SQLFields += field.Name + " = $" + strconv.Itoa(index) + ", "
+		data.StructFields += "*entity." + field.Property + ", "
+		index++
 	}
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")
 	data.StructFields = strings.TrimSuffix(data.StructFields, ", ")
