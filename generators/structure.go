@@ -76,7 +76,7 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 				continue
 			}
 
-			fieldtype := src[field.Type.Pos()-1 : field.Type.End()-1]
+			fieldtype := strings.TrimLeft(src[field.Type.Pos()-1:field.Type.End()-1], "*")
 			if field.Tag != nil && field.Tag.Value != "" {
 				tags = reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
 
