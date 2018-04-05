@@ -5,11 +5,11 @@
   branch = "master"
   name = "github.com/jinzhu/inflection"
   packages = ["."]
-  revision = "1c35d901db3da928c72a72d8458480cc9ade058f"
+  revision = "04140366298a54a039076d798123ffa108fff46c"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e58da422a165f5e98420077e66c9b3cbe8f8f34c70ef149dbad7a4df4a9156c5"
+  inputs-digest = "3007d0bef8caa31fa5c6b7d510f4109d5156d6ef61cad7dde7417dccd1070704"
   solver-name = "gps-cdcl"
   solver-version = 1
