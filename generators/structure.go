@@ -36,13 +36,14 @@ type StructureInfo struct {
 //    }
 //
 type FieldInfo struct {
-	Name      string             // field.name
-	Property  string             // GO struct fields (ID, Authcode, ...)
-	Type      string             // GO basic value types (int64, string, ...) or custom types
-	DBType    string             // field.type
-	Nullable  bool               // field.nullable
-	Default   string             // field.default
-	Tags      reflect.StructTag  // GO struct field tags (between ``)
+	Name       string            // field.name
+	Property   string            // GO struct fields (ID, Authcode, ...)
+	Type       string            // GO basic value types (int64, string, ...) or custom types
+	DBType     string            // field.type
+	Nullable   bool              // field.nullable
+	Default    string            // field.default
+	Filterable bool              //field.filterable
+	Tags       reflect.StructTag // GO struct field tags (between ``)
 }
 
 //NewStructureInfo process a go file to extract structure information
@@ -111,6 +112,11 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 			// "true" (nullable) or "false" (not null). Default: "false"
 			if val, ok := info.Tags.Lookup("field.nullable"); ok && val == "true" {
 				info.Nullable = true
+			}
+
+			// "true" (filterable) or "false" (not filterable). Default: "true"
+			if val, ok := info.Tags.Lookup("field.filterable"); ok && val != "false" {
+				info.Filterable = true
 			}
 
 			if val, ok := info.Tags.Lookup("field.default"); ok && val != "" {

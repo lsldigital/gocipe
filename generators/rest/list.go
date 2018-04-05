@@ -113,6 +113,10 @@ func GenerateList(structInfo generators.StructureInfo) (string, error) {
 	for _, field := range structInfo.Fields {
 		var segment bytes.Buffer
 
+		if !field.Filterable {
+			continue
+		}
+
 		switch field.Type {
 		case "bool":
 			err = tmplListFilterBool.Execute(&segment, struct{ Name string }{field.Name})
@@ -120,6 +124,8 @@ func GenerateList(structInfo generators.StructureInfo) (string, error) {
 			err = tmplListFilterString.Execute(&segment, struct{ Name string }{field.Name})
 		case "time.Time":
 			err = tmplListFilterDate.Execute(&segment, struct{ Name string }{field.Name})
+		default:
+			continue
 		}
 
 		if err != nil {
