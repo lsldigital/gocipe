@@ -156,6 +156,13 @@ func (g generator) Generate() (string, error) {
 		log.Fatalf("Failed to write output to %s: %s", targetFilename, err)
 	}
 
+	targetFilename = filepath.Dir(g.Filename) + "/../filters.go"
+	err = ioutil.WriteFile(targetFilename, []byte(generateModels()), 0644)
+
+	if err != nil {
+		log.Fatalf("Failed to write output to %s: %s", targetFilename, err)
+	}
+
 	// if err, out := exec.Command("goimports -w " + targetFilename).Output(); err != nil {
 	// 	log.Fatalf("An error occurred during goimports: %s\nOutput:\n%s", err, out)
 	// } else {

@@ -10,10 +10,25 @@ import (
 
 var tmplList, _ = template.New("GenerateList").Parse(`
 // List returns a slice containing {{.Name}} records
-func List() ([]*{{.Name}}, error) {
-	var list []*{{.Name}}
+func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
+	var (
+		list []*{{.Name}}
+		segments []string
+		values []interface{}
+	)
 
-	rows, err := db.Query("SELECT {{.SQLFields}} FROM {{.TableName}} ORDER BY id ASC")
+	query := "SELECT {{.SQLFields}} FROM {{.TableName}}"
+
+	for i, filter := range filters {
+		segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
+		values = append(values, filter.Value)
+	}
+
+	if len(segments) != 0 {
+		query += " WHERE " + strings.Join(segments, " AND ")
+	}
+
+	rows, err := db.Query(query+" ORDER BY id ASC", values...)
 
 	if err != nil {
 		return nil, err
