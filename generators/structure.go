@@ -23,11 +23,26 @@ type StructureInfo struct {
 }
 
 //FieldInfo represents information about a field
+//
+// Example of fields (in a struct)
+//
+//    type Struct struct {
+//        ID       *int64  `json:"id"       field.name:"id"        field.type:"serial"`
+//        Authcode *string `json:"-"        field.name:"auth_code" field.type:"varchar(128)"`
+//        Alias    *string `json:"alias"    field.name:"alias"     field.type:"varchar(32)"`
+//        Name     *string `json:"name"     field.name:"name"      field.type:"varchar(255)"`
+//        Callback *string `json:"callback" field.name:"callback"  field.type:"varchar(255)"`
+//        Status   *string `json:"status"   field.name:"status"    field.type:"char(1)"`
+//    }
+//
 type FieldInfo struct {
-	Name     string
-	Property string
-	Type     string
-	Tags     reflect.StructTag
+	Name      string             // field.name
+	Property  string             // GO struct fields (ID, Authcode, ...)
+	Type      string             // GO basic value types (int64, string, ...) or custom types
+	DBType    string             // field.type
+	Nullable  bool               // field.nullable
+	Default   string             // field.default
+	Tags      reflect.StructTag  // GO struct field tags (between ``)
 }
 
 //NewStructureInfo process a go file to extract structure information
@@ -66,28 +81,43 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 
 	if struc, ok := typeSpec.Type.(*ast.StructType); ok {
 		for _, field := range struc.Fields.List {
-			var (
-				property = field.Names[0].Name
-				tags     reflect.StructTag
-				name     string
-			)
+			var info FieldInfo
 
 			if len(field.Names) == 0 {
 				continue
 			}
 
-			fieldtype := strings.TrimLeft(src[field.Type.Pos()-1:field.Type.End()-1], "*")
-			if field.Tag != nil && field.Tag.Value != "" {
-				tags = reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
+			info.Property = field.Names[0].Name
 
-				if val, ok := tags.Lookup("json"); ok {
-					name = val
-				} else {
-					name = strings.ToLower(property)
-				}
+			info.Type = strings.TrimLeft(src[field.Type.Pos()-1:field.Type.End()-1], "*")
+			if field.Tag != nil && field.Tag.Value == "" {
+				return nil, fmt.Errorf("structure tags not found in: %s", structInfo.Name)
 			}
 
-			structInfo.Fields = append(structInfo.Fields, FieldInfo{Name: name, Property: property, Type: fieldtype, Tags: tags})
+			info.Tags = reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
+
+			if val, ok := info.Tags.Lookup("field.name"); ok {
+				info.Name = val
+			} else {
+				info.Name = strings.ToLower(info.Property)
+			}
+
+			if val, ok := info.Tags.Lookup("field.type"); ok {
+				info.DBType = val
+			} else {
+				return nil, fmt.Errorf("struct tag field.type not found in field: %s", info.Property)
+			}
+
+			// "true" (nullable) or "false" (not null). Default: "false"
+			if val, ok := info.Tags.Lookup("field.nullable"); ok && val == "true" {
+				info.Nullable = true
+			}
+
+			if val, ok := info.Tags.Lookup("field.default"); ok && val != "" {
+				info.Default = val
+			}
+
+			structInfo.Fields = append(structInfo.Fields, info)
 		}
 
 		return structInfo, nil
