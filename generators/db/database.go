@@ -2,7 +2,6 @@ package db
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"strings"
 
@@ -44,28 +43,19 @@ func GenerateDatabase(structInfo generators.StructureInfo) (string, error) {
 			constraints []string
 		)
 
-		if val, ok := sfield.Tags.Lookup("json"); ok {
-			field.Name = val
-		} else {
-			return "", fmt.Errorf("struct tag json not found in field: %s", field.Name)
-		}
-
-		if val, ok := sfield.Tags.Lookup("dbtype"); ok {
-			field.Type = strings.Trim(val, " ")
-		} else {
-			return "", fmt.Errorf("struct tag dbtype not found in field: %s", field.Name)
-		}
+		field.Name = sfield.Name
+		field.Type = sfield.DBType
 
 		if field.Name == "id" {
 			constraints = append(constraints, "PRIMARY KEY")
 		}
 
-		if val, ok := sfield.Tags.Lookup("nullable"); ok && val != "true" {
+		if !sfield.Nullable {
 			constraints = append(constraints, "NOT NULL")
 		}
 
-		if val, ok := sfield.Tags.Lookup("default"); ok && val != "" {
-			constraints = append(constraints, "DEFAULT "+val)
+		if sfield.Default != "" {
+			constraints = append(constraints, "DEFAULT " + sfield.Default)
 		}
 
 		if i < numFields-1 {
