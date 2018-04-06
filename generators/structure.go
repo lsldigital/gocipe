@@ -115,7 +115,7 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 			}
 
 			// "true" (filterable) or "false" (not filterable). Default: "true"
-			if val, ok := info.Tags.Lookup("field.filterable"); ok && val != "false" {
+			if val, ok := info.Tags.Lookup("field.filterable"); !ok || val != "false" {
 				info.Filterable = true
 			}
 

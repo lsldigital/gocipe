@@ -15,10 +15,7 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 		err      error
 		response responseList
 		filters  []models.ListFilter
-		query    url.Values
 	)
-	query = r.URL.Query()
-	
 	{{.Filters}}
 
 	response.Entities, err = List(filters)
@@ -49,49 +46,49 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 var tmplListFilterBool, _ = template.New("GenerateListFilterBool").Parse(`
 	if val := query.Get("{{.Name}}"); val != "" {
 		if t, e := strconv.ParseBool(val); e == nil {
-			filters = append(filters, models.ListFilter{"{{.Name}}", "=", t})
+			filters = append(filters, models.ListFilter{Field:"{{.Name}}", Operation:"=", Value:t})
 		}
 	}
 `)
 
 var tmplListFilterString, _ = template.New("GenerateListFilterString").Parse(`
 	if val := query.Get("{{.Name}}"); val != "" {
-		filters = append(filters, models.ListFilter{"{{.Name}}", "=", val})
+		filters = append(filters, models.ListFilter{Field:"{{.Name}}", Operation:"=", Value:val})
 	}
 
 	if val := query.Get("{{.Name}}Lk"); val != "" {
-		filters = append(filters, models.ListFilter{"{{.Name}}", "LIKE", "%" + val + "%"})
+		filters = append(filters, models.ListFilter{Field:"{{.Name}}", Operation:"LIKE", Value:"%" + val + "%"})
 	}
 `)
 
 var tmplListFilterDate, _ = template.New("GenerateListFilterDate").Parse(`
 	if val := query.Get("{{.Name}}"); len(val) == 16 {
 		if t, e := time.Parse("2006-01-02-15-04", val); e == nil {
-			filters = append(filters, models.ListFilter{"{{.Name}}", "=", t})
+			filters = append(filters, models.ListFilter{Field:"{{.Name}}", Operation:"=", Value:t})
 		}
 	}
 
 	if val := query.Get("{{.Name}}Gt"); len(val) == 16 {
 		if t, e := time.Parse("2006-01-02-15-04", val); e == nil {
-			filters = append(filters, models.ListFilter{"{{.Name}}", ">", t})
+			filters = append(filters, models.ListFilter{Field:"{{.Name}}", Operation:">", Value:t})
 		}
 	}
 
 	if val := query.Get("{{.Name}}Ge"); len(val) == 16 {
 		if t, e := time.Parse("2006-01-02-15-04", val); e == nil {
-			filters = append(filters, models.ListFilter{"{{.Name}}", ">=", t})
+			filters = append(filters, models.ListFilter{Field:"{{.Name}}", Operation:">=", Value:t})
 		}
 	}
 
 	if val := query.Get("{{.Name}}Lt"); len(val) == 16 {
 		if t, e := time.Parse("2006-01-02-15-04", val); e == nil {
-			filters = append(filters, models.ListFilter{"{{.Name}}", "<", t})
+			filters = append(filters, models.ListFilter{Field:"{{.Name}}", Operation:"<", Value:t})
 		}
 	}
 
 	if val := query.Get("{{.Name}}Le"); len(val) == 16 {
 		if t, e := time.Parse("2006-01-02-15-04", val); e == nil {
-			filters = append(filters, models.ListFilter{"{{.Name}}", "<=", t})
+			filters = append(filters, models.ListFilter{Field:"{{.Name}}", Operation:"<=", Value:t})
 		}
 	}
 `)
@@ -135,7 +132,11 @@ func GenerateList(structInfo generators.StructureInfo) (string, error) {
 		filters = append(filters, segment.String())
 	}
 
-	data.Filters = strings.Join(filters, "\n")
+	if len(filters) == 0 {
+		data.Filters = ""
+	} else {
+		data.Filters = "\nquery := r.URL.Query()\n" + strings.Join(filters, "\n")
+	}
 	err = tmplList.Execute(&output, data)
 
 	if err != nil {
