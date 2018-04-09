@@ -29,23 +29,23 @@ func GenerateRoutes(structInfo generators.StructureInfo, g generator) (string, e
 	})
 
 	if g.GenerateGet {
-		routes = append(routes, "\t"+`router.HandleFunc("/`+endpoint+`/{id}", RestGet).Methods("GET")`)
+		routes = append(routes, "\t"+`router.HandleFunc("/api/`+endpoint+`/{id}", RestGet).Methods("GET")`)
 	}
 
 	if g.GenerateList {
-		routes = append(routes, "\t"+`router.HandleFunc("/`+endpoint+`", RestList).Methods("GET")`)
+		routes = append(routes, "\t"+`router.HandleFunc("/api/`+endpoint+`", RestList).Methods("GET")`)
 	}
 
 	if g.GenerateDelete {
-		routes = append(routes, "\t"+`router.HandleFunc("/`+endpoint+`/{id}", RestDelete).Methods("DELETE")`)
+		routes = append(routes, "\t"+`router.HandleFunc("/api/`+endpoint+`/{id}", RestDelete).Methods("DELETE")`)
 	}
 
 	if g.GenerateCreate {
-		routes = append(routes, "\t"+`router.HandleFunc("/`+endpoint+`", RestCreate).Methods("POST")`)
+		routes = append(routes, "\t"+`router.HandleFunc("/api/`+endpoint+`", RestCreate).Methods("POST")`)
 	}
 
 	if g.GenerateUpdate {
-		routes = append(routes, "\t"+`router.HandleFunc("/`+endpoint+`/{id}", RestUpdate).Methods("PUT")`)
+		routes = append(routes, "\t"+`router.HandleFunc("/api/`+endpoint+`/{id}", RestUpdate).Methods("PUT")`)
 	}
 
 	data.Routes = strings.Join(routes, "\n")
