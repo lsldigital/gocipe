@@ -36,14 +36,21 @@ type StructureInfo struct {
 //    }
 //
 type FieldInfo struct {
-	Name       string            // field.name
-	Property   string            // GO struct fields (ID, Authcode, ...)
-	Type       string            // GO basic value types (int64, string, ...) or custom types
-	DBType     string            // field.type
-	Nullable   bool              // field.nullable
-	Default    string            // field.default
-	Filterable bool              //field.filterable
-	Tags       reflect.StructTag // GO struct field tags (between ``)
+	Name       string // field.name
+	Property   string // GO struct fields (ID, Authcode, ...)
+	Type       string // GO basic value types (int64, string, ...) or custom types
+	DBType     string // field.type
+	Nullable   bool   // field.nullable
+	Default    string // field.default
+	Filterable bool   //field.filterable
+	Widget     *WidgetInfo
+}
+
+//WidgetInfo represents structure tags for widget
+type WidgetInfo struct {
+	Label   string
+	Type    string
+	Options []string
 }
 
 //NewStructureInfo process a go file to extract structure information
@@ -82,7 +89,10 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 
 	if struc, ok := typeSpec.Type.(*ast.StructType); ok {
 		for _, field := range struc.Fields.List {
-			var info FieldInfo
+			var (
+				info FieldInfo
+				tags reflect.StructTag
+			)
 
 			if len(field.Names) == 0 {
 				continue
@@ -95,32 +105,41 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 				return nil, fmt.Errorf("structure tags not found in: %s", structInfo.Name)
 			}
 
-			info.Tags = reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
+			tags = reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
 
-			if val, ok := info.Tags.Lookup("field.name"); ok {
+			if val, ok := tags.Lookup("field.name"); ok {
 				info.Name = val
 			} else {
 				info.Name = strings.ToLower(info.Property)
 			}
 
-			if val, ok := info.Tags.Lookup("field.type"); ok {
+			if val, ok := tags.Lookup("field.type"); ok {
 				info.DBType = val
 			} else {
 				return nil, fmt.Errorf("struct tag field.type not found in field: %s", info.Property)
 			}
 
 			// "true" (nullable) or "false" (not null). Default: "false"
-			if val, ok := info.Tags.Lookup("field.nullable"); ok && val == "true" {
+			if val, ok := tags.Lookup("field.nullable"); ok && val == "true" {
 				info.Nullable = true
 			}
 
 			// "true" (filterable) or "false" (not filterable). Default: "true"
-			if val, ok := info.Tags.Lookup("field.filterable"); !ok || val != "false" {
+			if val, ok := tags.Lookup("field.filterable"); !ok || val != "false" {
 				info.Filterable = true
 			}
 
-			if val, ok := info.Tags.Lookup("field.default"); ok && val != "" {
+			if val, ok := tags.Lookup("field.default"); ok && val != "" {
 				info.Default = val
+			}
+
+			if val, ok := tags.Lookup("widget"); ok && val != "" {
+				w, e := ParseWidgetInfo(val)
+				if e == nil {
+					info.Widget = w
+				} else {
+					return nil, e
+				}
 			}
 
 			structInfo.Fields = append(structInfo.Fields, info)
@@ -135,11 +154,37 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 func (structInfo *StructureInfo) String() string {
 	output := "\n"
 	output += "Structure Name: " + structInfo.Name + "\n\n"
-	output += fmt.Sprintf("\t%10s\t%10s\t%s\n", "Name:", "Type:", "Tags:")
-	output += fmt.Sprintf("\t%10s\t%10s\t%s\n", "-----", "-----", "---------")
+	output += fmt.Sprintf("\t%10s\t%10s\n", "Name:", "Type:")
+	output += fmt.Sprintf("\t%10s\t%10s\n", "-----", "-----")
 	for _, fieldInfo := range structInfo.Fields {
-		output += fmt.Sprintf("\t%10s\t%10s\t%s\n", fieldInfo.Name, fieldInfo.Type, fieldInfo.Tags)
+		output += fmt.Sprintf("\t%10s\t%10s\n", fieldInfo.Name, fieldInfo.Type)
 	}
 
 	return output
+}
+
+//ParseWidgetInfo returns WidgetInfo by parsing a string; format being Label#Type#Options
+func ParseWidgetInfo(value string) (*WidgetInfo, error) {
+	var (
+		widgetInfo WidgetInfo
+		err        error
+		fields     []string
+		lenf       int
+	)
+
+	fields = strings.SplitN(value, "#", 3)
+	lenf = len(fields)
+
+	if lenf != 2 && lenf != 3 {
+		return nil, errors.New("Invalid format for Widget tag: " + value)
+	}
+
+	widgetInfo.Label = fields[0]
+	widgetInfo.Type = fields[1]
+
+	if lenf == 3 {
+		widgetInfo.Options = strings.Split(fields[2], ";")
+	}
+
+	return &widgetInfo, err
 }
