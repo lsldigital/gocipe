@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"io/ioutil"
-	"strings"
 
 	"github.com/fluxynet/gocipe/generators"
 )
@@ -30,7 +29,7 @@ func factory(args []string) (generators.Command, error) {
 	flagset.StringVar(&g.Structure, "struct", "", "Name of the structure to use")
 	flagset.BoolVar(&g.GenerateEditor, "editor", true, "Generate Editor component")
 	flagset.BoolVar(&g.GenerateListing, "listing", true, "Generate Listing component")
-	flagset.StringVar(&g.Output, "output", "", "File to output for the schema definition")
+	flagset.StringVar(&g.Output, "output", "", "File to output for the vuetify component (suffix will be added automatically)")
 
 	flagset.Parse(args)
 
@@ -44,9 +43,8 @@ func factory(args []string) (generators.Command, error) {
 
 func (g generator) Generate() (string, error) {
 	var (
-		generated []string
-		err       error
-		segment   string
+		err    error
+		output string
 	)
 
 	structInfo, err := generators.NewStructureInfo(g.Filename, g.Structure)
@@ -54,16 +52,28 @@ func (g generator) Generate() (string, error) {
 		return "", err
 	}
 
-	segment, err = GenerateEditor(*structInfo)
-	generated = append(generated, segment)
+	output, err = GenerateEditor(*structInfo)
 
 	if err != nil {
 		return "", err
 	}
 
-	targetFilename := g.Output
-	output := strings.Join(generated, "\n")
-	err = ioutil.WriteFile(targetFilename, []byte(output), 0644)
+	err = ioutil.WriteFile(g.Output+"Edit.vue", []byte(output), 0644)
+	if err != nil {
+		return "", err
+	}
+
+	output, err = GenerateList(*structInfo)
+
+	if err != nil {
+		return "", err
+	}
+
+	err = ioutil.WriteFile(g.Output+"List.vue", []byte(output), 0644)
+
+	if err != nil {
+		return "", err
+	}
 
 	return output, err
 }
