@@ -33,7 +33,7 @@ export default {
             return
         }
 
-        this.axios.get("/api/{{.Endpoint}}/" + this.id).then(response => {
+        axios.get("/api/{{.Endpoint}}/" + this.id).then(response => {
             this.id = response.data.entity.id
             {{.Assignment}}
         })

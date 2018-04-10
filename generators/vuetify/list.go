@@ -84,8 +84,11 @@ func GenerateList(structInfo generators.StructureInfo) (string, error) {
 	data.Endpoint = structInfo.TableName
 
 	for _, field := range structInfo.Fields {
+		if field.Widget == nil {
+			continue
+		}
 		columnData = append(columnData, `                    <td>᚜ props.item.`+field.Name+` ᚛</td>`)
-		columnNames = append(columnNames, `{text: "`+field.Name+`", value: "`+field.Name+`"}`)
+		columnNames = append(columnNames, `{text: "`+field.Widget.Label+`", value: "`+field.Name+`"}`)
 	}
 
 	data.ColumnData = strings.Join(columnData, "\n")
