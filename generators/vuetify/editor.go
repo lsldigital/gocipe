@@ -24,7 +24,7 @@ var tmplEditor, _ = template.New("GenerateEditor").Parse(`
 </template>
   
 <script>
-import axios from "axios";
+import axios from "axios"
 
 export default {
     props: ["id"],
@@ -57,13 +57,13 @@ export default {
     },
     methods: {
         querySelections(fieldname, endpoint, filter, val) {
-            this.select[fieldname].loading = true;
+            this.select[fieldname].loading = true
             axios.get("/api/" + endpoint + "?" + filter + "Lk=" + encodeURIComponent(val)).then(response => {
-                this.select[fieldname].loading = false;
+                this.select[fieldname].loading = false
                 this.select[fieldname].items = response.data.entities.map(function(e) {
-                    return { text: e[filter], value: e.id };
-                });
-            });
+                    return { text: e[filter], value: e.id }
+                })
+            })
         },
         save() {
             if (this.id) {
