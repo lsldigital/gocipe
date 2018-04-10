@@ -35,7 +35,8 @@ export default {
 
         axios.get("/api/{{.Endpoint}}/" + this.id).then(response => {
             this.id = response.data.entity.id
-            {{.Assignment}}
+			{{.Assignment}}
+			{{.CreatedAssgn}}
         })
     },
     data() {
@@ -146,6 +147,7 @@ func GenerateEditor(structInfo generators.StructureInfo) (string, error) {
 		selectData       []string
 		selectWatch      []string
 		dateData         []string
+		createdAssgn     []string
 		data             struct {
 			Assignment   string
 			EntityDecl   string
@@ -155,6 +157,7 @@ func GenerateEditor(structInfo generators.StructureInfo) (string, error) {
 			SelectData   string
 			SelectWatch  string
 			DateData     string
+			CreatedAssgn string
 		}
 	)
 
@@ -191,6 +194,7 @@ func GenerateEditor(structInfo generators.StructureInfo) (string, error) {
 				Field string
 			}{field.Widget.Label, field.Name})
 			dateData = append(dateData, field.Name+": {value: null, menuAppear: false}")
+			createdAssgn = append(createdAssgn, "this.dates."+field.Name+".value = response.data.entity."+field.Name+".substr(0,10)")
 		case "select-rel":
 			// if strings.HasPrefix(field.Widget.Options[0], "")
 			tmplEditorSelectRel.Execute(&markupSegment, struct {
@@ -222,6 +226,7 @@ func GenerateEditor(structInfo generators.StructureInfo) (string, error) {
 	data.SelectData = strings.Join(selectData, ",\n")
 	data.SelectWatch = strings.Join(selectWatch, ",\n")
 	data.DateData = strings.Join(dateData, ",\n")
+	data.CreatedAssgn = strings.Join(createdAssgn, ",\n")
 
 	err = tmplEditor.Execute(&output, data)
 	if err == nil {
