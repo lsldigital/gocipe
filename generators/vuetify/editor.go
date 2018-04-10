@@ -95,7 +95,31 @@ var tmplEditorCheckbox, _ = template.New("EditorCheckbox").Parse(`
 `)
 
 var tmplEditorDate, _ = template.New("EditorDate").Parse(`
-<v-date-picker v-model="dates.{{.Field}}" label="{{.Label}}" @change="entity.created_at = dates.{{.Field}} + 'T00:00:00Z'"/>
+<v-menu
+	ref="menu_{{.Field}}"
+	lazy
+	:close-on-content-click="false"
+	v-model="dates.{{.Field}}.menuAppear"
+	transition="scale-transition"
+	offset-y
+	full-width
+	:nudge-right="40"
+	min-width="290px"
+	:return-value.sync="dates.{{.Field}}.value"
+	>
+	<v-text-field
+		slot="activator"
+		label="{{.Label}}"
+		v-model="dates.{{.Field}}.value"
+		prepend-icon="event"
+		readonly
+		></v-text-field>
+		<v-date-picker v-model="dates.{{.Field}}.value" @change="entity.{{.Field}} = dates.{{.Field}}.value + 'T00:00:00Z'" no-title scrollable>
+		<v-spacer></v-spacer>
+		<v-btn flat color="primary" @click="menu_{{.Field}} = false">Cancel</v-btn>
+		<v-btn flat color="primary" @click="$refs.menu_{{.Field}}.save(dates.{{.Field}}.value)">OK</v-btn>
+		</v-date-picker>
+</v-menu>
 `)
 
 var tmplEditorSelectRel, _ = template.New("EditorSelectRel").Parse(`
@@ -166,7 +190,7 @@ func GenerateEditor(structInfo generators.StructureInfo) (string, error) {
 				Label string
 				Field string
 			}{field.Widget.Label, field.Name})
-			dateData = append(dateData, field.Name+": null")
+			dateData = append(dateData, field.Name+": {value: null, menuAppear: false}")
 		case "select-rel":
 			// if strings.HasPrefix(field.Widget.Options[0], "")
 			tmplEditorSelectRel.Execute(&markupSegment, struct {

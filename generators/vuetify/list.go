@@ -13,10 +13,16 @@ var tmplList, _ = template.New("GenerateList").Parse(`
 <template>
     <div class="container">
         <v-container>
-            <v-flex mb-4>
-                <h1>{{.Name}} listing</h1>
-                <v-text-field mb-4 append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>
-            </v-flex>
+            <v-toolbar color="transparent" flat>
+                <v-toolbar-title class="grey--text text--darken-4"><h2>{{.Name}} listing</h2></v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn ml-4 right small fab dark color="info" :to="{name: '{{.Endpoint}}'}">
+                    <v-icon dark>add</v-icon>
+                </v-btn>
+            </v-toolbar>
+
+            <v-text-field mb-4 append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>            
+            
             <v-alert :type="message.type" :value="true" v-for="(message, index) in messages" :key="index">
                 ᚜ message.text ᚛
             </v-alert>
@@ -24,7 +30,6 @@ var tmplList, _ = template.New("GenerateList").Parse(`
             <v-data-table :headers="headers" :items="entities" class="elevation-1" :search="search">
                 <template slot="items" slot-scope="props">
                     {{.ColumnData}}
-                    <td class="">᚜ props.item.name ᚛</td>
                     <td class="justify-center layout px-0">
                         <v-btn icon class="mx-0" :to="{name: '{{.Endpoint}}', params: {'id': props.item.id}  }">
                             <v-icon color="teal">edit</v-icon>
@@ -33,9 +38,15 @@ var tmplList, _ = template.New("GenerateList").Parse(`
                 </template>
 
                 <template slot="no-data">
-                    <v-alert slot="no-results" :value="true" color="error" icon="warning">
-                    Your search for "᚜ search ᚛" found no results.
-                    </v-alert>
+                    <v-flex ma-4>
+                        <v-alert slot="no-results" :value="true" color="info" outline icon="info" v-if="search.length > 0">
+                        Your search for "᚜ search ᚛" found no results.
+                        </v-alert>
+                        <v-alert slot="no-results" :value="true" color="info" outline icon="info" v-else>
+                            No {{.Name}} found. Would you like to create one?
+                            <v-btn :to="{name: '{{.Endpoint}}'}" color="info">create</v-btn>
+                        </v-alert>
+                    </v-flex>
                 </template>
             </v-data-table>
         </v-container>
@@ -51,7 +62,8 @@ export default {
       messages: [],
       search: "",
       headers: [
-        {{.ColumnNames}}
+        {{.ColumnNames}},
+        {'text': 'Action', 'value': null}
       ],
       entities: []
     };
