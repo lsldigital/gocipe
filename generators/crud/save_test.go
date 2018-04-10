@@ -11,10 +11,10 @@ func TestGenerateSave(t *testing.T) {
 	structInfo := generators.StructureInfo{
 		Name: "Persons",
 		Fields: []generators.FieldInfo{
-			{Name: "id", Type: "int64", Comments: ""},
-			{Name: "name", Type: "string", Comments: ""},
-			{Name: "email", Type: "string", Comments: ""},
-			{Name: "gender", Type: "string", Comments: ""},
+			{Name: "id", Type: "int64"},
+			{Name: "name", Type: "string"},
+			{Name: "email", Type: "string"},
+			{Name: "gender", Type: "string"},
 		},
 	}
 
