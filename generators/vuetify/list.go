@@ -43,6 +43,7 @@ var tmplList, _ = template.New("GenerateList").Parse(`
 </template>
 
 <script>
+import axios from "axios"
 export default {
   props: ["id"],
   data() {
@@ -51,13 +52,12 @@ export default {
       search: "",
       headers: [
         {{.ColumnNames}}
-        {text: "name", value: "name"}
       ],
       entities: []
     };
   },
   created() {
-      this.axios.get("/api/{{.Endpoint}}").then(response => {
+      axios.get("/api/{{.Endpoint}}").then(response => {
           this.entities = response.data.entities
       })
   }
@@ -88,6 +88,8 @@ func GenerateList(structInfo generators.StructureInfo) (string, error) {
 		columnNames = append(columnNames, `{text: "`+field.Name+`", value: "`+field.Name+`"}`)
 	}
 
+	data.ColumnData = strings.Join(columnData, "\n")
+	data.ColumnNames = strings.Join(columnNames, ",\n")
 	err = tmplList.Execute(&output, data)
 	if err == nil {
 		o := output.String()
@@ -95,9 +97,6 @@ func GenerateList(structInfo generators.StructureInfo) (string, error) {
 		o = strings.Replace(o, "᚛", "}}", -1)
 		return o, nil
 	}
-
-	data.ColumnData = strings.Join(columnData, "\n")
-	data.ColumnNames = strings.Join(columnNames, ",\n")
 
 	return "", err
 }
