@@ -52,27 +52,31 @@ func (g generator) Generate() (string, error) {
 		return "", err
 	}
 
-	output, err = GenerateEditor(*structInfo)
+	if g.GenerateEditor {
+		output, err = GenerateEditor(*structInfo)
 
-	if err != nil {
-		return "", err
+		if err != nil {
+			return "", err
+		}
+
+		err = ioutil.WriteFile(g.Output+"Edit.vue", []byte(output), 0644)
+		if err != nil {
+			return "", err
+		}
 	}
 
-	err = ioutil.WriteFile(g.Output+"Edit.vue", []byte(output), 0644)
-	if err != nil {
-		return "", err
-	}
+	if g.GenerateListing {
+		output, err = GenerateList(*structInfo)
 
-	output, err = GenerateList(*structInfo)
+		if err != nil {
+			return "", err
+		}
 
-	if err != nil {
-		return "", err
-	}
+		err = ioutil.WriteFile(g.Output+"List.vue", []byte(output), 0644)
 
-	err = ioutil.WriteFile(g.Output+"List.vue", []byte(output), 0644)
-
-	if err != nil {
-		return "", err
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return output, err
