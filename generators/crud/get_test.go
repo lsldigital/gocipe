@@ -20,14 +20,26 @@ func TestGenerateGet(t *testing.T) {
 
 	output, err := GenerateGet(structInfo)
 	expected := `
-//Get returns a single Person from database
-func Get(db *sql.DB, id int) (*Person, error) {
-	var entity = new(Person)
+//Get returns a single Persons from database by primary key
+func Get(id int64) (*Persons, error) {
+	var entity = New()
 
-	query := db.QueryRow("SELECT id, name, email, gender FROM ` + "`persons`" + ` WHERE id = ? LIMIT 1", id)
-	err := query.Scan(entity.id, entity.name, entity.email, entity.gender)
+	rows, err := db.Query("SELECT id, name, email, gender FROM  WHERE id = $1 ORDER BY id ASC", id)
 
-	return entity, err
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	if rows.Next() {
+		err := rows.Scan(entity., entity., entity., entity.)
+		if err != nil {
+			return nil, err
+		}
+		return entity, nil
+	}
+	
+	return nil, nil
 }
 `
 

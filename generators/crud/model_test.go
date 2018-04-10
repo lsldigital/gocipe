@@ -7,7 +7,7 @@ import (
 	"github.com/fluxynet/gocipe/generators"
 )
 
-func TestGenerateSave(t *testing.T) {
+func TestGenerateModel(t *testing.T) {
 	structInfo := generators.StructureInfo{
 		Name: "Persons",
 		Fields: []generators.FieldInfo{
@@ -18,14 +18,26 @@ func TestGenerateSave(t *testing.T) {
 		},
 	}
 
-	output, err := GenerateSave(structInfo)
+	output, err := GenerateModel(structInfo)
 	expected := `
-// Save either inserts or updates a Persons record based on whether or not id is nil
-func (entity *Persons) Save() error {
-	if entity.ID == nil {
-		return entity.Insert()
-	}
-	return entity.Update()
+import "database/sql"
+
+var db *sql.DB
+
+// Inject allows injection of services into the package
+func Inject(database *sql.DB) {
+	db = database
+}
+
+//New return a new Persons instance
+func New() *Persons {
+	entity := new(Persons)
+	entity. = new(int64)
+    entity. = new(string)
+    entity. = new(string)
+    entity. = new(string)
+
+	return entity
 }
 `
 	if err != nil {

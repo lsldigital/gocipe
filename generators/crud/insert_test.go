@@ -20,26 +20,21 @@ func TestGenerateInsert(t *testing.T) {
 
 	output, err := GenerateInsert(structInfo)
 	expected := `
-//Insert Will execute an SQLInsert Statement in the database. Prefer using Save instead of Insert directly.
-func (entity *Person) Insert(db *sql.DB) error {
-	stmt, err := db.Prepare("INSERT INTO ` + "`persons`" + ` (name, email, gender) VALUES (?, ?, ?)")
+// Insert performs an SQL insert for Persons record and update instance with inserted id.
+// Prefer using Save rather than Insert directly.
+func (entity *Persons) Insert() error {
+	var (
+		id  int64
+		err error
+	)
 
-	if err != nil {
-		return err
+	err = db.QueryRow("INSERT INTO  (name, email, gender) VALUES ($1, $2, $3) RETURNING id", *entity., *entity., *entity.).Scan(&id)
+
+	if err == nil {
+		entity.ID = &id
 	}
 
-	result, err := stmt.Exec(entity.name, entity.email, entity.gender)
-	if err != nil {
-		return err
-	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	entity.id = id
-	return nil
+	return err
 }
 `
 	if err != nil {

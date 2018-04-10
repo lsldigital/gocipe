@@ -20,17 +20,11 @@ func TestGenerateUpdate(t *testing.T) {
 
 	output, err := GenerateUpdate(structInfo)
 	expected := `
-//Update Will execute an SQLUpdate Statement in the database. Prefer using Save instead of Update directly.
-func (entity *Person) Update(db *sql.DB) error {
-	stmt, err := db.Prepare("UPDATE ` + "`persons`" + ` SET name = ?, email = ?, gender = ? WHERE id = ?")
-	if err != nil {
-		return err
-	}
+//Update Will execute an SQLUpdate Statement for Persons in the database. Prefer using Save instead of Update directly.
+func (entity *Persons) Update() error {
+	_, err := db.Exec("UPDATE  SET id = $2, name = $3, email = $4, gender = $5 WHERE id = $1", entity.ID, *entity., *entity., *entity., *entity.)
 
-	_, err = stmt.Exec(entity.name, entity.email, entity.gender, entity.id)
-	if err != nil {
-		return err
-	}
+	return err
 }
 `
 

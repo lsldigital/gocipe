@@ -20,28 +20,43 @@ func TestGenerateList(t *testing.T) {
 
 	output, err := GenerateList(structInfo)
 	expected := `
-//List returns all Person entities stored in database
-func List(db *sql.DB) ([]Person, error) {
+// List returns a slice containing Persons records
+func List(filters []models.ListFilter) ([]*Persons, error) {
 	var (
-		entity   *Person
-		entities []Person
+		list []*Persons
+		segments []string
+		values []interface{}
 	)
 
-	query, err := db.Query("SELECT id, name, email, gender FROM ` + "`persons`" + `")
+	query := "SELECT id, name, email, gender FROM "
+
+	for i, filter := range filters {
+		segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
+		values = append(values, filter.Value)
+	}
+
+	if len(segments) != 0 {
+		query += " WHERE " + strings.Join(segments, " AND ")
+	}
+
+	rows, err := db.Query(query+" ORDER BY id ASC", values...)
+
 	if err != nil {
-		return entities, err
-	}
-	defer query.Close()
-
-	entities = []Person
-
-	for query.Next() {
-		entity = new(Person)
-		query.Scan(entity.id, entity.name, entity.email, entity.gender)
-		entities = append(entities, *entity)
+		return nil, err
 	}
 
-	return entities, nil
+	defer rows.Close()
+	for rows.Next() {
+		entity := New()
+		err := rows.Scan(entity., entity., entity., entity.)
+		if err != nil {
+			return nil, err
+		}
+
+		list = append(list, entity)
+	}
+
+	return list, nil
 }
 `
 	if err != nil {
