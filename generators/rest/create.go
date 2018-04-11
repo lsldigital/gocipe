@@ -21,7 +21,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Failed to read body"}]}` + "`" + `)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "message": "Failed to read body"}]}` + "`" + `)
 		return
 	}
 
@@ -30,7 +30,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Failed to decode body"}]}` + "`" + `)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "message": "Failed to decode body"}]}` + "`" + `)
 		return
 	}
 	response.Entity.ID = nil
@@ -39,7 +39,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Save failed"}]}` + "`" + `)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "message": "Save failed"}]}` + "`" + `)
 		return
 	}
 
@@ -47,7 +47,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "JSON encoding failed"}]}` + "`" + `)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "message": "JSON encoding failed"}]}` + "`" + `)
 		return
 	}
 
