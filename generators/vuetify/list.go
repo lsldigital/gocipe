@@ -11,56 +11,53 @@ import (
 
 var tmplList, _ = template.New("GenerateList").Parse(`
 <template>
-    <div class="container">
-        <v-container>
-            <v-toolbar color="transparent" flat>
-                <v-toolbar-title class="grey--text text--darken-4 ml-0"><h2>{{.Name}}</h2></v-toolbar-title>
-                <v-spacer></v-spacer>
-                <v-btn mr-0 color="primary" :to="{name: '{{.Endpoint}}'}">
-                    <v-icon dark>add</v-icon> Add
-                </v-btn>
-            </v-toolbar>
-            
-            <v-alert :type="message.type" :value="true" v-for="(message, index) in messages" :key="index">
-                ᚜ message.text ᚛
-            </v-alert>
+    <v-container>
+        <v-toolbar color="transparent" flat>
+            <v-toolbar-title class="grey--text text--darken-4 ml-0"><h2>{{.Name}}</h2></v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-btn mr-0 color="primary" :to="{name: '{{.Endpoint}}Edit', params:{id: 0}}">
+                <v-icon dark>add</v-icon> Add
+            </v-btn>
+        </v-toolbar>
+        
+        <v-alert :type="message.type === 'E' ? 'error' : message.type" :value="true" v-for="(message, index) in messages" :key="index">
+            ᚜ message.text ᚛
+        </v-alert>
 
-            <v-alert type="info" value="true"  color="info" outline icon="info" v-if="entities.length === 0">
-                No Authors exist. Would you like to create one now?
-                <v-btn :to="{name: '{{.Endpoint}}'}" color="info">create new</v-btn>
-            </v-alert>
-            <template v-else>
-                <v-text-field mb-4 append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>            
-                <v-data-table :headers="headers" :items="entities" class="elevation-1" :search="search">
-                    <template slot="items" slot-scope="props">
-                        {{.ColumnData}}
-                        <td class="justify-center layout px-0">
-                            <v-btn icon class="mx-0" :to="{name: '{{.Endpoint}}', params: {'id': props.item.id}  }">
-                                <v-icon color="teal">edit</v-icon>
-                            </v-btn>
-                        </td>
-                    </template>
+        <v-alert type="info" value="true"  color="info" outline icon="info" v-if="entities.length === 0">
+            No Authors exist. Would you like to create one now?
+            <v-btn :to="{name: '{{.Endpoint}}Edit', params:{id: 0}}" color="info">create new</v-btn>
+        </v-alert>
+        <template v-else>
+            <v-text-field mb-4 append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>            
+            <v-data-table :headers="headers" :items="entities" class="elevation-1" :search="search">
+                <template slot="items" slot-scope="props">
+                    {{.ColumnData}}
+                    <td class="justify-center layout px-0">
+                        <v-btn icon class="mx-0" :to="{name: '{{.Endpoint}}Edit', params: {'id': props.item.id}  }">
+                            <v-icon color="teal">edit</v-icon>
+                        </v-btn>
+                    </td>
+                </template>
 
-                    <template slot="no-data">
-                        <v-flex ma-4>
-                            <v-alert slot="no-results" :value="true" color="info" outline icon="info" v-if="search.length > 0">
-                            Your search for "᚜ search ᚛" found no results.
-                            </v-alert>
-                            <v-alert slot="no-results" :value="true" color="info" outline icon="info" v-else>
-                                No {{.Name}} found.
-                            </v-alert>
-                        </v-flex>
-                    </template>
-                </v-data-table>
-            </template>
-        </v-container>
-    </div>
+                <template slot="no-data">
+                    <v-flex ma-4>
+                        <v-alert slot="no-results" :value="true" color="info" outline icon="info" v-if="search.length > 0">
+                        Your search for "᚜ search ᚛" found no results.
+                        </v-alert>
+                        <v-alert slot="no-results" :value="true" color="info" outline icon="info" v-else>
+                            No {{.Name}} found.
+                        </v-alert>
+                    </v-flex>
+                </template>
+            </v-data-table>
+        </template>
+    </v-container>
 </template>
 
 <script>
 import axios from "axios"
 export default {
-  props: ["id"],
   data() {
     return {
       messages: [],
@@ -73,9 +70,14 @@ export default {
     };
   },
   created() {
-      axios.get("/api/{{.Endpoint}}").then(response => {
-          this.entities = response.data.entities
+    axios
+      .get("/api/{{.Endpoint}}")
+      .then(response => {
+        this.entities = response.data.entities;
       })
+      .catch(error => {
+        this.messages = [...this.messages, ...error.response.data.messages];
+      });
   }
 };
 </script>
