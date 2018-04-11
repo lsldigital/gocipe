@@ -10,6 +10,7 @@ const (
 
 var (
 	env string
+	port string
 	dsn string
 	db  *sql.DB
 )
@@ -21,11 +22,16 @@ func init() {
 
 	godotenv.Load()
 
-	env = os.Getenv("ENV")
-	dsn = os.Getenv("DSN")
+	env  = os.Getenv("ENV")
+	port = os.Getenv("PORT")
+	dsn  = os.Getenv("DSN")
 
 	if env == "" {
 		log.Fatal("Environment variable ENV must be defined. Possible values are: DEV PROD")
+	}
+
+	if port == "" {
+		port = "8888"
 	}
 
 	if dsn == "" {
