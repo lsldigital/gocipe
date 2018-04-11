@@ -9,13 +9,13 @@ func main() {
 	registerRoutes(router)
 	
 	go func() {
-		err := http.ListenAndServe(":8888", router)
+		err := http.ListenAndServe(":" + port, router)
 		if err != nil {
 			log.Fatal("Failed to start http server: ", err)
 		}
 	}()
 
-	log.Println("Listening on :8888")
+	log.Println("Listening on :" + port)
 	<-sigs
 	log.Println("Server stopped")
 }
