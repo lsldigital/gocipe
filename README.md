@@ -53,3 +53,57 @@ field.nullable    | "true" (nullable) or "false" (not null). Default: "false"
 field.default     | Defines default value of field for database schema
 field.filterable  | Whether field can be used as filter for REST endpoints. "true" / "false". Default: "true"
 
+## Command, Arguments & Flags
+
+Go:generate accepts a command, one or more argument and one or more flags. For example, in the following:
+
+```go
+//go:generate gocipe crud -file $GOFILE -struct Person
+```
+
+- `gocipe` is the command
+- `crud` is the argument
+- `file` and `struct` are flags
+
+### Arguments
+
+`Gocipe` accepts one mandatory argument.
+
+Argument   | Description
+-----------|-------------------------------------
+crud       | Generates CRUD functions and methods
+db         | Generates database schema
+http       | Generates http server
+rest       | Generates REST endpoint functions and methods
+
+The arguments have some flags associated to them.
+
+### crud
+
+Flag     | Required | Default | Description
+---------|----------|---------|------------------------------------------
+file     | Yes      |         | Filename where struct is located
+struct   | Yes      |         | Name of the structure to use
+v        | No       | false   | Verbose mode. False by default
+`DELETE` |          |         |
+d        | No       | true    | Generate Delete
+hd       | No       | false   | Generate Delete pre-execution hook
+dh       | No       | false   | Generate Delete post-execution hook
+`GET`    |          |         |
+g        | No       | true    | Generate Get
+hg       | No       | false   | Generate Get pre-execution hook
+gh       | No       | false   | Generate Get post-execution hook
+`SAVE`   |          |         |
+s        | No       | true    | Generate Save
+hs       | No       | false   | Generate Save pre-execution hook
+sh       | No       | false   | Generate Save post-execution hook
+`LIST`   |          |         |
+l        | No       | true    | Generate List
+hl       | No       | false   | Generate List pre-execution hook
+lh       | No       | false   | Generate List post-execution hook
+
+### db
+
+### http
+
+### rest
