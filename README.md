@@ -104,6 +104,36 @@ lh       | No       | false   | Generate List post-execution hook
 
 ### db
 
+...
+
 ### http
 
+...
+
 ### rest
+
+Flag     | Required | Default | Description
+---------|----------|---------|------------------------------------------
+file     | Yes      |         | Filename where struct is located
+struct   | Yes      |         | Name of the structure to use
+v        | No       | false   | Verbose mode. False by default
+`DELETE` |          |         |
+d        | No       | true    | Generate Delete
+hd       | No       | false   | Generate Delete pre-execution hook
+dh       | No       | false   | Generate Delete post-execution hook
+`GET`    |          |         |
+g        | No       | true    | Generate Get
+hg       | No       | false   | Generate Get pre-execution hook
+gh       | No       | false   | Generate Get post-execution hook
+`CREATE` |          |         |
+c        | No       | true    | Generate Create
+hc       | No       | false   | Generate Create pre-execution hook
+ch       | No       | false   | Generate Create post-execution hook
+`UPDATE` |          |         |
+u        | No       | true    | Generate Update
+hu       | No       | false   | Generate Update pre-execution hook
+uh       | No       | false   | Generate Update post-execution hook
+`LIST`   |          |         |
+l        | No       | true    | Generate List
+hl       | No       | false   | Generate List pre-execution hook
+lh       | No       | false   | Generate List post-execution hook
