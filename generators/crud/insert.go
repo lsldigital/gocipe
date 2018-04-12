@@ -18,8 +18,8 @@ func (entity *{{.Name}}) Insert() error {
 		err error
 	)
 	{{if .PreExecHook }}
-    if e := savePreExecHook(entity); e != nil {
-        fmt.Printf("Error executing savePreExecHook() in {{.Name}}.Insert(): %s", e.Error())
+    if e := crudSavePreExecHook(entity); e != nil {
+        fmt.Printf("Error executing crudSavePreExecHook() in {{.Name}}.Insert(): %s", e.Error())
         return e
 	}
     {{end}}
@@ -29,8 +29,8 @@ func (entity *{{.Name}}) Insert() error {
 		entity.ID = &id
 	}
 	{{if .PostExecHook }}
-	if e := savePostExecHook(entity); e != nil {
-		fmt.Printf("Error executing savePostExecHook() in {{.Name}}.Insert(): %s", e.Error())
+	if e := crudSavePostExecHook(entity); e != nil {
+		fmt.Printf("Error executing crudSavePostExecHook() in {{.Name}}.Insert(): %s", e.Error())
 		return e
 	}
 	{{end}}

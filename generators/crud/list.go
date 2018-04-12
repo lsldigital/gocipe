@@ -19,8 +19,8 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 
 	query := "SELECT {{.SQLFields}} FROM {{.TableName}}"
 	{{if .PreExecHook }}
-    if e := listPreExecHook(&filters); e != nil {
-		fmt.Printf("Error executing listPreExecHook() in List(filters) for entity '{{.Name}}': %s", e.Error())
+    if e := crudListPreExecHook(&filters); e != nil {
+		fmt.Printf("Error executing crudListPreExecHook() in List(filters) for entity '{{.Name}}': %s", e.Error())
         return nil, e
 	}
     {{end}}
@@ -49,8 +49,8 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 		list = append(list, entity)
 	}
 	{{if .PostExecHook }}
-	if e := listPostExecHook(&list); e != nil {
-		fmt.Printf("Error executing listPostExecHook() in List(filters) for entity '{{.Name}}': %s", e.Error())
+	if e := crudListPostExecHook(&list); e != nil {
+		fmt.Printf("Error executing crudListPostExecHook() in List(filters) for entity '{{.Name}}': %s", e.Error())
 		return nil, e
 	}
 	{{end}}
@@ -60,12 +60,12 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 
 var tmplListHook, _ = template.New("GenerateListHook").Parse(`
 {{if .PreExecHook }}
-func listPreExecHook(filters *[]models.ListFilter) error {
+func crudListPreExecHook(filters *[]models.ListFilter) error {
 	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func listPostExecHook(list *[]*User) error {
+func crudListPostExecHook(list *[]*User) error {
 	return nil
 }
 {{end}}
@@ -106,7 +106,7 @@ func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExe
 	return output.String(), nil
 }
 
-// GenerateListHook will generate 2 functions: listPreExecHook() and listPostExecHook()
+// GenerateListHook will generate 2 functions: crudListPreExecHook() and crudListPostExecHook()
 func GenerateListHook(PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 

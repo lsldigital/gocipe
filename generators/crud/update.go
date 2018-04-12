@@ -13,15 +13,15 @@ var tmplUpdate, _ = template.New("GenerateUpdate").Parse(`
 //Update Will execute an SQLUpdate Statement for {{.Name}} in the database. Prefer using Save instead of Update directly.
 func (entity *{{.Name}}) Update() error {
 	{{if .PreExecHook }}
-    if e := savePreExecHook(entity); e != nil {
-        fmt.Printf("Error executing savePreExecHook() in {{.Name}}.Update(): %s", e.Error())
+    if e := crudSavePreExecHook(entity); e != nil {
+        fmt.Printf("Error executing crudSavePreExecHook() in {{.Name}}.Update(): %s", e.Error())
         return e
 	}
     {{end}}
 	_, err := db.Exec("UPDATE {{.TableName}} SET {{.SQLFields}} WHERE id = $1", {{.StructFields}})
 	{{if .PostExecHook }}
-	if e := savePostExecHook(entity); e != nil {
-		fmt.Printf("Error executing savePostExecHook() in {{.Name}}.Update(): %s", e.Error())
+	if e := crudSavePostExecHook(entity); e != nil {
+		fmt.Printf("Error executing crudSavePostExecHook() in {{.Name}}.Update(): %s", e.Error())
 		return e
 	}
 	{{end}}

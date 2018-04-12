@@ -19,12 +19,12 @@ func (entity *{{.Name}}) Save() error {
 
 var tmplSaveHook, _ = template.New("GenerateSaveHook").Parse(`
 {{if .PreExecHook }}
-func savePreExecHook(entity *User) error {
+func crudSavePreExecHook(entity *User) error {
 	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func savePostExecHook(entity *User) error {
+func crudSavePostExecHook(entity *User) error {
 	return nil
 }
 {{end}}
@@ -42,7 +42,7 @@ func GenerateSave(structInfo generators.StructureInfo) (string, error) {
 	return output.String(), nil
 }
 
-// GenerateSaveHook will generate 2 functions: savePreExecHook() and savePostExecHook()
+// GenerateSaveHook will generate 2 functions: crudSavePreExecHook() and crudSavePostExecHook()
 func GenerateSaveHook(PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 
