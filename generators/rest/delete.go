@@ -68,15 +68,50 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 }
 `)
 
+var tmplDeleteHook, _ = template.New("GenerateDeleteHook").Parse(`
+{{if .PreExecHook }}
+func restDeletePreExecHook(id int64) error {
+	return nil
+}
+{{end}}
+{{if .PostExecHook }}
+func restDeletePostExecHook(id int64) error {
+	return nil
+}
+{{end}}
+`)
+
 //GenerateDelete will generate a REST handler function for Delete
-func GenerateDelete(structInfo generators.StructureInfo) (string, error) {
+func GenerateDelete(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := struct {
-		Endpoint string
-	}{strings.ToLower(structInfo.Name)}
+		Endpoint     string
+		PreExecHook  bool
+		PostExecHook bool
+	}{strings.ToLower(structInfo.Name), PreExecHook, PostExecHook}
 
 	err := tmplDelete.Execute(&output, data)
 
+	if err != nil {
+		return "", err
+	}
+
+	return output.String(), nil
+}
+
+// GenerateDeleteHook will generate 2 functions: restDeletePreExecHook() and restDeletePostExecHook()
+func GenerateDeleteHook(PreExecHook bool, PostExecHook bool) (string, error) {
+	var output bytes.Buffer
+
+	data := new(struct {
+		PreExecHook  bool
+		PostExecHook bool
+	})
+
+	data.PreExecHook = PreExecHook
+	data.PostExecHook = PostExecHook
+
+	err := tmplDeleteHook.Execute(&output, data)
 	if err != nil {
 		return "", err
 	}

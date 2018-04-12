@@ -57,15 +57,50 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 }
 `)
 
+var tmplCreateHook, _ = template.New("GenerateCreateHook").Parse(`
+{{if .PreExecHook }}
+func restCreatePreExecHook(id int64) error {
+	return nil
+}
+{{end}}
+{{if .PostExecHook }}
+func restCreatePostExecHook(id int64) error {
+	return nil
+}
+{{end}}
+`)
+
 //GenerateCreate will generate a REST handler function for Create
-func GenerateCreate(structInfo generators.StructureInfo) (string, error) {
+func GenerateCreate(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := struct {
-		Endpoint string
-	}{strings.ToLower(structInfo.Name)}
+		Endpoint     string
+		PreExecHook  bool
+		PostExecHook bool
+	}{strings.ToLower(structInfo.Name), PreExecHook, PostExecHook}
 
 	err := tmplCreate.Execute(&output, data)
 
+	if err != nil {
+		return "", err
+	}
+
+	return output.String(), nil
+}
+
+// GenerateCreateHook will generate 2 functions: restCreatePreExecHook() and restCreatePostExecHook()
+func GenerateCreateHook(PreExecHook bool, PostExecHook bool) (string, error) {
+	var output bytes.Buffer
+
+	data := new(struct {
+		PreExecHook  bool
+		PostExecHook bool
+	})
+
+	data.PreExecHook = PreExecHook
+	data.PostExecHook = PostExecHook
+
+	err := tmplCreateHook.Execute(&output, data)
 	if err != nil {
 		return "", err
 	}

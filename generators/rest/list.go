@@ -93,15 +93,30 @@ var tmplListFilterDate, _ = template.New("GenerateListFilterDate").Parse(`
 	}
 `)
 
+var tmplListHook, _ = template.New("GenerateListHook").Parse(`
+{{if .PreExecHook }}
+func restListPreExecHook(filters *[]models.ListFilter) error {
+	return nil
+}
+{{end}}
+{{if .PostExecHook }}
+func restListPostExecHook(list *[]*User) error {
+	return nil
+}
+{{end}}
+`)
+
 //GenerateList will generate a REST handler function for List
-func GenerateList(structInfo generators.StructureInfo) (string, error) {
+func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var (
 		output  bytes.Buffer
 		filters []string
 		err     error
 		data    struct {
-			Endpoint string
-			Filters  string
+			Endpoint     string
+			Filters      string
+			PreExecHook  bool
+			PostExecHook bool
 		}
 	)
 
@@ -139,6 +154,26 @@ func GenerateList(structInfo generators.StructureInfo) (string, error) {
 	}
 	err = tmplList.Execute(&output, data)
 
+	if err != nil {
+		return "", err
+	}
+
+	return output.String(), nil
+}
+
+// GenerateListHook will generate 2 functions: restListPreExecHook() and restListPostExecHook()
+func GenerateListHook(PreExecHook bool, PostExecHook bool) (string, error) {
+	var output bytes.Buffer
+
+	data := new(struct {
+		PreExecHook  bool
+		PostExecHook bool
+	})
+
+	data.PreExecHook = PreExecHook
+	data.PostExecHook = PostExecHook
+
+	err := tmplListHook.Execute(&output, data)
 	if err != nil {
 		return "", err
 	}

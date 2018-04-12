@@ -88,15 +88,50 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 }
 `)
 
+var tmplUpdateHook, _ = template.New("GenerateUpdateHook").Parse(`
+{{if .PreExecHook }}
+func restUpdatePreExecHook(id int64) error {
+	return nil
+}
+{{end}}
+{{if .PostExecHook }}
+func restUpdatePostExecHook(id int64) error {
+	return nil
+}
+{{end}}
+`)
+
 //GenerateUpdate will generate a REST handler function for Update
-func GenerateUpdate(structInfo generators.StructureInfo) (string, error) {
+func GenerateUpdate(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := struct {
-		Endpoint string
-	}{strings.ToLower(structInfo.Name)}
+		Endpoint     string
+		PreExecHook  bool
+		PostExecHook bool
+	}{strings.ToLower(structInfo.Name), PreExecHook, PostExecHook}
 
 	err := tmplUpdate.Execute(&output, data)
 
+	if err != nil {
+		return "", err
+	}
+
+	return output.String(), nil
+}
+
+// GenerateUpdateHook will generate 2 functions: restUpdatePreExecHook() and restUpdatePostExecHook()
+func GenerateUpdateHook(PreExecHook bool, PostExecHook bool) (string, error) {
+	var output bytes.Buffer
+
+	data := new(struct {
+		PreExecHook  bool
+		PostExecHook bool
+	})
+
+	data.PreExecHook = PreExecHook
+	data.PostExecHook = PostExecHook
+
+	err := tmplUpdateHook.Execute(&output, data)
 	if err != nil {
 		return "", err
 	}
