@@ -66,6 +66,15 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	response.Entity.ID = &id
 
+	{{if .PreExecHook}}
+    if err = restUpdatePreExecHook(w, r, response.Entity); err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        return
+    }
+    {{end}}
+
 	err = response.Entity.Save()
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -73,6 +82,15 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Save failed"}]}` + "`" + `)
 		return
 	}
+
+	{{if .PostExecHook}}
+    if err = restUpdatePostExecHook(w, r, response.Entity); err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        return
+    }
+    {{end}}
 
 	output, err := json.Marshal(response)
 	if err != nil {
@@ -90,12 +108,12 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 
 var tmplUpdateHook, _ = template.New("GenerateUpdateHook").Parse(`
 {{if .PreExecHook }}
-func restUpdatePreExecHook(id int64) error {
+func restUpdatePreExecHook(w http.ResponseWriter, r *http.Request, entity *User) error {
 	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restUpdatePostExecHook(id int64) error {
+func restUpdatePostExecHook(w http.ResponseWriter, r *http.Request, entity *User) error {
 	return nil
 }
 {{end}}
@@ -111,7 +129,6 @@ func GenerateUpdate(structInfo generators.StructureInfo, PreExecHook bool, PostE
 	}{strings.ToLower(structInfo.Name), PreExecHook, PostExecHook}
 
 	err := tmplUpdate.Execute(&output, data)
-
 	if err != nil {
 		return "", err
 	}

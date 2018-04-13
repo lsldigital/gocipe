@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/fluxynet/gocipe/generators"
 	"log"
+
+	"github.com/fluxynet/gocipe/generators"
 )
 
 func init() {
@@ -65,9 +66,9 @@ func factory(args []string) (generators.Command, error) {
 	flagset.BoolVar(&g.GenerateCreatePreExecHook, "hc", false, "Generate Create pre-execution hook")
 	flagset.BoolVar(&g.GenerateCreatePostExecHook, "ch", false, "Generate Create post-execution hook")
 
-	flagset.BoolVar(&g.GenerateCreate, "u", true, "Generate Update")
-	flagset.BoolVar(&g.GenerateCreatePreExecHook, "hu", false, "Generate Update pre-execution hook")
-	flagset.BoolVar(&g.GenerateCreatePostExecHook, "uh", false, "Generate Update post-execution hook")
+	flagset.BoolVar(&g.GenerateUpdate, "u", true, "Generate Update")
+	flagset.BoolVar(&g.GenerateUpdatePreExecHook, "hu", false, "Generate Update pre-execution hook")
+	flagset.BoolVar(&g.GenerateUpdatePostExecHook, "uh", false, "Generate Update post-execution hook")
 
 	flagset.BoolVar(&g.GenerateList, "l", true, "Generate List")
 	flagset.BoolVar(&g.GenerateListPreExecHook, "hl", false, "Generate List pre-execution hook")

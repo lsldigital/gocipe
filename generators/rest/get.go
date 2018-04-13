@@ -31,6 +31,15 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	{{if .PreExecHook}}
+    if err = restGetPreExecHook(w, r, id); err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        return
+    }
+    {{end}}
+
 	response.Entity, err = Get(id)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -45,6 +54,15 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Entity not found"}]}` + "`" + `)
 		return
 	}
+
+	{{if .PostExecHook}}
+    if err = restGetPostExecHook(w, r, response.Entity); err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        return
+    }
+    {{end}}
 
 	response.Status = true
 	output, err := json.Marshal(response)
@@ -63,13 +81,13 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 
 var tmplGetHook, _ = template.New("GenerateGetHook").Parse(`
 {{if .PreExecHook }}
-func restGetPreExecHook(id int64) (*User, error) {
-	return New(), nil
+func restGetPreExecHook(w http.ResponseWriter, r *http.Request, id int64) error {
+	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restGetPostExecHook(entity *User) (*User, error) {
-	return entity, nil
+func restGetPostExecHook(w http.ResponseWriter, r *http.Request, entity *User) error {
+	return nil
 }
 {{end}}
 `)

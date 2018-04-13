@@ -18,8 +18,16 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 	)
 	{{.Filters}}
 
-	response.Entities, err = List(filters)
+	{{if .PreExecHook}}
+    if err = restListPreExecHook(w, r, &filters); err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        return
+    }
+    {{end}}
 
+	response.Entities, err = List(filters)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -27,8 +35,16 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Status = true
+	{{if .PostExecHook}}
+    if err = restListPostExecHook(w, r, &response.Entities); err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        return
+    }
+    {{end}}
 
+	response.Status = true
 	output, err := json.Marshal(response)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -95,12 +111,12 @@ var tmplListFilterDate, _ = template.New("GenerateListFilterDate").Parse(`
 
 var tmplListHook, _ = template.New("GenerateListHook").Parse(`
 {{if .PreExecHook }}
-func restListPreExecHook(filters *[]models.ListFilter) error {
+func restListPreExecHook(w http.ResponseWriter, r *http.Request, filters *[]models.ListFilter) error {
 	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restListPostExecHook(list *[]*User) error {
+func restListPostExecHook(w http.ResponseWriter, r *http.Request, list *[]*User) error {
 	return nil
 }
 {{end}}
@@ -152,6 +168,9 @@ func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExe
 	} else {
 		data.Filters = "\nquery := r.URL.Query()\n" + strings.Join(filters, "\n")
 	}
+
+	data.PreExecHook = PreExecHook
+	data.PostExecHook = PostExecHook
 	err = tmplList.Execute(&output, data)
 
 	if err != nil {

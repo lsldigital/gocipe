@@ -46,6 +46,15 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	{{if .PreExecHook}}
+    if err = restDeletePreExecHook(w, r, response.Entity); err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        return
+    }
+    {{end}}
+
 	err = response.Entity.Delete()
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -53,6 +62,15 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Delete failed"}]}` + "`" + `)
 		return
 	}
+
+	{{if .PostExecHook}}
+    if err = restDeletePostExecHook(w, r, id); err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        return
+    }
+    {{end}}
 
 	output, err := json.Marshal(response)
 	if err != nil {
@@ -70,12 +88,12 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 
 var tmplDeleteHook, _ = template.New("GenerateDeleteHook").Parse(`
 {{if .PreExecHook }}
-func restDeletePreExecHook(id int64) error {
+func restDeletePreExecHook(w http.ResponseWriter, r *http.Request, entity *User) error {
 	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restDeletePostExecHook(id int64) error {
+func restDeletePostExecHook(w http.ResponseWriter, r *http.Request, id int64) error {
 	return nil
 }
 {{end}}
