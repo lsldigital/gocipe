@@ -48,10 +48,13 @@ func factory(args []string) (generators.Command, error) {
 
 //Generate produce the generated code according to options
 func (g generator) Generate() (string, error) {
+
 	structInfo, err := generators.NewStructureInfo(g.Filename, g.Structure)
 	if err != nil {
 		return "", err
 	}
+
+	log.Fatalln(g)
 
 	var generated []string
 	generated = append(generated, "package "+structInfo.Package+"\n")

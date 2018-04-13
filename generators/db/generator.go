@@ -42,7 +42,7 @@ func (g generator) Generate() (string, error) {
 
 	structInfo, err := generators.NewStructureInfo(g.Filename, g.Structure)
 	if err != nil {
-		return "", e
+		return "", err
 	}
 
 	generated, err := GenerateDatabase(*structInfo)
