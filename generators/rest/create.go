@@ -77,12 +77,12 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 
 var tmplCreateHook, _ = template.New("GenerateCreateHook").Parse(`
 {{if .PreExecHook }}
-func restCreatePreExecHook(w http.ResponseWriter, r *http.Request, entity *User) error {
+func restCreatePreExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) error {
 	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restCreatePostExecHook(w http.ResponseWriter, r *http.Request, entity *User) error {
+func restCreatePostExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) error {
 	return nil
 }
 {{end}}
@@ -106,14 +106,16 @@ func GenerateCreate(structInfo generators.StructureInfo, PreExecHook bool, PostE
 }
 
 // GenerateCreateHook will generate 2 functions: restCreatePreExecHook() and restCreatePostExecHook()
-func GenerateCreateHook(PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateCreateHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
+		Name         string
 		PreExecHook  bool
 		PostExecHook bool
 	})
 
+	data.Name = structInfo.Name
 	data.PreExecHook = PreExecHook
 	data.PostExecHook = PostExecHook
 

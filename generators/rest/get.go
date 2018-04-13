@@ -86,7 +86,7 @@ func restGetPreExecHook(w http.ResponseWriter, r *http.Request, id int64) error 
 }
 {{end}}
 {{if .PostExecHook }}
-func restGetPostExecHook(w http.ResponseWriter, r *http.Request, entity *User) error {
+func restGetPostExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) error {
 	return nil
 }
 {{end}}
@@ -111,14 +111,16 @@ func GenerateGet(structInfo generators.StructureInfo, PreExecHook bool, PostExec
 }
 
 // GenerateGetHook will generate 2 functions: restGetPreExecHook() and restGetPostExecHook()
-func GenerateGetHook(PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateGetHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
+		Name         string
 		PreExecHook  bool
 		PostExecHook bool
 	})
 
+	data.Name = structInfo.Name
 	data.PreExecHook = PreExecHook
 	data.PostExecHook = PostExecHook
 

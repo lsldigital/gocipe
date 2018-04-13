@@ -65,7 +65,7 @@ func crudListPreExecHook(filters *[]models.ListFilter) error {
 }
 {{end}}
 {{if .PostExecHook }}
-func crudListPostExecHook(list *[]*User) error {
+func crudListPostExecHook(list *[]*{{.Name}}) error {
 	return nil
 }
 {{end}}
@@ -107,14 +107,16 @@ func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExe
 }
 
 // GenerateListHook will generate 2 functions: crudListPreExecHook() and crudListPostExecHook()
-func GenerateListHook(PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateListHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
+		Name         string
 		PreExecHook  bool
 		PostExecHook bool
 	})
 
+	data.Name = structInfo.Name
 	data.PreExecHook = PreExecHook
 	data.PostExecHook = PostExecHook
 

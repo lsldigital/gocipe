@@ -117,7 +117,7 @@ func (g generator) Generate() (string, error) {
 		generated = append(generated, segment)
 
 		if g.GenerateGetPreExecHook || g.GenerateGetPostExecHook {
-			segment, err := GenerateGetHook(g.GenerateGetPreExecHook, g.GenerateGetPostExecHook)
+			segment, err := GenerateGetHook(*structInfo, g.GenerateGetPreExecHook, g.GenerateGetPostExecHook)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateGetHook: %s\n", err)
 			}
@@ -133,7 +133,7 @@ func (g generator) Generate() (string, error) {
 		generated = append(generated, segment)
 
 		if g.GenerateListPreExecHook || g.GenerateListPostExecHook {
-			segment, err := GenerateListHook(g.GenerateListPreExecHook, g.GenerateListPostExecHook)
+			segment, err := GenerateListHook(*structInfo, g.GenerateListPreExecHook, g.GenerateListPostExecHook)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateListHook: %s\n", err)
 			}
@@ -149,7 +149,7 @@ func (g generator) Generate() (string, error) {
 		generated = append(generated, segment)
 
 		if g.GenerateDeletePreExecHook || g.GenerateDeletePostExecHook {
-			segment, err := GenerateDeleteHook(g.GenerateDeletePreExecHook, g.GenerateDeletePostExecHook)
+			segment, err := GenerateDeleteHook(*structInfo, g.GenerateDeletePreExecHook, g.GenerateDeletePostExecHook)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateDeleteHook: %s\n", err)
 			}
@@ -165,7 +165,7 @@ func (g generator) Generate() (string, error) {
 		generated = append(generated, segment)
 
 		if g.GenerateCreatePreExecHook || g.GenerateCreatePostExecHook {
-			segment, err := GenerateCreateHook(g.GenerateCreatePreExecHook, g.GenerateCreatePostExecHook)
+			segment, err := GenerateCreateHook(*structInfo, g.GenerateCreatePreExecHook, g.GenerateCreatePostExecHook)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateCreateHook: %s\n", err)
 			}
@@ -181,7 +181,7 @@ func (g generator) Generate() (string, error) {
 		generated = append(generated, segment)
 
 		if g.GenerateUpdatePreExecHook || g.GenerateUpdatePostExecHook {
-			segment, err := GenerateUpdateHook(g.GenerateUpdatePreExecHook, g.GenerateUpdatePostExecHook)
+			segment, err := GenerateUpdateHook(*structInfo, g.GenerateUpdatePreExecHook, g.GenerateUpdatePostExecHook)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateUpdateHook: %s\n", err)
 			}

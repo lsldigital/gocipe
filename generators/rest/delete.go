@@ -88,7 +88,7 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 
 var tmplDeleteHook, _ = template.New("GenerateDeleteHook").Parse(`
 {{if .PreExecHook }}
-func restDeletePreExecHook(w http.ResponseWriter, r *http.Request, entity *User) error {
+func restDeletePreExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) error {
 	return nil
 }
 {{end}}
@@ -118,14 +118,16 @@ func GenerateDelete(structInfo generators.StructureInfo, PreExecHook bool, PostE
 }
 
 // GenerateDeleteHook will generate 2 functions: restDeletePreExecHook() and restDeletePostExecHook()
-func GenerateDeleteHook(PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateDeleteHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
+		Name         string
 		PreExecHook  bool
 		PostExecHook bool
 	})
 
+	data.Name = structInfo.Name
 	data.PreExecHook = PreExecHook
 	data.PostExecHook = PostExecHook
 

@@ -125,7 +125,7 @@ func (g generator) Generate() (string, error) {
 		generated = append(generated, segment)
 
 		if g.GenerateGetPreExecHook || g.GenerateGetPostExecHook {
-			segment, err := GenerateGetHook(g.GenerateGetPreExecHook, g.GenerateGetPostExecHook)
+			segment, err := GenerateGetHook(*structInfo, g.GenerateGetPreExecHook, g.GenerateGetPostExecHook)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateGetHook: %s\n", err)
 			}
@@ -141,7 +141,7 @@ func (g generator) Generate() (string, error) {
 		generated = append(generated, segment)
 
 		if g.GenerateListPreExecHook || g.GenerateListPostExecHook {
-			segment, err := GenerateListHook(g.GenerateListPreExecHook, g.GenerateListPostExecHook)
+			segment, err := GenerateListHook(*structInfo, g.GenerateListPreExecHook, g.GenerateListPostExecHook)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateListHook: %s\n", err)
 			}
@@ -190,7 +190,7 @@ func (g generator) Generate() (string, error) {
 		generated = append(generated, segment)
 
 		if g.GenerateSavePreExecHook || g.GenerateSavePostExecHook {
-			segment, err := GenerateSaveHook(g.GenerateSavePreExecHook, g.GenerateSavePostExecHook)
+			segment, err := GenerateSaveHook(*structInfo, g.GenerateSavePreExecHook, g.GenerateSavePostExecHook)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateSaveHook: %s\n", err)
 			}

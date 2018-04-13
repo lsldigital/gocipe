@@ -45,12 +45,12 @@ func Get(id int64) (*{{.Name}}, error) {
 
 var tmplGetHook, _ = template.New("GenerateGetHook").Parse(`
 {{if .PreExecHook }}
-func crudGetPreExecHook(id int64) (*User, error) {
+func crudGetPreExecHook(id int64) (*{{.Name}}, error) {
 	return New(), nil
 }
 {{end}}
 {{if .PostExecHook }}
-func crudGetPostExecHook(entity *User) (*User, error) {
+func crudGetPostExecHook(entity *{{.Name}}) (*{{.Name}}, error) {
 	return entity, nil
 }
 {{end}}
@@ -92,14 +92,16 @@ func GenerateGet(structInfo generators.StructureInfo, PreExecHook bool, PostExec
 }
 
 // GenerateGetHook will generate 2 functions: crudGetPreExecHook() and crudGetPostExecHook()
-func GenerateGetHook(PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateGetHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
+		Name         string
 		PreExecHook  bool
 		PostExecHook bool
 	})
 
+	data.Name = structInfo.Name
 	data.PreExecHook = PreExecHook
 	data.PostExecHook = PostExecHook
 
