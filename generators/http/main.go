@@ -2,7 +2,7 @@ package http
 
 var tmplMain = `
 func main() {
-	var error err
+	var err error
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM)
 
