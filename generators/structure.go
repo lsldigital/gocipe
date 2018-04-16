@@ -43,6 +43,7 @@ type FieldInfo struct {
 	Nullable   bool              // field.nullable
 	Default    string            // field.default
 	Filterable bool              //field.filterable
+	Upload     string            //field.upload
 	Tags       reflect.StructTag // GO struct field tags (between ``)
 }
 
@@ -121,6 +122,10 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 
 			if val, ok := info.Tags.Lookup("field.default"); ok && val != "" {
 				info.Default = val
+			}
+
+			if val, ok := info.Tags.Lookup("field.upload"); ok && val != "" {
+				info.Upload = val
 			}
 
 			structInfo.Fields = append(structInfo.Fields, info)

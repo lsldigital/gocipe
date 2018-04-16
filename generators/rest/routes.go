@@ -14,6 +14,7 @@ var tmplRoutes, _ = template.New("GenerateRoutes").Parse(`
 func RegisterRoutes(router *mux.Router) {
 {{.Routes}}
 }
+{{.Files}}
 `)
 
 //GenerateRoutes create function RegisterRoutes to register route endpoints
@@ -26,6 +27,7 @@ func GenerateRoutes(structInfo generators.StructureInfo, g generator) (string, e
 	endpoint := inflection.Plural(strings.ToLower(structInfo.Name))
 	data := new(struct {
 		Routes string
+		Files  string
 	})
 
 	if g.GenerateGet {
@@ -46,6 +48,11 @@ func GenerateRoutes(structInfo generators.StructureInfo, g generator) (string, e
 
 	if g.GenerateUpdate {
 		routes = append(routes, "\t"+`router.HandleFunc("/`+endpoint+`/{id}", RestUpdate).Methods("PUT")`)
+	}
+
+	if segment, r, err := GenerateFiles(structInfo); err == nil && len(r) != 0 {
+		data.Files = segment
+		routes = append(routes, r...)
 	}
 
 	data.Routes = strings.Join(routes, "\n")
