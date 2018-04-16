@@ -55,8 +55,6 @@ func init() {
 	} else {
 		log.Fatal("Database ping failed: ", err)
 	}
-
-	inject()
 }
 `
 
