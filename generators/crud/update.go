@@ -21,7 +21,7 @@ func (entity *{{.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 		}
 	}
 
-	stmt, err := tx.Prepare("UPDATE users SET id = $2, auth_code = $3, alias = $4, name = $5, callback = $6, status = $7 WHERE id = $1")
+	stmt, err := tx.Prepare("UPDATE {{.TableName}} SET {{.SQLFields}} WHERE id = $1")
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (entity *{{.Name}}) Update(tx *sql.Tx, autocommit bool) error {
         return fmt.Errorf("error executing crudPreSave() in {{.Name}}.Update(): %s", err)
 	}
     {{end}}
-	_, err = stmt.Exec("UPDATE {{.TableName}} SET {{.SQLFields}} WHERE id = $1", {{.StructFields}})
+	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("error executing transaction statement in {{.Name}}.Update(): %s", err)
