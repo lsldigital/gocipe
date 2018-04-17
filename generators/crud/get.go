@@ -29,7 +29,7 @@ func Get(id int64) (*{{.Name}}, error) {
 			return nil, err
 		}
         {{if .PostExecHook }}
-		if entity, err = crudPostGet(entity); err != nil {
+		if err = crudPostGet(entity); err != nil {
 			return nil, fmt.Errorf("error executing crudPostGet() in Get(%d) for entity '{{.Name}}': %s", id, err)
 		}
         {{end}}
@@ -47,8 +47,8 @@ func crudPreGet(id int64) error {
 }
 {{end}}
 {{if .PostExecHook }}
-func crudPostGet(entity *{{.Name}}) (*{{.Name}}, error) {
-	return entity, nil
+func crudPostGet(entity *{{.Name}}) error {
+	return nil
 }
 {{end}}
 `)

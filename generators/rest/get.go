@@ -53,7 +53,7 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-    if response.Entity, err = restPostGet(w, r, response.Entity); err != nil {
+    if err = restPostGet(w, r, response.Entity); err != nil {
         return
     }
     {{end}}
@@ -80,8 +80,8 @@ func restPreGet(w http.ResponseWriter, r *http.Request, id int64) error {
 }
 {{end}}
 {{if .PostExecHook }}
-func restPostGet(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) (*{{.Name}}, error) {
-	return entity, nil
+func restPostGet(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) error {
+	return nil
 }
 {{end}}
 `)

@@ -24,8 +24,8 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 			return err
 		}
 	}
-
-	stmt, err := tx.Prepare("INSERT INTO users (auth_code, alias, name, callback, status) VALUES ($1, $2, $3, $4, $5) RETURNING id")
+	
+	stmt, err := tx.Prepare("INSERT INTO {{.TableName}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
 	if err != nil {
 		return err
 	}
@@ -35,12 +35,12 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 		return fmt.Errorf("error executing crudPreSave() in {{.Name}}.Insert(): %s", err)
 	}
     {{end}}
-	err = stmt.QueryRow(*entity.Authcode, *entity.Alias, *entity.Name, *entity.Callback, *entity.Status).Scan(&id)
+	err = stmt.QueryRow({{.StructFields}}).Scan(&id)
 	if err == nil {
 		entity.ID = &id
 	} else {
 		tx.Rollback()
-		return fmt.Errorf("error executing transaction statement in User.Insert(): %s", err)
+		return fmt.Errorf("error executing transaction statement in {{.Name}}: %s", err)
 	}
 	{{if .PostExecHook }}
 	if err := crudPostSave(entity, tx); err != nil {
@@ -51,7 +51,7 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 	if autocommit {
 		err = tx.Commit()
 		if err != nil {
-			return fmt.Errorf("error committing transaction in User.Insert(): %s", err)
+			return fmt.Errorf("error committing transaction in {{.Name}}.Insert(): %s", err)
 		}
 	}
 
