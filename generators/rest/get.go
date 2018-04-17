@@ -56,10 +56,10 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-    if err = restGetPostExecHook(w, r, response.Entity); err != nil {
+    if response.Entity, err = restGetPostExecHook(w, r, response.Entity); err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restGetPostExecHook(w, r, %d) failed for '{{.Endpoint}}'"}]}` + "`" + `, id)
+        fmt.Fprintf(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restGetPostExecHook(w, r, %d) failed for '{{.Endpoint}}'"}]}` + "`" + `, id)
         return
     }
     {{end}}
@@ -86,8 +86,8 @@ func restGetPreExecHook(w http.ResponseWriter, r *http.Request, id int64) error 
 }
 {{end}}
 {{if .PostExecHook }}
-func restGetPostExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) error {
-	return nil
+func restGetPostExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) (*{{.Name}}, error) {
+	return entity, nil
 }
 {{end}}
 `)

@@ -13,9 +13,9 @@ var tmplGet, _ = template.New("GenerateGet").Parse(`
 func Get(id int64) (*{{.Name}}, error) {
 	var entity = New()
 	{{if .PreExecHook }}
-    if e := crudGetPreExecHook(id); e != nil {
-		fmt.Printf("Error executing crudGetPreExecHook() in Get(%d) for entity '{{.Name}}': %s", id, e.Error())
-        return nil, e
+    if err := crudGetPreExecHook(id); err != nil {
+		fmt.Printf("Error executing crudGetPreExecHook() in Get(%d) for entity '{{.Name}}': %s", id, err.Error())
+        return nil, err
 	}
     {{end}}
 	rows, err := db.Query("SELECT {{.SQLFields}} FROM {{.TableName}} WHERE id = $1 ORDER BY id ASC", id)
@@ -31,7 +31,7 @@ func Get(id int64) (*{{.Name}}, error) {
 		}
         {{if .PostExecHook }}
 		if entity, err = crudGetPostExecHook(entity); err != nil {
-			fmt.Printf("Error executing crudGetPostExecHook() in Get(%d) for entity 'User': %s", id, err.Error())
+			fmt.Printf("Error executing crudGetPostExecHook() in Get(%d) for entity '{{.Name}}': %s", id, err.Error())
 			return nil, err
 		}
         {{end}}
