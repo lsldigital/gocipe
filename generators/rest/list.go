@@ -111,13 +111,13 @@ var tmplListFilterDate, _ = template.New("GenerateListFilterDate").Parse(`
 
 var tmplListHook, _ = template.New("GenerateListHook").Parse(`
 {{if .PreExecHook }}
-func restListPreExecHook(w http.ResponseWriter, r *http.Request, *filters []models.ListFilter) error {
-	return nil
+func restListPreExecHook(w http.ResponseWriter, r *http.Request, filters []models.ListFilter) ([]models.ListFilter, error) {
+	return filters, nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restListPostExecHook(w http.ResponseWriter, r *http.Request, list *[]*{{.Name}}) error {
-	return nil
+func restListPostExecHook(w http.ResponseWriter, r *http.Request, list []*{{.Name}}) ([]*{{.Name}}, error) {
+	return list, nil
 }
 {{end}}
 `)
