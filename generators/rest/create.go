@@ -15,6 +15,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 		err      error
 		rawbody  []byte
 		response responseSingle
+		tx       *sql.Tx
 	)
 
 	rawbody, err = ioutil.ReadAll(r.Body)
@@ -35,13 +36,19 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	response.Entity.ID = nil
 
+	tx, err = db.Begin()
+	if err != nil {
+		return
+	}
+
 	{{if .PreExecHook}}
-    if err = restCreatePreExecHook(w, r, response.Entity); err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
-        return
-    }
+	if tx, err = restCreatePreExecHook(w, r, response.Entity, tx); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restCreatePreExecHook failed for '{{.Endpoint}}'"}]}` + "`" + `)
+		_ = tx.Rollback()
+		return
+	}
     {{end}}
 
 	err = response.Entity.Save()
@@ -53,13 +60,21 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-    if err = restCreatePostExecHook(w, r, response.Entity); err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
-        return
-    }
-    {{end}}
+	if tx, err = restCreatePostExecHook(w, r, response.Entity, tx); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restCreatePreExecHook failed for '{{.Endpoint}}'"}]}` + "`" + `)
+		_ = tx.Rollback()
+		return
+	}
+	{{end}}
+	
+	if err = tx.Commit(); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "RestCreate could not commit transaction"}]}` + "`" + `)
+		return
+	}
 
 	output, err := json.Marshal(response)
 	if err != nil {
@@ -77,13 +92,13 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 
 var tmplCreateHook, _ = template.New("GenerateCreateHook").Parse(`
 {{if .PreExecHook }}
-func restCreatePreExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) error {
-	return nil
+func restCreatePreExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (*sql.Tx, error) {
+	return tx, nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restCreatePostExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) error {
-	return nil
+func restCreatePostExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (*sql.Tx, error) {
+	return tx, nil
 }
 {{end}}
 `)
