@@ -14,8 +14,7 @@ func Get(id int64) (*{{.Name}}, error) {
 	var entity = New()
 	{{if .PreExecHook }}
     if err := crudPreGet(id); err != nil {
-		fmt.Printf("Error executing crudPreGet() in Get(%d) for entity '{{.Name}}': %s", id, err.Error())
-        return nil, err
+		return nil, fmt.Errorf("error executing crudPreGet() in Get(%d) for entity '{{.Name}}': %s", id, err)
 	}
     {{end}}
 	rows, err := db.Query("SELECT {{.SQLFields}} FROM {{.TableName}} WHERE id = $1 ORDER BY id ASC", id)
@@ -31,8 +30,7 @@ func Get(id int64) (*{{.Name}}, error) {
 		}
         {{if .PostExecHook }}
 		if entity, err = crudPostGet(entity); err != nil {
-			fmt.Printf("Error executing crudPostGet() in Get(%d) for entity '{{.Name}}': %s", id, err.Error())
-			return nil, err
+			return nil, fmt.Errorf("error executing crudPostGet() in Get(%d) for entity '{{.Name}}': %s", id, err)
 		}
         {{end}}
 		return entity, nil

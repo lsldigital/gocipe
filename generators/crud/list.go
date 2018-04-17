@@ -21,8 +21,7 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 	query := "SELECT {{.SQLFields}} FROM {{.TableName}}"
 	{{if .PreExecHook }}
     if filters, err = crudPreList(filters); err != nil {
-		fmt.Printf("Error executing crudPreList() in List(filters) for entity '{{.Name}}': %s", err.Error())
-        return nil, err
+		return nil, fmt.Errorf("error executing crudPreList() in List(filters) for entity '{{.Name}}': %s", err)
 	}
     {{end}}
 	for i, filter := range filters {
@@ -51,8 +50,7 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 	}
 	{{if .PostExecHook }}
 	if list, err = crudPostList(list); err != nil {
-		fmt.Printf("Error executing crudPostList() in List(filters) for entity '{{.Name}}': %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("error executing crudPostList() in List(filters) for entity '{{.Name}}': %s", err)
 	}
 	{{end}}
 	return list, nil

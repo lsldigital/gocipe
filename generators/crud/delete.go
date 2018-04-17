@@ -25,9 +25,8 @@ func Delete(id int64, tx *sql.Tx, autocommit bool) error {
 	}
 	{{if .PreExecHook}}
 	if err := crudPreDelete(id, tx); err != nil {
-		fmt.Printf("Error executing crudPreDelete() in Delete(%d) for entity '{{.Name}}': %s", id, err.Error())
 		tx.Rollback()
-		return err
+		return fmt.Errorf("error executing crudPreDelete() in Delete(%d) for entity '{{.Name}}': %s", id, err)
 	}
 	{{end}}
 	_, err = stmt.Exec(id)
@@ -37,9 +36,8 @@ func Delete(id int64, tx *sql.Tx, autocommit bool) error {
 	}
 	{{if .PostExecHook}}
 	if err := crudPostDelete(id, tx); err != nil {
-		fmt.Printf("Error executing crudPostDelete() in Delete(%d) for entity '{{.Name}}': %s", id, err.Error())
 		tx.Rollback()
-		return err
+		return fmt.Errorf("Error executing crudPostDelete() in Delete(%d) for entity '{{.Name}}': %s", id, err)
 	}
 	{{end}}
 	if autocommit {
