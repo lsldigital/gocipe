@@ -6,6 +6,7 @@ import (
 	_ "github.com/fluxynet/gocipe/generators/db"
 	_ "github.com/fluxynet/gocipe/generators/http"
 	_ "github.com/fluxynet/gocipe/generators/rest"
+	_ "github.com/fluxynet/gocipe/generators/vuetify"
 )
 
 func main() {

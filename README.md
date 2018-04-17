@@ -51,7 +51,8 @@ field.name        | Defines DB table column name
 field.type        | Defines DB table column type
 field.nullable    | "true" (nullable) or "false" (not null). Default: "false"
 field.default     | Defines default value of field for database schema
-field.filterable  | Whether field can be used as filter for REST endpoints. "true" / "false". Default: "true"
+field.filterable  | If field can be used as filter for REST endpoints. "true" / "false". Default: "true"
+widget            | Widget to use (vuetify). Format is `Label#Type` or `Label#Type#Options`
 
 ## Command, Arguments & Flags
 
@@ -65,26 +66,35 @@ Go:generate accepts a command, one or more argument and one or more flags. For e
 - `crud` is the argument
 - `file` and `struct` are flags
 
+**Notes**
+There is no guarantee about imports and formatting. Some imports may be missing and some files may have loose formatting.
+Use goimports and go fmt to ensure imports and formatting are correct, example: `goimports -w models/...` and `go fmt -w models/...`
+
 ### Arguments
 
 `Gocipe` accepts one mandatory argument.
 
 Argument   | Description
 -----------|-------------------------------------
+http       | Generates http server boiler plate. Use in `main.go`
 crud       | Generates CRUD functions and methods
 db         | Generates database schema
-http       | Generates http server
 rest       | Generates REST endpoint functions and methods
+vuetify    | Generates vuetify Edit and List components for entities
 
 The arguments have some flags associated to them.
 
-### crud
+### common
 
 Flag     | Required | Default | Description
 ---------|----------|---------|------------------------------------------
 file     | Yes      |         | Filename where struct is located
 struct   | Yes      |         | Name of the structure to use
 v        | No       | false   | Verbose mode. False by default
+
+### crud
+Flag     | Required | Default | Description
+---------|----------|---------|------------------------------------------
 `DELETE` |          |         |
 d        | No       | true    | Generate Delete
 hd       | No       | false   | Generate Delete pre-execution hook
@@ -103,12 +113,19 @@ hl       | No       | false   | Generate List pre-execution hook
 lh       | No       | false   | Generate List post-execution hook
 
 ### db
+Flag     | Required | Default | Description
+---------|----------|---------|------------------------------------------
+output   | Yes      |         | SQL filename to write to
 
-...
+```
+//go:generate gocipe db -file $GOFILE -struct Person -output $GOPATH/src/github.com/namespace/project/db/person.sql
+```
 
 ### http
 
-...
+```
+//go:generate gocipe http -file $GOFILE
+```
 
 ### rest
 
@@ -137,3 +154,16 @@ uh       | No       | false   | Generate Update post-execution hook
 l        | No       | true    | Generate List
 hl       | No       | false   | Generate List pre-execution hook
 lh       | No       | false   | Generate List post-execution hook
+
+## Widget
+
+Type         | Description                                                                | Options
+-------------|----------------------------------------------------------------------------|--------
+`textfield`  | Text box                                                                   |   
+`textarea`   | Text area                                                                  |    
+`number`     | Number                                                                     | 
+`password`   | Password                                                                   |   
+`checkbox`   | Checkbox                                                                   |   
+`date`       | Date picker                                                                |      
+`select`     | Select with predefined options                                             | `key1|label1;key2|label2;keyn|labeln`             
+`select-rel` | Select with options fetched asynchronously from a related entity endpoint  | `endpoint;filtername` where filtername is the field used for label                                                        
