@@ -24,3 +24,17 @@ field.type        | Defines DB table column type
 field.nullable    | "true" (nullable) or "false" (not null). Default: "false"
 field.default     | Defines default value of field for database schema
 field.filterable  | If field can be used as filter for REST endpoints. "true" / "false". Default: "true"
+widget            | Widget to use (vuetify). Format is `Label#Type` or `Label#Type#Options`
+
+## Widget
+
+Type         | Description                                                                | Options
+-------------|----------------------------------------------------------------------------|--------
+`textfield`  | Text box                                                                   |   
+`textarea`   | Text area                                                                  |    
+`number`     | Number                                                                     | 
+`password`   | Password                                                                   |   
+`checkbox`   | Checkbox                                                                   |   
+`date`       | Date picker                                                                |      
+`select`     | Select with predefined options                                             | `key1|label1;key2|label2;keyn|labeln`             
+`select-rel` | Select with options fetched asynchronously from a related entity endpoint  | `endpoint;filtername` where filtername is the field used for label                                                        

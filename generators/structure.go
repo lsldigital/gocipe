@@ -148,7 +148,7 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 		return structInfo, nil
 	}
 
-	return nil, errors.New("Type " + structInfo.Name + " is not a structure type.")
+	return nil, errors.New("type " + structInfo.Name + " is not a structure type.")
 }
 
 func (structInfo *StructureInfo) String() string {
@@ -176,7 +176,7 @@ func ParseWidgetInfo(value string) (*WidgetInfo, error) {
 	lenf = len(fields)
 
 	if lenf != 2 && lenf != 3 {
-		return nil, errors.New("Invalid format for Widget tag: " + value)
+		return nil, errors.New("invalid format for widget tag: " + value)
 	}
 
 	widgetInfo.Label = fields[0]

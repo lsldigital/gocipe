@@ -91,6 +91,24 @@ var tmplEditorTextfield, _ = template.New("EditorTextfield").Parse(`
 <v-text-field v-model="entity.{{.Field}}" label="{{.Label}}" />
 `)
 
+var tmplEditorTextarea, _ = template.New("EditorTextarea").Parse(`
+<v-text-field v-model="entity.{{.Field}}" label="{{.Label}}" multiline />
+`)
+
+var tmplEditorNumber, _ = template.New("EditorRange").Parse(`
+<v-text-field v-model="entity.{{.Field}}" label="{{.Label}}" type="number" />
+`)
+
+var tmplEditorPassword, _ = template.New("EditorPassword").Parse(`
+<v-text-field
+	v-model="entity.{{.Field}}"
+	:append-icon="e1 ? 'visibility' : 'visibility_off'"
+	:append-icon-cb="() => (e1 = !e1)"
+	:type="e1 ? 'password' : 'text'"
+	counter
+  ></v-text-field>
+`)
+
 var tmplEditorCheckbox, _ = template.New("EditorCheckbox").Parse(`
 <v-checkbox label="{{.Label}}" v-model="entity.{{.Field}}"></v-checkbox>
 `)
@@ -123,6 +141,12 @@ var tmplEditorDate, _ = template.New("EditorDate").Parse(`
 </v-menu>
 `)
 
+var tmplEditorTime, _ = template.New("EditorTime").Parse(`
+<div>
+    <v-time-picker v-model="entity.{{.Field}}" label="{{.Label}}" :landscape="landscape"></v-time-picker>
+  </div>
+`)
+
 var tmplEditorSelectRel, _ = template.New("EditorSelectRel").Parse(`
 <v-select
     autocomplete
@@ -134,6 +158,24 @@ var tmplEditorSelectRel, _ = template.New("EditorSelectRel").Parse(`
     :search-input.sync="select.{{.Field}}.search"
 	v-model="entity.{{.Field}}"
 ></v-select>
+`)
+
+var tmplEditorSelect, _ = template.New("EditorSelect").Parse(`
+<v-select
+	autocomplete
+	cache-items
+	required
+	label="{{.Label}}"
+	:items="select.{{.Field}}.items"
+	v-model="entity.{{.Field}}"
+></v-select>
+`)
+
+var tmplEditorToggle, _ = template.New("EditorToggle").Parse(`
+<v-switch
+	:label="{{.Label}}"
+	v-model="entity.{{.Field}}"
+></v-switch>
 `)
 
 //GenerateEditor generate editor code
@@ -183,11 +225,31 @@ func GenerateEditor(structInfo generators.StructureInfo) (string, error) {
 				Label string
 				Field string
 			}{field.Widget.Label, field.Name})
+
+		case "textarea":
+			tmplEditorTextarea.Execute(&markupSegment, struct {
+				Label string
+				Field string
+			}{field.Widget.Label, field.Name})
+
+		case "number":
+			tmplEditorTextarea.Execute(&markupSegment, struct {
+				Label string
+				Field string
+			}{field.Widget.Label, field.Name})
+
+		case "password":
+			tmplEditorPassword.Execute(&markupSegment, struct {
+				Label string
+				Field string
+			}{field.Widget.Label, field.Name})
+
 		case "checkbox":
 			tmplEditorCheckbox.Execute(&markupSegment, struct {
 				Label string
 				Field string
 			}{field.Widget.Label, field.Name})
+
 		case "date":
 			tmplEditorDate.Execute(&markupSegment, struct {
 				Label string
@@ -195,8 +257,26 @@ func GenerateEditor(structInfo generators.StructureInfo) (string, error) {
 			}{field.Widget.Label, field.Name})
 			dateData = append(dateData, field.Name+": {value: null, menuAppear: false}")
 			createdAssgn = append(createdAssgn, "this.dates."+field.Name+".value = response.data.entity."+field.Name+".substr(0,10)")
+
+		case "select":
+			tmplEditorSelect.Execute(&markupSegment, struct {
+				Label string
+				Field string
+			}{})
+
+			var values []string
+			for _, pair := range field.Widget.Options {
+				p := strings.SplitN(pair, "|", 2)
+				if len(p) == 1 {
+					values = append(values, fmt.Sprintf(`{text: "%s", value: "%s"}`, p[0], p[0]))
+				} else {
+					values = append(values, fmt.Sprintf(`{text: "%s", value: "%s"}`, p[0], p[1]))
+				}
+			}
+
+			selectData = append(selectData, field.Name+": { items: ["+strings.Join(values, ", ")+"]}")
+
 		case "select-rel":
-			// if strings.HasPrefix(field.Widget.Options[0], "")
 			tmplEditorSelectRel.Execute(&markupSegment, struct {
 				Label string
 				Field string
