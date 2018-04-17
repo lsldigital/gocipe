@@ -9,22 +9,22 @@ import (
 
 var tmplSave, _ = template.New("GenerateSave").Parse(`
 // Save either inserts or updates a {{.Name}} record based on whether or not id is nil
-func (entity *{{.Name}}) Save(tx *sql.Tx) (*sql.Tx, error) {
+func (entity *{{.Name}}) Save(tx *sql.Tx, autocommit bool) error {
 	if entity.ID == nil {
-		return tx, entity.Insert()
+		return entity.Insert(tx, autocommit)
 	}
-	return tx, entity.Update()
+	return entity.Update(tx, autocommit)
 }
 `)
 
 var tmplSaveHook, _ = template.New("GenerateSaveHook").Parse(`
 {{if .PreExecHook }}
-func crudSavePreExecHook(entity *{{.Name}}) error {
+func crudPreSave(entity *{{.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func crudSavePostExecHook(entity *{{.Name}}) error {
+func crudPostSave(entity *{{.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}

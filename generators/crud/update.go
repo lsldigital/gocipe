@@ -11,21 +11,40 @@ import (
 
 var tmplUpdate, _ = template.New("GenerateUpdate").Parse(`
 //Update Will execute an SQLUpdate Statement for {{.Name}} in the database. Prefer using Save instead of Update directly.
-func (entity *{{.Name}}) Update() error {
+func (entity *{{.Name}}) Update(tx *sql.Tx, autocommit bool) error {
+	var err error
+
+	if tx == nil {
+		tx, err = db.Begin()
+		if err != nil {
+			return err
+		}
+	}
+
+	stmt, err := tx.Prepare("UPDATE users SET id = $2, auth_code = $3, alias = $4, name = $5, callback = $6, status = $7 WHERE id = $1")
+	if err != nil {
+		return err
+	}
+
 	{{if .PreExecHook }}
-    if e := crudSavePreExecHook(entity); e != nil {
-        fmt.Printf("Error executing crudSavePreExecHook() in {{.Name}}.Update(): %s", e.Error())
-        return e
+    if err := crudPreSave(entity, tx); err != nil {
+        return fmt.Errorf("error executing crudPreSave() in XXX.Update(): %s", err.Error())
 	}
     {{end}}
-	_, err := db.Exec("UPDATE {{.TableName}} SET {{.SQLFields}} WHERE id = $1", {{.StructFields}})
+	_, err = stmt.Exec("UPDATE {{.TableName}} SET {{.SQLFields}} WHERE id = $1", {{.StructFields}})
 	{{if .PostExecHook }}
-	if e := crudSavePostExecHook(entity); e != nil {
-		fmt.Printf("Error executing crudSavePostExecHook() in {{.Name}}.Update(): %s", e.Error())
-		return e
+	if e := crudPostSave(entity, tx); e != nil {
+		return fmt.Errorf("error executing crudPostSave() in XXX.Update(): %s", err.Error())
 	}
 	{{end}}
-	return err
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			return fmt.Errorf("error committing transaction in User.Update(): %s", err)
+		}
+	}
+
+	return nil
 }
 `)
 

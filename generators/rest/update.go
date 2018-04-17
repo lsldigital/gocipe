@@ -82,7 +82,7 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
     }
     {{end}}
 
-	tx, err = response.Entity.Save(tx)
+	err = response.Entity.Save(tx, false)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)

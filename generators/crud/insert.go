@@ -12,29 +12,49 @@ import (
 var tmplInsert, _ = template.New("GenerateInsert").Parse(`
 // Insert performs an SQL insert for {{.Name}} record and update instance with inserted id.
 // Prefer using Save rather than Insert directly.
-func (entity *{{.Name}}) Insert() error {
+func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 	var (
 		id  int64
 		err error
 	)
+
+	if tx == nil {
+		tx, err = db.Begin()
+		if err != nil {
+			return err
+		}
+	}
+
+	stmt, err := tx.Prepare("INSERT INTO users (auth_code, alias, name, callback, status) VALUES ($1, $2, $3, $4, $5) RETURNING id")
+	if err != nil {
+		return err
+	}
 	{{if .PreExecHook }}
-    if e := crudSavePreExecHook(entity); e != nil {
-        fmt.Printf("Error executing crudSavePreExecHook() in {{.Name}}.Insert(): %s", e.Error())
-        return e
+    if e := crudPreSave(entity, tx); e != nil {
+		return fmt.Errorf("error executing crudPreSave() in {{.Name}}.Insert(): %s", err)
 	}
     {{end}}
-	err = db.QueryRow("INSERT INTO {{.TableName}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id", {{.StructFields}}).Scan(&id)
-
+	res, err := stmt.Exec(*entity.Authcode, *entity.Alias, *entity.Name, *entity.Callback, *entity.Status)
 	if err == nil {
+		id, err = res.LastInsertId()
 		entity.ID = &id
+	} else {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in User.Insert(): %s", err)
 	}
 	{{if .PostExecHook }}
-	if e := crudSavePostExecHook(entity); e != nil {
-		fmt.Printf("Error executing crudSavePostExecHook() in {{.Name}}.Insert(): %s", e.Error())
-		return e
+	if e := crudPostSave(entity, tx); e != nil {
+		return fmt.Errorf("error executing crudPostSave() in {{.Name}}.Insert(): %s", err)
 	}
 	{{end}}
-	return err
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			return fmt.Errorf("error committing transaction in User.Insert(): %s", err)
+		}
+	}
+
+	return nil
 }
 `)
 
