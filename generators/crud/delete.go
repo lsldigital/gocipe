@@ -28,7 +28,7 @@ func Delete(id int64, tx *sql.Tx) (*sql.Tx, error) {
 		return nil, err
 	}
 	{{if .PreExecHook}}
-	if tx, err := crudDeletePreExecHook(id, tx); err != nil {
+	if err := crudPreDelete(id, tx); err != nil {
 		fmt.Printf("Error executing deletePreExecHook() in Delete(%d) for entity '{{.Name}}': %s", id, err.Error())
 		_ = tx.Rollback()
 		return nil, err
@@ -36,7 +36,7 @@ func Delete(id int64, tx *sql.Tx) (*sql.Tx, error) {
 	{{end}}
 	_, err = stmt.Exec(id)
 	{{if .PostExecHook}}
-	if tx, err := crudDeletePostExecHook(id, tx); err != nil {
+	if err := crudPostDelete(id, tx); err != nil {
 		fmt.Printf("Error executing deletePostExecHook() in Delete(%d) for entity '{{.Name}}': %s", id, err.Error())
 		_ = tx.Rollback()
 		return nil, err

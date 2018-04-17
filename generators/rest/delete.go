@@ -104,7 +104,7 @@ func restPreDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx)
 }
 {{end}}
 {{if .PostExecHook }}
-func restPostDelete(w http.ResponseWriter, r *http.Request, id int64, sql.error {
+func restPostDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
