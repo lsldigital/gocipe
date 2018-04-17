@@ -52,7 +52,7 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	{{if .PreExecHook}}
-	if tx, err = restDeletePreExecHook(w, r, response.Entity, tx); err != nil {
+	if tx, err = restDeletePreExecHook(w, r, id, tx); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restDeletePreExecHook failed for '{{.Endpoint}}'"}]}` + "`" + `)
