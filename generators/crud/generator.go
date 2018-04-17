@@ -97,26 +97,6 @@ func (g generator) Generate() (string, error) {
 		generated = append(generated, segment)
 	}
 
-	// {
-	// 	segment, err := GenerateMarshal(*structInfo)
-
-	// 	if err != nil {
-	// 		log.Fatalf("An error occured during GenerateMarshal: %s\n", err)
-	// 	}
-
-	// 	generated = append(generated, segment)
-	// }
-
-	// {
-	// 	segment, err := GenerateUnmarshal(*structInfo)
-
-	// 	if err != nil {
-	// 		log.Fatalf("An error occured during GenerateUnmarshal: %s\n", err)
-	// 	}
-
-	// 	generated = append(generated, segment)
-	// }
-
 	if g.GenerateGet {
 		segment, err := GenerateGet(*structInfo, g.GenerateGetPreExecHook, g.GenerateGetPostExecHook)
 		if err != nil {

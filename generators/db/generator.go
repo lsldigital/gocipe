@@ -50,7 +50,11 @@ func (g generator) Generate() (string, error) {
 		return "", err
 	}
 
-	targetFilename := g.Output
+	targetFilename, err := generators.GetAbsPath(g.Output)
+	if err != nil {
+		return "", err
+	}
+
 	err = ioutil.WriteFile(targetFilename, []byte(generated), 0644)
 
 	return generated, err

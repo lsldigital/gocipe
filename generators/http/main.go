@@ -2,20 +2,24 @@ package http
 
 var tmplMain = `
 func main() {
+	var err error
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM)
 
 	router := mux.NewRouter()
-	registerRoutes(router)
+	
+	if err = bootstrap(router); err != nil {
+		log.Fatal("Bootstrap failed: ", err)
+	}
 	
 	go func() {
-		err := http.ListenAndServe(":8888", router)
+		err = http.ListenAndServe(":" + port, router)
 		if err != nil {
 			log.Fatal("Failed to start http server: ", err)
 		}
 	}()
 
-	log.Println("Listening on :8888")
+	log.Println("Listening on :" + port)
 	<-sigs
 	log.Println("Server stopped")
 }
