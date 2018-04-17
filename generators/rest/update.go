@@ -75,9 +75,6 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	{{if .PreExecHook}}
     if err = restPreUpdate(w, r, response.Entity, tx); err != nil {
 		tx.Rollback()
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreUpdate() failed to execute in '{{.Endpoint}}'"}]}` + "`" + `)
         return
     }
     {{end}}
@@ -93,9 +90,6 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	{{if .PostExecHook}}
     if err = restPostUpdate(w, r, response.Entity, tx); err != nil {
 		tx.Rollback()
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPostUpdate() failed to execute in '{{.Endpoint}}'"}]}` + "`" + `)
         return
     }
 	{{end}}
@@ -135,13 +129,13 @@ func restPostUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, t
 `)
 
 //GenerateUpdate will generate a REST handler function for Update
-func GenerateUpdate(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateUpdate(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := struct {
 		Endpoint     string
 		PreExecHook  bool
 		PostExecHook bool
-	}{strings.ToLower(structInfo.Name), PreExecHook, PostExecHook}
+	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook}
 
 	err := tmplUpdate.Execute(&output, data)
 	if err != nil {
@@ -152,7 +146,7 @@ func GenerateUpdate(structInfo generators.StructureInfo, PreExecHook bool, PostE
 }
 
 // GenerateUpdateHook will generate 2 functions: restPreUpdate() and restPostUpdate()
-func GenerateUpdateHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateUpdateHook(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
@@ -162,8 +156,8 @@ func GenerateUpdateHook(structInfo generators.StructureInfo, PreExecHook bool, P
 	})
 
 	data.Name = structInfo.Name
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	err := tmplUpdateHook.Execute(&output, data)
 	if err != nil {

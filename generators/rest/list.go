@@ -20,9 +20,6 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 
 	{{if .PreExecHook}}
     if filters, err = restPreList(w, r, filters); err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreList() failed for '{{.Endpoint}}'"}]}` + "`" + `)
         return
     }
     {{end}}
@@ -37,9 +34,6 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 
 	{{if .PostExecHook}}
     if response.Entities, err = restPostList(w, r, response.Entities); err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreList() failed for '{{.Endpoint}}'"}]}` + "`" + `)
         return
     }
     {{end}}
@@ -123,7 +117,7 @@ func restPostList(w http.ResponseWriter, r *http.Request, list []*{{.Name}}) ([]
 `)
 
 //GenerateList will generate a REST handler function for List
-func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateList(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var (
 		output  bytes.Buffer
 		filters []string
@@ -169,8 +163,8 @@ func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExe
 		data.Filters = "\nquery := r.URL.Query()\n" + strings.Join(filters, "\n")
 	}
 
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 	err = tmplList.Execute(&output, data)
 
 	if err != nil {
@@ -181,7 +175,7 @@ func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExe
 }
 
 // GenerateListHook will generate 2 functions: restPreList() and restPostList()
-func GenerateListHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateListHook(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
@@ -191,8 +185,8 @@ func GenerateListHook(structInfo generators.StructureInfo, PreExecHook bool, Pos
 	})
 
 	data.Name = structInfo.Name
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	err := tmplListHook.Execute(&output, data)
 	if err != nil {

@@ -54,9 +54,6 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 	{{if .PreExecHook}}
 	if err = restPreDelete(w, r, id, tx); err != nil {
 		tx.Rollback()
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreDelete failed for '{{.Endpoint}}'"}]}` + "`" + `)
 		return
 	}
     {{end}}
@@ -71,9 +68,6 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 	{{if .PostExecHook}}
 	if err = restPostDelete(w, r, id, tx); err != nil {
 		tx.Rollback()
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPostDelete failed for '{{.Endpoint}}'"}]}` + "`" + `)
 		return
 	}
 	{{end}}
@@ -112,13 +106,13 @@ func restPostDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx
 `)
 
 //GenerateDelete will generate a REST handler function for Delete
-func GenerateDelete(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateDelete(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := struct {
 		Endpoint     string
 		PreExecHook  bool
 		PostExecHook bool
-	}{strings.ToLower(structInfo.Name), PreExecHook, PostExecHook}
+	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook}
 
 	err := tmplDelete.Execute(&output, data)
 
@@ -130,7 +124,7 @@ func GenerateDelete(structInfo generators.StructureInfo, PreExecHook bool, PostE
 }
 
 // GenerateDeleteHook will generate 2 functions: restPreDelete() and restPostDelete()
-func GenerateDeleteHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateDeleteHook(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
@@ -140,8 +134,8 @@ func GenerateDeleteHook(structInfo generators.StructureInfo, PreExecHook bool, P
 	})
 
 	data.Name = structInfo.Name
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	err := tmplDeleteHook.Execute(&output, data)
 	if err != nil {

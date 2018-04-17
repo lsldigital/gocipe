@@ -33,9 +33,6 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 
 	{{if .PreExecHook}}
     if err = restPreGet(w, r, id); err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprintf(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreGet(w, r, %d) failed for '{{.Endpoint}}'"}]}` + "`" + `, id)
         return
     }
     {{end}}
@@ -57,9 +54,6 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 
 	{{if .PostExecHook}}
     if response.Entity, err = restPostGet(w, r, response.Entity); err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprintf(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPostGet(w, r, %d) failed for '{{.Endpoint}}'"}]}` + "`" + `, id)
         return
     }
     {{end}}
@@ -93,13 +87,13 @@ func restPostGet(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) (*{{
 `)
 
 //GenerateGet will generate a REST handler function for GET
-func GenerateGet(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateGet(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := struct {
 		Endpoint     string
 		PreExecHook  bool
 		PostExecHook bool
-	}{strings.ToLower(structInfo.Name), PreExecHook, PostExecHook}
+	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook}
 
 	err := tmplGet.Execute(&output, data)
 
@@ -111,7 +105,7 @@ func GenerateGet(structInfo generators.StructureInfo, PreExecHook bool, PostExec
 }
 
 // GenerateGetHook will generate 2 functions: restPreGet() and restPostGet()
-func GenerateGetHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateGetHook(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
@@ -121,8 +115,8 @@ func GenerateGetHook(structInfo generators.StructureInfo, PreExecHook bool, Post
 	})
 
 	data.Name = structInfo.Name
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	err := tmplGetHook.Execute(&output, data)
 	if err != nil {
