@@ -9,11 +9,11 @@ import (
 
 var tmplSave, _ = template.New("GenerateSave").Parse(`
 // Save either inserts or updates a {{.Name}} record based on whether or not id is nil
-func (entity *{{.Name}}) Save() error {
+func (entity *{{.Name}}) Save(tx *sql.Tx) (*sql.Tx, error) {
 	if entity.ID == nil {
-		return entity.Insert()
+		return tx, entity.Insert()
 	}
-	return entity.Update()
+	return tx, entity.Update()
 }
 `)
 
