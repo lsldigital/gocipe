@@ -43,29 +43,29 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 
 	{{if .PreExecHook}}
 	if err = restPreCreate(w, r, response.Entity, tx); err != nil {
+		tx.Rollback()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreCreate failed for '{{.Endpoint}}'"}]}` + "`" + `)
-		_ = tx.Rollback()
 		return
 	}
     {{end}}
 
 	err = response.Entity.Save(tx, false)
 	if err != nil {
+		tx.Rollback()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Save failed"}]}` + "`" + `)
-		_ = tx.Rollback()
 		return
 	}
 
 	{{if .PostExecHook}}
 	if err = restPostCreate(w, r, response.Entity, tx); err != nil {
+		tx.Rollback()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPostCreate failed for '{{.Endpoint}}'"}]}` + "`" + `)
-		_ = tx.Rollback()
 		return
 	}
 	{{end}}
@@ -121,7 +121,7 @@ func GenerateCreate(structInfo generators.StructureInfo, PreExecHook bool, PostE
 	return output.String(), nil
 }
 
-// GenerateCreateHook will generate 2 functions: restCreatePreExecHook() and restCreatePostExecHook()
+// GenerateCreateHook will generate 2 functions: restPreCreate() and restPostCreate()
 func GenerateCreateHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 

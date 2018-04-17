@@ -19,10 +19,10 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 	{{.Filters}}
 
 	{{if .PreExecHook}}
-    if filters, err = restListPreExecHook(w, r, filters); err != nil {
+    if filters, err = restPreList(w, r, filters); err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restListPreExecHook() failed for '{{.Endpoint}}'"}]}` + "`" + `)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreList() failed for '{{.Endpoint}}'"}]}` + "`" + `)
         return
     }
     {{end}}
@@ -36,10 +36,10 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-    if response.Entities, err = restListPostExecHook(w, r, response.Entities); err != nil {
+    if response.Entities, err = restPostList(w, r, response.Entities); err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restListPreExecHook() failed for '{{.Endpoint}}'"}]}` + "`" + `)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreList() failed for '{{.Endpoint}}'"}]}` + "`" + `)
         return
     }
     {{end}}
@@ -111,12 +111,12 @@ var tmplListFilterDate, _ = template.New("GenerateListFilterDate").Parse(`
 
 var tmplListHook, _ = template.New("GenerateListHook").Parse(`
 {{if .PreExecHook }}
-func restListPreExecHook(w http.ResponseWriter, r *http.Request, filters []models.ListFilter) ([]models.ListFilter, error) {
+func restPreList(w http.ResponseWriter, r *http.Request, filters []models.ListFilter) ([]models.ListFilter, error) {
 	return filters, nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restListPostExecHook(w http.ResponseWriter, r *http.Request, list []*{{.Name}}) ([]*{{.Name}}, error) {
+func restPostList(w http.ResponseWriter, r *http.Request, list []*{{.Name}}) ([]*{{.Name}}, error) {
 	return list, nil
 }
 {{end}}
@@ -180,7 +180,7 @@ func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExe
 	return output.String(), nil
 }
 
-// GenerateListHook will generate 2 functions: restListPreExecHook() and restListPostExecHook()
+// GenerateListHook will generate 2 functions: restPreList() and restPostList()
 func GenerateListHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 

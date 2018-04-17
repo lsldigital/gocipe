@@ -73,11 +73,11 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PreExecHook}}
-    if err = restUpdatePreExecHook(w, r, response.Entity, tx); err != nil {
+    if err = restPreUpdate(w, r, response.Entity, tx); err != nil {
+		tx.Rollback()
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
-		tx.Rollback()
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreUpdate() failed to execute in '{{.Endpoint}}'"}]}` + "`" + `)
         return
     }
     {{end}}
@@ -91,11 +91,11 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-    if err = restUpdatePostExecHook(w, r, response.Entity, tx); err != nil {
+    if err = restPostUpdate(w, r, response.Entity, tx); err != nil {
+		tx.Rollback()
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
-		tx.Rollback()
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPostUpdate() failed to execute in '{{.Endpoint}}'"}]}` + "`" + `)
         return
     }
 	{{end}}
@@ -123,12 +123,12 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 
 var tmplUpdateHook, _ = template.New("GenerateUpdateHook").Parse(`
 {{if .PreExecHook }}
-func restUpdatePreExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) error {
+func restPreUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restUpdatePostExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) error {
+func restPostUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
@@ -151,7 +151,7 @@ func GenerateUpdate(structInfo generators.StructureInfo, PreExecHook bool, PostE
 	return output.String(), nil
 }
 
-// GenerateUpdateHook will generate 2 functions: restUpdatePreExecHook() and restUpdatePostExecHook()
+// GenerateUpdateHook will generate 2 functions: restPreUpdate() and restPostUpdate()
 func GenerateUpdateHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 

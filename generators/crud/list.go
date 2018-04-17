@@ -20,8 +20,8 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 
 	query := "SELECT {{.SQLFields}} FROM {{.TableName}}"
 	{{if .PreExecHook }}
-    if filters, err = crudListPreExecHook(filters); err != nil {
-		fmt.Printf("Error executing crudListPreExecHook() in List(filters) for entity '{{.Name}}': %s", err.Error())
+    if filters, err = crudPreList(filters); err != nil {
+		fmt.Printf("Error executing crudPreList() in List(filters) for entity '{{.Name}}': %s", err.Error())
         return nil, err
 	}
     {{end}}
@@ -50,8 +50,8 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 		list = append(list, entity)
 	}
 	{{if .PostExecHook }}
-	if list, err = crudListPostExecHook(list); err != nil {
-		fmt.Printf("Error executing crudListPostExecHook() in List(filters) for entity '{{.Name}}': %s", err.Error())
+	if list, err = crudPostList(list); err != nil {
+		fmt.Printf("Error executing crudPostList() in List(filters) for entity '{{.Name}}': %s", err.Error())
 		return nil, err
 	}
 	{{end}}
@@ -61,12 +61,12 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 
 var tmplListHook, _ = template.New("GenerateListHook").Parse(`
 {{if .PreExecHook }}
-func crudListPreExecHook(filters []models.ListFilter) ([]models.ListFilter, error) {
+func crudPreList(filters []models.ListFilter) ([]models.ListFilter, error) {
 	return filters, nil
 }
 {{end}}
 {{if .PostExecHook }}
-func crudListPostExecHook(list []*{{.Name}}) ([]*{{.Name}}, error) {
+func crudPostList(list []*{{.Name}}) ([]*{{.Name}}, error) {
 	return list, nil
 }
 {{end}}
@@ -107,7 +107,7 @@ func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExe
 	return output.String(), nil
 }
 
-// GenerateListHook will generate 2 functions: crudListPreExecHook() and crudListPostExecHook()
+// GenerateListHook will generate 2 functions: crudPreList() and crudPostList()
 func GenerateListHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 

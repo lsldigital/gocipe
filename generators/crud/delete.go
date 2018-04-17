@@ -29,16 +29,16 @@ func Delete(id int64, tx *sql.Tx) (*sql.Tx, error) {
 	}
 	{{if .PreExecHook}}
 	if err := crudPreDelete(id, tx); err != nil {
-		fmt.Printf("Error executing deletePreExecHook() in Delete(%d) for entity '{{.Name}}': %s", id, err.Error())
-		_ = tx.Rollback()
+		fmt.Printf("Error executing crudPreDelete() in Delete(%d) for entity '{{.Name}}': %s", id, err.Error())
+		tx.Rollback()
 		return nil, err
 	}
 	{{end}}
 	_, err = stmt.Exec(id)
 	{{if .PostExecHook}}
 	if err := crudPostDelete(id, tx); err != nil {
-		fmt.Printf("Error executing deletePostExecHook() in Delete(%d) for entity '{{.Name}}': %s", id, err.Error())
-		_ = tx.Rollback()
+		fmt.Printf("Error executing crudPostDelete() in Delete(%d) for entity '{{.Name}}': %s", id, err.Error())
+		tx.Rollback()
 		return nil, err
 	}
 	{{end}}
@@ -72,7 +72,7 @@ func (entity *{{.Name}}) Delete(tx *sql.Tx) (*sql.Tx, error) {
 	}
 	{{if .PreExecHook}}
 	if err := crudPreDelete(id, tx); err != nil {
-		_ = tx.Rollback()
+		tx.Rollback()
 		return nil, fmt.Errorf("Error executing crudPreDelete() in User.Delete() for ID = %d : %s", id, err.Error())
 	}
 	{{end}}
@@ -82,7 +82,7 @@ func (entity *{{.Name}}) Delete(tx *sql.Tx) (*sql.Tx, error) {
 	}
 	{{if .PostExecHook}}
 	if err = crudPostDelete(id, tx); err != nil {
-		_ = tx.Rollback()
+		tx.Rollback()
 		return nil, fmt.Errorf("Error executing crudPostDelete() in User.Delete() for ID = %d : %s", id, err.Error())
 	}
 	{{end}}
@@ -130,7 +130,7 @@ func GenerateDelete(structInfo generators.StructureInfo, PreExecHook bool, PostE
 	return output.String(), nil
 }
 
-// GenerateDeleteHook will generate 2 functions: deletePreExecHook() and deletePostExecHook()
+// GenerateDeleteHook will generate 2 functions: crudPreDelete() and crudPostDelete()
 func GenerateDeleteHook(PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 

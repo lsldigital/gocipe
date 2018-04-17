@@ -32,10 +32,10 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PreExecHook}}
-    if err = restGetPreExecHook(w, r, id); err != nil {
+    if err = restPreGet(w, r, id); err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprintf(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restGetPreExecHook(w, r, %d) failed for '{{.Endpoint}}'"}]}` + "`" + `, id)
+        fmt.Fprintf(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreGet(w, r, %d) failed for '{{.Endpoint}}'"}]}` + "`" + `, id)
         return
     }
     {{end}}
@@ -56,10 +56,10 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-    if response.Entity, err = restGetPostExecHook(w, r, response.Entity); err != nil {
+    if response.Entity, err = restPostGet(w, r, response.Entity); err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprintf(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restGetPostExecHook(w, r, %d) failed for '{{.Endpoint}}'"}]}` + "`" + `, id)
+        fmt.Fprintf(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPostGet(w, r, %d) failed for '{{.Endpoint}}'"}]}` + "`" + `, id)
         return
     }
     {{end}}
@@ -81,12 +81,12 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 
 var tmplGetHook, _ = template.New("GenerateGetHook").Parse(`
 {{if .PreExecHook }}
-func restGetPreExecHook(w http.ResponseWriter, r *http.Request, id int64) error {
+func restPreGet(w http.ResponseWriter, r *http.Request, id int64) error {
 	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restGetPostExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) (*{{.Name}}, error) {
+func restPostGet(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) (*{{.Name}}, error) {
 	return entity, nil
 }
 {{end}}
@@ -110,7 +110,7 @@ func GenerateGet(structInfo generators.StructureInfo, PreExecHook bool, PostExec
 	return output.String(), nil
 }
 
-// GenerateGetHook will generate 2 functions: restGetPreExecHook() and restGetPostExecHook()
+// GenerateGetHook will generate 2 functions: restPreGet() and restPostGet()
 func GenerateGetHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 

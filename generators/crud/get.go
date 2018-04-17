@@ -13,8 +13,8 @@ var tmplGet, _ = template.New("GenerateGet").Parse(`
 func Get(id int64) (*{{.Name}}, error) {
 	var entity = New()
 	{{if .PreExecHook }}
-    if err := crudGetPreExecHook(id); err != nil {
-		fmt.Printf("Error executing crudGetPreExecHook() in Get(%d) for entity '{{.Name}}': %s", id, err.Error())
+    if err := crudPreGet(id); err != nil {
+		fmt.Printf("Error executing crudPreGet() in Get(%d) for entity '{{.Name}}': %s", id, err.Error())
         return nil, err
 	}
     {{end}}
@@ -30,8 +30,8 @@ func Get(id int64) (*{{.Name}}, error) {
 			return nil, err
 		}
         {{if .PostExecHook }}
-		if entity, err = crudGetPostExecHook(entity); err != nil {
-			fmt.Printf("Error executing crudGetPostExecHook() in Get(%d) for entity '{{.Name}}': %s", id, err.Error())
+		if entity, err = crudPostGet(entity); err != nil {
+			fmt.Printf("Error executing crudPostGet() in Get(%d) for entity '{{.Name}}': %s", id, err.Error())
 			return nil, err
 		}
         {{end}}
@@ -44,12 +44,12 @@ func Get(id int64) (*{{.Name}}, error) {
 
 var tmplGetHook, _ = template.New("GenerateGetHook").Parse(`
 {{if .PreExecHook }}
-func crudGetPreExecHook(id int64) error {
+func crudPreGet(id int64) error {
 	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func crudGetPostExecHook(entity *{{.Name}}) (*{{.Name}}, error) {
+func crudPostGet(entity *{{.Name}}) (*{{.Name}}, error) {
 	return entity, nil
 }
 {{end}}
@@ -90,7 +90,7 @@ func GenerateGet(structInfo generators.StructureInfo, PreExecHook bool, PostExec
 	return output.String(), nil
 }
 
-// GenerateGetHook will generate 2 functions: crudGetPreExecHook() and crudGetPostExecHook()
+// GenerateGetHook will generate 2 functions: crudPreGet() and crudPostGet()
 func GenerateGetHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 

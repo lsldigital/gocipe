@@ -31,6 +31,7 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 	}
 	{{if .PreExecHook }}
     if e := crudPreSave(entity, tx); e != nil {
+		tx.Rollback()
 		return fmt.Errorf("error executing crudPreSave() in {{.Name}}.Insert(): %s", err)
 	}
     {{end}}
@@ -44,6 +45,7 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 	}
 	{{if .PostExecHook }}
 	if e := crudPostSave(entity, tx); e != nil {
+		tx.Rollback()
 		return fmt.Errorf("error executing crudPostSave() in {{.Name}}.Insert(): %s", err)
 	}
 	{{end}}

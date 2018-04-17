@@ -28,19 +28,26 @@ func (entity *{{.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 
 	{{if .PreExecHook }}
     if err := crudPreSave(entity, tx); err != nil {
-        return fmt.Errorf("error executing crudPreSave() in XXX.Update(): %s", err.Error())
+		tx.Rollback()
+        return fmt.Errorf("error executing crudPreSave() in {{.Name}}.Update(): %s", err.Error())
 	}
     {{end}}
 	_, err = stmt.Exec("UPDATE {{.TableName}} SET {{.SQLFields}} WHERE id = $1", {{.StructFields}})
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in {{.Name}}.Update(): %s", err)
+	}
+
 	{{if .PostExecHook }}
 	if e := crudPostSave(entity, tx); e != nil {
-		return fmt.Errorf("error executing crudPostSave() in XXX.Update(): %s", err.Error())
+		tx.Rollback()
+		return fmt.Errorf("error executing crudPostSave() in {{.Name}}.Update(): %s", err.Error())
 	}
 	{{end}}
 	if autocommit {
 		err = tx.Commit()
 		if err != nil {
-			return fmt.Errorf("error committing transaction in User.Update(): %s", err)
+			return fmt.Errorf("error committing transaction in {{.Name}}.Update(): %s", err)
 		}
 	}
 

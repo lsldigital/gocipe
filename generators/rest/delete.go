@@ -53,15 +53,16 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	{{if .PreExecHook}}
 	if err = restPreDelete(w, r, id, tx); err != nil {
+		tx.Rollback()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreDelete failed for '{{.Endpoint}}'"}]}` + "`" + `)
-		_ = tx.Rollback()
 		return
 	}
     {{end}}
 	tx, err = response.Entity.Delete(tx)
 	if err != nil {
+		tx.Rollback()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Delete failed"}]}` + "`" + `)
@@ -69,10 +70,10 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	{{if .PostExecHook}}
 	if err = restPostDelete(w, r, id, tx); err != nil {
+		tx.Rollback()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPostDelete failed for '{{.Endpoint}}'"}]}` + "`" + `)
-		_ = tx.Rollback()
 		return
 	}
 	{{end}}
@@ -128,7 +129,7 @@ func GenerateDelete(structInfo generators.StructureInfo, PreExecHook bool, PostE
 	return output.String(), nil
 }
 
-// GenerateDeleteHook will generate 2 functions: restDeletePreExecHook() and restDeletePostExecHook()
+// GenerateDeleteHook will generate 2 functions: restPreDelete() and restPostDelete()
 func GenerateDeleteHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var output bytes.Buffer
 
