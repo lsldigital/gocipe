@@ -43,7 +43,7 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 		return fmt.Errorf("error executing transaction statement in User.Insert(): %s", err)
 	}
 	{{if .PostExecHook }}
-	if e := crudPostSave(entity, tx); e != nil {
+	if err := crudPostSave(entity, tx); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("error executing crudPostSave() in {{.Name}}.Insert(): %s", err)
 	}

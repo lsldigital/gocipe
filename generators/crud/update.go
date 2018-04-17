@@ -39,7 +39,7 @@ func (entity *{{.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 	}
 
 	{{if .PostExecHook }}
-	if e := crudPostSave(entity, tx); e != nil {
+	if err := crudPostSave(entity, tx); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("error executing crudPostSave() in {{.Name}}.Update(): %s", err)
 	}
