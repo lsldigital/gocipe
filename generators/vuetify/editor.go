@@ -12,7 +12,13 @@ import (
 var tmplEditor, _ = template.New("GenerateEditor").Parse(`
 <template>
     <div class="container">
-        <h1>{{.Name}}</h1>
+		<v-toolbar color="transparent" flat>
+            <v-toolbar-title class="grey--text text--darken-4 ml-0"><h2>{{.Name}}</h2></v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-btn ml-0 small color="grey" flat :to="{name: '{{.Endpoint}}List'}">
+                <v-icon dark>arrow_back</v-icon> Back
+            </v-btn>
+        </v-toolbar>
 		<v-alert :type="message.type" :value="true" v-for="(message, index) in messages" :key="index">
 		᚜ message.text ᚛
 		</v-alert>
@@ -20,6 +26,7 @@ var tmplEditor, _ = template.New("GenerateEditor").Parse(`
         {{.FieldsMarkup}}
 
         <v-btn color="primary" @click="save()">Save</v-btn>
+        <v-btn color="gray" :to="{name: '{{.Endpoint}}List'}">Cancel</v-btn>
 	</div>
 </template>
   

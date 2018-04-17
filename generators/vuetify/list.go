@@ -24,9 +24,9 @@ var tmplList, _ = template.New("GenerateList").Parse(`
             ᚜ message.text ᚛
         </v-alert>
 
-        <v-alert type="info" value="true"  color="info" outline icon="info" v-if="entities.length === 0">
-            No Authors exist. Would you like to create one now?
-            <v-btn :to="{name: '{{.Endpoint}}Edit', params:{id: 0}}" color="info">create new</v-btn>
+        <v-alert type="info" value="true"  color="primary" outline icon="info" v-if="entities.length === 0">
+            No {{.Name}} exist. Would you like to create one now?
+            <v-btn :to="{name: '{{.Endpoint}}Edit', params:{id: 0}}" color="primary">create new</v-btn>
         </v-alert>
         <template v-else>
             <v-text-field mb-4 append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>            
@@ -42,10 +42,10 @@ var tmplList, _ = template.New("GenerateList").Parse(`
 
                 <template slot="no-data">
                     <v-flex ma-4>
-                        <v-alert slot="no-results" :value="true" color="info" outline icon="info" v-if="search.length > 0">
+                        <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-if="search.length > 0">
                         Your search for "᚜ search ᚛" found no results.
                         </v-alert>
-                        <v-alert slot="no-results" :value="true" color="info" outline icon="info" v-else>
+                        <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-else>
                             No {{.Name}} found.
                         </v-alert>
                     </v-flex>
