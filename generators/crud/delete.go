@@ -71,9 +71,9 @@ func (entity *{{.Name}}) Delete(tx *sql.Tx) (*sql.Tx, error) {
 		return nil, err
 	}
 	{{if .PreExecHook}}
-	if tx, err := crudDeletePreExecHook(id, tx); err != nil {
+	if err := crudPreDelete(id, tx); err != nil {
 		_ = tx.Rollback()
-		return nil, fmt.Errorf("Error executing deletePreExecHook() in User.Delete() for ID = %d : %s", id, err.Error())
+		return nil, fmt.Errorf("Error executing crudPreDelete() in User.Delete() for ID = %d : %s", id, err.Error())
 	}
 	{{end}}
 	_, err = stmt.Exec(id)
@@ -81,9 +81,9 @@ func (entity *{{.Name}}) Delete(tx *sql.Tx) (*sql.Tx, error) {
 		entity.ID = nil
 	}
 	{{if .PostExecHook}}
-	if tx, err = crudDeletePostExecHook(id, tx); err != nil {
+	if err = crudPostDelete(id, tx); err != nil {
 		_ = tx.Rollback()
-		return nil, fmt.Errorf("Error executing deletePostExecHook() in User.Delete() for ID = %d : %s", id, err.Error())
+		return nil, fmt.Errorf("Error executing crudPostDelete() in User.Delete() for ID = %d : %s", id, err.Error())
 	}
 	{{end}}
 	if txWasNil {
@@ -96,13 +96,13 @@ func (entity *{{.Name}}) Delete(tx *sql.Tx) (*sql.Tx, error) {
 
 var tmplDeleteHook, _ = template.New("GenerateDeleteHook").Parse(`
 {{if .PreExecHook }}
-func crudDeletePreExecHook(id int64, tx *sql.Tx) (*sql.Tx, error) {
-	return tx, nil
+func crudPreDelete(id int64, tx *sql.Tx) error {
+	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func crudDeletePostExecHook(id int64, tx *sql.Tx) (*sql.Tx, error) {
-	return tx, nil
+func crudPostDelete(id int64, tx *sql.Tx) error {
+	return nil
 }
 {{end}}
 `)

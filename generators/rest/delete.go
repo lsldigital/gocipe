@@ -52,10 +52,10 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	{{if .PreExecHook}}
-	if tx, err = restDeletePreExecHook(w, r, id, tx); err != nil {
+	if err = restPreDelete(w, r, id, tx); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restDeletePreExecHook failed for '{{.Endpoint}}'"}]}` + "`" + `)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreDelete failed for '{{.Endpoint}}'"}]}` + "`" + `)
 		_ = tx.Rollback()
 		return
 	}
@@ -68,10 +68,10 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	{{if .PostExecHook}}
-	if tx, err = restDeletePostExecHook(w, r, id, tx); err != nil {
+	if err = restPostDelete(w, r, id, tx); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restDeletePostExecHook failed for '{{.Endpoint}}'"}]}` + "`" + `)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPostDelete failed for '{{.Endpoint}}'"}]}` + "`" + `)
 		_ = tx.Rollback()
 		return
 	}
@@ -99,13 +99,13 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 
 var tmplDeleteHook, _ = template.New("GenerateDeleteHook").Parse(`
 {{if .PreExecHook }}
-func restDeletePreExecHook(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) (*sql.Tx, error) {
-	return tx, nil
+func restPreDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) error {
+	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restDeletePostExecHook(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) (*sql.Tx, error) {
-	return tx, nil
+func restPostDelete(w http.ResponseWriter, r *http.Request, id int64, sql.error {
+	return nil
 }
 {{end}}
 `)

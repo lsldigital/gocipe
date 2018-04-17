@@ -42,10 +42,10 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PreExecHook}}
-	if tx, err = restCreatePreExecHook(w, r, response.Entity, tx); err != nil {
+	if err = restPreCreate(w, r, response.Entity, tx); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restCreatePreExecHook failed for '{{.Endpoint}}'"}]}` + "`" + `)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPreCreate failed for '{{.Endpoint}}'"}]}` + "`" + `)
 		_ = tx.Rollback()
 		return
 	}
@@ -61,10 +61,10 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-	if tx, err = restCreatePostExecHook(w, r, response.Entity, tx); err != nil {
+	if err = restPostCreate(w, r, response.Entity, tx); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restCreatePreExecHook failed for '{{.Endpoint}}'"}]}` + "`" + `)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restPostCreate failed for '{{.Endpoint}}'"}]}` + "`" + `)
 		_ = tx.Rollback()
 		return
 	}
@@ -93,13 +93,13 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 
 var tmplCreateHook, _ = template.New("GenerateCreateHook").Parse(`
 {{if .PreExecHook }}
-func restCreatePreExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (*sql.Tx, error) {
-	return tx, nil
+func restPreCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) error {
+	return nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restCreatePostExecHook(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (*sql.Tx, error) {
-	return tx, nil
+func restPostCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) error {
+	return nil
 }
 {{end}}
 `)
