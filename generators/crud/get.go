@@ -13,13 +13,12 @@ var tmplGet, _ = template.New("GenerateGet").Parse(`
 func Get(id int64) (*{{.Name}}, error) {
 	var entity = New()
 	{{if .PreExecHook }}
-    if entity, e := crudGetPreExecHook(id); e != nil {
-		fmt.Printf("Error executing crudGetPreExecHook() in Get(" + strconv.FormatInt(id, 10) + ") for entity '{{.Name}}': %s", e.Error())
-        return entity, e
+    if e := crudGetPreExecHook(id); e != nil {
+		fmt.Printf("Error executing crudGetPreExecHook() in Get(%d) for entity '{{.Name}}': %s", id, e.Error())
+        return nil, e
 	}
     {{end}}
 	rows, err := db.Query("SELECT {{.SQLFields}} FROM {{.TableName}} WHERE id = $1 ORDER BY id ASC", id)
-
 	if err != nil {
 		return nil, err
 	}
@@ -31,10 +30,10 @@ func Get(id int64) (*{{.Name}}, error) {
 			return nil, err
 		}
         {{if .PostExecHook }}
-        if entity, e := crudGetPostExecHook(entity); e != nil {
-			fmt.Printf("Error executing crudGetPostExecHook() in Get(" + strconv.FormatInt(id, 10) + ") for entity '{{.Name}}': %s", e.Error())
-			return entity, e
-        }
+		if entity, err = crudGetPostExecHook(entity); err != nil {
+			fmt.Printf("Error executing crudGetPostExecHook() in Get(%d) for entity 'User': %s", id, err.Error())
+			return nil, err
+		}
         {{end}}
 		return entity, nil
 	}
@@ -45,8 +44,8 @@ func Get(id int64) (*{{.Name}}, error) {
 
 var tmplGetHook, _ = template.New("GenerateGetHook").Parse(`
 {{if .PreExecHook }}
-func crudGetPreExecHook(id int64) (*{{.Name}}, error) {
-	return New(), nil
+func crudGetPreExecHook(id int64) error {
+	return nil
 }
 {{end}}
 {{if .PostExecHook }}

@@ -35,7 +35,7 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
     if err = restGetPreExecHook(w, r, id); err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        fmt.Fprintf(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restGetPreExecHook(w, r, %d) failed for '{{.Endpoint}}'"}]}` + "`" + `, id)
         return
     }
     {{end}}
@@ -59,7 +59,7 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
     if err = restGetPostExecHook(w, r, response.Entity); err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restGetPostExecHook(w, r, %d) failed for '{{.Endpoint}}'"}]}` + "`" + `, id)
         return
     }
     {{end}}
