@@ -60,7 +60,7 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
     {{end}}
-	tx, err = response.Entity.Delete(tx)
+	err = response.Entity.Delete(tx, false)
 	if err != nil {
 		tx.Rollback()
 		w.Header().Set("Content-Type", "application/json")

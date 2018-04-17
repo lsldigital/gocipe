@@ -9,88 +9,93 @@ import (
 
 var tmplDelete, _ = template.New("GenerateDelete").Parse(`
 // Delete deletes a {{.Name}} record from database by id primary key
-func Delete(id int64, tx *sql.Tx) (*sql.Tx, error) {
-	var (
-		err      error
-		txWasNil bool
-	)
+func Delete(id int64, tx *sql.Tx, autocommit bool) error {
+	var err error
 
 	if tx == nil {
-		txWasNil = true
 		tx, err = db.Begin()
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	stmt, err := tx.Prepare("DELETE FROM {{.TableName}} WHERE id = $1")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	{{if .PreExecHook}}
 	if err := crudPreDelete(id, tx); err != nil {
 		fmt.Printf("Error executing crudPreDelete() in Delete(%d) for entity '{{.Name}}': %s", id, err.Error())
 		tx.Rollback()
-		return nil, err
+		return err
 	}
 	{{end}}
 	_, err = stmt.Exec(id)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in Delete(%d) for entity '{{.Name}}': %s", id, err)
+	}
 	{{if .PostExecHook}}
 	if err := crudPostDelete(id, tx); err != nil {
 		fmt.Printf("Error executing crudPostDelete() in Delete(%d) for entity '{{.Name}}': %s", id, err.Error())
 		tx.Rollback()
-		return nil, err
+		return err
 	}
 	{{end}}
-	if txWasNil {
-		tx.Commit()
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			return fmt.Errorf("error committing transaction in Delete(%d) for '{{.Name}}': %s", id, err)
+		}
 	}
 
-	return tx, err
+	return err
 }
 
 // Delete deletes a {{.Name}} record from database and sets id to nil
-func (entity *{{.Name}}) Delete(tx *sql.Tx) (*sql.Tx, error) {
-	var (
-		err      error
-		txWasNil bool
-	)
+func (entity *{{.Name}}) Delete(tx *sql.Tx, autocommit bool) error {
+	var err error
 
 	id := *entity.ID
 
 	if tx == nil {
-		txWasNil = true
 		tx, err = db.Begin()
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	stmt, err := tx.Prepare("DELETE FROM {{.TableName}} WHERE id = $1")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	{{if .PreExecHook}}
 	if err := crudPreDelete(id, tx); err != nil {
 		tx.Rollback()
-		return nil, fmt.Errorf("Error executing crudPreDelete() in User.Delete() for ID = %d : %s", id, err.Error())
+		return fmt.Errorf("error executing crudPreDelete() in {{.Name}}.Delete() for ID = %d : %s", id, err)
 	}
 	{{end}}
 	_, err = stmt.Exec(id)
-	if err != nil {
+	if err == nil {
 		entity.ID = nil
+	} else {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in {{.Name}}.Delete() for ID = %d : %s", id, err)
 	}
 	{{if .PostExecHook}}
 	if err = crudPostDelete(id, tx); err != nil {
 		tx.Rollback()
-		return nil, fmt.Errorf("Error executing crudPostDelete() in User.Delete() for ID = %d : %s", id, err.Error())
+		return fmt.Errorf("error executing crudPostDelete() in {{.Name}}.Delete() for ID = %d : %s", id, err)
 	}
 	{{end}}
-	if txWasNil {
-		tx.Commit()
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			return fmt.Errorf("error committing transaction in {{.Name}}.Delete() for ID = %d : %s", id, err)
+		}
 	}
 
-	return tx, err
+	return err
 }
 `)
 
