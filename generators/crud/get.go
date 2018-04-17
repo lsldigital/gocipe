@@ -54,7 +54,7 @@ func crudPostGet(entity *{{.Name}}) (*{{.Name}}, error) {
 `)
 
 //GenerateGet generates code to get an entity from database
-func GenerateGet(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateGet(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := new(struct {
 		Name         string
@@ -69,8 +69,8 @@ func GenerateGet(structInfo generators.StructureInfo, PreExecHook bool, PostExec
 	data.TableName = structInfo.TableName
 	data.SQLFields = ""
 	data.StructFields = ""
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	for _, field := range structInfo.Fields {
 		data.SQLFields += field.Name + ", "
@@ -89,7 +89,7 @@ func GenerateGet(structInfo generators.StructureInfo, PreExecHook bool, PostExec
 }
 
 // GenerateGetHook will generate 2 functions: crudPreGet() and crudPostGet()
-func GenerateGetHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateGetHook(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
@@ -99,8 +99,8 @@ func GenerateGetHook(structInfo generators.StructureInfo, PreExecHook bool, Post
 	})
 
 	data.Name = structInfo.Name
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	err := tmplGetHook.Execute(&output, data)
 	if err != nil {

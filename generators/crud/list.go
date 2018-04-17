@@ -71,7 +71,7 @@ func crudPostList(list []*{{.Name}}) ([]*{{.Name}}, error) {
 `)
 
 //GenerateList returns code to return a list of entities from database
-func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateList(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := new(struct {
 		Name         string
@@ -86,8 +86,8 @@ func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExe
 	data.TableName = structInfo.TableName
 	data.SQLFields = ""
 	data.StructFields = ""
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	for _, field := range structInfo.Fields {
 		data.SQLFields += field.Name + ", "
@@ -106,7 +106,7 @@ func GenerateList(structInfo generators.StructureInfo, PreExecHook bool, PostExe
 }
 
 // GenerateListHook will generate 2 functions: crudPreList() and crudPostList()
-func GenerateListHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateListHook(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
@@ -116,8 +116,8 @@ func GenerateListHook(structInfo generators.StructureInfo, PreExecHook bool, Pos
 	})
 
 	data.Name = structInfo.Name
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	err := tmplListHook.Execute(&output, data)
 	if err != nil {

@@ -43,7 +43,7 @@ func GenerateSave(structInfo generators.StructureInfo) (string, error) {
 }
 
 // GenerateSaveHook will generate 2 functions: crudSavePreExecHook() and crudSavePostExecHook()
-func GenerateSaveHook(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateSaveHook(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
@@ -53,8 +53,8 @@ func GenerateSaveHook(structInfo generators.StructureInfo, PreExecHook bool, Pos
 	})
 
 	data.Name = structInfo.Name
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	err := tmplSaveHook.Execute(&output, data)
 	if err != nil {

@@ -3,6 +3,7 @@ package crud
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -23,21 +24,21 @@ type generator struct {
 	// If true, will print the output (model, functions/methods and hooks). False by default
 	Verbose bool
 
-	GenerateDelete             bool
-	GenerateDeletePreExecHook  bool
-	GenerateDeletePostExecHook bool
+	GenerateDelete     bool
+	GeneratePreDelete  bool
+	GeneratePostDelete bool
 
-	GenerateGet             bool
-	GenerateGetPreExecHook  bool
-	GenerateGetPostExecHook bool
+	GenerateGet     bool
+	GeneratePreGet  bool
+	GeneratePostGet bool
 
-	GenerateSave             bool
-	GenerateSavePreExecHook  bool
-	GenerateSavePostExecHook bool
+	GenerateSave     bool
+	GeneratePreSave  bool
+	GeneratePostSave bool
 
-	GenerateList             bool
-	GenerateListPreExecHook  bool
-	GenerateListPostExecHook bool
+	GenerateList     bool
+	GeneratePreList  bool
+	GeneratePostList bool
 }
 
 func factory(args []string) (generators.Command, error) {
@@ -50,20 +51,20 @@ func factory(args []string) (generators.Command, error) {
 	flagset.BoolVar(&g.Verbose, "v", false, "Prints the generated models, functions/methods and hooks")
 
 	flagset.BoolVar(&g.GenerateDelete, "d", true, "Generate Delete")
-	flagset.BoolVar(&g.GenerateDeletePreExecHook, "hd", false, "Generate Delete pre-execution hook")
-	flagset.BoolVar(&g.GenerateDeletePostExecHook, "dh", false, "Generate Delete post-execution hook")
+	flagset.BoolVar(&g.GeneratePreDelete, "hd", false, "Generate Delete pre-execution hook")
+	flagset.BoolVar(&g.GeneratePostDelete, "dh", false, "Generate Delete post-execution hook")
 
 	flagset.BoolVar(&g.GenerateGet, "g", true, "Generate Get")
-	flagset.BoolVar(&g.GenerateGetPreExecHook, "hg", false, "Generate Get pre-execution hook")
-	flagset.BoolVar(&g.GenerateGetPostExecHook, "gh", false, "Generate Get post-execution hook")
+	flagset.BoolVar(&g.GeneratePreGet, "hg", false, "Generate Get pre-execution hook")
+	flagset.BoolVar(&g.GeneratePostGet, "gh", false, "Generate Get post-execution hook")
 
 	flagset.BoolVar(&g.GenerateSave, "s", true, "Generate Save")
-	flagset.BoolVar(&g.GenerateSavePreExecHook, "hs", false, "Generate Save pre-execution hook")
-	flagset.BoolVar(&g.GenerateSavePostExecHook, "sh", false, "Generate Save post-execution hook")
+	flagset.BoolVar(&g.GeneratePreSave, "hs", false, "Generate Save pre-execution hook")
+	flagset.BoolVar(&g.GeneratePostSave, "sh", false, "Generate Save post-execution hook")
 
 	flagset.BoolVar(&g.GenerateList, "l", true, "Generate List")
-	flagset.BoolVar(&g.GenerateListPreExecHook, "hl", false, "Generate List pre-execution hook")
-	flagset.BoolVar(&g.GenerateListPostExecHook, "lh", false, "Generate List post-execution hook")
+	flagset.BoolVar(&g.GeneratePreList, "hl", false, "Generate List pre-execution hook")
+	flagset.BoolVar(&g.GeneratePostList, "lh", false, "Generate List post-execution hook")
 
 	flagset.Parse(args)
 
@@ -98,14 +99,14 @@ func (g generator) Generate() (string, error) {
 	}
 
 	if g.GenerateGet {
-		segment, err := GenerateGet(*structInfo, g.GenerateGetPreExecHook, g.GenerateGetPostExecHook)
+		segment, err := GenerateGet(*structInfo, g.GeneratePreGet, g.GeneratePostGet)
 		if err != nil {
 			log.Fatalf("An error occured during GenerateGet: %s\n", err)
 		}
 		generated = append(generated, segment)
 
-		if g.GenerateGetPreExecHook || g.GenerateGetPostExecHook {
-			segment, err := GenerateGetHook(*structInfo, g.GenerateGetPreExecHook, g.GenerateGetPostExecHook)
+		if g.GeneratePreGet || g.GeneratePostGet {
+			segment, err := GenerateGetHook(*structInfo, g.GeneratePreGet, g.GeneratePostGet)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateGetHook: %s\n", err)
 			}
@@ -114,14 +115,14 @@ func (g generator) Generate() (string, error) {
 	}
 
 	if g.GenerateList {
-		segment, err := GenerateList(*structInfo, g.GenerateListPreExecHook, g.GenerateListPostExecHook)
+		segment, err := GenerateList(*structInfo, g.GeneratePreList, g.GeneratePostList)
 		if err != nil {
 			log.Fatalf("An error occured during GenerateList: %s\n", err)
 		}
 		generated = append(generated, segment)
 
-		if g.GenerateListPreExecHook || g.GenerateListPostExecHook {
-			segment, err := GenerateListHook(*structInfo, g.GenerateListPreExecHook, g.GenerateListPostExecHook)
+		if g.GeneratePreList || g.GeneratePostList {
+			segment, err := GenerateListHook(*structInfo, g.GeneratePreList, g.GeneratePostList)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateListHook: %s\n", err)
 			}
@@ -130,14 +131,14 @@ func (g generator) Generate() (string, error) {
 	}
 
 	if g.GenerateDelete {
-		segment, err := GenerateDelete(*structInfo, g.GenerateDeletePreExecHook, g.GenerateDeletePostExecHook)
+		segment, err := GenerateDelete(*structInfo, g.GeneratePreDelete, g.GeneratePostDelete)
 		if err != nil {
 			log.Fatalf("An error occured during GenerateDelete: %s\n", err)
 		}
 		generated = append(generated, segment)
 
-		if g.GenerateDeletePreExecHook || g.GenerateDeletePostExecHook {
-			segment, err := GenerateDeleteHook(g.GenerateDeletePreExecHook, g.GenerateDeletePostExecHook)
+		if g.GeneratePreDelete || g.GeneratePostDelete {
+			segment, err := GenerateDeleteHook(g.GeneratePreDelete, g.GeneratePostDelete)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateDeleteHook: %s\n", err)
 			}
@@ -150,14 +151,14 @@ func (g generator) Generate() (string, error) {
 			segment string
 			err     error
 		)
-		segment, err = GenerateInsert(*structInfo, g.GenerateSavePreExecHook, g.GenerateSavePostExecHook)
+		segment, err = GenerateInsert(*structInfo, g.GeneratePreSave, g.GeneratePostSave)
 
 		if err != nil {
 			log.Fatalf("An error occured during GenerateInsert: %s\n", err)
 		}
 		generated = append(generated, segment)
 
-		segment, err = GenerateUpdate(*structInfo, g.GenerateSavePreExecHook, g.GenerateSavePostExecHook)
+		segment, err = GenerateUpdate(*structInfo, g.GeneratePreSave, g.GeneratePostSave)
 		if err != nil {
 			log.Fatalf("An error occured during GenerateUpdate: %s\n", err)
 		}
@@ -169,8 +170,8 @@ func (g generator) Generate() (string, error) {
 		}
 		generated = append(generated, segment)
 
-		if g.GenerateSavePreExecHook || g.GenerateSavePostExecHook {
-			segment, err := GenerateSaveHook(*structInfo, g.GenerateSavePreExecHook, g.GenerateSavePostExecHook)
+		if g.GeneratePreSave || g.GeneratePostSave {
+			segment, err := GenerateSaveHook(*structInfo, g.GeneratePreSave, g.GeneratePostSave)
 			if err != nil {
 				log.Fatalf("An error occured during GenerateSaveHook: %s\n", err)
 			}
@@ -193,6 +194,7 @@ func (g generator) Generate() (string, error) {
 	if err != nil {
 		log.Fatalf("Failed to get absolute path (crud hooks): %s\n", err)
 	}
+
 	if len(hooks) > 0 && !generators.FileExists(targetFilename) {
 		hookOutput = "package " + structInfo.Package + " \n" + strings.Join(hooks, "\n")
 		err = ioutil.WriteFile(targetFilename, []byte(hookOutput), 0644)
@@ -214,7 +216,8 @@ func (g generator) Generate() (string, error) {
 	// }
 
 	if g.Verbose {
-		return output + "\n//--- HOOKS ---\n\n" + hookOutput, err
+		fmt.Println(output+"\n//--- HOOKS ---\n\n"+hookOutput, err)
+		fmt.Println(structInfo)
 	}
 
 	return "", err

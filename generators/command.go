@@ -37,10 +37,7 @@ func Execute() {
 			log.Fatalln(err)
 		}
 
-		output, err := generator.Generate()
-		if output != "" {
-			fmt.Println(output)
-		}
+		_, err = generator.Generate()
 
 		if err != nil {
 			log.Fatalln(err)

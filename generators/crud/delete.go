@@ -111,7 +111,7 @@ func crudPostDelete(id int64, tx *sql.Tx) error {
 `)
 
 //GenerateDelete will generate a function to delete entity from database
-func GenerateDelete(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateDelete(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := new(struct {
 		Name         string
@@ -122,8 +122,8 @@ func GenerateDelete(structInfo generators.StructureInfo, PreExecHook bool, PostE
 
 	data.Name = structInfo.Name
 	data.TableName = structInfo.TableName
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	err := tmplDelete.Execute(&output, data)
 	if err != nil {
@@ -134,7 +134,7 @@ func GenerateDelete(structInfo generators.StructureInfo, PreExecHook bool, PostE
 }
 
 // GenerateDeleteHook will generate 2 functions: crudPreDelete() and crudPostDelete()
-func GenerateDeleteHook(PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateDeleteHook(preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 
 	data := new(struct {
@@ -142,8 +142,8 @@ func GenerateDeleteHook(PreExecHook bool, PostExecHook bool) (string, error) {
 		PostExecHook bool
 	})
 
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	err := tmplDeleteHook.Execute(&output, data)
 	if err != nil {

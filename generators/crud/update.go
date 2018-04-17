@@ -56,7 +56,7 @@ func (entity *{{.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 `)
 
 //GenerateUpdate returns code to update an entity in database
-func GenerateUpdate(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
+func GenerateUpdate(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var (
 		output bytes.Buffer
 		index  = 2
@@ -74,8 +74,8 @@ func GenerateUpdate(structInfo generators.StructureInfo, PreExecHook bool, PostE
 	data.TableName = structInfo.TableName
 	data.SQLFields = ""
 	data.StructFields = "entity.ID, "
-	data.PreExecHook = PreExecHook
-	data.PostExecHook = PostExecHook
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	for _, field := range structInfo.Fields {
 		if field.Name == "ID" {
