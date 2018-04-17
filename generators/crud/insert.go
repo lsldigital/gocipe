@@ -30,14 +30,13 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 		return err
 	}
 	{{if .PreExecHook }}
-    if e := crudPreSave(entity, tx); e != nil {
+    if err := crudPreSave(entity, tx); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("error executing crudPreSave() in {{.Name}}.Insert(): %s", err)
 	}
     {{end}}
-	res, err := stmt.Exec(*entity.Authcode, *entity.Alias, *entity.Name, *entity.Callback, *entity.Status)
+	err = stmt.QueryRow(*entity.Authcode, *entity.Alias, *entity.Name, *entity.Callback, *entity.Status).Scan(&id)
 	if err == nil {
-		id, err = res.LastInsertId()
 		entity.ID = &id
 	} else {
 		tx.Rollback()
