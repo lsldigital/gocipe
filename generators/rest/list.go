@@ -19,10 +19,10 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 	{{.Filters}}
 
 	{{if .PreExecHook}}
-    if err = restListPreExecHook(w, r, &filters); err != nil {
+    if filters, err = restListPreExecHook(w, r, filters); err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restListPreExecHook() failed for '{{.Endpoint}}'"}]}` + "`" + `)
         return
     }
     {{end}}
@@ -36,10 +36,10 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-    if err = restListPostExecHook(w, r, &response.Entities); err != nil {
+    if response.Entities, err = restListPostExecHook(w, r, response.Entities); err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": err.Error()}]}` + "`" + `)
+        fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "restListPreExecHook() failed for '{{.Endpoint}}'"}]}` + "`" + `)
         return
     }
     {{end}}
@@ -111,7 +111,7 @@ var tmplListFilterDate, _ = template.New("GenerateListFilterDate").Parse(`
 
 var tmplListHook, _ = template.New("GenerateListHook").Parse(`
 {{if .PreExecHook }}
-func restListPreExecHook(w http.ResponseWriter, r *http.Request, filters *[]models.ListFilter) error {
+func restListPreExecHook(w http.ResponseWriter, r *http.Request, *filters []models.ListFilter) error {
 	return nil
 }
 {{end}}

@@ -12,16 +12,17 @@ var tmplList, _ = template.New("GenerateList").Parse(`
 // List returns a slice containing {{.Name}} records
 func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 	var (
-		list []*{{.Name}}
+		list     []*{{.Name}}
 		segments []string
-		values []interface{}
+		values   []interface{}
+		err      error
 	)
 
 	query := "SELECT {{.SQLFields}} FROM {{.TableName}}"
 	{{if .PreExecHook }}
-    if e := crudListPreExecHook(&filters); e != nil {
-		fmt.Printf("Error executing crudListPreExecHook() in List(filters) for entity '{{.Name}}': %s", e.Error())
-        return nil, e
+    if filters, err = crudListPreExecHook(filters); err != nil {
+		fmt.Printf("Error executing crudListPreExecHook() in List(filters) for entity '{{.Name}}': %s", err.Error())
+        return nil, err
 	}
     {{end}}
 	for i, filter := range filters {
@@ -49,9 +50,9 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 		list = append(list, entity)
 	}
 	{{if .PostExecHook }}
-	if e := crudListPostExecHook(&list); e != nil {
-		fmt.Printf("Error executing crudListPostExecHook() in List(filters) for entity '{{.Name}}': %s", e.Error())
-		return nil, e
+	if list, err = crudListPostExecHook(list); err != nil {
+		fmt.Printf("Error executing crudListPostExecHook() in List(filters) for entity '{{.Name}}': %s", err.Error())
+		return nil, err
 	}
 	{{end}}
 	return list, nil
@@ -60,13 +61,13 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 
 var tmplListHook, _ = template.New("GenerateListHook").Parse(`
 {{if .PreExecHook }}
-func crudListPreExecHook(filters *[]models.ListFilter) error {
-	return nil
+func crudListPreExecHook(filters []models.ListFilter) ([]models.ListFilter, error) {
+	return filters, nil
 }
 {{end}}
 {{if .PostExecHook }}
-func crudListPostExecHook(list *[]*{{.Name}}) error {
-	return nil
+func crudListPostExecHook(list []*{{.Name}}) ([]*{{.Name}}, error) {
+	return list, nil
 }
 {{end}}
 `)
