@@ -25,7 +25,7 @@ var tmplList, _ = template.New("GenerateList").Parse(`
         </v-alert>
 
         <v-alert type="info" value="true"  color="primary" outline icon="info" v-if="entities.length === 0">
-            No Authors exist. Would you like to create one now?
+            No {{.Name}} exist. Would you like to create one now?
             <v-btn :to="{name: '{{.Endpoint}}Edit', params:{id: 0}}" color="primary">create new</v-btn>
         </v-alert>
         <template v-else>
