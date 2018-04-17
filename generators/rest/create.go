@@ -51,11 +51,12 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	}
     {{end}}
 
-	err = response.Entity.Save()
+	tx, err = response.Entity.Save(tx)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "Save failed"}]}` + "`" + `)
+		_ = tx.Rollback()
 		return
 	}
 
