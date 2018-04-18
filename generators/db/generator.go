@@ -21,8 +21,8 @@ type generator struct {
 
 func factory(args []string) (generators.Command, error) {
 	var g generator
+	flagset := flag.NewFlagSet("db", flag.ExitOnError)
 
-	flagset := flag.NewFlagSet("crud", flag.ExitOnError)
 	flagset.StringVar(&g.Filename, "file", "", "Filename where struct is located")
 	flagset.StringVar(&g.Structure, "struct", "", "Name of the structure to use")
 	flagset.StringVar(&g.Output, "output", "", "File to output for the schema definition")

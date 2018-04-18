@@ -16,6 +16,8 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 		rawbody  []byte
 		id       int64
 		response responseSingle
+		tx       *sql.Tx
+		{{if .Hooks}}stop     bool{{end}}
 	)
 
 	vars := mux.Vars(r)
@@ -66,11 +68,44 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	response.Entity.ID = &id
 
-	err = response.Entity.Save()
+	tx, err = db.Begin()
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to process"}]}` + "`" + `)
+		return
+	}
+
+	{{if .PreExecHook}}
+    if stop, err = restPreUpdate(w, r, response.Entity, tx); err != nil {
+		tx.Rollback()
+        return
+    } else if stop {
+		return
+	}
+    {{end}}
+
+	err = response.Entity.Save(tx, false)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Save failed"}]}` + "`" + `)
+		return
+	}
+
+	{{if .PostExecHook}}
+    if stop, err = restPostUpdate(w, r, response.Entity, tx); err != nil {
+		tx.Rollback()
+        return
+    } else if stop {
+		return
+	}
+	{{end}}
+	
+	if err = tx.Commit(); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "RestUpdate could not commit transaction"}]}` + "`" + `)
 		return
 	}
 
@@ -88,15 +123,52 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 }
 `)
 
+var tmplUpdateHook, _ = template.New("GenerateUpdateHook").Parse(`
+{{if .PreExecHook }}
+func restPreUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
+}
+{{end}}
+{{if .PostExecHook }}
+func restPostUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
+}
+{{end}}
+`)
+
 //GenerateUpdate will generate a REST handler function for Update
-func GenerateUpdate(structInfo generators.StructureInfo) (string, error) {
+func GenerateUpdate(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := struct {
-		Endpoint string
-	}{strings.ToLower(structInfo.Name)}
+		Endpoint     string
+		PreExecHook  bool
+		PostExecHook bool
+		Hooks        bool
+	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook, preExecHook || postExecHook}
 
 	err := tmplUpdate.Execute(&output, data)
+	if err != nil {
+		return "", err
+	}
 
+	return output.String(), nil
+}
+
+// GenerateUpdateHook will generate 2 functions: restPreUpdate() and restPostUpdate()
+func GenerateUpdateHook(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
+	var output bytes.Buffer
+
+	data := new(struct {
+		Name         string
+		PreExecHook  bool
+		PostExecHook bool
+	})
+
+	data.Name = structInfo.Name
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
+
+	err := tmplUpdateHook.Execute(&output, data)
 	if err != nil {
 		return "", err
 	}

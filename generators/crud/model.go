@@ -42,6 +42,10 @@ func GenerateModel(structInfo generators.StructureInfo) (string, error) {
 	data.Name = structInfo.Name
 
 	for _, field := range structInfo.Fields {
+		if field.Name == "id" {
+			continue
+		}
+
 		item := "entity." + field.Property + " = new(" + strings.TrimLeft(field.Type, "*") + ")"
 		fields = append(fields, item)
 	}

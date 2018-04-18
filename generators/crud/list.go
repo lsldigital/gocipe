@@ -12,13 +12,18 @@ var tmplList, _ = template.New("GenerateList").Parse(`
 // List returns a slice containing {{.Name}} records
 func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 	var (
-		list []*{{.Name}}
+		list     []*{{.Name}}
 		segments []string
-		values []interface{}
+		values   []interface{}
+		err      error
 	)
 
 	query := "SELECT {{.SQLFields}} FROM {{.TableName}}"
-
+	{{if .PreExecHook }}
+    if filters, err = crudPreList(filters); err != nil {
+		return nil, fmt.Errorf("error executing crudPreList() in List(filters) for entity '{{.Name}}': %s", err)
+	}
+    {{end}}
 	for i, filter := range filters {
 		segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
 		values = append(values, filter.Value)
@@ -29,7 +34,6 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 	}
 
 	rows, err := db.Query(query+" ORDER BY id ASC", values...)
-
 	if err != nil {
 		return nil, err
 	}
@@ -44,25 +48,46 @@ func List(filters []models.ListFilter) ([]*{{.Name}}, error) {
 
 		list = append(list, entity)
 	}
-
+	{{if .PostExecHook }}
+	if list, err = crudPostList(list); err != nil {
+		return nil, fmt.Errorf("error executing crudPostList() in List(filters) for entity '{{.Name}}': %s", err)
+	}
+	{{end}}
 	return list, nil
 }
 `)
 
+var tmplListHook, _ = template.New("GenerateListHook").Parse(`
+{{if .PreExecHook }}
+func crudPreList(filters []models.ListFilter) ([]models.ListFilter, error) {
+	return filters, nil
+}
+{{end}}
+{{if .PostExecHook }}
+func crudPostList(list []*{{.Name}}) ([]*{{.Name}}, error) {
+	return list, nil
+}
+{{end}}
+`)
+
 //GenerateList returns code to return a list of entities from database
-func GenerateList(structInfo generators.StructureInfo) (string, error) {
+func GenerateList(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := new(struct {
 		Name         string
 		TableName    string
 		SQLFields    string
 		StructFields string
+		PreExecHook  bool
+		PostExecHook bool
 	})
 
 	data.Name = structInfo.Name
 	data.TableName = structInfo.TableName
 	data.SQLFields = ""
 	data.StructFields = ""
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
 
 	for _, field := range structInfo.Fields {
 		data.SQLFields += field.Name + ", "
@@ -73,7 +98,28 @@ func GenerateList(structInfo generators.StructureInfo) (string, error) {
 	data.StructFields = strings.TrimSuffix(data.StructFields, ", ")
 
 	err := tmplList.Execute(&output, data)
+	if err != nil {
+		return "", err
+	}
 
+	return output.String(), nil
+}
+
+// GenerateListHook will generate 2 functions: crudPreList() and crudPostList()
+func GenerateListHook(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
+	var output bytes.Buffer
+
+	data := new(struct {
+		Name         string
+		PreExecHook  bool
+		PostExecHook bool
+	})
+
+	data.Name = structInfo.Name
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
+
+	err := tmplListHook.Execute(&output, data)
 	if err != nil {
 		return "", err
 	}

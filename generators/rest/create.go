@@ -15,6 +15,8 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 		err      error
 		rawbody  []byte
 		response responseSingle
+		tx       *sql.Tx
+		{{if .Hooks}}stop     bool{{end}}
 	)
 
 	rawbody, err = ioutil.ReadAll(r.Body)
@@ -35,11 +37,45 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	response.Entity.ID = nil
 
-	err = response.Entity.Save()
+	tx, err = db.Begin()
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to process"}]}` + "`" + `)
+		return
+	}
+
+	{{if .PreExecHook}}
+	if stop, err = restPreCreate(w, r, response.Entity, tx); err != nil {
+		tx.Rollback()
+		return
+	} else if stop {
+		return
+	}
+    {{end}}
+
+	err = response.Entity.Save(tx, false)
+	if err != nil {
+		tx.Rollback()
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Save failed"}]}` + "`" + `)
+		return
+	}
+
+	{{if .PostExecHook}}
+	if stop, err = restPostCreate(w, r, response.Entity, tx); err != nil {
+		tx.Rollback()
+		return
+	} else if stop {
+		return
+	}
+	{{end}}
+	
+	if err = tx.Commit(); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "RestCreate could not commit transaction"}]}` + "`" + `)
 		return
 	}
 
@@ -57,15 +93,52 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 }
 `)
 
+var tmplCreateHook, _ = template.New("GenerateCreateHook").Parse(`
+{{if .PreExecHook }}
+func restPreCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
+}
+{{end}}
+{{if .PostExecHook }}
+func restPostCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
+}
+{{end}}
+`)
+
 //GenerateCreate will generate a REST handler function for Create
-func GenerateCreate(structInfo generators.StructureInfo) (string, error) {
+func GenerateCreate(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var output bytes.Buffer
 	data := struct {
-		Endpoint string
-	}{strings.ToLower(structInfo.Name)}
+		Endpoint     string
+		PreExecHook  bool
+		PostExecHook bool
+		Hooks        bool
+	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook, preExecHook || postExecHook}
 
 	err := tmplCreate.Execute(&output, data)
+	if err != nil {
+		return "", err
+	}
 
+	return output.String(), nil
+}
+
+// GenerateCreateHook will generate 2 functions: restPreCreate() and restPostCreate()
+func GenerateCreateHook(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
+	var output bytes.Buffer
+
+	data := new(struct {
+		Name         string
+		PreExecHook  bool
+		PostExecHook bool
+	})
+
+	data.Name = structInfo.Name
+	data.PreExecHook = preExecHook
+	data.PostExecHook = postExecHook
+
+	err := tmplCreateHook.Execute(&output, data)
 	if err != nil {
 		return "", err
 	}
