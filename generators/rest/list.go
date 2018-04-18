@@ -15,11 +15,12 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 		err      error
 		response responseList
 		filters  []models.ListFilter
+		{{if .Hooks}}stop     bool{{end}}
 	)
 	{{.Filters}}
 
 	{{if .PreExecHook}}
-    if filters, err = restPreList(w, r, filters); err != nil {
+    if filters, stop, err = restPreList(w, r, filters); err != nil || stop {
         return
     }
     {{end}}
@@ -33,7 +34,7 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-    if response.Entities, err = restPostList(w, r, response.Entities); err != nil {
+    if response.Entities, stop, err = restPostList(w, r, response.Entities); err != nil || stop {
         return
     }
     {{end}}
@@ -105,13 +106,13 @@ var tmplListFilterDate, _ = template.New("GenerateListFilterDate").Parse(`
 
 var tmplListHook, _ = template.New("GenerateListHook").Parse(`
 {{if .PreExecHook }}
-func restPreList(w http.ResponseWriter, r *http.Request, filters []models.ListFilter) ([]models.ListFilter, error) {
-	return filters, nil
+func restPreList(w http.ResponseWriter, r *http.Request, filters []models.ListFilter) ([]models.ListFilter, bool, error) {
+	return filters, false, nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restPostList(w http.ResponseWriter, r *http.Request, list []*{{.Name}}) ([]*{{.Name}}, error) {
-	return list, nil
+func restPostList(w http.ResponseWriter, r *http.Request, list []*{{.Name}}) ([]*{{.Name}}, bool, error) {
+	return list, false, nil
 }
 {{end}}
 `)
@@ -127,6 +128,7 @@ func GenerateList(structInfo generators.StructureInfo, preExecHook bool, postExe
 			Filters      string
 			PreExecHook  bool
 			PostExecHook bool
+			Hooks        bool
 		}
 	)
 
@@ -165,6 +167,7 @@ func GenerateList(structInfo generators.StructureInfo, preExecHook bool, postExe
 
 	data.PreExecHook = preExecHook
 	data.PostExecHook = postExecHook
+	data.Hooks = data.PreExecHook || data.PostExecHook
 	err = tmplList.Execute(&output, data)
 
 	if err != nil {

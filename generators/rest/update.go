@@ -17,6 +17,7 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 		id       int64
 		response responseSingle
 		tx       *sql.Tx
+		{{if .Hooks}}stop     bool{{end}}
 	)
 
 	vars := mux.Vars(r)
@@ -69,14 +70,19 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 
 	tx, err = db.Begin()
 	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to process"}]}` + "`" + `)
 		return
 	}
 
 	{{if .PreExecHook}}
-    if err = restPreUpdate(w, r, response.Entity, tx); err != nil {
+    if stop, err = restPreUpdate(w, r, response.Entity, tx); err != nil {
 		tx.Rollback()
         return
-    }
+    } else if stop {
+		return
+	}
     {{end}}
 
 	err = response.Entity.Save(tx, false)
@@ -88,10 +94,12 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-    if err = restPostUpdate(w, r, response.Entity, tx); err != nil {
+    if stop, err = restPostUpdate(w, r, response.Entity, tx); err != nil {
 		tx.Rollback()
         return
-    }
+    } else if stop {
+		return
+	}
 	{{end}}
 	
 	if err = tx.Commit(); err != nil {
@@ -117,13 +125,13 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 
 var tmplUpdateHook, _ = template.New("GenerateUpdateHook").Parse(`
 {{if .PreExecHook }}
-func restPreUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) error {
-	return nil
+func restPreUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restPostUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) error {
-	return nil
+func restPostUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
 }
 {{end}}
 `)
@@ -135,7 +143,8 @@ func GenerateUpdate(structInfo generators.StructureInfo, preExecHook bool, postE
 		Endpoint     string
 		PreExecHook  bool
 		PostExecHook bool
-	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook}
+		Hooks        bool
+	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook, preExecHook || postExecHook}
 
 	err := tmplUpdate.Execute(&output, data)
 	if err != nil {

@@ -15,6 +15,7 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 		id       int64
 		err      error
 		response responseSingle
+		{{if .Hooks}}stop     bool{{end}}
 	)
 
 	vars := mux.Vars(r)
@@ -32,7 +33,7 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PreExecHook}}
-    if err = restPreGet(w, r, id); err != nil {
+    if stop, err = restPreGet(w, r, id); err != nil || stop {
         return
     }
     {{end}}
@@ -53,7 +54,7 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-    if err = restPostGet(w, r, response.Entity); err != nil {
+    if stop, err = restPostGet(w, r, response.Entity); err != nil || stop {
         return
     }
     {{end}}
@@ -75,13 +76,13 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 
 var tmplGetHook, _ = template.New("GenerateGetHook").Parse(`
 {{if .PreExecHook }}
-func restPreGet(w http.ResponseWriter, r *http.Request, id int64) error {
-	return nil
+func restPreGet(w http.ResponseWriter, r *http.Request, id int64) (bool, error) {
+	return false, nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restPostGet(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) error {
-	return nil
+func restPostGet(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) (bool, error) {
+	return false, nil
 }
 {{end}}
 `)
@@ -93,7 +94,8 @@ func GenerateGet(structInfo generators.StructureInfo, preExecHook bool, postExec
 		Endpoint     string
 		PreExecHook  bool
 		PostExecHook bool
-	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook}
+		Hooks        bool
+	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook, preExecHook || postExecHook}
 
 	err := tmplGet.Execute(&output, data)
 

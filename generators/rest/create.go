@@ -16,6 +16,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 		rawbody  []byte
 		response responseSingle
 		tx       *sql.Tx
+		{{if .Hooks}}stop     bool{{end}}
 	)
 
 	rawbody, err = ioutil.ReadAll(r.Body)
@@ -38,12 +39,17 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 
 	tx, err = db.Begin()
 	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to process"}]}` + "`" + `)
 		return
 	}
 
 	{{if .PreExecHook}}
-	if err = restPreCreate(w, r, response.Entity, tx); err != nil {
+	if stop, err = restPreCreate(w, r, response.Entity, tx); err != nil {
 		tx.Rollback()
+		return
+	} else if stop {
 		return
 	}
     {{end}}
@@ -58,8 +64,10 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{{if .PostExecHook}}
-	if err = restPostCreate(w, r, response.Entity, tx); err != nil {
+	if stop, err = restPostCreate(w, r, response.Entity, tx); err != nil {
 		tx.Rollback()
+		return
+	} else if stop {
 		return
 	}
 	{{end}}
@@ -87,13 +95,13 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 
 var tmplCreateHook, _ = template.New("GenerateCreateHook").Parse(`
 {{if .PreExecHook }}
-func restPreCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) error {
-	return nil
+func restPreCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restPostCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) error {
-	return nil
+func restPostCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
 }
 {{end}}
 `)
@@ -105,7 +113,8 @@ func GenerateCreate(structInfo generators.StructureInfo, preExecHook bool, postE
 		Endpoint     string
 		PreExecHook  bool
 		PostExecHook bool
-	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook}
+		Hooks        bool
+	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook, preExecHook || postExecHook}
 
 	err := tmplCreate.Execute(&output, data)
 	if err != nil {

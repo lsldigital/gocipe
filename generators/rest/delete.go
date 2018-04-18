@@ -16,6 +16,7 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 		err      error
 		response responseSingle
 		tx       *sql.Tx
+		{{if .Hooks}}stop     bool{{end}}
 	)
 
 	vars := mux.Vars(r)
@@ -49,11 +50,16 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 
 	tx, err = db.Begin()
 	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to process"}]}` + "`" + `)
 		return
 	}
 	{{if .PreExecHook}}
-	if err = restPreDelete(w, r, id, tx); err != nil {
+	if stop, err = restPreDelete(w, r, id, tx); err != nil {
 		tx.Rollback()
+		return
+	} else if stop {
 		return
 	}
     {{end}}
@@ -66,8 +72,10 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	{{if .PostExecHook}}
-	if err = restPostDelete(w, r, id, tx); err != nil {
+	if stop, err = restPostDelete(w, r, id, tx); err != nil {
 		tx.Rollback()
+		return
+	} else if stop {
 		return
 	}
 	{{end}}
@@ -94,13 +102,13 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 
 var tmplDeleteHook, _ = template.New("GenerateDeleteHook").Parse(`
 {{if .PreExecHook }}
-func restPreDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) error {
-	return nil
+func restPreDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) (bool, error) {
+	return false, nil
 }
 {{end}}
 {{if .PostExecHook }}
-func restPostDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) error {
-	return nil
+func restPostDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) (bool, error) {
+	return false, nil
 }
 {{end}}
 `)
@@ -112,7 +120,8 @@ func GenerateDelete(structInfo generators.StructureInfo, preExecHook bool, postE
 		Endpoint     string
 		PreExecHook  bool
 		PostExecHook bool
-	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook}
+		Hooks        bool
+	}{strings.ToLower(structInfo.Name), preExecHook, postExecHook, preExecHook || postExecHook}
 
 	err := tmplDelete.Execute(&output, data)
 
