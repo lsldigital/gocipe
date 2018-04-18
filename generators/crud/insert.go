@@ -24,6 +24,8 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 			return err
 		}
 	}
+
+	{{.SnippetsBefore}}
 	
 	stmt, err := tx.Prepare("INSERT INTO {{.TableName}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
 	if err != nil {
@@ -61,13 +63,18 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 
 //GenerateInsert generate function to insert an entity in database
 func GenerateInsert(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
-	var output bytes.Buffer
+	var (
+		output         bytes.Buffer
+		snippetsBefore []string
+	)
+
 	data := new(struct {
 		Name            string
 		TableName       string
 		SQLFields       string
 		SQLPlaceholders string
 		StructFields    string
+		SnippetsBefore  string
 		PreExecHook     bool
 		PostExecHook    bool
 	})
@@ -81,8 +88,12 @@ func GenerateInsert(structInfo generators.StructureInfo, PreExecHook bool, PostE
 	data.PostExecHook = PostExecHook
 
 	for i, field := range structInfo.Fields {
-		if field.Name == "id" {
+		if field.Property == "ID" {
 			continue
+		} else if field.Property == "CreatedAt" {
+			snippetsBefore = append(snippetsBefore, "*entity.CreatedAt = time.Now()")
+		} else if field.Property == "UpdatedAt" {
+			snippetsBefore = append(snippetsBefore, "*entity.UpdatedAt = time.Now()")
 		}
 
 		data.SQLFields += field.Name + ", "
@@ -93,6 +104,10 @@ func GenerateInsert(structInfo generators.StructureInfo, PreExecHook bool, PostE
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")
 	data.SQLPlaceholders = strings.TrimSuffix(data.SQLPlaceholders, ", ")
 	data.StructFields = strings.TrimSuffix(data.StructFields, ", ")
+
+	if len(snippetsBefore) != 0 {
+		data.SnippetsBefore = strings.Join(snippetsBefore, "\n")
+	}
 
 	err := tmplInsert.Execute(&output, data)
 	if err != nil {

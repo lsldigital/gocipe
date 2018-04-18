@@ -21,6 +21,8 @@ func (entity *{{.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 		}
 	}
 
+	{{.SnippetsBefore}}
+
 	stmt, err := tx.Prepare("UPDATE {{.TableName}} SET {{.SQLFields}} WHERE id = $1")
 	if err != nil {
 		return err
@@ -58,16 +60,19 @@ func (entity *{{.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 //GenerateUpdate returns code to update an entity in database
 func GenerateUpdate(structInfo generators.StructureInfo, preExecHook bool, postExecHook bool) (string, error) {
 	var (
-		output bytes.Buffer
-		index  = 2
+		output         bytes.Buffer
+		index          = 2
+		snippetsBefore []string
 	)
+
 	data := new(struct {
-		Name         string
-		TableName    string
-		SQLFields    string
-		StructFields string
-		PreExecHook  bool
-		PostExecHook bool
+		Name           string
+		TableName      string
+		SQLFields      string
+		StructFields   string
+		SnippetsBefore string
+		PreExecHook    bool
+		PostExecHook   bool
 	})
 
 	data.Name = structInfo.Name
@@ -78,8 +83,10 @@ func GenerateUpdate(structInfo generators.StructureInfo, preExecHook bool, postE
 	data.PostExecHook = postExecHook
 
 	for _, field := range structInfo.Fields {
-		if field.Name == "ID" {
+		if field.Property == "ID" {
 			continue
+		} else if field.Property == "UpdatedAt" {
+			snippetsBefore = append(snippetsBefore, "*entity.UpdatedAt = time.Now()")
 		}
 
 		data.SQLFields += field.Name + " = $" + strconv.Itoa(index) + ", "
@@ -88,6 +95,10 @@ func GenerateUpdate(structInfo generators.StructureInfo, preExecHook bool, postE
 	}
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")
 	data.StructFields = strings.TrimSuffix(data.StructFields, ", ")
+
+	if len(snippetsBefore) != 0 {
+		data.SnippetsBefore = strings.Join(snippetsBefore, "\n")
+	}
 
 	err := tmplUpdate.Execute(&output, data)
 	if err != nil {
