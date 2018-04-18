@@ -90,8 +90,10 @@ func GenerateList(structInfo generators.StructureInfo, preExecHook bool, postExe
 	data.PostExecHook = postExecHook
 
 	for _, field := range structInfo.Fields {
-		data.SQLFields += field.Name + ", "
-		data.StructFields += "entity." + field.Property + ", "
+		if field.ManyMany == nil {
+			data.SQLFields += field.Name + ", "
+			data.StructFields += "entity." + field.Property + ", "
+		}
 	}
 
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")

@@ -44,6 +44,7 @@ type FieldInfo struct {
 	Default    string // field.default
 	Filterable bool   //field.filterable
 	Widget     *WidgetInfo
+	ManyMany   *ManyManyInfo
 }
 
 //WidgetInfo represents structure tags for widget
@@ -51,6 +52,13 @@ type WidgetInfo struct {
 	Label   string
 	Type    string
 	Options []string
+}
+
+// ManyManyInfo represents structure for a field with a many-many relationship
+type ManyManyInfo struct {
+	ThisID     string
+	PivotTable string
+	ThatID     string
 }
 
 //NewStructureInfo process a go file to extract structure information
@@ -109,14 +117,10 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 
 			if val, ok := tags.Lookup("field.name"); ok {
 				info.Name = val
-			} else {
-				info.Name = strings.ToLower(info.Property)
 			}
 
 			if val, ok := tags.Lookup("field.type"); ok {
 				info.DBType = val
-			} else {
-				return nil, fmt.Errorf("struct tag field.type not found in field: %s", info.Property)
 			}
 
 			// "true" (nullable) or "false" (not null). Default: "false"
@@ -137,6 +141,15 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 				w, e := ParseWidgetInfo(val)
 				if e == nil {
 					info.Widget = w
+				} else {
+					return nil, e
+				}
+			}
+
+			if val, ok := tags.Lookup("field.mmany"); ok && val != "" {
+				m, e := ParseManyManyInfo(val)
+				if e == nil {
+					info.ManyMany = m
 				} else {
 					return nil, e
 				}
@@ -167,7 +180,6 @@ func (structInfo *StructureInfo) String() string {
 func ParseWidgetInfo(value string) (*WidgetInfo, error) {
 	var (
 		widgetInfo WidgetInfo
-		err        error
 		fields     []string
 		lenf       int
 	)
@@ -186,5 +198,24 @@ func ParseWidgetInfo(value string) (*WidgetInfo, error) {
 		widgetInfo.Options = strings.Split(fields[2], ";")
 	}
 
-	return &widgetInfo, err
+	return &widgetInfo, nil
+}
+
+// ParseManyManyInfo returns ManyManyInfo by parsing a string; format being ThisID#PivotTable#ThatID
+func ParseManyManyInfo(value string) (*ManyManyInfo, error) {
+	var (
+		manyMany ManyManyInfo
+		fields   []string
+	)
+
+	fields = strings.Split(value, "#")
+	if len(fields) != 3 {
+		return nil, errors.New("invalid format for many many tag: " + value)
+	}
+
+	manyMany.ThisID = fields[0]
+	manyMany.PivotTable = fields[1]
+	manyMany.ThatID = fields[2]
+
+	return &manyMany, nil
 }

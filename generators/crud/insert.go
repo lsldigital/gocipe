@@ -16,6 +16,7 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 	var (
 		id  int64
 		err error
+		{{.ManyManyVars}}
 	)
 
 	if tx == nil {
@@ -44,6 +45,7 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 		tx.Rollback()
 		return fmt.Errorf("error executing transaction statement in {{.Name}}: %s", err)
 	}
+	{{.ManyMany}}
 	{{if .PostExecHook }}
 	if err := crudPostSave(entity, tx); err != nil {
 		tx.Rollback()
@@ -61,11 +63,28 @@ func (entity *{{.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 }
 `)
 
+var tmplManyManyInsert, _ = template.New("ManyManyInsert").Parse(`
+	stmtMmany, err = tx.Prepare("INSERT INTO {{.PivotTable}} ({{.ThisID}}, {{.ThatID}}) VALUES ($1, $2)")
+	
+	if err != nil {
+		return fmt.Errorf("error preparing transaction statement in ManyManyInsert(%d) {{.ThisID}}-{{.ThatID}} for table '{{.PivotTable}}': %s", *entity.ID, err)
+	}
+
+	for _, relatedID := range entity.{{.RelatedProperty}} {
+		_, err = stmtMmany.Exec(entity.ID, relatedID)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("error executing transaction statement in ManyManyInsert(%d) {{.ThisID}}-{{.ThatID}} for table '{{.PivotTable}}': %s", *entity.ID, err)
+		}
+	}
+`)
+
 //GenerateInsert generate function to insert an entity in database
 func GenerateInsert(structInfo generators.StructureInfo, PreExecHook bool, PostExecHook bool) (string, error) {
 	var (
 		output         bytes.Buffer
 		snippetsBefore []string
+		manyMany       []string
 	)
 
 	data := new(struct {
@@ -75,6 +94,8 @@ func GenerateInsert(structInfo generators.StructureInfo, PreExecHook bool, PostE
 		SQLPlaceholders string
 		StructFields    string
 		SnippetsBefore  string
+		ManyMany        string
+		ManyManyVars    string
 		PreExecHook     bool
 		PostExecHook    bool
 	})
@@ -96,9 +117,13 @@ func GenerateInsert(structInfo generators.StructureInfo, PreExecHook bool, PostE
 			snippetsBefore = append(snippetsBefore, "*entity.UpdatedAt = time.Now()")
 		}
 
-		data.SQLFields += field.Name + ", "
-		data.SQLPlaceholders += "$" + strconv.Itoa(i) + ", "
-		data.StructFields += "*entity." + field.Property + ", "
+		if field.ManyMany == nil {
+			data.SQLFields += field.Name + ", "
+			data.SQLPlaceholders += "$" + strconv.Itoa(i) + ", "
+			data.StructFields += "*entity." + field.Property + ", "
+		} else {
+			manyMany = append(manyMany, insertManyMany(field))
+		}
 	}
 
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")
@@ -109,10 +134,38 @@ func GenerateInsert(structInfo generators.StructureInfo, PreExecHook bool, PostE
 		data.SnippetsBefore = strings.Join(snippetsBefore, "\n")
 	}
 
+	if len(manyMany) != 0 {
+		data.ManyMany = strings.Join(manyMany, "\n") + "\n"
+		data.ManyManyVars = "stmtMmany *sql.Stmt"
+	}
+
 	err := tmplInsert.Execute(&output, data)
 	if err != nil {
 		return "", err
 	}
 
 	return output.String(), nil
+}
+
+func insertManyMany(field generators.FieldInfo) string {
+	var output bytes.Buffer
+
+	data := new(struct {
+		PivotTable      string
+		RelatedProperty string
+		ThatID          string
+		ThisID          string
+	})
+
+	data.PivotTable = field.ManyMany.PivotTable
+	data.RelatedProperty = field.Property
+	data.ThisID = field.ManyMany.ThisID
+	data.ThatID = field.ManyMany.ThatID
+
+	err := tmplManyManyInsert.Execute(&output, data)
+	if err != nil {
+		return ""
+	}
+
+	return output.String()
 }
