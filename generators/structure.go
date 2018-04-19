@@ -116,8 +116,10 @@ func processStructure(pkg string, src string, typeSpec *ast.TypeSpec) (*Structur
 
 			tags = reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
 
-			if val, ok := tags.Lookup("field.name"); ok {
+			if val, ok := tags.Lookup("field.name"); ok && val != "" {
 				info.Name = val
+			} else {
+				return nil, fmt.Errorf("field.name tag not found in: %s", structInfo.Name)
 			}
 
 			if val, ok := tags.Lookup("field.type"); ok {
