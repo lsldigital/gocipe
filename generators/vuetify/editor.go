@@ -162,8 +162,9 @@ var tmplEditorSelectRel, _ = template.New("EditorSelectRel").Parse(`
     label="{{.Label}}"
     :loading="select.{{.Field}}.isloading"
     :items="select.{{.Field}}.items"
-    :search-input.sync="select.{{.Field}}.search"
+	:search-input.sync="select.{{.Field}}.search"
 	v-model="entity.{{.Field}}"
+	{{.Options}}
 ></v-select>
 `)
 
@@ -175,6 +176,7 @@ var tmplEditorSelect, _ = template.New("EditorSelect").Parse(`
 	label="{{.Label}}"
 	:items="select.{{.Field}}.items"
 	v-model="entity.{{.Field}}"
+	{{.Options}}
 ></v-select>
 `)
 
@@ -266,14 +268,23 @@ func GenerateEditor(structInfo generators.StructureInfo) (string, error) {
 			createdAssgn = append(createdAssgn, "this.dates."+field.Name+".value = response.data.entity."+field.Name+".substr(0,10)")
 
 		case "select":
+			var options []string
+
+			for _, v := range field.Widget.Options {
+				if v == "multiple" {
+					options = append(options, "multiple chips")
+				}
+			}
+
 			tmplEditorSelect.Execute(&markupSegment, struct {
-				Label string
-				Field string
-			}{})
+				Label   string
+				Field   string
+				Options string
+			}{field.Widget.Label, field.Name, strings.Join(options, " ")})
 
 			var values []string
-			for _, pair := range field.Widget.Options {
-				p := strings.SplitN(pair, "|", 2)
+			for _, pair := range field.Widget.Data {
+				p := strings.SplitN(pair, ":", 2)
 				if len(p) == 1 {
 					values = append(values, fmt.Sprintf(`{text: "%s", value: "%s"}`, p[0], p[0]))
 				} else {
@@ -284,23 +295,38 @@ func GenerateEditor(structInfo generators.StructureInfo) (string, error) {
 			selectData = append(selectData, field.Name+": { items: ["+strings.Join(values, ", ")+"]}")
 
 		case "select-rel":
-			tmplEditorSelectRel.Execute(&markupSegment, struct {
-				Label string
-				Field string
-			}{field.Widget.Label, field.Name})
+			var options []string
 
-			if len(field.Widget.Options) != 2 {
+			for _, v := range field.Widget.Options {
+				if v == "multiple" {
+					options = append(options, "multiple chips")
+				}
+			}
+
+			tmplEditorSelect.Execute(&markupSegment, struct {
+				Label   string
+				Field   string
+				Options string
+			}{field.Widget.Label, field.Name, strings.Join(options, " ")})
+
+			if len(field.Widget.Data) != 2 {
 				return "", fmt.Errorf("invalid options for field: %s", field.Property)
 			}
 
-			endpoint := field.Widget.Options[0]
-			filtername := field.Widget.Options[1]
+			endpoint := field.Widget.Data[0]
+			filtername := field.Widget.Data[1]
 
 			selectData = append(selectData, field.Name+": {search: null, isloading: false, items: []}")
 			selectWatch = append(selectWatch, `
 			"select.`+field.Name+`.search": function(val) {
 				val && this.querySelections("`+field.Name+`", "`+endpoint+`", "`+filtername+`", val)
 			}`)
+
+		case "toggle":
+			tmplEditorToggle.Execute(&markupSegment, struct {
+				Label string
+				Field string
+			}{field.Widget.Label, field.Name})
 		}
 		fieldsMarkup = append(fieldsMarkup, markupSegment.String())
 	}

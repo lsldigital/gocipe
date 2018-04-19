@@ -51,6 +51,7 @@ type FieldInfo struct {
 type WidgetInfo struct {
 	Label   string
 	Type    string
+	Data    []string
 	Options []string
 }
 
@@ -193,6 +194,15 @@ func ParseWidgetInfo(value string) (*WidgetInfo, error) {
 
 	widgetInfo.Label = fields[0]
 	widgetInfo.Type = fields[1]
+
+	if strings.HasSuffix(widgetInfo.Type, ")") {
+		splat := strings.SplitN(strings.TrimRight(widgetInfo.Type, ")"), "(", 2)
+		if len(splat) != 2 {
+			return nil, fmt.Errorf("invalid widget.type %s", value)
+		}
+		widgetInfo.Type = splat[0]
+		widgetInfo.Data = strings.Split(splat[1], ",")
+	}
 
 	if lenf == 3 {
 		widgetInfo.Options = strings.Split(fields[2], ";")

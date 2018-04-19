@@ -52,6 +52,7 @@ field.type        | Defines DB table column type
 field.nullable    | "true" (nullable) or "false" (not null). Default: "false"
 field.default     | Defines default value of field for database schema
 field.filterable  | If field can be used as filter for REST endpoints. "true" / "false". Default: "true"
+field.mmany       | Format is `thisid#pivotTable#thatid`
 widget            | Widget to use (vuetify). Format is `Label#Type` or `Label#Type#Options`
 
 ## Command, Arguments & Flags
@@ -157,13 +158,17 @@ lh       | No       | false   | Generate List post-execution hook
 
 ## Widget
 
-Type         | Description                                                                | Options
--------------|----------------------------------------------------------------------------|--------
-`textfield`  | Text box                                                                   |   
-`textarea`   | Text area                                                                  |    
-`number`     | Number                                                                     | 
-`password`   | Password                                                                   |   
-`checkbox`   | Checkbox                                                                   |   
-`date`       | Date picker                                                                |      
-`select`     | Select with predefined options                                             | `key1|label1;key2|label2;keyn|labeln`             
-`select-rel` | Select with options fetched asynchronously from a related entity endpoint  | `endpoint;filtername` where filtername is the field used for label                                                        
+All widget tags follow the format `Label#Type(Data)#Options`
+
+Type         | Description                                                               | Data                                          | Options
+-------------|---------------------------------------------------------------------------|-----------------------------------------------|--------
+`textfield`  | Text box                                                                  |                                               |   
+`textarea`   | Text area                                                                 |                                               |    
+`number`     | Number                                                                    |                                               | 
+`range `     | Range                                                                     |                                               |  
+`password`   | Password                                                                  |                                               |   
+`checkbox`   | Checkbox                                                                  |                                               |   
+`date`       | Date picker                                                               |                                               |      
+`select`     | Select with predefined options                                            | `(key1:value1, key2:value2, ... keyn:value1)` |              
+`select-rel` | Select with options fetched asynchronously from a related entity endpoint | `(endpoint,filtername)` e.g: `(persons;name)` |                                                        
+> If no data, then it must be ommitted, including the `()`
