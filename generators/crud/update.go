@@ -12,7 +12,10 @@ import (
 var tmplUpdate, _ = template.New("GenerateUpdate").Parse(`
 //Update Will execute an SQLUpdate Statement for {{.Name}} in the database. Prefer using Save instead of Update directly.
 func (entity *{{.Name}}) Update(tx *sql.Tx, autocommit bool) error {
-	var err error
+	var (
+		err error
+		{{.ManyManyVars}}
+	)
 
 	if tx == nil {
 		tx, err = db.Begin()
@@ -39,7 +42,7 @@ func (entity *{{.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 		tx.Rollback()
 		return fmt.Errorf("error executing transaction statement in {{.Name}}.Update(): %s", err)
 	}
-
+	{{.ManyMany}}
 	{{if .PostExecHook }}
 	if err := crudPostSave(entity, tx); err != nil {
 		tx.Rollback()
@@ -63,6 +66,7 @@ func GenerateUpdate(structInfo generators.StructureInfo, preExecHook bool, postE
 		output         bytes.Buffer
 		index          = 2
 		snippetsBefore []string
+		manyMany       []string
 	)
 
 	data := new(struct {
@@ -71,6 +75,8 @@ func GenerateUpdate(structInfo generators.StructureInfo, preExecHook bool, postE
 		SQLFields      string
 		StructFields   string
 		SnippetsBefore string
+		ManyMany       string
+		ManyManyVars   string
 		PreExecHook    bool
 		PostExecHook   bool
 	})
@@ -78,7 +84,7 @@ func GenerateUpdate(structInfo generators.StructureInfo, preExecHook bool, postE
 	data.Name = structInfo.Name
 	data.TableName = structInfo.TableName
 	data.SQLFields = ""
-	data.StructFields = "entity.ID, "
+	data.StructFields = "*entity.ID, "
 	data.PreExecHook = preExecHook
 	data.PostExecHook = postExecHook
 
@@ -89,15 +95,26 @@ func GenerateUpdate(structInfo generators.StructureInfo, preExecHook bool, postE
 			snippetsBefore = append(snippetsBefore, "*entity.UpdatedAt = time.Now()")
 		}
 
-		data.SQLFields += field.Name + " = $" + strconv.Itoa(index) + ", "
-		data.StructFields += "*entity." + field.Property + ", "
-		index++
+		if field.ManyMany == nil {
+			data.SQLFields += field.Name + " = $" + strconv.Itoa(index) + ", "
+			data.StructFields += "*entity." + field.Property + ", "
+			index++
+		} else {
+			manyMany = append(manyMany, deleteManyMany("*entity.ID", field))
+			manyMany = append(manyMany, insertManyMany(field))
+		}
 	}
+
 	data.SQLFields = strings.TrimSuffix(data.SQLFields, ", ")
 	data.StructFields = strings.TrimSuffix(data.StructFields, ", ")
 
 	if len(snippetsBefore) != 0 {
 		data.SnippetsBefore = strings.Join(snippetsBefore, "\n")
+	}
+
+	if len(manyMany) != 0 {
+		data.ManyMany = strings.Join(manyMany, "\n") + "\n"
+		data.ManyManyVars = "stmtMmany *sql.Stmt"
 	}
 
 	err := tmplUpdate.Execute(&output, data)
