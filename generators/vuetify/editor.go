@@ -182,7 +182,7 @@ var tmplEditorSelect, _ = template.New("EditorSelect").Parse(`
 
 var tmplEditorToggle, _ = template.New("EditorToggle").Parse(`
 <v-switch
-	:label="{{.Label}}"
+	label="{{.Label}}"
 	v-model="entity.{{.Field}}"
 ></v-switch>
 `)
