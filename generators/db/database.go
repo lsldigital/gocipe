@@ -57,7 +57,7 @@ func GenerateDatabase(structInfo generators.StructureInfo) (string, error) {
 		)
 
 		if sfield.ManyMany != nil {
-			if strings.Compare(sfield.ManyMany.ThisID, sfield.ManyMany.ThatID) == -1 {
+			if strings.Compare(sfield.ManyMany.ThisID, sfield.ManyMany.ThatID) == 1 {
 				manymany = append(manymany, manymanyDatabase(sfield))
 			}
 			continue
