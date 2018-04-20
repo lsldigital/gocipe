@@ -15,3 +15,5 @@
 
 .idea/
 gocipe
+gocipe.json
+*.gocipe.json
