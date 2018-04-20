@@ -1,0 +1,30 @@
+{
+  "container": true,
+  "http": true,
+  "amigo": "hola",
+  "schema": {
+    "create": true,
+    "drop": true,
+    "aggregate": true
+  },
+  "myArray": [
+    {
+      "id": "1",
+      "create": true,
+      "drop": true,
+      "aggregate": true
+    },
+    {
+      "id": "2",
+      "create": true,
+      "drop": true,
+      "aggregate": true
+    },
+    {
+      "id": "3",
+      "create": true,
+      "drop": true,
+      "aggregate": true
+    }
+  ]
+}

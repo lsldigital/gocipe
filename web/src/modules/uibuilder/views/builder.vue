@@ -32,8 +32,8 @@
 
 <script>
 import draggable from "vuedraggable";
-import gocipe from "../gocipe.json";
-// import gocipe from "../simple.gocipe.json";
+// import gocipe from "../gocipe.json";
+import gocipe from "../simple.gocipe.json";
 import booleanType from "./components/booleanType.vue";
 import stringType from "./components/stringType.vue";
 
