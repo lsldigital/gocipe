@@ -2,12 +2,32 @@
   "container": true,
   "http": true,
   "amigo": "hola",
+  "myArray": [
+    {
+      "id": "1",
+      "create": true,
+      "drop": true,
+      "aggregate": true
+    },
+    {
+      "id": "2",
+      "create": true,
+      "drop": true,
+      "aggregate": true
+    },
+    {
+      "id": "3",
+      "create": true,
+      "drop": true,
+      "aggregate": true
+    }
+  ],
   "schema": {
     "create": true,
     "drop": true,
     "aggregate": true
   },
-  "myArray": [
+  "names": [
     {
       "id": "1",
       "create": true,
