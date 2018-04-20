@@ -16,40 +16,29 @@
                         </v-expansion-panel-content>
                     </draggable>
                 </v-expansion-panel>
-                <v-btn block @click.native.stop="dialog = true">Add {{property}}</v-btn>
-                <v-dialog v-model="dialog" max-width="290">
-                    <v-card>
-                        <v-card-title class="headline">Add new {{property}}</v-card-title>
-                        <v-card-text>{{property}} consists of</v-card-text>
-                        <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn color="darken-1" flat="flat" @click.native="dialog = false">Cancel</v-btn>
-                            <v-btn color="green darken-1" flat="flat" @click.native="dialog = false">Confirm</v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
+                <Dialog :property="property" @interface="updateArray" />
             </v-flex>
         </v-layout>
         <v-layout v-else v-for="(objectValue, objectProperty, objectIndex) in value" :key="objectIndex + '__' + objectProperty">
-            <!-- <v-flex md2>{{objectProperty}} </v-flex> -->
             <v-flex md12>
                 <component :is="getType(objectValue)" :object="value" :property="objectProperty" :index="objectIndex" :value="objectValue"> </component>
             </v-flex>
         </v-layout>
     </div>
+
 </template>
 
 <script>
 import draggable from "vuedraggable";
 import booleanType from "@/modules/uibuilder/views/components/booleanType.vue";
 import stringType from "@/modules/uibuilder/views/components/stringType.vue";
+import Dialog from "../dialog/Dialog.vue";
+
 import Vue from "vue";
 
 export default {
   data() {
-    return {
-      dialog: false
-    };
+    return {};
   },
   props: ["value", "property", "index", "object"],
   computed: {
@@ -78,12 +67,18 @@ export default {
         return true;
       }
       return false;
+    },
+    updateArray($event) {
+      const copy = Object.assign($event);
+      console.log(copy);
+      this.computedValue.push(copy);
     }
   },
   components: {
     draggable,
     booleanType,
-    stringType
+    stringType,
+    Dialog
   }
 };
 </script>
