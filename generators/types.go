@@ -20,10 +20,10 @@ const (
 // Recipe represents a recipe to generate a project
 type Recipe struct {
 	// Container indicates whether or not container should be generated
-	Container bool `json:"container"`
+	Bootstrap BootstrapOpts `json:"bootstrap"`
 
 	// HTTP indicates whether http server code should be generated
-	HTTP bool `json:"http"`
+	HTTP HTTPOpts `json:"http"`
 
 	// Schema describes options for Schema generation
 	Schema SchemaOpts `json:"schema"`
@@ -39,6 +39,42 @@ type Recipe struct {
 
 	// Entities lists entities to be generated
 	Entities []Entity
+}
+
+// HTTPOpts represents options for http function generation
+type HTTPOpts struct {
+	// Generate indicates whether or not to generate http serve function
+	Generate bool `json:"generate"`
+
+	// Prefix indicates which prefix to use for routes
+	Prefix string `json:"prefix"`
+
+	// Port represents default port to run application
+	Port string `json:"port"`
+}
+
+// BootstrapOpts represents options for bootstrap function generation
+type BootstrapOpts struct {
+	// Generate indicates whether or not to generate bootstrap
+	Generate bool `json:"generate"`
+
+	// Settings represent list of settings to load during bootstrap into main package
+	Settings []BootstrapSetting `json:"settings"`
+}
+
+// BootstrapSetting represents a setting required by the application and loaded during bootstrap
+type BootstrapSetting struct {
+	// Name represents name of setting
+	Name string `json:"name"`
+
+	// Type represents data type of setting
+	Type string `json:"type"`
+
+	// Description gives information on the setting (useful to display errors if not found)
+	Description string `json:"description"`
+
+	// FromDB indicates if setting comes from ENV variable or database (default)
+	FromDB bool `json:"from_env"`
 }
 
 // SchemaOpts represents options for schema generation
