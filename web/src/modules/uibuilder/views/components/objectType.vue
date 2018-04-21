@@ -16,7 +16,6 @@
                                 </v-card-text>
                             </v-card>
                         </v-expansion-panel-content>
-
                     </draggable>
                 </v-expansion-panel>
                 <Dialog :property="property" @interface="updateArray" />
@@ -32,8 +31,6 @@ import draggable from "vuedraggable";
 import booleanType from "@/modules/uibuilder/views/components/booleanType.vue";
 import stringType from "@/modules/uibuilder/views/components/stringType.vue";
 import Dialog from "../dialog/Dialog.vue";
-
-import Vue from "vue";
 
 export default {
   data() {
