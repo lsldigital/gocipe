@@ -1,0 +1,61 @@
+package user
+
+import (
+	"database/sql"
+)
+
+{{if .Hooks.PreRead}}
+func crudPreGet(id int64) error {
+	return nil
+}
+{{end}}
+{{if .Hooks.PostRead}}
+func crudPostGet(entity *{{.Name}}) error {
+	return nil
+}
+{{end}}
+
+{{if .Hooks.PreList}}
+func crudPreList(filters []models.ListFilter) ([]models.ListFilter, error) {
+	return filters, nil
+}
+{{end}}
+{{if .Hooks.PostList}}
+func crudPostList(list []*{{.Name}}) ([]*{{.Name}}, error) {
+	return list, nil
+}
+{{end}}
+
+{{if .Hooks.PreDelete}}
+func crudPreDelete(id int64, tx *sql.Tx) error {
+	return nil
+}
+{{end}}
+{{if .Hooks.PostDelete}}
+func crudPostDelete(id int64, tx *sql.Tx) error {
+	return nil
+}
+{{end}}
+
+
+{{if .Hooks.PreCreate }}
+func crudPreCreate(entity *{{.Name}}, tx *sql.Tx) error {
+	return nil
+}
+{{end}}
+{{if .Hooks.PreCreate }}
+func crudPostCreate(entity *{{.Name}}, tx *sql.Tx) error {
+	return nil
+}
+{{end}}
+
+{{if .Hooks.PreUpdate}}
+func crudPreUpdate(entity *{{.Name}}, tx *sql.Tx) error {
+	return nil
+}
+{{end}}
+{{if .Hooks.PostUpdate}}
+func crudPostUpdate(entity *{{.Name}}, tx *sql.Tx) error {
+	return nil
+}
+{{end}}

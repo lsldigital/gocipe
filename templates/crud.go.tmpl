@@ -1,0 +1,428 @@
+package {{.Package}}
+
+import "database/sql"
+
+var db *sql.DB
+
+// Inject allows injection of services into the package
+func Inject(database *sql.DB) {
+	db = database
+}
+
+// New return a new {{.Entity.Name}} instance
+func New() *{{.Entity.Name}} {
+	entity := new({{.Entity.Name}})
+	{{range .Entity.Fields}}entity.{{.Property.Name}} = new({{.Property.Type}})
+	{{end}}
+	return entity
+}
+
+// Get returns a single {{.Entity.Name}} from database by primary key
+func Get(id int64) (*{{.Entity.Name}}, error) {
+	var entity = New()
+	{{if .Entity.Crud.Hooks.PreRead}}
+    if err := crudPreGet(id); err != nil {
+		return nil, fmt.Errorf("error executing crudPreGet() in Get(%d) for entity '{{.Entity.Name}}': %s", id, err)
+	}
+    {{end}}
+	rows, err := db.Query("SELECT {{.SQLFieldsSelect}} FROM {{.Entity.Table}} t {{.Joins}}WHERE id = $1 ORDER BY t.id ASC", id)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		{{range .JoinVarsDecl}}{{.}}
+		{{end}}
+
+		err := rows.Scan({{.StructFieldsSelect}})
+		if err != nil {
+			return nil, err
+		} 
+		
+		{{range .JoinVarsAssgn}}{{.}}
+		{{end}}
+	}
+	{{if .Entity.Crud.Hooks.PostRead}}
+	if err = crudPostGet(entity); err != nil {
+		return nil, fmt.Errorf("error executing crudPostGet() in Get(%d) for entity '{{.Entity.Name}}': %s", id, err)
+	}
+	{{end}}
+
+	return entity, nil
+}
+
+// List returns a slice containing {{.Entity.Name}} records
+func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
+	var (
+		list     []*{{.Entity.Name}}
+		segments []string
+		values   []interface{}
+		err      error
+	)
+
+	query := "SELECT {{.SQLFieldsSelect}} FROM {{.Entity.Table}}"
+	{{if .Entity.Crud.Hooks.PreList}}
+    if filters, err = crudPreList(filters); err != nil {
+		return nil, fmt.Errorf("error executing crudPreList() in List(filters) for entity '{{.Entity.Name}}': %s", err)
+	}
+    {{end}}
+	for i, filter := range filters {
+		segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
+		values = append(values, filter.Value)
+	}
+
+	if len(segments) != 0 {
+		query += " WHERE " + strings.Join(segments, " AND ")
+	}
+
+	rows, err := db.Query(query+" ORDER BY id ASC", values...)
+	{{if .HasRelationshipManyMany}}
+	indexID := make(map[int64]*%s)
+	{{end}}
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		entity := New()
+		err := rows.Scan({{.StructFieldsSelect}})
+		if err != nil {
+			return nil, err
+		}
+
+		list = append(list, entity)
+		{{if .HasRelationshipManyMany}}
+		indexID[*entity.ID] = entity
+		{{end}}
+	}
+	{{range .ManyManyFields}}
+	if related, e := loadRelated(indexID, "{{.Relationship.Target.ThisID}}", "{{.Relationship.Target.ThatID}}", "{{.Relationship.Target.Table}}"); e == nil {
+		for i, v := range related {
+			indexID[i].{{.Property.Name}} = append(indexID[i].{{.Property.Name}}, v)
+		}
+	} else {
+		return nil, err
+	}
+	{{end}}
+
+	{{if .Entity.Crud.Hooks.PostList}}
+	if list, err = crudPostList(list); err != nil {
+		return nil, fmt.Errorf("error executing crudPostList() in List(filters) for entity '{{.Entity.Name}}': %s", err)
+	}
+	{{end}}
+	return list, nil
+}
+
+{{if .HasRelationshipManyMany}}
+// loadRelated is a helper function to load related entities
+func loadRelated(indexID map[int64]*{{.Entity.Name}}, thisid string, thatid string, pivot string) (map[int64]int64, error) {
+	var (
+		placeholder string
+		values  []interface{}
+		idthis  int64
+		idthat  int64
+	)
+
+	related := make(map[int64]int64)
+
+	c := 1
+	for i := range indexID {
+		placeholder += "$" + strconv.Itoa(c) + ","
+		values = append(values, i)
+		c++
+	}
+	placeholder = strings.TrimRight(placeholder, ",")
+
+	rows, err := db.Query("SELECT "+thisid+", "+thatid+" FROM "+pivot+" WHERE "+thisid+" IN ("+placeholder+")", values...)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&idthis, &idthat)
+		if err != nil {
+			return nil, err
+		}
+		related[idthis] = idthat
+	}
+
+	return related, nil
+}
+{{end}}
+
+// Delete deletes a {{.Entity.Name}} record from database by id primary key
+func Delete(id int64, tx *sql.Tx, autocommit bool) error {
+	var (
+		err error
+		{{if .HasRelationshipManyMany}}
+		stmtMmany *sql.Stmt
+		{{end}}
+	)
+
+	if tx == nil {
+		tx, err = db.Begin()
+		if err != nil {
+			return err
+		}
+	}
+
+	stmt, err := tx.Prepare("DELETE FROM {{.Entity.Table}} WHERE id = $1")
+	if err != nil {
+		return err
+	}
+	{{if .Entity.Crud.Hooks.PreDelete}}
+	if err := crudPreDelete(id, tx); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing crudPreDelete() in Delete(%d) for entity '{{.Entity.Name}}': %s", id, err)
+	}
+	{{end}}
+	{{range .ManyManyFields}}	
+	stmtMmany, err = tx.Prepare("DELETE FROM {{.Relationship.Target.Table}} WHERE {{.Relationship.Target.ThisID}} = $1")
+
+	if err != nil {
+		return fmt.Errorf("error preparing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", id, err)
+	}
+
+	_, err = stmtMmany.Exec(id)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", id, err)
+	}
+	{{end}}
+	_, err = stmt.Exec(id)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in Delete(%d) for entity '{{.Entity.Name}}': %s", id, err)
+	}
+	{{if .Entity.Crud.Hooks.PostDelete}}
+	if err := crudPostDelete(id, tx); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("Error executing crudPostDelete() in Delete(%d) for entity '{{.Entity.Name}}': %s", id, err)
+	}
+	{{end}}
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			return fmt.Errorf("error committing transaction in Delete(%d) for '{{.Entity.Name}}': %s", id, err)
+		}
+	}
+
+	return err
+}
+
+// Delete deletes a {{.Entity.Name}} record from database and sets id to nil
+func (entity *{{.Entity.Name}}) Delete(tx *sql.Tx, autocommit bool) error {
+	var (
+		err error
+		{{if .HasRelationshipManyMany}}
+		stmtMmany *sql.Stmt
+		{{end}}
+	)
+
+	id := *entity.ID
+
+	if tx == nil {
+		tx, err = db.Begin()
+		if err != nil {
+			return err
+		}
+	}
+
+	stmt, err := tx.Prepare("DELETE FROM {{.Entity.Table}} WHERE id = $1")
+	if err != nil {
+		return err
+	}
+	{{if .Entity.Crud.Hooks.PreDelete}}
+	if err := crudPreDelete(id, tx); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing crudPreDelete() in {{.Entity.Name}}.Delete() for ID = %d : %s", id, err)
+	}
+	{{end}}
+	{{range .ManyManyFields}}	
+	stmtMmany, err = tx.Prepare("DELETE FROM {{.Relationship.Target.Table}} WHERE {{.Relationship.Target.ThisID}} = $1")
+
+	if err != nil {
+		return fmt.Errorf("error preparing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
+	}
+
+	_, err = stmtMmany.Exec(*entity.ID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
+	}
+	{{end}}
+	_, err = stmt.Exec(id)
+	if err == nil {
+		entity.ID = nil
+	} else {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in {{.Entity.Name}}.Delete() for ID = %d : %s", id, err)
+	}
+	{{if .Entity.Crud.Hooks.PostDelete}}
+	if err = crudPostDelete(id, tx); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing crudPostDelete() in {{.Entity.Name}}.Delete() for ID = %d : %s", id, err)
+	}
+	{{end}}
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			return fmt.Errorf("error committing transaction in {{.Entity.Name}}.Delete() for ID = %d : %s", id, err)
+		}
+	}
+
+	return err
+}
+
+// Save either inserts or updates a {{.Entity.Name}} record based on whether or not id is nil
+func (entity *{{.Entity.Name}}) Save(tx *sql.Tx, autocommit bool) error {
+	if entity.ID == nil {
+		return entity.Insert(tx, autocommit)
+	}
+	return entity.Update(tx, autocommit)
+}
+
+// Insert performs an SQL insert for {{.Entity.Name}} record and update instance with inserted id.
+// Prefer using Save rather than Insert directly.
+func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
+	var (
+		id  int64
+		err error
+		{{if .HasRelationshipManyMany}}
+		stmtMmany *sql.Stmt
+		{{end}}
+	)
+
+	if tx == nil {
+		tx, err = db.Begin()
+		if err != nil {
+			return err
+		}
+	}
+	{{range .BeforeInsert}}{{.}}
+	{{end}}
+	stmt, err := tx.Prepare("INSERT INTO {{.Entity.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
+	if err != nil {
+		return err
+	}
+	{{if .Entity.Crud.Hooks.PreCreate}}
+    if err := crudPreCreate(entity, tx); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing crudPreCreate() in {{.Entity.Name}}.Insert(): %s", err)
+	}
+    {{end}}
+	err = stmt.QueryRow({{.StructFieldsInsert}}).Scan(&id)
+	if err == nil {
+		entity.ID = &id
+	} else {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in {{.Entity.Name}}: %s", err)
+	}
+	{{range .ManyManyFields}}
+	stmtMmany, err = tx.Prepare("INSERT INTO {{.Relationship.Target.Table}} ({{.Relationship.Target.ThisID}}, {{.Relationship.Target.ThatID}}) VALUES ($1, $2)")
+	
+	if err != nil {
+		return fmt.Errorf("error preparing transaction statement in ManyManyInsert(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
+	}
+
+	for _, relatedID := range entity.{{.Property.Name}} {
+		_, err = stmtMmany.Exec(entity.ID, relatedID)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("error executing transaction statement in ManyManyInsert(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
+		}
+	}
+	{{end}}
+	{{if .Entity.Crud.Hooks.PostCreate}}
+	if err := crudPostCreate(entity, tx); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing crudPostCreate() in {{.Entity.Name}}.Insert(): %s", err)
+	}
+	{{end}}
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			return fmt.Errorf("error committing transaction in {{.Entity.Name}}.Insert(): %s", err)
+		}
+	}
+
+	return nil
+}
+
+// Update Will execute an SQLUpdate Statement for {{.Entity.Name}} in the database. Prefer using Save instead of Update directly.
+func (entity *{{.Entity.Name}}) Update(tx *sql.Tx, autocommit bool) error {
+	var (
+		err error
+		{{if .HasRelationshipManyMany}}
+		stmtMmany *sql.Stmt
+		{{end}}
+	)
+
+	if tx == nil {
+		tx, err = db.Begin()
+		if err != nil {
+			return err
+		}
+	}
+	{{range .BeforeUpdate}}{{.}}
+	{{end}}
+	stmt, err := tx.Prepare("UPDATE {{.Entity.Table}} SET {{.SQLFieldsUpdate}} WHERE id = $1")
+	if err != nil {
+		return err
+	}
+
+	{{if .Entity.Crud.Hooks.PreUpdate}}
+    if err := crudPreUpdate(entity, tx); err != nil {
+		tx.Rollback()
+        return fmt.Errorf("error executing crudPreUpdate() in {{.Entity.Name}}.Update(): %s", err)
+	}
+    {{end}}
+	_, err = stmt.Exec({{.StructFieldsUpdate}})
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in {{.Entity.Name}}.Update(): %s", err)
+	}
+	{{range .ManyManyFields}}
+	stmtMmany, err = tx.Prepare("DELETE FROM {{.Relationship.Target.Table}} WHERE {{.Relationship.Target.ThisID}} = $1")
+
+	if err != nil {
+		return fmt.Errorf("error preparing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", id, err)
+	}
+
+	_, err = stmtMmany.Exec(id)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", id, err)
+	}
+
+	stmtMmany, err = tx.Prepare("INSERT INTO {{.Relationship.Target.Table}} ({{.Relationship.Target.ThisID}}, {{.Relationship.Target.ThatID}}) VALUES ($1, $2)")
+	
+	if err != nil {
+		return fmt.Errorf("error preparing transaction statement in ManyManyInsert(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
+	}
+
+	for _, relatedID := range entity.{{.Property.Name}} {
+		_, err = stmtMmany.Exec(entity.ID, relatedID)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("error executing transaction statement in ManyManyInsert(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
+		}
+	}
+	{{end}}
+	{{if .Entity.Crud.Hooks.PostUpdate}}
+	if err := crudPostUpdate(entity, tx); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing crudPostUpdate() in {{.Entity.Name}}.Update(): %s", err)
+	}
+	{{end}}
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			return fmt.Errorf("error committing transaction in {{.Entity.Name}}.Update(): %s", err)
+		}
+	}
+
+	return nil
+}

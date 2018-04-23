@@ -44,11 +44,11 @@ func main() {
 
 	generators.SetTemplates(rice.MustFindBox("templates"))
 
-	work.Waitgroup.Add(1)
-	go generators.GenerateBootstrap(work, recipe.Bootstrap)
+	work.Waitgroup.Add(3)
 
-	work.Waitgroup.Add(1)
+	go generators.GenerateBootstrap(work, recipe.Bootstrap)
 	go generators.GenerateHTTP(work, recipe.HTTP)
+	go generators.GenerateCrud(work, recipe.Crud, recipe.Entities)
 
 	go func() {
 		for generated := range done {

@@ -224,16 +224,16 @@ type Entity struct {
 	Fields []Field `json:"fields"`
 
 	// Schema describes options for Schema generation - overrides recipe level Schema config
-	Schema SchemaOpts `json:"schema"`
+	Schema *SchemaOpts `json:"schema"`
 
 	// Crud describes options for Crud generation - overrides recipe level Crud config
-	Crud CrudOpts `json:"crud"`
+	Crud *CrudOpts `json:"crud"`
 
 	// Rest describes options for Rest generation - overrides recipe level Rest config
-	Rest RestOpts `json:"rest"`
+	Rest *RestOpts `json:"rest"`
 
 	// Vuetify describes options for Vuetify generation - overrides recipe level Vuetify config
-	Vuetify VuetifyOpts `json:"vuetify"`
+	Vuetify *VuetifyOpts `json:"vuetify"`
 }
 
 // Field describes a field contained in an entity
@@ -254,7 +254,7 @@ type Field struct {
 	Relationship FieldRelationship `json:"relationship"`
 
 	// Widget represents widget information for the field
-	Widget WidgetOptions `json:"widget"`
+	Widget WidgetOpts `json:"widget"`
 }
 
 // FieldProperty represents code information for the field
