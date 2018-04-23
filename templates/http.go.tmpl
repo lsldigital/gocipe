@@ -1,0 +1,36 @@
+package main
+
+import (
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/gorilla/mux"
+)
+
+// serve starts an http server
+func serve(route func(prefix string, router *mux.Router) error) {
+	var err error
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGTERM)
+
+	router := mux.NewRouter()
+	err = route("{{.Prefix}}", router)
+
+	if err != nil {
+		log.Fatal("Failed to register routes: ", err)
+	}
+	
+	go func() {
+		err = http.ListenAndServe(":{{.Port}}", router)
+		if err != nil {
+			log.Fatal("Failed to start http server: ", err)
+		}
+	}()
+
+	log.Println("Listening on : {{.Port}}")
+	<-sigs
+	log.Println("Server stopped")
+}

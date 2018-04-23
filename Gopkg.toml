@@ -24,3 +24,11 @@
 [[constraint]]
   branch = "master"
   name = "github.com/jinzhu/inflection"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/gobuffalo/velvet"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/GeertJohan/go.rice"

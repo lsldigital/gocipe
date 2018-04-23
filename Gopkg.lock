@@ -3,13 +3,34 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/GeertJohan/go.rice"
+  packages = [
+    ".",
+    "embedded"
+  ]
+  revision = "c02ca9a983da5807ddf7d796784928f5be4afd09"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/daaku/go.zipexe"
+  packages = ["."]
+  revision = "a5fe2436ffcb3236e175e5149162b41cd28bd27d"
+
+[[projects]]
+  branch = "master"
   name = "github.com/jinzhu/inflection"
   packages = ["."]
   revision = "04140366298a54a039076d798123ffa108fff46c"
 
+[[projects]]
+  branch = "master"
+  name = "github.com/kardianos/osext"
+  packages = ["."]
+  revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3007d0bef8caa31fa5c6b7d510f4109d5156d6ef61cad7dde7417dccd1070704"
+  inputs-digest = "3d050ffd7e28fee51780bc94143e88c712c2c6c0a3631ca2f8026eabd7e800a1"
   solver-name = "gps-cdcl"
   solver-version = 1
