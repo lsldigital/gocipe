@@ -14,3 +14,12 @@
         <v-divider></v-divider>
     </v-navigation-drawer>
 </template>
+
+<script>
+// import TopicsEdit from "@/views/Entities/TopicsEdit";
+
+export default {
+  props: ["drawer"]
+};
+</script>
+

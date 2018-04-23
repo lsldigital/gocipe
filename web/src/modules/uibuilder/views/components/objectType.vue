@@ -1,36 +1,38 @@
 <template>
-    <v-layout>
-        <v-flex md2 class="root-branch">
-            <h3>{{property || "root"}} </h3>
-        </v-flex>
-        <v-flex md10 class="children-branch">
-            <template v-if="isArray(value)">
-                <v-expansion-panel>
-                    <draggable class="full-width" v-model="computedValue">
-                        <v-expansion-panel-content v-for="(objectValue,  objectIndex) in computedValue" :key="objectIndex + '__' + property">
-                            <h4 slot="header">{{Object.keys(computedValue[objectIndex])[0]}} {{computedValue[objectIndex][Object.keys(computedValue[objectIndex])[0]]}}</h4>
-                            <v-card>
-                                <v-card-text>
-                                    <component :is="getType(objectValue)" :object="value" :property="objectIndex" :index="objectIndex" :value="objectValue"> </component>
-                                    <v-btn outline small color="red">Delete</v-btn>
-                                </v-card-text>
-                            </v-card>
-                        </v-expansion-panel-content>
-                    </draggable>
-                </v-expansion-panel>
-                <Dialog :property="property" @interface="updateArray" />
-            </template>
-            <component v-else v-for="(objectValue, objectProperty, objectIndex) in value" :key="objectIndex + '__' + objectProperty" :is="getType(objectValue)" :object="value" :property="objectProperty" :index="objectIndex" :value="objectValue"> </component>
-        </v-flex>
-    </v-layout>
+  <v-layout>
+    <v-flex md2 class="root-branch">
+      <h3>{{property || "root"}} </h3>
+    </v-flex>
+    <v-flex md10 class="children-branch">
 
+      <template v-if="isArray(value)">
+        <v-expansion-panel>
+          <draggable class="full-width" v-model="computedValue">
+            <v-expansion-panel-content v-for="(objectValue,  objectIndex) in computedValue" :key="objectIndex + '__' + property">
+              <h4 slot="header">{{Object.keys(computedValue[objectIndex])[0]}} {{computedValue[objectIndex][Object.keys(computedValue[objectIndex])[0]]}}</h4>
+              <v-card>
+                <v-card-text>
+                  <component :is="getType(objectValue)" :object="value" :index="objectIndex" :value="objectValue"> </component>
+                  <v-btn outline small color="red">Delete</v-btn>
+                </v-card-text>
+
+              </v-card>
+            </v-expansion-panel-content>
+          </draggable>
+        </v-expansion-panel>
+        <add-dialog :property="property" @interface="updateArray" />
+      </template>
+
+      <component v-else v-for="(objectValue, objectProperty, objectIndex) in value" :key="objectIndex + '__' + objectProperty" :is="getType(objectValue)" :object="value" :property="objectProperty" :index="objectIndex" :value="objectValue"> </component>
+    </v-flex>
+  </v-layout>
 </template>
 
 <script>
 import draggable from "vuedraggable";
 import booleanType from "@/modules/uibuilder/views/components/booleanType.vue";
 import stringType from "@/modules/uibuilder/views/components/stringType.vue";
-import Dialog from "../dialog/Dialog.vue";
+import AddDialog from "@/modules/uibuilder/views/dialog/AddDialog.vue";
 
 export default {
   data() {
@@ -65,16 +67,14 @@ export default {
       return false;
     },
     updateArray($event) {
-      const copy = Object.assign($event);
-      console.log(copy);
-      this.computedValue.push(copy);
+      this.computedValue.push($event);
     }
   },
   components: {
     draggable,
     booleanType,
     stringType,
-    Dialog
+    AddDialog
   }
 };
 </script>
