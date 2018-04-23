@@ -1,13 +1,13 @@
 <template>
   <v-layout>
-    <v-flex sm9>
+    <v-flex sm12>
       <component :is="getType(gocipe)" :value="gocipe"> </component>
     </v-flex>
-    <v-flex sm3>
+    <!-- <v-flex sm12 class="code">
       <pre>
           {{ gocipe }}
         </pre>
-    </v-flex>
+    </v-flex> -->
   </v-layout>
 </template>
 
@@ -15,6 +15,7 @@
 import draggable from "vuedraggable";
 import gocipe from "../gocipe.json";
 // import gocipe from "../simple.gocipe.json";
+// import gocipe from "../types.json";
 import booleanType from "./components/booleanType.vue";
 import stringType from "./components/stringType.vue";
 
@@ -37,3 +38,14 @@ export default {
   }
 };
 </script>
+
+
+<style lang="scss" scoped>
+.code {
+  background: red;
+}
+</style>
+
+
+
+
