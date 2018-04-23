@@ -7,11 +7,6 @@ import (
 
 // GenerateCrud returns generated code to run an http server
 func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
-	if !opts.Create && !opts.Read && !opts.ReadList && !opts.Update && !opts.Delete {
-		work.Done <- GeneratedCode{Generator: "GenerateCrud", Error: ErrorSkip}
-		return nil
-	}
-
 	work.Waitgroup.Add(len(entities))
 	for _, entity := range entities {
 		go func(entity Entity) {
@@ -38,8 +33,6 @@ func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
 
 					HasRelationshipManyMany bool
 					ManyManyFields          []Field
-
-					Hooks CrudHooks
 				}
 
 				sqlfieldsSelect []string
@@ -55,6 +48,14 @@ func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
 				joins     []string
 				joinCount int
 			)
+
+			if entity.Crud == nil {
+				entity.Crud = &opts
+			}
+
+			if !entity.Crud.Create && !entity.Crud.Read && !entity.Crud.ReadList && !entity.Crud.Update && !entity.Crud.Delete {
+				work.Done <- GeneratedCode{Generator: "GenerateCrud", Error: ErrorSkip}
+			}
 
 			for _, field := range entity.Fields {
 				if field.Relationship.Type == "" {
@@ -116,9 +117,22 @@ func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
 			}
 
 			code, err := ExecuteTemplate("crud.go.tmpl", data)
-
 			if err != nil {
 				work.Done <- GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to load execute template: %s", err)}
+			}
+
+			if entity.Crud.Hooks.PreCreate || entity.Crud.Hooks.PostCreate || entity.Crud.Hooks.PreRead || entity.Crud.Hooks.PostRead || entity.Crud.Hooks.PreList || entity.Crud.Hooks.PostList || entity.Crud.Hooks.PreUpdate || entity.Crud.Hooks.PostUpdate || entity.Crud.Hooks.PreDelete || entity.Crud.Hooks.PostDelete {
+				work.Waitgroup.Add(1)
+				hooks, e := ExecuteTemplate("crud_hooks.go.tmpl", struct {
+					Hooks CrudHooks
+					Name  string
+				}{entity.Crud.Hooks, entity.Name})
+
+				if e == nil {
+					work.Done <- GeneratedCode{Generator: "GeneratorCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_crud_hooks.go", data.Package, data.Package)}
+				} else {
+					work.Done <- GeneratedCode{Generator: "GeneratorCRUDHooks", Error: e}
+				}
 			}
 
 			work.Done <- GeneratedCode{Generator: "GeneratorCRUD", Code: code, Filename: fmt.Sprintf("models/%s/%s_crud.go", data.Package, data.Package)}

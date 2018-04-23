@@ -12,17 +12,15 @@ func Inject(database *sql.DB) {
 // New return a new {{.Entity.Name}} instance
 func New() *{{.Entity.Name}} {
 	entity := new({{.Entity.Name}})
-	{{range .Entity.Fields}}
-	entity.{{.Property.Name}} = new({{.Property.Type}})
+	{{range .Entity.Fields}}entity.{{.Property.Name}} = new({{.Property.Type}})
 	{{end}}
-
 	return entity
 }
 
 // Get returns a single {{.Entity.Name}} from database by primary key
 func Get(id int64) (*{{.Entity.Name}}, error) {
 	var entity = New()
-	{{if .Hooks.PreRead}}
+	{{if .Entity.Crud.Hooks.PreRead}}
     if err := crudPreGet(id); err != nil {
 		return nil, fmt.Errorf("error executing crudPreGet() in Get(%d) for entity '{{.Entity.Name}}': %s", id, err)
 	}
@@ -34,8 +32,7 @@ func Get(id int64) (*{{.Entity.Name}}, error) {
 
 	defer rows.Close()
 	for rows.Next() {
-		{{range .JoinVarsDecl}}
-		{{.}}
+		{{range .JoinVarsDecl}}{{.}}
 		{{end}}
 
 		err := rows.Scan({{.StructFieldsSelect}})
@@ -43,11 +40,10 @@ func Get(id int64) (*{{.Entity.Name}}, error) {
 			return nil, err
 		} 
 		
-		{{range .JoinVarsAssgn}}
-		{{.}}
+		{{range .JoinVarsAssgn}}{{.}}
 		{{end}}
 	}
-	{{if .Hooks.PostRead}}
+	{{if .Entity.Crud.Hooks.PostRead}}
 	if err = crudPostGet(entity); err != nil {
 		return nil, fmt.Errorf("error executing crudPostGet() in Get(%d) for entity '{{.Entity.Name}}': %s", id, err)
 	}
@@ -66,7 +62,7 @@ func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
 	)
 
 	query := "SELECT {{.SQLFieldsSelect}} FROM {{.Entity.Table}}"
-	{{if .Hooks.PreList}}
+	{{if .Entity.Crud.Hooks.PreList}}
     if filters, err = crudPreList(filters); err != nil {
 		return nil, fmt.Errorf("error executing crudPreList() in List(filters) for entity '{{.Entity.Name}}': %s", err)
 	}
@@ -101,7 +97,6 @@ func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
 		indexID[*entity.ID] = entity
 		{{end}}
 	}
-
 	{{range .ManyManyFields}}
 	if related, e := loadRelated(indexID, "{{.Relationship.Target.ThisID}}", "{{.Relationship.Target.ThatID}}", "{{.Relationship.Target.Table}}"); e == nil {
 		for i, v := range related {
@@ -110,9 +105,9 @@ func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
 	} else {
 		return nil, err
 	}
-
 	{{end}}
-	{{if .Hooks.PostList}}
+
+	{{if .Entity.Crud.Hooks.PostList}}
 	if list, err = crudPostList(list); err != nil {
 		return nil, fmt.Errorf("error executing crudPostList() in List(filters) for entity '{{.Entity.Name}}': %s", err)
 	}
@@ -177,13 +172,12 @@ func Delete(id int64, tx *sql.Tx, autocommit bool) error {
 	if err != nil {
 		return err
 	}
-	{{if .Hooks.PreDelete}}
+	{{if .Entity.Crud.Hooks.PreDelete}}
 	if err := crudPreDelete(id, tx); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("error executing crudPreDelete() in Delete(%d) for entity '{{.Entity.Name}}': %s", id, err)
 	}
 	{{end}}
-	
 	{{range .ManyManyFields}}	
 	stmtMmany, err = tx.Prepare("DELETE FROM {{.Relationship.Target.Table}} WHERE {{.Relationship.Target.ThisID}} = $1")
 
@@ -196,14 +190,13 @@ func Delete(id int64, tx *sql.Tx, autocommit bool) error {
 		tx.Rollback()
 		return fmt.Errorf("error executing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", id, err)
 	}
-
 	{{end}}
 	_, err = stmt.Exec(id)
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("error executing transaction statement in Delete(%d) for entity '{{.Entity.Name}}': %s", id, err)
 	}
-	{{if .Hooks.PostDelete}}
+	{{if .Entity.Crud.Hooks.PostDelete}}
 	if err := crudPostDelete(id, tx); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("Error executing crudPostDelete() in Delete(%d) for entity '{{.Entity.Name}}': %s", id, err)
@@ -241,13 +234,12 @@ func (entity *{{.Entity.Name}}) Delete(tx *sql.Tx, autocommit bool) error {
 	if err != nil {
 		return err
 	}
-	{{if .Hooks.PreDelete}}
+	{{if .Entity.Crud.Hooks.PreDelete}}
 	if err := crudPreDelete(id, tx); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("error executing crudPreDelete() in {{.Entity.Name}}.Delete() for ID = %d : %s", id, err)
 	}
 	{{end}}
-
 	{{range .ManyManyFields}}	
 	stmtMmany, err = tx.Prepare("DELETE FROM {{.Relationship.Target.Table}} WHERE {{.Relationship.Target.ThisID}} = $1")
 
@@ -260,7 +252,6 @@ func (entity *{{.Entity.Name}}) Delete(tx *sql.Tx, autocommit bool) error {
 		tx.Rollback()
 		return fmt.Errorf("error executing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
 	}
-
 	{{end}}
 	_, err = stmt.Exec(id)
 	if err == nil {
@@ -269,7 +260,7 @@ func (entity *{{.Entity.Name}}) Delete(tx *sql.Tx, autocommit bool) error {
 		tx.Rollback()
 		return fmt.Errorf("error executing transaction statement in {{.Entity.Name}}.Delete() for ID = %d : %s", id, err)
 	}
-	{{if .Hooks.PostDelete}}
+	{{if .Entity.Crud.Hooks.PostDelete}}
 	if err = crudPostDelete(id, tx); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("error executing crudPostDelete() in {{.Entity.Name}}.Delete() for ID = %d : %s", id, err)
@@ -310,19 +301,16 @@ func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 			return err
 		}
 	}
-
-	{{range .BeforeInsert}}
-	{{.}}
+	{{range .BeforeInsert}}{{.}}
 	{{end}}
-	
 	stmt, err := tx.Prepare("INSERT INTO {{.Entity.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
 	if err != nil {
 		return err
 	}
-	{{if .Hooks.PreCreate}}
-    if err := crudPreSave(entity, tx); err != nil {
+	{{if .Entity.Crud.Hooks.PreCreate}}
+    if err := crudPreCreate(entity, tx); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("error executing crudPreSave() in {{.Entity.Name}}.Insert(): %s", err)
+		return fmt.Errorf("error executing crudPreCreate() in {{.Entity.Name}}.Insert(): %s", err)
 	}
     {{end}}
 	err = stmt.QueryRow({{.StructFieldsInsert}}).Scan(&id)
@@ -332,7 +320,6 @@ func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 		tx.Rollback()
 		return fmt.Errorf("error executing transaction statement in {{.Entity.Name}}: %s", err)
 	}
-	
 	{{range .ManyManyFields}}
 	stmtMmany, err = tx.Prepare("INSERT INTO {{.Relationship.Target.Table}} ({{.Relationship.Target.ThisID}}, {{.Relationship.Target.ThatID}}) VALUES ($1, $2)")
 	
@@ -348,10 +335,10 @@ func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 		}
 	}
 	{{end}}
-	{{if .Hooks.PostCreate}}
-	if err := crudPostSave(entity, tx); err != nil {
+	{{if .Entity.Crud.Hooks.PostCreate}}
+	if err := crudPostCreate(entity, tx); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("error executing crudPostSave() in {{.Entity.Name}}.Insert(): %s", err)
+		return fmt.Errorf("error executing crudPostCreate() in {{.Entity.Name}}.Insert(): %s", err)
 	}
 	{{end}}
 	if autocommit {
@@ -379,20 +366,17 @@ func (entity *{{.Entity.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 			return err
 		}
 	}
-
-	{{range .BeforeUpdate}}
-	{{.}}
+	{{range .BeforeUpdate}}{{.}}
 	{{end}}
-
 	stmt, err := tx.Prepare("UPDATE {{.Entity.Table}} SET {{.SQLFieldsUpdate}} WHERE id = $1")
 	if err != nil {
 		return err
 	}
 
-	{{if .Hooks.PreUpdate}}
-    if err := crudPreSave(entity, tx); err != nil {
+	{{if .Entity.Crud.Hooks.PreUpdate}}
+    if err := crudPreUpdate(entity, tx); err != nil {
 		tx.Rollback()
-        return fmt.Errorf("error executing crudPreSave() in {{.Entity.Name}}.Update(): %s", err)
+        return fmt.Errorf("error executing crudPreUpdate() in {{.Entity.Name}}.Update(): %s", err)
 	}
     {{end}}
 	_, err = stmt.Exec({{.StructFieldsUpdate}})
@@ -400,7 +384,6 @@ func (entity *{{.Entity.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 		tx.Rollback()
 		return fmt.Errorf("error executing transaction statement in {{.Entity.Name}}.Update(): %s", err)
 	}
-	
 	{{range .ManyManyFields}}
 	stmtMmany, err = tx.Prepare("DELETE FROM {{.Relationship.Target.Table}} WHERE {{.Relationship.Target.ThisID}} = $1")
 
@@ -428,11 +411,10 @@ func (entity *{{.Entity.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 		}
 	}
 	{{end}}
-
-	{{if .Hooks.PostUpdate}}
-	if err := crudPostSave(entity, tx); err != nil {
+	{{if .Entity.Crud.Hooks.PostUpdate}}
+	if err := crudPostUpdate(entity, tx); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("error executing crudPostSave() in {{.Entity.Name}}.Update(): %s", err)
+		return fmt.Errorf("error executing crudPostUpdate() in {{.Entity.Name}}.Update(): %s", err)
 	}
 	{{end}}
 	if autocommit {
