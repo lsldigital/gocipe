@@ -31,6 +31,7 @@ type GeneratedCode struct {
 	Generator string
 	Filename  string
 	Code      string
+	Overwrite bool
 	Error     error
 }
 
