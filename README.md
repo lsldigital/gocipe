@@ -69,7 +69,7 @@ Go:generate accepts a command, one or more argument and one or more flags. For e
 
 **Notes**
 There is no guarantee about imports and formatting. Some imports may be missing and some files may have loose formatting.
-Use goimports and go fmt to ensure imports and formatting are correct, example: `goimports -w models/...` and `go fmt -w models/...`
+Use `goimports` and `go fmt` to ensure imports and formatting are correct, example: `goimports -w models/...` and `go fmt -w models/...`
 
 ### Arguments
 
