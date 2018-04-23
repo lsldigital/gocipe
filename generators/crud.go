@@ -7,7 +7,8 @@ import (
 
 // GenerateCrud returns generated code to run an http server
 func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
-	work.Waitgroup.Add(len(entities))
+	work.Waitgroup.Add(len(entities) * 2) //2 jobs to be waited upon for each thread - _crud.go and _crud_hooks.go generation
+
 	for _, entity := range entities {
 		go func(entity Entity) {
 			var (
@@ -122,23 +123,30 @@ func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
 			}
 
 			if entity.Crud.Hooks.PreCreate || entity.Crud.Hooks.PostCreate || entity.Crud.Hooks.PreRead || entity.Crud.Hooks.PostRead || entity.Crud.Hooks.PreList || entity.Crud.Hooks.PostList || entity.Crud.Hooks.PreUpdate || entity.Crud.Hooks.PostUpdate || entity.Crud.Hooks.PreDelete || entity.Crud.Hooks.PostDelete {
-				work.Waitgroup.Add(1)
 				hooks, e := ExecuteTemplate("crud_hooks.go.tmpl", struct {
 					Hooks CrudHooks
 					Name  string
 				}{entity.Crud.Hooks, entity.Name})
 
 				if e == nil {
-					work.Done <- GeneratedCode{Generator: "GeneratorCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_crud_hooks.go", data.Package, data.Package)}
+					work.Done <- GeneratedCode{Generator: "GenerateCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_crud_hooks.go", data.Package, data.Package)}
 				} else {
-					work.Done <- GeneratedCode{Generator: "GeneratorCRUDHooks", Error: e}
+					work.Done <- GeneratedCode{Generator: "GenerateCRUDHooks", Error: e}
 				}
+			} else {
+				work.Done <- GeneratedCode{Generator: "GenerateCRUDHooks", Error: ErrorSkip}
 			}
 
-			work.Done <- GeneratedCode{Generator: "GeneratorCRUD", Code: code, Filename: fmt.Sprintf("models/%s/%s_crud.go", data.Package, data.Package)}
+			work.Done <- GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: fmt.Sprintf("models/%s/%s_crud.go", data.Package, data.Package)}
 		}(entity)
 	}
 
-	work.Waitgroup.Done()
-	return nil
+	code, err := ExecuteTemplate("crud_filters.go.tmpl", struct{}{})
+	if err == nil {
+		work.Done <- GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: "models/filters.go"}
+	} else {
+		work.Done <- GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to load execute template: %s", err)}
+	}
+
+	return err
 }

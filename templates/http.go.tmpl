@@ -11,13 +11,13 @@ import (
 )
 
 // serve starts an http server
-func serve(route func(prefix string, router *mux.Router) error) {
+func serve(route func(router *mux.Router) error) {
 	var err error
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM)
 
 	router := mux.NewRouter()
-	err = route("{{.Prefix}}", router)
+	err = route(router)
 
 	if err != nil {
 		log.Fatal("Failed to register routes: ", err)

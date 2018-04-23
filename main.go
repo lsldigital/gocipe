@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"runtime"
 	"sync"
 
 	rice "github.com/GeertJohan/go.rice"
@@ -15,6 +16,8 @@ import (
 //go:generate rice embed-go
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	var recipe *generators.Recipe
 	done := make(chan generators.GeneratedCode)
 
@@ -44,15 +47,15 @@ func main() {
 
 	generators.SetTemplates(rice.MustFindBox("templates"))
 
-	work.Waitgroup.Add(3)
+	work.Waitgroup.Add(4)
 
 	go generators.GenerateBootstrap(work, recipe.Bootstrap)
 	go generators.GenerateHTTP(work, recipe.HTTP)
 	go generators.GenerateCrud(work, recipe.Crud, recipe.Entities)
+	go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 
 	go func() {
 		for generated := range done {
-			fmt.Print(generated.Generator)
 			if generated.Error == nil {
 				fmt.Println("Filename: ", generated.Filename)
 				fmt.Println(generated.Code)

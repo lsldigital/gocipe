@@ -1,0 +1,59 @@
+import (
+	"database/sql"
+	"net/http"
+)
+
+{{if .Hooks.PreRead}}
+func restPreGet(w http.ResponseWriter, r *http.Request, id int64) (bool, error) {
+	return false, nil
+}
+{{end}}
+{{if .Hooks.PostRead}}
+func restPostGet(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) (bool, error) {
+	return false, nil
+}
+{{end}}
+
+{{if .Hooks.PreList}}
+func restPreList(w http.ResponseWriter, r *http.Request, filters []models.ListFilter) ([]models.ListFilter, bool, error) {
+	return filters, false, nil
+}
+{{end}}
+{{if .Hooks.PostList}}
+func restPostList(w http.ResponseWriter, r *http.Request, list []*{{.Name}}) ([]*{{.Name}}, bool, error) {
+	return list, false, nil
+}
+{{end}}
+
+{{if .Hooks.PreCreate}}
+func restPreCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
+}
+{{end}}
+{{if .Hooks.PostCreate}}
+func restPostCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
+}
+{{end}}
+
+{{if .Hooks.PreUpdate}}
+func restPreUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
+}
+{{end}}
+{{if .Hooks.PostUpdate}}
+func restPostUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {
+	return false, nil
+}
+{{end}}
+
+{{if .Hooks.PreDelete}}
+func restPreDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) (bool, error) {
+	return false, nil
+}
+{{end}}
+{{if .Hooks.PostDelete}}
+func restPostDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) (bool, error) {
+	return false, nil
+}
+{{end}}

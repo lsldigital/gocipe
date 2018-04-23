@@ -46,9 +46,6 @@ type HTTPOpts struct {
 	// Generate indicates whether or not to generate http serve function
 	Generate bool `json:"generate"`
 
-	// Prefix indicates which prefix to use for routes
-	Prefix string `json:"prefix"`
-
 	// Port represents default port to run application
 	Port string `json:"port"`
 }
@@ -162,6 +159,9 @@ type RestOpts struct {
 	// Delete indicates if http endpoint for DELETE method should be generated
 	Delete bool `json:"delete"`
 
+	// Prefix indicates which prefix to use for routes
+	Prefix string `json:"prefix"`
+
 	// Hooks describes hooks options for REST generation
 	Hooks RestHooks `json:"hooks"`
 }
@@ -255,6 +255,9 @@ type Field struct {
 
 	// Widget represents widget information for the field
 	Widget WidgetOpts `json:"widget"`
+
+	// Filterable indicates if queries can be made using this field
+	Filterable bool `json:"filterable"`
 }
 
 // FieldProperty represents code information for the field
@@ -274,8 +277,11 @@ type FieldSchema struct {
 	// Type is the data type for the field in database
 	Type string `json:"type"`
 
-	// Widget represents information to generate UI widgets - must be one of the widget types
-	Widget interface{}
+	// Nullable indicates if null values are allowed in database for this field
+	Nullable bool `json:"nullable"`
+
+	// Default provides the default value for this field in database
+	Default string `json:"default"`
 }
 
 // FieldRelationship represents a relationship between this entity and another
@@ -307,14 +313,14 @@ type WidgetOpts struct {
 	Type string `json:"type"`
 
 	// Options represents options listed by this widget
-	Options []WidgetOptions `json:"options"`
+	Options []WidgetOption `json:"options"`
 
 	// Target represents a target endpoint to pull data for this widget
 	Target WidgetTarget `json:"target"`
 }
 
-// WidgetOptions represents an option for SelectRel widget type
-type WidgetOptions struct {
+// WidgetOption represents an option for SelectRel widget type
+type WidgetOption struct {
 	// Value represents the stored value of the option
 	Value string `json:"value"`
 	// Label represents the displayed of the option

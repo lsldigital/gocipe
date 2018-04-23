@@ -28,11 +28,19 @@ type GenerationWork struct {
 
 // GeneratedCode represents code that has been generated and the intended file
 type GeneratedCode struct {
+	// Generator indicates which generator produced the code
 	Generator string
-	Filename  string
-	Code      string
-	Overwrite bool
-	Error     error
+
+	// Filename is the name of the file to write to
+	Filename string
+
+	// Code is the generated code
+	Code string
+	// NoOverwrite will not overwrite an existing file
+	NoOverwrite bool
+
+	// Error represents any error that may have occurred
+	Error error
 }
 
 // SetTemplates injects template box
