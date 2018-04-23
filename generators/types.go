@@ -249,6 +249,12 @@ type Field struct {
 
 	// Schema represents schema information for the field
 	Schema FieldSchema `json:"schema"`
+
+	// Relationship represents relationship information for the field
+	Relationship FieldRelationship `json:"relationship"`
+
+	// Widget represents widget information for the field
+	Widget WidgetOptions `json:"widget"`
 }
 
 // FieldProperty represents code information for the field
@@ -272,41 +278,54 @@ type FieldSchema struct {
 	Widget interface{}
 }
 
-// WidgetPassword represents a widget of type Password
-type WidgetPassword struct {
+// FieldRelationship represents a relationship between this entity and another
+type FieldRelationship struct {
+	// Type represents the type of relationship
+	Type string `json:"type"`
+	// Target represents the target of the relationship
+	Target FieldRelationshipTarget `json:"target"`
+}
+
+// FieldRelationshipTarget represents a target for a relationship
+type FieldRelationshipTarget struct {
+	// Entity represents the other entity in the relationship
+	Entity string `json:"entity"`
+
+	// Table represents the other table in the relationship
+	Table string `json:"table"`
+
+	// ThisID represents the field in this entity used for the relationship
+	ThisID string `json:"thisid"`
+
+	// ThatID represents the field in the other entity used for the relationship
+	ThatID string `json:"thatid"`
+}
+
+// WidgetOpts represents a UI widget
+type WidgetOpts struct {
 	// Type indicates which widget type is represented
 	Type string `json:"type"`
+
+	// Options represents options listed by this widget
+	Options []WidgetOptions `json:"options"`
+
+	// Target represents a target endpoint to pull data for this widget
+	Target WidgetTarget `json:"target"`
 }
 
-// WidgetSelectRel represents a widget of type Select-Relational
-type WidgetSelectRel struct {
-	// Type indicates which widget type is represented
-	Type    string                  `json:"type"`
-	Options []WidgetSelectRelOption `json:"options"`
-}
-
-// WidgetSelectRelOption represents an option for SelectRel widget type
-type WidgetSelectRelOption struct {
+// WidgetOptions represents an option for SelectRel widget type
+type WidgetOptions struct {
 	// Value represents the stored value of the option
 	Value string `json:"value"`
 	// Label represents the displayed of the option
 	Label string `json:"label"`
 }
 
-// WidgetSelect represents a widget of type Select
-type WidgetSelect struct {
-	// Type indicates which widget type is represented
-	Type string `json:"type"`
-}
+// WidgetTarget represents a target endpoint to pull data for this widget
+type WidgetTarget struct {
+	// Endpoint represents an endpoint to pull data from
+	Endpoint string
 
-// WidgetTextarea represents a widget of type Textarea
-type WidgetTextarea struct {
-	// Type indicates which widget type is represented
-	Type string `json:"type"`
-}
-
-// WidgetTextfield represents a widget of type Textfield
-type WidgetTextfield struct {
-	// Type indicates which widget type is represented
-	Type string `json:"type"`
+	// Label which field to use for label on data endpoint
+	Label string
 }
