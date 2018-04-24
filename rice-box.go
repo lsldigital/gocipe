@@ -43,11 +43,16 @@ func init() {
 		FileModTime: time.Unix(1524516210, 0),
 		Content:     string("import (\n\t\"database/sql\"\n\t\"net/http\"\n)\n\n{{if .Hooks.PreRead}}\nfunc restPreGet(w http.ResponseWriter, r *http.Request, id int64) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n{{if .Hooks.PostRead}}\nfunc restPostGet(w http.ResponseWriter, r *http.Request, entity *{{.Name}}) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n\n{{if .Hooks.PreList}}\nfunc restPreList(w http.ResponseWriter, r *http.Request, filters []models.ListFilter) ([]models.ListFilter, bool, error) {\n\treturn filters, false, nil\n}\n{{end}}\n{{if .Hooks.PostList}}\nfunc restPostList(w http.ResponseWriter, r *http.Request, list []*{{.Name}}) ([]*{{.Name}}, bool, error) {\n\treturn list, false, nil\n}\n{{end}}\n\n{{if .Hooks.PreCreate}}\nfunc restPreCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n{{if .Hooks.PostCreate}}\nfunc restPostCreate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n\n{{if .Hooks.PreUpdate}}\nfunc restPreUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n{{if .Hooks.PostUpdate}}\nfunc restPostUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Name}}, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n\n{{if .Hooks.PreDelete}}\nfunc restPreDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n{{if .Hooks.PostDelete}}\nfunc restPostDelete(w http.ResponseWriter, r *http.Request, id int64, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}"),
 	}
+	file9 := &embedded.EmbeddedFile{
+		Filename:    "schema.sql.tmpl",
+		FileModTime: time.Unix(1524538525, 0),
+		Content:     string("DROP TABLE IF EXISTS {{.Entity.Table}};\n\nCREATE TABLE {{.Entity.Table}} ({{range $i, $e := .Entity.Fields}}\n\t\"{{$e.Schema.Field}}\" {{$e.Schema.Type}}{{if not $e.Schema.Nullable}} NOT NULL{{end}}{{if ne $e.Schema.Default \"\"}} DEFAULT {{$e.Schema.Default}}{{end}},\n\t{{end}}\n\tPRIMARY KEY (\"id\")\n);\n\n{{range .ManyManyFields}}\nDROP TABLE IF EXISTS {{.Relationship.Target.Table}};\n\nCREATE TABLE {{.Relationship.Target.Table}} (\n\t\"{{.Relationship.Target.ThisID}}\" INT NOT NULL,\n\t\"{{.Relationship.Target.ThatID}}\" INT NOT NULL\n);\n{{end}}"),
+	}
 
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1524513500, 0),
+		DirModTime: time.Unix(1524532348, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2, // "bootstrap.go.tmpl"
 			file3, // "crud.go.tmpl"
@@ -56,6 +61,7 @@ func init() {
 			file6, // "http.go.tmpl"
 			file7, // "rest.go.tmpl"
 			file8, // "rest_hooks.go.tmpl"
+			file9, // "schema.sql.tmpl"
 
 		},
 	}
@@ -66,7 +72,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`templates`, &embedded.EmbeddedBox{
 		Name: `templates`,
-		Time: time.Unix(1524513500, 0),
+		Time: time.Unix(1524532348, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},
@@ -78,6 +84,7 @@ func init() {
 			"http.go.tmpl":         file6,
 			"rest.go.tmpl":         file7,
 			"rest_hooks.go.tmpl":   file8,
+			"schema.sql.tmpl":      file9,
 		},
 	})
 }

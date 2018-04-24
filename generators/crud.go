@@ -95,7 +95,7 @@ func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
 					structFieldsSelect = append(structFieldsSelect, fmt.Sprintf("&j%d, ", joinCount))
 					joinCount++
 
-					if field.Relationship.Type == "many-many" {
+					if field.Relationship.Type == RelationshipTypeManyMany {
 						data.HasRelationshipManyMany = true
 						data.ManyManyFields = append(data.ManyManyFields, field)
 					}

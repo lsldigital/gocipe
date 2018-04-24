@@ -15,6 +15,9 @@ const (
 
 	// WidgetTypeTextfield indicates a widget of type Textfield
 	WidgetTypeTextfield = "textfield"
+
+	// RelationshipTypeManyMany represents a relationship of type Many-Many
+	RelationshipTypeManyMany = "many-many"
 )
 
 // Recipe represents a recipe to generate a project

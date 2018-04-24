@@ -47,20 +47,21 @@ func main() {
 
 	generators.SetTemplates(rice.MustFindBox("templates"))
 
-	work.Waitgroup.Add(4)
+	work.Waitgroup.Add(5)
 
 	go generators.GenerateBootstrap(work, recipe.Bootstrap)
 	go generators.GenerateHTTP(work, recipe.HTTP)
 	go generators.GenerateCrud(work, recipe.Crud, recipe.Entities)
 	go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
+	go generators.GenerateSchema(work, recipe.Schema, recipe.Entities)
 
 	go func() {
 		for generated := range done {
 			if generated.Error == nil {
-				fmt.Println("Filename: ", generated.Filename)
+				fmt.Println("=====Filename: ", generated.Filename)
 				fmt.Println(generated.Code)
 			} else {
-				fmt.Println("Error: ", generated.Error)
+				fmt.Println(generated.Generator, " Error: ", generated.Error)
 			}
 			work.Waitgroup.Done()
 		}

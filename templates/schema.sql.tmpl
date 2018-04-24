@@ -1,0 +1,16 @@
+DROP TABLE IF EXISTS {{.Entity.Table}};
+
+CREATE TABLE {{.Entity.Table}} ({{range $i, $e := .Entity.Fields}}
+	"{{$e.Schema.Field}}" {{$e.Schema.Type}}{{if not $e.Schema.Nullable}} NOT NULL{{end}}{{if ne $e.Schema.Default ""}} DEFAULT {{$e.Schema.Default}}{{end}},
+	{{end}}
+	PRIMARY KEY ("id")
+);
+
+{{range .ManyManyFields}}
+DROP TABLE IF EXISTS {{.Relationship.Target.Table}};
+
+CREATE TABLE {{.Relationship.Target.Table}} (
+	"{{.Relationship.Target.ThisID}}" INT NOT NULL,
+	"{{.Relationship.Target.ThatID}}" INT NOT NULL
+);
+{{end}}
