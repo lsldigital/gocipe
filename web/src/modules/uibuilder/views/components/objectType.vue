@@ -1,16 +1,17 @@
 <template>
   <v-layout mb-2>
     <v-flex md2 class="root-branch" v-if="property && !isArray(value)">
-      <header @click.stop="collapse = !collapse">
+      <header @click.stop="collapse = !collapse" :class="{'collapsed': collapse, 'notcollapsed': !collapse}">
         <span>{{property || "root"}} { }
-          <transition name="slide-fade">
-            <v-icon v-if="collapse">expand_more</v-icon>
-            <v-icon v-else>expand_less</v-icon>
+          <transition :key="collapse" name="slide-fade">
+            <v-icon>{{ collapse ? 'expand_more': 'expand_less'}}</v-icon>
           </transition>
         </span>
+
       </header>
+
     </v-flex>
-    <transition name="slide-fade">
+    <transition mode="out-in" name="slide-fade">
       <v-flex v-show="!collapse" class="children-branch" :class="{'md10': property, 'md12': !property, 'md12': isArray(value) }">
         <template v-if="isArray(value)">
           <header @click.stop="arrcollapse = !arrcollapse">
@@ -137,7 +138,11 @@ export default {
   -moz-user-select: none;
   -webkit-user-select: none;
   user-select: none;
-  cursor: se-resize;
+  cursor: ne-resize;
+
+  &.collapsed {
+    cursor: se-resize;
+  }
 }
 .children-branch header span {
   display: inline-block;
@@ -145,12 +150,21 @@ export default {
   // background: white;
   color: black;
   padding: 10px 30px 10px 10px;
+  box-shadow: inset 0 -2px 1px -2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 1px 0 rgba(0, 0, 0, 0.14),
+    inset 0 1px 3px 0 hsla(0, 0%, 0%, 0.122);
   box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14),
     0 1px 3px 0 hsla(0, 0%, 0%, 0.122);
   border-radius: 10px 50% 50% 10px;
+
   // border-bottom: 2px solid #ddd;
 
   /* margin-left: -20px; */
+}
+.children-branch header.collapsed span {
+  box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14),
+    0 1px 3px 0 hsla(0, 0%, 0%, 0.122);
+  border-radius: 10px 50% 50% 10px;
 }
 
 .children-branch header span.array {

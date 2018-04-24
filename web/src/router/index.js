@@ -12,16 +12,6 @@ export default new Router({
   routes: [
     {
       path: "/",
-      name: "home",
-      component: Home
-    },
-    {
-      path: "/settings",
-      name: "settings",
-      component: PageSettings
-    },
-    {
-      path: "/gocipe",
       name: "gocipe",
       component: PageGocipe
     }
