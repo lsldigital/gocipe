@@ -21,10 +21,8 @@ import (
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	var (
-		recipe *util.Recipe
-		files  []string
-	)
+	var recipe *util.Recipe
+
 	done := make(chan util.GeneratedCode)
 	work := util.GenerationWork{
 		Waitgroup: new(sync.WaitGroup),
@@ -65,46 +63,58 @@ func main() {
 	go generators.GenerateSchema(work, recipe.Schema, recipe.Entities)
 	go generators.GenerateVuetify(work, recipe.Rest, recipe.Vuetify, recipe.Entities)
 
-	go func() {
+	go func(recipePath string) {
+		var outlog []string
+		outcome := true
+
 		for generated := range done {
 			if generated.Error == nil {
-				files = append(files, generated.Filename)
-				saveGenerated(generated)
+				l, ok := saveGenerated(generated)
+				outlog = append(outlog, l)
+				outcome = outcome && ok
 			} else {
 				fmt.Println(generated.Generator, " Error: ", generated.Error)
+				outcome = false
 			}
 			work.Waitgroup.Done()
 		}
-	}()
+
+		err = ioutil.WriteFile(recipePath+".log", []byte(strings.Join(outlog, "\n")), os.FileMode(0755))
+		if err != nil {
+			fmt.Printf("failed to write file log file %s.log: %s", recipePath, err)
+		}
+
+		if outcome {
+			fmt.Printf("Generated %d files without error.\n", len(outlog))
+		} else {
+			fmt.Printf("Some errors occurred during recipe generation. See %s.log for details.\n", recipePath)
+		}
+	}(recipePath)
 
 	work.Waitgroup.Wait()
 	close(done)
 
-	err = ioutil.WriteFile(recipePath+".log", []byte(strings.Join(files, "\n")), os.FileMode(0644))
-	if err != nil {
-		log.Fatalf("failed to write file log file %s.log: %s", recipePath, err)
-	}
 }
 
-func saveGenerated(generated util.GeneratedCode) error {
+func saveGenerated(generated util.GeneratedCode) (string, bool) {
 	filename, err := util.GetAbsPath(generated.Filename)
 	if err != nil {
-		return fmt.Errorf("cannot resolve path [%s] %s: %s", generated.Generator, generated.Filename, err)
+		return fmt.Sprintf("[WriteError] cannot resolve path [%s] %s: %s", generated.Generator, generated.Filename, err), false
 	}
 
 	if util.FileExists(filename) && generated.NoOverwrite {
-		return fmt.Errorf("skipping existing file [%s] %s", generated.Generator, generated.Filename)
+		return fmt.Sprintf("[WriteError] skipping existing file [%s] %s", generated.Generator, generated.Filename), false
 	}
 
-	var mode os.FileMode = 0644
+	var mode os.FileMode = 0755
 	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
-		return fmt.Errorf("directory creation failed [%s] %s: %s", generated.Generator, generated.Filename, err)
+		return fmt.Sprintf("[WriteError] directory creation failed [%s] %s: %s", generated.Generator, generated.Filename, err), false
 	}
 
 	err = ioutil.WriteFile(filename, []byte(generated.Code), mode)
 	if err != nil {
-		return fmt.Errorf("failed to write file [%s] %s: %s", generated.Generator, generated.Filename, err)
+		return fmt.Sprintf("[WriteError] failed to write file [%s] %s: %s", generated.Generator, generated.Filename, err), false
 	}
 
-	return nil
+	return fmt.Sprintf("[Wrote] %s", filename), true
 }
