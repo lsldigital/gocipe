@@ -11,6 +11,7 @@ import (
 
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/fluxynet/gocipe/generators"
+	"github.com/fluxynet/gocipe/util"
 )
 
 //go:generate rice embed-go
@@ -18,10 +19,11 @@ import (
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	var recipe *generators.Recipe
-	done := make(chan generators.GeneratedCode)
+	var recipe *util.Recipe
+	done := make(chan util.GeneratedCode)
+	files := make(map[string]string)
 
-	work := generators.GenerationWork{
+	work := util.GenerationWork{
 		Waitgroup: new(sync.WaitGroup),
 		Done:      done,
 	}
@@ -30,7 +32,7 @@ func main() {
 		log.Fatalln("Usage: gocipe gocipe.json")
 	}
 
-	recipePath, err := generators.GetAbsPath(os.Args[1])
+	recipePath, err := util.GetAbsPath(os.Args[1])
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -45,21 +47,21 @@ func main() {
 		log.Fatalln("recipe decoding failed: ", err)
 	}
 
-	generators.SetTemplates(rice.MustFindBox("templates"))
+	util.SetTemplates(rice.MustFindBox("templates"))
 
-	work.Waitgroup.Add(5)
+	work.Waitgroup.Add(1)
 
-	go generators.GenerateBootstrap(work, recipe.Bootstrap)
-	go generators.GenerateHTTP(work, recipe.HTTP)
-	go generators.GenerateCrud(work, recipe.Crud, recipe.Entities)
-	go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
-	go generators.GenerateSchema(work, recipe.Schema, recipe.Entities)
+	// go generators.GenerateBootstrap(work, recipe.Bootstrap)
+	// go generators.GenerateHTTP(work, recipe.HTTP)
+	// go generators.GenerateCrud(work, recipe.Crud, recipe.Entities)
+	// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
+	// go generators.GenerateSchema(work, recipe.Schema, recipe.Entities)
+	go generators.GenerateVuetify(work, recipe.Rest, recipe.Vuetify, recipe.Entities)
 
 	go func() {
 		for generated := range done {
 			if generated.Error == nil {
-				fmt.Println("=====Filename: ", generated.Filename)
-				fmt.Println(generated.Code)
+				files[generated.Filename] = generated.Code
 			} else {
 				fmt.Println(generated.Generator, " Error: ", generated.Error)
 			}
@@ -69,4 +71,8 @@ func main() {
 
 	work.Waitgroup.Wait()
 	close(done)
+
+	// for filename, code := range files {
+	// 	fmt.Println(filename, code)
+	// }
 }

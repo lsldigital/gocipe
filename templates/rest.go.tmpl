@@ -112,49 +112,49 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 	)
 	{{range .Entity.Fields}}{{if .Filterable}}
 	{{if eq .Property.Type "bool"}}
-	if val := query.Get("{{.Property.Name}}"); val != "" {
+	if val := query.Get("{{.Serialized}}"); val != "" {
 		if t, e := strconv.ParseBool(val); e == nil {
-			filters = append(filters, models.ListFilter{Field:"{{.Property.Name}}", Operation:"=", Value:t})
+			filters = append(filters, models.ListFilter{Field:"{{.Schema.Field}}", Operation:"=", Value:t})
 		}
 	}
 	{{end}}
 	{{if eq .Property.Type "string"}}
-	if val := query.Get("{{.Property.Name}}"); val != "" {
-		filters = append(filters, models.ListFilter{Field:"{{.Property.Name}}", Operation:"=", Value:val})
+	if val := query.Get("{{.Serialized}}"); val != "" {
+		filters = append(filters, models.ListFilter{Field:"{{.Schema.Field}}", Operation:"=", Value:val})
 	}
 
-	if val := query.Get("{{.Property.Name}}-lk"); val != "" {
-		filters = append(filters, models.ListFilter{Field:"{{.Property.Name}}", Operation:"LIKE", Value:"%" + val + "%"})
+	if val := query.Get("{{.Serialized}}-lk"); val != "" {
+		filters = append(filters, models.ListFilter{Field:"{{.Schema.Field}}", Operation:"LIKE", Value:"%" + val + "%"})
 	}
 	{{end}}
 	{{if eq .Property.Type "time.Time"}}
-	if val := query.Get("{{.Property.Name}}"); len(val) == 16 {
+	if val := query.Get("{{.Serialized}}"); len(val) == 16 {
 		if t, e := time.Parse("2006-01-02-15-04", val); e == nil {
-			filters = append(filters, models.ListFilter{Field:"{{.Property.Name}}", Operation:"=", Value:t})
+			filters = append(filters, models.ListFilter{Field:"{{.Schema.Field}}", Operation:"=", Value:t})
 		}
 	}
 
-	if val := query.Get("{{.Property.Name}}-gt"); len(val) == 16 {
+	if val := query.Get("{{.Serialized}}-gt"); len(val) == 16 {
 		if t, e := time.Parse("2006-01-02-15-04", val); e == nil {
-			filters = append(filters, models.ListFilter{Field:"{{.Property.Name}}", Operation:">", Value:t})
+			filters = append(filters, models.ListFilter{Field:"{{.Schema.Field}}", Operation:">", Value:t})
 		}
 	}
 
-	if val := query.Get("{{.Property.Name}}-ge"); len(val) == 16 {
+	if val := query.Get("{{.Serialized}}-ge"); len(val) == 16 {
 		if t, e := time.Parse("2006-01-02-15-04", val); e == nil {
-			filters = append(filters, models.ListFilter{Field:"{{.Property.Name}}", Operation:">=", Value:t})
+			filters = append(filters, models.ListFilter{Field:"{{.Schema.Field}}", Operation:">=", Value:t})
 		}
 	}
 
-	if val := query.Get("{{.Property.Name}}-lt"); len(val) == 16 {
+	if val := query.Get("{{.Serialized}}-lt"); len(val) == 16 {
 		if t, e := time.Parse("2006-01-02-15-04", val); e == nil {
-			filters = append(filters, models.ListFilter{Field:"{{.Property.Name}}", Operation:"<", Value:t})
+			filters = append(filters, models.ListFilter{Field:"{{.Schema.Field}}", Operation:"<", Value:t})
 		}
 	}
 
-	if val := query.Get("{{.Property.Name}}-le"); len(val) == 16 {
+	if val := query.Get("{{.Serialized}}-le"); len(val) == 16 {
 		if t, e := time.Parse("2006-01-02-15-04", val); e == nil {
-			filters = append(filters, models.ListFilter{Field:"{{.Property.Name}}", Operation:"<=", Value:t})
+			filters = append(filters, models.ListFilter{Field:"{{.Schema.Field}}", Operation:"<=", Value:t})
 		}
 	}
 	{{end}}

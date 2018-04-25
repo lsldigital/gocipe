@@ -1,4 +1,4 @@
-package generators
+package util
 
 import (
 	"bytes"
@@ -88,7 +88,19 @@ func ExecuteTemplate(name string, data interface{}) (string, error) {
 		return "", err
 	}
 
-	tpl, err := template.New(name).Parse(raw)
+	templatesFn := template.FuncMap{
+		"plus1": func(index int) int {
+			return index + 1
+		},
+		"widget_field": func(component string, widget string, field Field) (string, error) {
+			if widget == "" {
+				return "", nil
+			}
+			return ExecuteTemplate(component+"_editor-field-"+widget+".vue.tmpl", field)
+		},
+	}
+
+	tpl, err := template.New(name).Funcs(templatesFn).Parse(raw)
 	if err != nil {
 		return "", err
 	}

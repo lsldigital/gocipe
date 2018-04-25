@@ -1,20 +1,35 @@
-package generators
+package util
 
 const (
-	// WidgetTypePassword indicates a widget of type Password
+	// WidgetTypeCheckbox represents widget of type checkbox
+	WidgetTypeCheckbox = "checkbox"
+
+	// WidgetTypeDate represents widget of type date
+	WidgetTypeDate = "date"
+
+	// WidgetTypeNumber represents widget of type number
+	WidgetTypeNumber = "number"
+
+	// WidgetTypePassword represents widget of type password
 	WidgetTypePassword = "password"
 
-	// WidgetTypeSelectRel indicates a widget of type Select-Relational
-	WidgetTypeSelectRel = "select-rel"
-
-	// WidgetTypeSelect indicates a widget of type Select
+	// WidgetTypeSelect represents widget of type select
 	WidgetTypeSelect = "select"
 
-	// WidgetTypeTextarea indicates a widget of type Textarea
-	WidgetTypeTextarea = "textarea"
+	// WidgetTypeSelectRel represents widget of type select-rel
+	WidgetTypeSelectRel = "select-rel"
 
-	// WidgetTypeTextfield indicates a widget of type Textfield
-	WidgetTypeTextfield = "textfield"
+	// WidgetTypeTextArea represents widget of type textarea
+	WidgetTypeTextArea = "textarea"
+
+	// WidgetTypeTextField represents widget of type textfield
+	WidgetTypeTextField = "textfield"
+
+	// WidgetTypeTime represents widget of type time
+	WidgetTypeTime = "time"
+
+	// WidgetTypeToggle represents widget of type toggle
+	WidgetTypeToggle = "toggle"
 
 	// RelationshipTypeManyMany represents a relationship of type Many-Many
 	RelationshipTypeManyMany = "many-many"
@@ -300,6 +315,12 @@ type FieldRelationshipTarget struct {
 	// Entity represents the other entity in the relationship
 	Entity string `json:"entity"`
 
+	// Endpoint represents the endpoint where query can be made
+	Endpoint string `json:"endpoint"`
+
+	// Query represents the field to use in the query string
+	Query string `json:"query"`
+
 	// Table represents the other table in the relationship
 	Table string `json:"table"`
 
@@ -320,6 +341,9 @@ type WidgetOpts struct {
 
 	// Target represents a target endpoint to pull data for this widget
 	Target WidgetTarget `json:"target"`
+
+	// Multiple indicates that the field accepts multiple values
+	Multiple bool
 }
 
 // WidgetOption represents an option for SelectRel widget type

@@ -1,0 +1,9 @@
+<v-select
+	autocomplete
+	cache-items
+	required
+	label="{{.Label}}"
+	:items="select.{{.Serialized}}.items"
+	v-model="entity.{{.Serialized}}"
+	{{if .Widget.Multiple}}multiple chips{{end}}
+></v-select>

@@ -1,0 +1,11 @@
+<v-select
+    autocomplete
+    cache-items
+    required
+    label="{{.Label}}"
+    :loading="select.{{.Serialized}}.isloading"
+    :items="select.{{.Serialized}}.items"
+	:search-input.sync="select.{{.Serialized}}.search"
+	v-model="entity.{{.Serialized}}"
+	{{if .Widget.Multiple}}multiple chips{{end}}
+></v-select>

@@ -3,18 +3,20 @@ package generators
 import (
 	"fmt"
 	"strings"
+
+	"github.com/fluxynet/gocipe/util"
 )
 
 // GenerateCrud returns generated code to run an http server
-func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
+func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.Entity) error {
 	work.Waitgroup.Add(len(entities) * 2) //2 jobs to be waited upon for each thread - _crud.go and _crud_hooks.go generation
 
 	for _, entity := range entities {
-		go func(entity Entity) {
+		go func(entity util.Entity) {
 			var (
 				data struct {
 					Package string
-					Entity  Entity
+					Entity  util.Entity
 
 					SQLFieldsSelect string
 					SQLFieldsUpdate string
@@ -33,7 +35,7 @@ func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
 					BeforeInsert []string
 
 					HasRelationshipManyMany bool
-					ManyManyFields          []Field
+					ManyManyFields          []util.Field
 				}
 
 				sqlfieldsSelect []string
@@ -55,7 +57,7 @@ func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
 			}
 
 			if !entity.Crud.Create && !entity.Crud.Read && !entity.Crud.ReadList && !entity.Crud.Update && !entity.Crud.Delete {
-				work.Done <- GeneratedCode{Generator: "GenerateCrud", Error: ErrorSkip}
+				work.Done <- util.GeneratedCode{Generator: "GenerateCrud", Error: util.ErrorSkip}
 			}
 
 			for _, field := range entity.Fields {
@@ -95,7 +97,7 @@ func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
 					structFieldsSelect = append(structFieldsSelect, fmt.Sprintf("&j%d, ", joinCount))
 					joinCount++
 
-					if field.Relationship.Type == RelationshipTypeManyMany {
+					if field.Relationship.Type == util.RelationshipTypeManyMany {
 						data.HasRelationshipManyMany = true
 						data.ManyManyFields = append(data.ManyManyFields, field)
 					}
@@ -117,35 +119,35 @@ func GenerateCrud(work GenerationWork, opts CrudOpts, entities []Entity) error {
 				data.Joins = "INNER JOIN " + strings.Join(joins, " INNER JOIN ") + " "
 			}
 
-			code, err := ExecuteTemplate("crud.go.tmpl", data)
+			code, err := util.ExecuteTemplate("crud.go.tmpl", data)
 			if err != nil {
-				work.Done <- GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to load execute template: %s", err)}
+				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to load execute template: %s", err)}
 			}
 
 			if entity.Crud.Hooks.PreCreate || entity.Crud.Hooks.PostCreate || entity.Crud.Hooks.PreRead || entity.Crud.Hooks.PostRead || entity.Crud.Hooks.PreList || entity.Crud.Hooks.PostList || entity.Crud.Hooks.PreUpdate || entity.Crud.Hooks.PostUpdate || entity.Crud.Hooks.PreDelete || entity.Crud.Hooks.PostDelete {
-				hooks, e := ExecuteTemplate("crud_hooks.go.tmpl", struct {
-					Hooks CrudHooks
+				hooks, e := util.ExecuteTemplate("crud_hooks.go.tmpl", struct {
+					Hooks util.CrudHooks
 					Name  string
 				}{entity.Crud.Hooks, entity.Name})
 
 				if e == nil {
-					work.Done <- GeneratedCode{Generator: "GenerateCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_crud_hooks.go", data.Package, data.Package)}
+					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_crud_hooks.go", data.Package, data.Package)}
 				} else {
-					work.Done <- GeneratedCode{Generator: "GenerateCRUDHooks", Error: e}
+					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Error: e}
 				}
 			} else {
-				work.Done <- GeneratedCode{Generator: "GenerateCRUDHooks", Error: ErrorSkip}
+				work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Error: util.ErrorSkip}
 			}
 
-			work.Done <- GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: fmt.Sprintf("models/%s/%s_crud.go", data.Package, data.Package)}
+			work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: fmt.Sprintf("models/%s/%s_crud.go", data.Package, data.Package)}
 		}(entity)
 	}
 
-	code, err := ExecuteTemplate("crud_filters.go.tmpl", struct{}{})
+	code, err := util.ExecuteTemplate("crud_filters.go.tmpl", struct{}{})
 	if err == nil {
-		work.Done <- GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: "models/filters.go"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: "models/filters.go"}
 	} else {
-		work.Done <- GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to load execute template: %s", err)}
+		work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to load execute template: %s", err)}
 	}
 
 	return err

@@ -1,0 +1,102 @@
+<template>
+    <div class="container">
+		<v-toolbar color="transparent" flat>
+            <v-toolbar-title class="grey--text text--darken-4 ml-0"><h2>{{.Entity.Name}}</h2></v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-btn ml-0 small color="grey" flat :to="{name: '{{.Endpoint}}List'}">
+                <v-icon dark>arrow_back</v-icon> Back
+            </v-btn>
+        </v-toolbar>
+		<v-alert :type="message.type" :value="true" v-for="(message, index) in messages" :key="index">
+		{{ "{{ message.text }}" }}
+		</v-alert>
+  
+        {{range .Entity.Fields -}}
+        {{widget_field "vuetify" .Widget.Type .}}
+        {{- end}}
+
+        <v-btn color="primary" @click="save()">Save</v-btn>
+        <v-btn color="gray" :to="{name: '{{.Endpoint}}List'}">Cancel</v-btn>
+	</div>
+</template>
+  
+<script>
+import axios from "axios"
+
+export default {
+    props: ["id"],
+    created() {
+        if (!this.id) {
+            return
+        }
+
+        axios.get("/api/{{.Endpoint}}/" + this.id).then(response => {
+            this.id = response.data.entity.id
+            {{range .Entity.Fields}}{{if ne .Serialized "id"}}
+            this.entity.{{.Serialized}} = response.data.entity.{{.Serialized}}
+            {{if eq .Widget.Type "date"}}this.dates.{{.Serialized}}.value = response.data.entity.{{.Serialized}}.substr(0,10){{end}}
+            {{end}}{{end}}
+        })
+    },
+    data() {
+        return {
+            select: {
+                field.Name+": { items: ["+strings.Join(values, ", ")+"]}"
+                {{range $i, $v := .Entity.Fields}}{{if eq .Widget.Type "date"}}
+                {{.Serialized}}: {
+                    items
+                }
+                {{if eq (plus1 $i) (len $.Entity.Fields)}},{{end}}
+                {{end}}{{end}}
+			},
+			dates: {
+                {{range $i, $v := .Entity.Fields}}{{if eq .Widget.Type "date"}}
+				{{.Serialized}}: {value: null, menuAppear: false}{{if eq (plus1 $i) (len $.Entity.Fields)}},{{end}}
+                {{end}}{{end}}
+			},
+            messages: [],
+            entity: {
+                {{range $i, $e := .Entity.Fields}}{{if ne .Serialized "id"}}
+                this.entity.{{.Serialized}} = null{{if eq (plus1 $i) (len $.Entity.Fields)}},{{end}}
+                {{end}}{{end}}
+            }
+        }
+    },
+    watch: {
+        {{range $i, $e := .Entity.Fields}}
+        select.{{.Serialized}}.search: function(val) {
+            val && this.querySelections("{{.Serialized}}", "{{$.Endpoint}}", "{{$.Prefix}}/{{.Relationship.Target.Endpoint}}", val)
+        }{{if eq (plus1 $i) (len $.Entity.Fields)}},{{end}}
+        {{end}}
+    },
+    methods: {
+        querySelections(fieldname, endpoint, filter, val) {
+            this.select[fieldname].loading = true
+            axios.get("/api/" + endpoint + "?" + filter + "-lk=" + encodeURIComponent(val)).then(response => {
+                this.select[fieldname].loading = false
+                this.select[fieldname].items = response.data.entities.map(function(e) {
+                    return { text: e[filter], value: e.id }
+                })
+            })
+        },
+        save() {
+            if (this.id) {
+                axios.put("/api/{{.Endpoint}}/" + this.id, this.entity).then(this.saved)
+            } else {
+                axios.post("/api/{{.Endpoint}}", this.entity).then(this.saved)
+            }
+		},
+		saved(response) {
+			this.id = response.data.entity.id
+			{{range .Entity.Fields}}{{if ne .Serialized "id"}}
+            this.entity.{{.Serialized}} = response.data.entity.{{.Serialized}}
+            {{end}}{{end}}
+
+			this.messages.push({
+				type: "success",
+				text: "{{.Entity.Name}} saved successfully"
+			})
+		}
+    }
+}
+</script>
