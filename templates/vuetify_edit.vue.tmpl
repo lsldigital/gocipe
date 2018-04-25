@@ -41,32 +41,34 @@ export default {
     data() {
         return {
             select: {
-                field.Name+": { items: ["+strings.Join(values, ", ")+"]}"
                 {{range $i, $v := .Entity.Fields}}{{if eq .Widget.Type "date"}}
                 {{.Serialized}}: {
-                    items
-                }
-                {{if eq (plus1 $i) (len $.Entity.Fields)}},{{end}}
+                    items:[
+                        {{range $j, $u := .Widget.Options}}
+                        {text: "{{.Label}}", value: "{{.Value}}"}{{if eq (plus1 $j) (len $u)}},{{end}}
+                        {{end}}
+                    ]
+                }{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}
                 {{end}}{{end}}
 			},
 			dates: {
                 {{range $i, $v := .Entity.Fields}}{{if eq .Widget.Type "date"}}
-				{{.Serialized}}: {value: null, menuAppear: false}{{if eq (plus1 $i) (len $.Entity.Fields)}},{{end}}
+				{{.Serialized}}: {value: null, menuAppear: false}{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}
                 {{end}}{{end}}
 			},
             messages: [],
             entity: {
                 {{range $i, $e := .Entity.Fields}}{{if ne .Serialized "id"}}
-                this.entity.{{.Serialized}} = null{{if eq (plus1 $i) (len $.Entity.Fields)}},{{end}}
+                {{.Serialized}} : null{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}
                 {{end}}{{end}}
             }
         }
     },
     watch: {
         {{range $i, $e := .Entity.Fields}}
-        select.{{.Serialized}}.search: function(val) {
+        "select.{{.Serialized}}.search": function(val) {
             val && this.querySelections("{{.Serialized}}", "{{$.Endpoint}}", "{{$.Prefix}}/{{.Relationship.Target.Endpoint}}", val)
-        }{{if eq (plus1 $i) (len $.Entity.Fields)}},{{end}}
+        }{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}
         {{end}}
     },
     methods: {
