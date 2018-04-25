@@ -131,7 +131,7 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 				}{entity.Crud.Hooks, entity.Name})
 
 				if e == nil {
-					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_crud_hooks.go", data.Package, data.Package)}
+					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_crud_hooks.go", data.Package, data.Package), NoOverwrite: true}
 				} else {
 					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Error: e}
 				}

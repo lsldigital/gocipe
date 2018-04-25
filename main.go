@@ -103,7 +103,7 @@ func saveGenerated(generated util.GeneratedCode) (string, bool) {
 	}
 
 	if util.FileExists(filename) && generated.NoOverwrite {
-		return fmt.Sprintf("[WriteError] skipping existing file [%s] %s", generated.Generator, generated.Filename), false
+		return fmt.Sprintf("[Skip] skipping existing file [%s] %s", generated.Generator, generated.Filename), false
 	}
 
 	var mode os.FileMode = 0755

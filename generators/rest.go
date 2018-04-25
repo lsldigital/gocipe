@@ -38,7 +38,7 @@ func GenerateREST(work util.GenerationWork, opts util.RestOpts, entities []util.
 				}{entity.Rest.Hooks, entity.Name})
 
 				if e == nil {
-					work.Done <- util.GeneratedCode{Generator: "GenerateRESTHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_rest_hooks.go", data.Package, data.Package)}
+					work.Done <- util.GeneratedCode{Generator: "GenerateRESTHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_rest_hooks.go", data.Package, data.Package), NoOverwrite: true}
 				} else {
 					work.Done <- util.GeneratedCode{Generator: "GenerateRESTHooks", Error: e}
 				}
