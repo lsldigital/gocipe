@@ -27,12 +27,19 @@ func GenerateVuetify(work util.GenerationWork, restOpts util.RestOpts, opts util
 
 			if entity.Vuetify == nil {
 				entity.Vuetify = &opts
+			} else if entity.Vuetify.Path == "" {
+				entity.Vuetify.Path = opts.Path
+			}
+
+			path := entity.Vuetify.Path
+			if path == "" {
+				path = "vuetify"
 			}
 
 			data.Entity = entity
 			data.Endpoint = restOpts.Prefix + "/" + inflection.Plural(strings.ToLower(entity.Name))
 			data.Prefix = restOpts.Prefix
-			filename := entity.Vuetify.Path + "/" + data.Entity.Name
+			filename := path + "/" + data.Entity.Name
 			list, err := util.ExecuteTemplate("vuetify_list.vue.tmpl", data)
 
 			if err == nil {

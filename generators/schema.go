@@ -22,6 +22,13 @@ func GenerateSchema(work util.GenerationWork, opts util.SchemaOpts, entities []u
 
 			if entity.Schema == nil {
 				entity.Schema = &opts
+			} else if entity.Schema.Path == "" {
+				entity.Schema.Path = opts.Path
+			}
+
+			path := entity.Schema.Path
+			if path == "" {
+				path = "schema"
 			}
 
 			data.Entity = entity
@@ -38,9 +45,9 @@ func GenerateSchema(work util.GenerationWork, opts util.SchemaOpts, entities []u
 			if err != nil {
 				work.Done <- util.GeneratedCode{Generator: "GenerateSchema", Error: err}
 			} else if entity.Schema.Aggregate {
-				work.Done <- util.GeneratedCode{Generator: "GenerateSchema", Code: code, Filename: "schema.sql"}
+				work.Done <- util.GeneratedCode{Generator: "GenerateSchema", Code: code, Filename: path + "/schema.sql"}
 			} else {
-				work.Done <- util.GeneratedCode{Generator: "GenerateSchema", Code: code, Filename: fmt.Sprintf("schema_%s.sql", entity.Table)}
+				work.Done <- util.GeneratedCode{Generator: "GenerateSchema", Code: code, Filename: fmt.Sprintf("%s/schema_%s.sql", path, entity.Table)}
 			}
 		}(entity)
 	}

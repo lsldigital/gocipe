@@ -102,6 +102,9 @@ type SchemaOpts struct {
 
 	// Aggregate whether or not to generate schema into single file instead of separate files
 	Aggregate bool `json:"aggregate"`
+
+	// Path indicates in which path to generate the schema sql file
+	Path string `json:"path"`
 }
 
 // CrudOpts represents which crud functions should be generated

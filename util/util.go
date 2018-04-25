@@ -3,7 +3,6 @@ package util
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -60,10 +59,6 @@ func GetAbsPath(src string) (string, error) {
 		}
 
 		location = path.Clean(wd + "/" + location)
-	}
-
-	if !FileExists(location) {
-		return "", fmt.Errorf("file not found: %s", src)
 	}
 
 	return location, nil
