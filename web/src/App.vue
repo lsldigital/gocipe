@@ -1,8 +1,6 @@
 <template>
   <v-app id="app">
 
-    <Toolbar />
-
     <v-content>
       <v-slide-x-transition mode="out-in">
         <router-view></router-view>
@@ -15,20 +13,14 @@
 </template>
 
 <script>
-import Toolbar from "./views/components/ui-elements/Toolbar";
-import Navigation from "./views/components/ui-elements/Navigation";
 import FooterUI from "./views/components/ui-elements/FooterUI";
 
 export default {
-  data: () => ({
-    drawer: true
-  }),
+  data: () => ({}),
   props: {
     source: String
   },
   components: {
-    Toolbar,
-    Navigation,
     FooterUI
   }
 };
