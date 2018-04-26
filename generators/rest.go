@@ -33,9 +33,10 @@ func GenerateREST(work util.GenerationWork, opts util.RestOpts, entities []util.
 			code, err := util.ExecuteTemplate("rest.go.tmpl", data)
 			if entity.Rest.Hooks.PreCreate || entity.Rest.Hooks.PostCreate || entity.Rest.Hooks.PreRead || entity.Rest.Hooks.PostRead || entity.Rest.Hooks.PreList || entity.Rest.Hooks.PostList || entity.Rest.Hooks.PreUpdate || entity.Rest.Hooks.PostUpdate || entity.Rest.Hooks.PreDelete || entity.Rest.Hooks.PostDelete {
 				hooks, e := util.ExecuteTemplate("rest_hooks.go.tmpl", struct {
-					Hooks util.RestHooks
-					Name  string
-				}{entity.Rest.Hooks, entity.Name})
+					Hooks   util.RestHooks
+					Name    string
+					Package string
+				}{entity.Rest.Hooks, entity.Name, data.Package})
 
 				if e == nil {
 					work.Done <- util.GeneratedCode{Generator: "GenerateRESTHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_rest_hooks.go", data.Package, data.Package), NoOverwrite: true}

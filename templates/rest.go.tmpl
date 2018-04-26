@@ -1,3 +1,4 @@
+package {{.Package}}
 import (
 	"database/sql"
 	"encoding/json"
@@ -10,20 +11,20 @@ import (
 )
 
 type responseSingle struct {
-	Status   bool      ` + "`" + `json:"status"` + "`" + `
-	Messages []message ` + "`" + `json:"messages"` + "`" + `
-	Entity   *{{.Entity.Name}} ` + "`" + `json:"entity"` + "`" + `
+	Status   bool      `json:"status"`
+	Messages []message `json:"messages"`
+	Entity   *{{.Entity.Name}} `json:"entity"`
 }
 
 type responseList struct {
-	Status   bool        ` + "`" + `json:"status"` + "`" + `
-	Messages []message   ` + "`" + `json:"messages"` + "`" + `
-	Entities []*{{.Entity.Name}} ` + "`" + `json:"entities"` + "`" + `
+	Status   bool                `json:"status"`
+	Messages []message           `json:"messages"`
+	Entities []*{{.Entity.Name}} `json:"entities"`
 }
 
 type message struct {
-	Type    rune   ` + "`" + `json:"type"` + "`" + `
-	Message string ` + "`" + `json:"message"` + "`" + `
+	Type    rune   `json:"type"`
+	Message string `json:"message"`
 }
 
 //RegisterRoutes registers routes with a mux Router
@@ -55,7 +56,7 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 	if !valid {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Invalid ID"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Invalid ID"}]}`
 		return
 	}
 
@@ -69,14 +70,14 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "An error occurred"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "An error occurred"}]}`
 		return
 	}
 
 	if response.Entity == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Entity not found"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Entity not found"}]}`
 		return
 	}
 
@@ -91,7 +92,7 @@ func RestGet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "JSON encoding failed"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "JSON encoding failed"}]}`
 		return
 	}
 
@@ -170,7 +171,7 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "An error occurred"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "An error occurred"}]}`
 		return
 	}
 
@@ -185,7 +186,7 @@ func RestList(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "JSON encoding failed"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "JSON encoding failed"}]}`
 		return
 	}
 
@@ -210,7 +211,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to read body"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Failed to read body"}]}`
 		return
 	}
 
@@ -219,7 +220,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to decode body"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Failed to decode body"}]}`
 		return
 	}
 	response.Entity.ID = nil
@@ -228,7 +229,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to process"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Failed to process"}]}`
 		return
 	}
 
@@ -246,7 +247,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 		tx.Rollback()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Save failed"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Save failed"}]}`
 		return
 	}
 
@@ -262,7 +263,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	if err = tx.Commit(); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "RestCreate could not commit transaction"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "E", "message": "RestCreate could not commit transaction"}]}`
 		return
 	}
 
@@ -270,7 +271,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "JSON encoding failed"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "JSON encoding failed"}]}`
 		return
 	}
 
@@ -302,7 +303,7 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	if !valid {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Invalid ID"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Invalid ID"}]}`
 		return
 	}
 
@@ -310,14 +311,14 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "An error occurred"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "An error occurred"}]}`
 		return
 	}
 
 	if response.Entity == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Entity not found"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Entity not found"}]}`
 		return
 	}
 
@@ -325,7 +326,7 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to read body"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Failed to read body"}]}`
 		return
 	}
 
@@ -334,7 +335,7 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to decode body"}]}` + "`" + `)
+			fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Failed to decode body"}]}`
 			return
 		}
 	}
@@ -344,7 +345,7 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to process"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Failed to process"}]}`
 		return
 	}
 
@@ -361,7 +362,7 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Save failed"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Save failed"}]}`
 		return
 	}
 
@@ -377,7 +378,7 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	if err = tx.Commit(); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "RestUpdate could not commit transaction"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "E", "message": "RestUpdate could not commit transaction"}]}`
 		return
 	}
 
@@ -385,7 +386,7 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "JSON encoding failed"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "JSON encoding failed"}]}`
 		return
 	}
 
@@ -416,7 +417,7 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 	if !valid {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Invalid ID"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Invalid ID"}]}`
 		return
 	}
 
@@ -424,14 +425,14 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "An error occurred"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "An error occurred"}]}`
 		return
 	}
 
 	if response.Entity == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Entity not found"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Entity not found"}]}`
 		return
 	}
 
@@ -439,7 +440,7 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Failed to process"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Failed to process"}]}`
 		return
 	}
 	{{if .Entity.Rest.Hooks.PreDelete}}
@@ -455,7 +456,7 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 		tx.Rollback()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "Delete failed"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Delete failed"}]}`
 		return
 	}
 	{{if .Entity.Rest.Hooks.PostDelete}}
@@ -469,7 +470,7 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 	if err = tx.Commit(); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "E", "message": "RestDelete could not commit transaction"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "E", "message": "RestDelete could not commit transaction"}]}`
 		return
 	}
 
@@ -477,7 +478,7 @@ func RestDelete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, ` + "`" + `{"status": false, "messages": [{"type": "error", "text": "JSON encoding failed"}]}` + "`" + `)
+		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "JSON encoding failed"}]}`
 		return
 	}
 

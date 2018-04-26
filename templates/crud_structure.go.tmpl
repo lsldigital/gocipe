@@ -1,0 +1,9 @@
+package {{.Package}}
+
+// {{.Entity.Name}} {{.Entity.Description}}
+type {{.Entity.Name}} struct {
+	ID        *int64  `json:"id"`
+	{{range .Entity.Fields}}{{if ne .Property.Name "ID"}}
+	{{.Property.Name}} *{{.Property.Type}} `json:"{{.Serialized}}"`
+	{{end}}{{end}}
+}

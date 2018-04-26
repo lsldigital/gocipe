@@ -35,8 +35,12 @@ type GeneratedCode struct {
 
 	// Code is the generated code
 	Code string
+
 	// NoOverwrite will not overwrite an existing file
 	NoOverwrite bool
+
+	// Aggregate indicates file output needs to be aggregated instead of individual file write
+	Aggregate bool
 
 	// Error represents any error that may have occurred
 	Error error

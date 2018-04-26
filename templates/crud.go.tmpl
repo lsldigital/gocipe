@@ -9,14 +9,6 @@ func Inject(database *sql.DB) {
 	db = database
 }
 
-// New return a new {{.Entity.Name}} instance
-func New() *{{.Entity.Name}} {
-	entity := new({{.Entity.Name}})
-	{{range .Entity.Fields}}entity.{{.Property.Name}} = new({{.Property.Type}})
-	{{end}}
-	return entity
-}
-
 // Get returns a single {{.Entity.Name}} from database by primary key
 func Get(id int64) (*{{.Entity.Name}}, error) {
 	var entity = New()
@@ -32,8 +24,7 @@ func Get(id int64) (*{{.Entity.Name}}, error) {
 
 	defer rows.Close()
 	for rows.Next() {
-		{{range .JoinVarsDecl}}{{.}}
-		{{end}}
+		{{range .JoinVarsDecl}}var {{.}}{{end}}
 
 		err := rows.Scan({{.StructFieldsSelect}})
 		if err != nil {

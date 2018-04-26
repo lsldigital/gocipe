@@ -9,7 +9,7 @@ import (
 
 // GenerateCrud returns generated code to run an http server
 func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.Entity) error {
-	work.Waitgroup.Add(len(entities) * 2) //2 jobs to be waited upon for each thread - _crud.go and _crud_hooks.go generation
+	work.Waitgroup.Add(len(entities) * 3) //2 jobs to be waited upon for each thread - entity.go,  entity_crud.go and entity_crud_hooks.go generation
 
 	for _, entity := range entities {
 		go func(entity util.Entity) {
@@ -119,16 +119,29 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 				data.Joins = "INNER JOIN " + strings.Join(joins, " INNER JOIN ") + " "
 			}
 
+			structure, err := util.ExecuteTemplate("crud_structure.go.tmpl", struct {
+				Entity  util.Entity
+				Package string
+			}{entity, data.Package})
+			if err == nil {
+				work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModel", Code: structure, Filename: fmt.Sprintf("models/%s/%s.go", data.Package, data.Package)}
+			} else {
+				work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModel", Error: fmt.Errorf("failed to load execute template: %s", err)}
+			}
+
 			code, err := util.ExecuteTemplate("crud.go.tmpl", data)
-			if err != nil {
+			if err == nil {
+				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: fmt.Sprintf("models/%s/%s_crud.go", data.Package, data.Package)}
+			} else {
 				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to load execute template: %s", err)}
 			}
 
 			if entity.Crud.Hooks.PreCreate || entity.Crud.Hooks.PostCreate || entity.Crud.Hooks.PreRead || entity.Crud.Hooks.PostRead || entity.Crud.Hooks.PreList || entity.Crud.Hooks.PostList || entity.Crud.Hooks.PreUpdate || entity.Crud.Hooks.PostUpdate || entity.Crud.Hooks.PreDelete || entity.Crud.Hooks.PostDelete {
 				hooks, e := util.ExecuteTemplate("crud_hooks.go.tmpl", struct {
-					Hooks util.CrudHooks
-					Name  string
-				}{entity.Crud.Hooks, entity.Name})
+					Hooks   util.CrudHooks
+					Name    string
+					Package string
+				}{entity.Crud.Hooks, entity.Name, data.Package})
 
 				if e == nil {
 					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_crud_hooks.go", data.Package, data.Package), NoOverwrite: true}
@@ -138,8 +151,6 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 			} else {
 				work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Error: util.ErrorSkip}
 			}
-
-			work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: fmt.Sprintf("models/%s/%s_crud.go", data.Package, data.Package)}
 		}(entity)
 	}
 
