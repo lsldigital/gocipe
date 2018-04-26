@@ -14,6 +14,10 @@ func GenerateVuetify(work util.GenerationWork, restOpts util.RestOpts, opts util
 		return nil
 	}
 
+	if opts.Module == "" {
+		opts.Module = "web"
+	}
+
 	work.Waitgroup.Add(len(entities) * 2) //2 jobs to be waited upon for each thread - Editor and List
 	for _, entity := range entities {
 		go func(entity util.Entity) {
@@ -49,21 +53,30 @@ func GenerateVuetify(work util.GenerationWork, restOpts util.RestOpts, opts util
 			}
 		}(entity)
 	}
+	work.Waitgroup.Add(6) //6 stubs
 
-	routes, err := util.ExecuteTemplate("vuetify_routes.js.tmpl", struct {
+	var (
+		stub string
+		err  error
+	)
+	path := opts.Module + "/src/modules/gocipe/store/"
+
+	stub, err = util.ExecuteTemplate("vuetify_routes.js.tmpl", struct {
 		Entities []util.Entity
 	}{entities})
-
-	work.Waitgroup.Add(4) //5 stubs - 1 for current thread
-
-	path := opts.Module + "/src/modules/gocipe/store/"
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleIndex", Code: routes, Filename: path + "index.js"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleRoutes", Code: stub, Filename: path + "routes.js"}
+	} else {
+		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleRoutes", Error: err}
+	}
+
+	stub, err = util.ExecuteTemplate("vuetify_index.js.tmpl", struct{}{})
+	if err == nil {
+		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleIndex", Code: stub, Filename: path + "index.js", NoOverwrite: true}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleIndex", Error: err}
 	}
 
-	var stub string
 	stub, err = util.ExecuteTemplate("vuetify_actions.js.tmpl", struct{}{})
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleActions", Code: stub, Filename: path + "actions.js", NoOverwrite: true}
@@ -91,5 +104,7 @@ func GenerateVuetify(work util.GenerationWork, restOpts util.RestOpts, opts util
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleTypes", Error: err}
 	}
+
+	work.Waitgroup.Done()
 	return nil
 }

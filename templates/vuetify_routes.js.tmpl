@@ -1,9 +1,5 @@
-import actions from "./actions";
-import getters from "./getters";
-import mutations from "./mutations";
-
 {{range .Entities}}
-// {{.Name}}
+// {{.Name}} {{.Description}}
 import {{.Name}}Edit from "../views/{{plural .Name}}Edit.vue";
 import {{.Name}}List from "../views/{{plural .Name}}List.vue";
 {{end}}
@@ -28,22 +24,18 @@ let routes = [
   {{end}}
 ];
 
-let entities = routes.map(route => route.entity);
+let entities = [
+  {{range $i, $v := .Entities}}
+  "{{plural .Name}}"{{if ne (plus1 $i) (len $.Entities)}},{{end}}
+  {{end}}
+];
 
-const state = {
-  entities: routes
-};
-
-const namespaced = true;
-
-export function registerRoutes(router) {
+function registerRoutes(router) {
   router.addRoutes(routes);
 }
 
 export default {
-  namespaced,
-  state,
-  actions,
-  getters,
-  mutations
-};
+  routes,
+  entities,
+  registerRoutes
+}

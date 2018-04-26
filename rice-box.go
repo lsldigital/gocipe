@@ -119,21 +119,26 @@ func init() {
 		Content:     string("export default {}\n"),
 	}
 	fileo := &embedded.EmbeddedFile{
+		Filename:    "vuetify_index.js.tmpl",
+		FileModTime: time.Unix(1524773669, 0),
+		Content:     string("import actions from \"./actions\";\nimport getters from \"./getters\";\nimport mutations from \"./mutations\";\nimport routes from \"./routes\";\n\nconst namespaced = true;\n\nconst state = {\n  entities: routes\n};\n\nexport default {\n  namespaced,\n  state,\n  actions,\n  getters,\n  mutations\n};"),
+	}
+	filep := &embedded.EmbeddedFile{
 		Filename:    "vuetify_list.vue.tmpl",
 		FileModTime: time.Unix(1524663450, 0),
 		Content:     string("<template>\n    <v-container>\n        <v-toolbar color=\"transparent\" flat>\n            <v-toolbar-title class=\"grey--text text--darken-4 ml-0\"><h2>{{.Entity.Name}}</h2></v-toolbar-title>\n            <v-spacer></v-spacer>\n            <v-btn mr-0 color=\"primary\" :to=\"{name: '{{.Endpoint}}Edit', params:{id: 0}}\">\n                <v-icon dark>add</v-icon> Add\n            </v-btn>\n        </v-toolbar>\n        \n        <v-alert :type=\"message.type === 'E' ? 'error' : message.type\" :value=\"true\" v-for=\"(message, index) in messages\" :key=\"index\">\n            {{ \"{{ message.text }}\" }}\n        </v-alert>\n\n        <v-alert type=\"info\" value=\"true\"  color=\"primary\" outline icon=\"info\" v-if=\"entities.length === 0\">\n            No {{.Entity.Name}} exist. Would you like to create one now?\n            <v-btn :to=\"{name: '{{.Endpoint}}Edit', params:{id: 0}}\" color=\"primary\">create new</v-btn>\n        </v-alert>\n        <template v-else>\n            <v-text-field mb-4 append-icon=\"search\" label=\"Search\" single-line hide-details v-model=\"search\"></v-text-field>            \n            <v-data-table :headers=\"headers\" :items=\"entities\" class=\"elevation-1\" :search=\"search\">\n                <template slot=\"items\" slot-scope=\"props\">\n\t\t\t\t\t{{ range .Entity.Fields }}\n\t\t\t\t\t<td>{{ printf \"{{ props.item.%s}}\" .Serialized }}</td>\n\t\t\t\t\t{{end}}\n                    <td class=\"justify-center layout px-0\">\n                        <v-btn icon class=\"mx-0\" :to=\"{name: '{{.Endpoint}}Edit', params: {'id': props.item.id}  }\">\n                            <v-icon color=\"teal\">edit</v-icon>\n                        </v-btn>\n                    </td>\n                </template>\n\n                <template slot=\"no-data\">\n                    <v-flex ma-4>\n                        <v-alert slot=\"no-results\" :value=\"true\" color=\"primary\" outline icon=\"info\" v-if=\"search.length > 0\">\n                        Your search for \"{{ \"{{ search }}\" }}\" found no results.\n                        </v-alert>\n                        <v-alert slot=\"no-results\" :value=\"true\" color=\"primary\" outline icon=\"info\" v-else>\n                            No {{.Entity.Name}} found.\n                        </v-alert>\n                    </v-flex>\n                </template>\n            </v-data-table>\n        </template>\n    </v-container>\n</template>\n\n<script>\nimport axios from \"axios\"\nexport default {\n  data() {\n    return {\n      messages: [],\n      search: \"\",\n      headers: [\n\t\t{{range .Entity.Fields }}\n\t\t{text: \"{{.Label}}\", value: \"{{.Serialized}}\"},\n\t\t{{end}}\n        {'text': 'Action', 'value': null}\n      ],\n      entities: []\n    };\n  },\n  created() {\n    axios\n      .get(\"/api/{{.Endpoint}}\")\n      .then(response => {\n        this.entities = response.data.entities;\n      })\n      .catch(error => {\n        this.messages = [...this.messages, ...error.response.data.messages];\n      });\n  }\n};\n</script>"),
 	}
-	filep := &embedded.EmbeddedFile{
+	fileq := &embedded.EmbeddedFile{
 		Filename:    "vuetify_mutations.js.tmpl",
 		FileModTime: time.Unix(1524749492, 0),
 		Content:     string("import types from \"./types\";\n\nexport default {}\n"),
 	}
-	fileq := &embedded.EmbeddedFile{
-		Filename:    "vuetify_routes.js.tmpl",
-		FileModTime: time.Unix(1524771033, 0),
-		Content:     string("import actions from \"./actions\";\nimport getters from \"./getters\";\nimport mutations from \"./mutations\";\n\n{{range .Entities}}\n// {{.Name}}\nimport {{.Name}}Edit from \"../views/{{plural .Name}}Edit.vue\";\nimport {{.Name}}List from \"../views/{{plural .Name}}List.vue\";\n{{end}}\n\nlet routes = [\n  {{range $i, $v := .Entities}}\n  {\n    path: \"/{{lower (plural .Name)}}/:id\",\n    name: \"{{lower (plural .Name)}}Edit\",\n    props: true,\n    icon: \"dashboard\",\n    component: {{.Name}}Edit,\n    entity: \"{{plural .Name}}\"\n  },\n  {\n    path: \"/{{lower (plural .Name)}}list/\",\n    name: \"{{lower (plural .Name)}}List\",\n    icon: \"dashboard\",\n    component: {{.Name}}List,\n    entity: \"{{plural .Name}}\"\n  }{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nlet entities = routes.map(route => route.entity);\n\nconst state = {\n  entities: routes\n};\n\nconst namespaced = true;\n\nexport function registerRoutes(router) {\n  router.addRoutes(routes);\n}\n\nexport default {\n  namespaced,\n  state,\n  actions,\n  getters,\n  mutations\n};\n"),
-	}
 	filer := &embedded.EmbeddedFile{
+		Filename:    "vuetify_routes.js.tmpl",
+		FileModTime: time.Unix(1524774098, 0),
+		Content:     string("{{range .Entities}}\n// {{.Name}} {{.Description}}\nimport {{.Name}}Edit from \"../views/{{plural .Name}}Edit.vue\";\nimport {{.Name}}List from \"../views/{{plural .Name}}List.vue\";\n{{end}}\n\nlet routes = [\n  {{range $i, $v := .Entities}}\n  {\n    path: \"/{{lower (plural .Name)}}/:id\",\n    name: \"{{lower (plural .Name)}}Edit\",\n    props: true,\n    icon: \"dashboard\",\n    component: {{.Name}}Edit,\n    entity: \"{{plural .Name}}\"\n  },\n  {\n    path: \"/{{lower (plural .Name)}}list/\",\n    name: \"{{lower (plural .Name)}}List\",\n    icon: \"dashboard\",\n    component: {{.Name}}List,\n    entity: \"{{plural .Name}}\"\n  }{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nlet entities = [\n  {{range $i, $v := .Entities}}\n  \"{{plural .Name}}\"{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nfunction registerRoutes(router) {\n  router.addRoutes(routes);\n}\n\nexport default {\n  routes,\n  entities,\n  registerRoutes\n}\n"),
+	}
+	files := &embedded.EmbeddedFile{
 		Filename:    "vuetify_types.js.tmpl",
 		FileModTime: time.Unix(1524749554, 0),
 		Content:     string("export default {}\n"),
@@ -142,7 +147,7 @@ func init() {
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1524771036, 0),
+		DirModTime: time.Unix(1524773484, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2, // "bootstrap.go.tmpl"
 			file3, // "crud.go.tmpl"
@@ -166,10 +171,11 @@ func init() {
 			filel, // "vuetify_editor-field-time.vue.tmpl"
 			filem, // "vuetify_editor-field-toggle.vue.tmpl"
 			filen, // "vuetify_getters.js.tmpl"
-			fileo, // "vuetify_list.vue.tmpl"
-			filep, // "vuetify_mutations.js.tmpl"
-			fileq, // "vuetify_routes.js.tmpl"
-			filer, // "vuetify_types.js.tmpl"
+			fileo, // "vuetify_index.js.tmpl"
+			filep, // "vuetify_list.vue.tmpl"
+			fileq, // "vuetify_mutations.js.tmpl"
+			filer, // "vuetify_routes.js.tmpl"
+			files, // "vuetify_types.js.tmpl"
 
 		},
 	}
@@ -180,7 +186,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`templates`, &embedded.EmbeddedBox{
 		Name: `templates`,
-		Time: time.Unix(1524771036, 0),
+		Time: time.Unix(1524773484, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},
@@ -207,10 +213,11 @@ func init() {
 			"vuetify_editor-field-time.vue.tmpl":       filel,
 			"vuetify_editor-field-toggle.vue.tmpl":     filem,
 			"vuetify_getters.js.tmpl":                  filen,
-			"vuetify_list.vue.tmpl":                    fileo,
-			"vuetify_mutations.js.tmpl":                filep,
-			"vuetify_routes.js.tmpl":                   fileq,
-			"vuetify_types.js.tmpl":                    filer,
+			"vuetify_index.js.tmpl":                    fileo,
+			"vuetify_list.vue.tmpl":                    filep,
+			"vuetify_mutations.js.tmpl":                fileq,
+			"vuetify_routes.js.tmpl":                   filer,
+			"vuetify_types.js.tmpl":                    files,
 		},
 	})
 }
