@@ -66,28 +66,28 @@ func GenerateVuetify(work util.GenerationWork, restOpts util.RestOpts, opts util
 	var stub string
 	stub, err = util.ExecuteTemplate("vuetify_actions.js.tmpl", struct{}{})
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleActions", Code: stub, Filename: path + "actions.js"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleActions", Code: stub, Filename: path + "actions.js", NoOverwrite: true}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleActions", Error: err}
 	}
 
 	stub, err = util.ExecuteTemplate("vuetify_getters.js.tmpl", struct{}{})
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleGetters", Code: stub, Filename: path + "getters.js"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleGetters", Code: stub, Filename: path + "getters.js", NoOverwrite: true}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleGetters", Error: err}
 	}
 
 	stub, err = util.ExecuteTemplate("vuetify_mutations.js.tmpl", struct{}{})
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleMutations", Code: stub, Filename: path + "mutations.js"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleMutations", Code: stub, Filename: path + "mutations.js", NoOverwrite: true}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleMutations", Error: err}
 	}
 
 	stub, err = util.ExecuteTemplate("vuetify_types.js.tmpl", struct{}{})
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleTypes", Code: stub, Filename: path + "types.js"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleTypes", Code: stub, Filename: path + "types.js", NoOverwrite: true}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleTypes", Error: err}
 	}

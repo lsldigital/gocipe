@@ -130,7 +130,7 @@ func init() {
 	}
 	fileq := &embedded.EmbeddedFile{
 		Filename:    "vuetify_routes.js.tmpl",
-		FileModTime: time.Unix(1524748960, 0),
+		FileModTime: time.Unix(1524771033, 0),
 		Content:     string("import actions from \"./actions\";\nimport getters from \"./getters\";\nimport mutations from \"./mutations\";\n\n{{range .Entities}}\n// {{.Name}}\nimport {{.Name}}Edit from \"../views/{{plural .Name}}Edit.vue\";\nimport {{.Name}}List from \"../views/{{plural .Name}}List.vue\";\n{{end}}\n\nlet routes = [\n  {{range $i, $v := .Entities}}\n  {\n    path: \"/{{lower (plural .Name)}}/:id\",\n    name: \"{{lower (plural .Name)}}Edit\",\n    props: true,\n    icon: \"dashboard\",\n    component: {{.Name}}Edit,\n    entity: \"{{plural .Name}}\"\n  },\n  {\n    path: \"/{{lower (plural .Name)}}list/\",\n    name: \"{{lower (plural .Name)}}List\",\n    icon: \"dashboard\",\n    component: {{.Name}}List,\n    entity: \"{{plural .Name}}\"\n  }{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nlet entities = routes.map(route => route.entity);\n\nconst state = {\n  entities: routes\n};\n\nconst namespaced = true;\n\nexport function registerRoutes(router) {\n  router.addRoutes(routes);\n}\n\nexport default {\n  namespaced,\n  state,\n  actions,\n  getters,\n  mutations\n};\n"),
 	}
 	filer := &embedded.EmbeddedFile{
@@ -142,7 +142,7 @@ func init() {
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1524749506, 0),
+		DirModTime: time.Unix(1524771036, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2, // "bootstrap.go.tmpl"
 			file3, // "crud.go.tmpl"
@@ -180,7 +180,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`templates`, &embedded.EmbeddedBox{
 		Name: `templates`,
-		Time: time.Unix(1524749506, 0),
+		Time: time.Unix(1524771036, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},
