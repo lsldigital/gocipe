@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	rice "github.com/GeertJohan/go.rice"
+	"github.com/jinzhu/inflection"
 )
 
 var (
@@ -96,6 +97,12 @@ func ExecuteTemplate(name string, data interface{}) (string, error) {
 				return "", nil
 			}
 			return ExecuteTemplate(component+"_editor-field-"+widget+".vue.tmpl", field)
+		},
+		"plural": func(str string) string {
+			return inflection.Plural(str)
+		},
+		"lower": func(str string) string {
+			return strings.ToLower(str)
 		},
 	}
 

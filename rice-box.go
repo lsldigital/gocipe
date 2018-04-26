@@ -54,70 +54,95 @@ func init() {
 		Content:     string("DROP TABLE IF EXISTS {{.Entity.Table}};\n\nCREATE TABLE {{.Entity.Table}} ({{range $i, $e := .Entity.Fields}}{{if ne .Schema.Field \"\"}}\n\t\"{{.Schema.Field}}\" \n\t{{$e.Schema.Type}}\n\t{{if not .Schema.Nullable}} NOT NULL{{end}}\n\t{{if ne .Schema.Default \"\"}} DEFAULT {{.Schema.Default}}{{end}},\n\t{{end}}{{end}}\n\tPRIMARY KEY (\"id\")\n);\n\n{{range .ManyManyFields}}\nDROP TABLE IF EXISTS {{.Relationship.Target.Table}};\n\nCREATE TABLE {{.Relationship.Target.Table}} (\n\t\"{{.Relationship.Target.ThisID}}\" INT NOT NULL,\n\t\"{{.Relationship.Target.ThatID}}\" INT NOT NULL\n);\n{{end}}"),
 	}
 	fileb := &embedded.EmbeddedFile{
+		Filename:    "vuetify_actions.js.tmpl",
+		FileModTime: time.Unix(1524749427, 0),
+		Content:     string("import types from \"./types\";\n\nexport default {}"),
+	}
+	filec := &embedded.EmbeddedFile{
 		Filename:    "vuetify_edit.vue.tmpl",
 		FileModTime: time.Unix(1524679446, 0),
 		Content:     string("<template>\n    <div class=\"container\">\n\t\t<v-toolbar color=\"transparent\" flat>\n            <v-toolbar-title class=\"grey--text text--darken-4 ml-0\"><h2>{{.Entity.Name}}</h2></v-toolbar-title>\n            <v-spacer></v-spacer>\n            <v-btn ml-0 small color=\"grey\" flat :to=\"{name: '{{.Endpoint}}List'}\">\n                <v-icon dark>arrow_back</v-icon> Back\n            </v-btn>\n        </v-toolbar>\n\t\t<v-alert :type=\"message.type\" :value=\"true\" v-for=\"(message, index) in messages\" :key=\"index\">\n\t\t{{ \"{{ message.text }}\" }}\n\t\t</v-alert>\n  \n        {{range .Entity.Fields -}}\n        {{widget_field \"vuetify\" .Widget.Type .}}\n        {{- end}}\n\n        <v-btn color=\"primary\" @click=\"save()\">Save</v-btn>\n        <v-btn color=\"gray\" :to=\"{name: '{{.Endpoint}}List'}\">Cancel</v-btn>\n\t</div>\n</template>\n  \n<script>\nimport axios from \"axios\"\n\nexport default {\n    props: [\"id\"],\n    created() {\n        if (!this.id) {\n            return\n        }\n\n        axios.get(\"/api/{{.Endpoint}}/\" + this.id).then(response => {\n            this.id = response.data.entity.id\n            {{range .Entity.Fields}}{{if ne .Serialized \"id\"}}\n            this.entity.{{.Serialized}} = response.data.entity.{{.Serialized}}\n            {{if eq .Widget.Type \"date\"}}this.dates.{{.Serialized}}.value = response.data.entity.{{.Serialized}}.substr(0,10){{end}}\n            {{end}}{{end}}\n        })\n    },\n    data() {\n        return {\n            select: {\n                {{range $i, $v := .Entity.Fields}}{{if eq .Widget.Type \"date\"}}\n                {{.Serialized}}: {\n                    items:[\n                        {{range $j, $u := .Widget.Options}}\n                        {text: \"{{.Label}}\", value: \"{{.Value}}\"}{{if eq (plus1 $j) (len $u)}},{{end}}\n                        {{end}}\n                    ]\n                }{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n                {{end}}{{end}}\n\t\t\t},\n\t\t\tdates: {\n                {{range $i, $v := .Entity.Fields}}{{if eq .Widget.Type \"date\"}}\n\t\t\t\t{{.Serialized}}: {value: null, menuAppear: false}{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n                {{end}}{{end}}\n\t\t\t},\n            messages: [],\n            entity: {\n                {{range $i, $e := .Entity.Fields}}{{if ne .Serialized \"id\"}}\n                {{.Serialized}} : null{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n                {{end}}{{end}}\n            }\n        }\n    },\n    watch: {\n        {{range $i, $e := .Entity.Fields}}\n        \"select.{{.Serialized}}.search\": function(val) {\n            val && this.querySelections(\"{{.Serialized}}\", \"{{$.Endpoint}}\", \"{{$.Prefix}}/{{.Relationship.Target.Endpoint}}\", val)\n        }{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n        {{end}}\n    },\n    methods: {\n        querySelections(fieldname, endpoint, filter, val) {\n            this.select[fieldname].loading = true\n            axios.get(\"/api/\" + endpoint + \"?\" + filter + \"-lk=\" + encodeURIComponent(val)).then(response => {\n                this.select[fieldname].loading = false\n                this.select[fieldname].items = response.data.entities.map(function(e) {\n                    return { text: e[filter], value: e.id }\n                })\n            })\n        },\n        save() {\n            if (this.id) {\n                axios.put(\"/api/{{.Endpoint}}/\" + this.id, this.entity).then(this.saved)\n            } else {\n                axios.post(\"/api/{{.Endpoint}}\", this.entity).then(this.saved)\n            }\n\t\t},\n\t\tsaved(response) {\n\t\t\tthis.id = response.data.entity.id\n\t\t\t{{range .Entity.Fields}}{{if ne .Serialized \"id\"}}\n            this.entity.{{.Serialized}} = response.data.entity.{{.Serialized}}\n            {{end}}{{end}}\n\n\t\t\tthis.messages.push({\n\t\t\t\ttype: \"success\",\n\t\t\t\ttext: \"{{.Entity.Name}} saved successfully\"\n\t\t\t})\n\t\t}\n    }\n}\n</script>"),
 	}
-	filec := &embedded.EmbeddedFile{
+	filed := &embedded.EmbeddedFile{
 		Filename:    "vuetify_editor-field-checkbox.vue.tmpl",
 		FileModTime: time.Unix(1524654324, 0),
 		Content:     string("<v-checkbox label=\"{{.Label}}\" v-model=\"entity.{{.Serialized}}\"></v-checkbox>"),
 	}
-	filed := &embedded.EmbeddedFile{
+	filee := &embedded.EmbeddedFile{
 		Filename:    "vuetify_editor-field-date.vue.tmpl",
 		FileModTime: time.Unix(1524654335, 0),
 		Content:     string("<v-menu\n\tref=\"menu_{{.Serialized}}\"\n\tlazy\n\t:close-on-content-click=\"false\"\n\tv-model=\"dates.{{.Serialized}}.menuAppear\"\n\ttransition=\"scale-transition\"\n\toffset-y\n\tfull-width\n\t:nudge-right=\"40\"\n\tmin-width=\"290px\"\n\t:return-value.sync=\"dates.{{.Serialized}}.value\"\n\t>\n\t<v-text-field\n\t\tslot=\"activator\"\n\t\tlabel=\"{{.Label}}\"\n\t\tv-model=\"dates.{{.Serialized}}.value\"\n\t\tprepend-icon=\"event\"\n\t\treadonly\n\t\t></v-text-field>\n\t\t<v-date-picker v-model=\"dates.{{.Serialized}}.value\" @change=\"entity.{{.Serialized}} = dates.{{.Serialized}}.value + 'T00:00:00Z'\" no-title scrollable>\n\t\t<v-spacer></v-spacer>\n\t\t<v-btn flat color=\"primary\" @click=\"menu_{{.Serialized}} = false\">Cancel</v-btn>\n\t\t<v-btn flat color=\"primary\" @click=\"$refs.menu_{{.Serialized}}.save(dates.{{.Serialized}}.value)\">OK</v-btn>\n\t\t</v-date-picker>\n</v-menu>"),
 	}
-	filee := &embedded.EmbeddedFile{
+	filef := &embedded.EmbeddedFile{
 		Filename:    "vuetify_editor-field-number.vue.tmpl",
 		FileModTime: time.Unix(1524654354, 0),
 		Content:     string("<v-text-field v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" type=\"number\" />"),
 	}
-	filef := &embedded.EmbeddedFile{
+	fileg := &embedded.EmbeddedFile{
 		Filename:    "vuetify_editor-field-password.vue.tmpl",
 		FileModTime: time.Unix(1524654359, 0),
 		Content:     string("<v-text-field\n\tv-model=\"entity.{{.Serialized}}\"\n\t:append-icon=\"e1 ? 'visibility' : 'visibility_off'\"\n\t:append-icon-cb=\"() => (e1 = !e1)\"\n\t:type=\"e1 ? 'password' : 'text'\"\n\tcounter\n  ></v-text-field>"),
 	}
-	fileg := &embedded.EmbeddedFile{
+	fileh := &embedded.EmbeddedFile{
 		Filename:    "vuetify_editor-field-select-rel.vue.tmpl",
 		FileModTime: time.Unix(1524663870, 0),
 		Content:     string("<v-select\n    autocomplete\n    cache-items\n    required\n    label=\"{{.Label}}\"\n    :loading=\"select.{{.Serialized}}.isloading\"\n    :items=\"select.{{.Serialized}}.items\"\n\t:search-input.sync=\"select.{{.Serialized}}.search\"\n\tv-model=\"entity.{{.Serialized}}\"\n\t{{if .Widget.Multiple}}multiple chips{{end}}\n></v-select>"),
 	}
-	fileh := &embedded.EmbeddedFile{
+	filei := &embedded.EmbeddedFile{
 		Filename:    "vuetify_editor-field-select.vue.tmpl",
 		FileModTime: time.Unix(1524663879, 0),
 		Content:     string("<v-select\n\tautocomplete\n\tcache-items\n\trequired\n\tlabel=\"{{.Label}}\"\n\t:items=\"select.{{.Serialized}}.items\"\n\tv-model=\"entity.{{.Serialized}}\"\n\t{{if .Widget.Multiple}}multiple chips{{end}}\n></v-select>"),
 	}
-	filei := &embedded.EmbeddedFile{
+	filej := &embedded.EmbeddedFile{
 		Filename:    "vuetify_editor-field-textarea.vue.tmpl",
 		FileModTime: time.Unix(1524654397, 0),
 		Content:     string("<v-text-field v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" multiline />"),
 	}
-	filej := &embedded.EmbeddedFile{
+	filek := &embedded.EmbeddedFile{
 		Filename:    "vuetify_editor-field-textfield.vue.tmpl",
 		FileModTime: time.Unix(1524654403, 0),
 		Content:     string("<v-text-field v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" />"),
 	}
-	filek := &embedded.EmbeddedFile{
+	filel := &embedded.EmbeddedFile{
 		Filename:    "vuetify_editor-field-time.vue.tmpl",
 		FileModTime: time.Unix(1524654414, 0),
 		Content:     string("<div>\n\t<v-time-picker v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" :landscape=\"landscape\"></v-time-picker>\n</div>"),
 	}
-	filel := &embedded.EmbeddedFile{
+	filem := &embedded.EmbeddedFile{
 		Filename:    "vuetify_editor-field-toggle.vue.tmpl",
 		FileModTime: time.Unix(1524654423, 0),
 		Content:     string("<v-switch\n\tlabel=\"{{.Label}}\"\n\tv-model=\"entity.{{.Serialized}}\"\n></v-switch>"),
 	}
-	filem := &embedded.EmbeddedFile{
+	filen := &embedded.EmbeddedFile{
+		Filename:    "vuetify_getters.js.tmpl",
+		FileModTime: time.Unix(1524749464, 0),
+		Content:     string("export default {}\n"),
+	}
+	fileo := &embedded.EmbeddedFile{
 		Filename:    "vuetify_list.vue.tmpl",
 		FileModTime: time.Unix(1524663450, 0),
 		Content:     string("<template>\n    <v-container>\n        <v-toolbar color=\"transparent\" flat>\n            <v-toolbar-title class=\"grey--text text--darken-4 ml-0\"><h2>{{.Entity.Name}}</h2></v-toolbar-title>\n            <v-spacer></v-spacer>\n            <v-btn mr-0 color=\"primary\" :to=\"{name: '{{.Endpoint}}Edit', params:{id: 0}}\">\n                <v-icon dark>add</v-icon> Add\n            </v-btn>\n        </v-toolbar>\n        \n        <v-alert :type=\"message.type === 'E' ? 'error' : message.type\" :value=\"true\" v-for=\"(message, index) in messages\" :key=\"index\">\n            {{ \"{{ message.text }}\" }}\n        </v-alert>\n\n        <v-alert type=\"info\" value=\"true\"  color=\"primary\" outline icon=\"info\" v-if=\"entities.length === 0\">\n            No {{.Entity.Name}} exist. Would you like to create one now?\n            <v-btn :to=\"{name: '{{.Endpoint}}Edit', params:{id: 0}}\" color=\"primary\">create new</v-btn>\n        </v-alert>\n        <template v-else>\n            <v-text-field mb-4 append-icon=\"search\" label=\"Search\" single-line hide-details v-model=\"search\"></v-text-field>            \n            <v-data-table :headers=\"headers\" :items=\"entities\" class=\"elevation-1\" :search=\"search\">\n                <template slot=\"items\" slot-scope=\"props\">\n\t\t\t\t\t{{ range .Entity.Fields }}\n\t\t\t\t\t<td>{{ printf \"{{ props.item.%s}}\" .Serialized }}</td>\n\t\t\t\t\t{{end}}\n                    <td class=\"justify-center layout px-0\">\n                        <v-btn icon class=\"mx-0\" :to=\"{name: '{{.Endpoint}}Edit', params: {'id': props.item.id}  }\">\n                            <v-icon color=\"teal\">edit</v-icon>\n                        </v-btn>\n                    </td>\n                </template>\n\n                <template slot=\"no-data\">\n                    <v-flex ma-4>\n                        <v-alert slot=\"no-results\" :value=\"true\" color=\"primary\" outline icon=\"info\" v-if=\"search.length > 0\">\n                        Your search for \"{{ \"{{ search }}\" }}\" found no results.\n                        </v-alert>\n                        <v-alert slot=\"no-results\" :value=\"true\" color=\"primary\" outline icon=\"info\" v-else>\n                            No {{.Entity.Name}} found.\n                        </v-alert>\n                    </v-flex>\n                </template>\n            </v-data-table>\n        </template>\n    </v-container>\n</template>\n\n<script>\nimport axios from \"axios\"\nexport default {\n  data() {\n    return {\n      messages: [],\n      search: \"\",\n      headers: [\n\t\t{{range .Entity.Fields }}\n\t\t{text: \"{{.Label}}\", value: \"{{.Serialized}}\"},\n\t\t{{end}}\n        {'text': 'Action', 'value': null}\n      ],\n      entities: []\n    };\n  },\n  created() {\n    axios\n      .get(\"/api/{{.Endpoint}}\")\n      .then(response => {\n        this.entities = response.data.entities;\n      })\n      .catch(error => {\n        this.messages = [...this.messages, ...error.response.data.messages];\n      });\n  }\n};\n</script>"),
+	}
+	filep := &embedded.EmbeddedFile{
+		Filename:    "vuetify_mutations.js.tmpl",
+		FileModTime: time.Unix(1524749492, 0),
+		Content:     string("import types from \"./types\";\n\nexport default {}\n"),
+	}
+	fileq := &embedded.EmbeddedFile{
+		Filename:    "vuetify_routes.js.tmpl",
+		FileModTime: time.Unix(1524748960, 0),
+		Content:     string("import actions from \"./actions\";\nimport getters from \"./getters\";\nimport mutations from \"./mutations\";\n\n{{range .Entities}}\n// {{.Name}}\nimport {{.Name}}Edit from \"../views/{{plural .Name}}Edit.vue\";\nimport {{.Name}}List from \"../views/{{plural .Name}}List.vue\";\n{{end}}\n\nlet routes = [\n  {{range $i, $v := .Entities}}\n  {\n    path: \"/{{lower (plural .Name)}}/:id\",\n    name: \"{{lower (plural .Name)}}Edit\",\n    props: true,\n    icon: \"dashboard\",\n    component: {{.Name}}Edit,\n    entity: \"{{plural .Name}}\"\n  },\n  {\n    path: \"/{{lower (plural .Name)}}list/\",\n    name: \"{{lower (plural .Name)}}List\",\n    icon: \"dashboard\",\n    component: {{.Name}}List,\n    entity: \"{{plural .Name}}\"\n  }{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nlet entities = routes.map(route => route.entity);\n\nconst state = {\n  entities: routes\n};\n\nconst namespaced = true;\n\nexport function registerRoutes(router) {\n  router.addRoutes(routes);\n}\n\nexport default {\n  namespaced,\n  state,\n  actions,\n  getters,\n  mutations\n};\n"),
+	}
+	filer := &embedded.EmbeddedFile{
+		Filename:    "vuetify_types.js.tmpl",
+		FileModTime: time.Unix(1524749554, 0),
+		Content:     string("export default {}\n"),
 	}
 
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1524741350, 0),
+		DirModTime: time.Unix(1524749506, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2, // "bootstrap.go.tmpl"
 			file3, // "crud.go.tmpl"
@@ -128,18 +153,23 @@ func init() {
 			file8, // "rest.go.tmpl"
 			file9, // "rest_hooks.go.tmpl"
 			filea, // "schema.sql.tmpl"
-			fileb, // "vuetify_edit.vue.tmpl"
-			filec, // "vuetify_editor-field-checkbox.vue.tmpl"
-			filed, // "vuetify_editor-field-date.vue.tmpl"
-			filee, // "vuetify_editor-field-number.vue.tmpl"
-			filef, // "vuetify_editor-field-password.vue.tmpl"
-			fileg, // "vuetify_editor-field-select-rel.vue.tmpl"
-			fileh, // "vuetify_editor-field-select.vue.tmpl"
-			filei, // "vuetify_editor-field-textarea.vue.tmpl"
-			filej, // "vuetify_editor-field-textfield.vue.tmpl"
-			filek, // "vuetify_editor-field-time.vue.tmpl"
-			filel, // "vuetify_editor-field-toggle.vue.tmpl"
-			filem, // "vuetify_list.vue.tmpl"
+			fileb, // "vuetify_actions.js.tmpl"
+			filec, // "vuetify_edit.vue.tmpl"
+			filed, // "vuetify_editor-field-checkbox.vue.tmpl"
+			filee, // "vuetify_editor-field-date.vue.tmpl"
+			filef, // "vuetify_editor-field-number.vue.tmpl"
+			fileg, // "vuetify_editor-field-password.vue.tmpl"
+			fileh, // "vuetify_editor-field-select-rel.vue.tmpl"
+			filei, // "vuetify_editor-field-select.vue.tmpl"
+			filej, // "vuetify_editor-field-textarea.vue.tmpl"
+			filek, // "vuetify_editor-field-textfield.vue.tmpl"
+			filel, // "vuetify_editor-field-time.vue.tmpl"
+			filem, // "vuetify_editor-field-toggle.vue.tmpl"
+			filen, // "vuetify_getters.js.tmpl"
+			fileo, // "vuetify_list.vue.tmpl"
+			filep, // "vuetify_mutations.js.tmpl"
+			fileq, // "vuetify_routes.js.tmpl"
+			filer, // "vuetify_types.js.tmpl"
 
 		},
 	}
@@ -150,7 +180,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`templates`, &embedded.EmbeddedBox{
 		Name: `templates`,
-		Time: time.Unix(1524741350, 0),
+		Time: time.Unix(1524749506, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},
@@ -164,18 +194,23 @@ func init() {
 			"rest.go.tmpl":                             file8,
 			"rest_hooks.go.tmpl":                       file9,
 			"schema.sql.tmpl":                          filea,
-			"vuetify_edit.vue.tmpl":                    fileb,
-			"vuetify_editor-field-checkbox.vue.tmpl":   filec,
-			"vuetify_editor-field-date.vue.tmpl":       filed,
-			"vuetify_editor-field-number.vue.tmpl":     filee,
-			"vuetify_editor-field-password.vue.tmpl":   filef,
-			"vuetify_editor-field-select-rel.vue.tmpl": fileg,
-			"vuetify_editor-field-select.vue.tmpl":     fileh,
-			"vuetify_editor-field-textarea.vue.tmpl":   filei,
-			"vuetify_editor-field-textfield.vue.tmpl":  filej,
-			"vuetify_editor-field-time.vue.tmpl":       filek,
-			"vuetify_editor-field-toggle.vue.tmpl":     filel,
-			"vuetify_list.vue.tmpl":                    filem,
+			"vuetify_actions.js.tmpl":                  fileb,
+			"vuetify_edit.vue.tmpl":                    filec,
+			"vuetify_editor-field-checkbox.vue.tmpl":   filed,
+			"vuetify_editor-field-date.vue.tmpl":       filee,
+			"vuetify_editor-field-number.vue.tmpl":     filef,
+			"vuetify_editor-field-password.vue.tmpl":   fileg,
+			"vuetify_editor-field-select-rel.vue.tmpl": fileh,
+			"vuetify_editor-field-select.vue.tmpl":     filei,
+			"vuetify_editor-field-textarea.vue.tmpl":   filej,
+			"vuetify_editor-field-textfield.vue.tmpl":  filek,
+			"vuetify_editor-field-time.vue.tmpl":       filel,
+			"vuetify_editor-field-toggle.vue.tmpl":     filem,
+			"vuetify_getters.js.tmpl":                  filen,
+			"vuetify_list.vue.tmpl":                    fileo,
+			"vuetify_mutations.js.tmpl":                filep,
+			"vuetify_routes.js.tmpl":                   fileq,
+			"vuetify_types.js.tmpl":                    filer,
 		},
 	})
 }
