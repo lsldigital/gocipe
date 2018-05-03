@@ -7,12 +7,19 @@ import (
 )
 
 // GenerateBootstrap returns bootstrap generated code
-func GenerateBootstrap(work util.GenerationWork, opts util.BootstrapOpts) error {
+func GenerateBootstrap(work util.GenerationWork, opts util.BootstrapOpts, httpOpts util.HTTPOpts) error {
 	if !opts.Generate {
 		work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Error: util.ErrorSkip}
 	}
 
-	code, err := util.ExecuteTemplate("bootstrap.go.tmpl", opts)
+	if httpOpts.Port == "" {
+		httpOpts.Port = "8080"
+	}
+
+	code, err := util.ExecuteTemplate("bootstrap.go.tmpl", struct {
+		Bootstrap util.BootstrapOpts
+		HTTP      util.HTTPOpts
+	}{opts, httpOpts})
 
 	if err != nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Error: fmt.Errorf("failed to execute template: %s", err)}

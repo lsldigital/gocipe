@@ -28,7 +28,12 @@ func GenerateREST(work util.GenerationWork, opts util.RestOpts, entities []util.
 
 			data.Entity = entity
 			data.Package = strings.ToLower(entity.Name)
-			data.Endpoint = opts.Prefix + "/" + inflection.Plural(data.Package)
+
+			if opts.Prefix == "" {
+				data.Endpoint = inflection.Plural(data.Package)
+			} else {
+				data.Endpoint = opts.Prefix + "/" + inflection.Plural(data.Package)
+			}
 
 			code, err := util.ExecuteTemplate("rest.go.tmpl", data)
 			if entity.Rest.Hooks.PreCreate || entity.Rest.Hooks.PostCreate || entity.Rest.Hooks.PreRead || entity.Rest.Hooks.PostRead || entity.Rest.Hooks.PreList || entity.Rest.Hooks.PostList || entity.Rest.Hooks.PreUpdate || entity.Rest.Hooks.PostUpdate || entity.Rest.Hooks.PreDelete || entity.Rest.Hooks.PostDelete {

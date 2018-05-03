@@ -19,8 +19,9 @@ const (
 
 var (
 	env string
-    {{if not .NoDB}}db  *sql.DB{{end}}
-	{{range .Settings}}
+	{{if not .Bootstrap.NoDB}}db  *sql.DB{{end}}
+	{{if .HTTP.Generate}}httpPort string{{end}}
+	{{range .Bootstrap.Settings}}
 	// {{.Name}} {{.Description}}
 	{{.Name}} string
 	{{end}}
@@ -34,7 +35,7 @@ func bootstrap() {
 		env = EnvironmentProd
 	}
 
-	{{if not .NoDB}}
+	{{if not .Bootstrap.NoDB}}
 	dsn := os.Getenv("DSN")
 	if dsn == "" {
 		log.Fatal("Environment variable DSN must be defined. Example: postgres://user:pass@host/db?sslmode=disable")
@@ -60,7 +61,14 @@ func bootstrap() {
 	}
 	{{end}}
 
-	{{range .Settings}}
+	{{if .HTTP.Generate}}
+	httpPort = os.Getenv("HTTP_PORT")
+	if httpPort == "" {
+		httpPort = "{{.HTTP.Port}}"
+	}
+	{{end}}
+
+	{{range .Bootstrap.Settings}}
 	// {{.Name}} {{.Description}}
 	{{.Name}} = os.Getenv("{{upper (snake .Name)}}")
 	if {{.Name}} == "" {

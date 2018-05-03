@@ -56,7 +56,7 @@ func main() {
 
 	work.Waitgroup.Add(6)
 
-	go generators.GenerateBootstrap(work, recipe.Bootstrap)
+	go generators.GenerateBootstrap(work, recipe.Bootstrap, recipe.HTTP)
 	go generators.GenerateHTTP(work, recipe.HTTP)
 	go generators.GenerateCrud(work, recipe.Crud, recipe.Entities)
 	go generators.GenerateREST(work, recipe.Rest, recipe.Entities)

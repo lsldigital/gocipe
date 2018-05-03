@@ -34,8 +34,15 @@ func GenerateVuetify(work util.GenerationWork, restOpts util.RestOpts, opts util
 			}
 
 			data.Entity = entity
-			data.Endpoint = restOpts.Prefix + inflection.Plural(strings.ToLower(entity.Name))
-			data.Prefix = restOpts.Prefix
+
+			if restOpts.Prefix == "" {
+				data.Endpoint = inflection.Plural(strings.ToLower(entity.Name))
+				data.Prefix = "/"
+			} else {
+				data.Endpoint = restOpts.Prefix + "/" + inflection.Plural(strings.ToLower(entity.Name))
+				data.Prefix = "/" + restOpts.Prefix + "/"
+			}
+
 			filename := opts.Module + "/src/modules/gocipe/views/" + inflection.Plural(data.Entity.Name)
 			list, err := util.ExecuteTemplate("vuetify_list.vue.tmpl", data)
 

@@ -67,7 +67,7 @@ export default {
     watch: {
         {{range $i, $e := .Entity.Fields}}
         "select.{{.Serialized}}.search": function(val) {
-            val && this.querySelections("{{.Serialized}}", "{{$.Endpoint}}", "{{$.Prefix}}/{{.Relationship.Target.Endpoint}}", val)
+            val && this.querySelections("{{.Serialized}}", "{{$.Endpoint}}", "{{$.Prefix}}{{.Relationship.Target.Endpoint}}", val)
         }{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}
         {{end}}
     },
