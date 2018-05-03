@@ -19,29 +19,28 @@ const (
 
 var (
 	env string
-    db  *sql.DB
+    {{if not .NoDB}}db  *sql.DB{{end}}
 	{{range .Settings}}
 	// {{.Name}} {{.Description}}
-	{{.Name}} {{.Type}}
+	{{.Name}} string
 	{{end}}
 )
 
 func bootstrap() {
-	var err error
-
 	godotenv.Load()
-
-	dsn := os.Getenv("DSN")
 	env = os.Getenv("ENV")
 
 	if env == "" {
 		env = EnvironmentProd
 	}
 
+	{{if not .NoDB}}
+	dsn := os.Getenv("DSN")
 	if dsn == "" {
 		log.Fatal("Environment variable DSN must be defined. Example: postgres://user:pass@host/db?sslmode=disable")
 	}
 
+	var err error
 	db, err = sql.Open("postgres", dsn)
 	if err == nil {
 		log.Println("Connected to database successfully.")
@@ -59,4 +58,13 @@ func bootstrap() {
 	} else {
 		log.Fatal("Database ping failed: ", err)
 	}
+	{{end}}
+
+	{{range .Settings}}
+	// {{.Name}} {{.Description}}
+	{{.Name}} = os.Getenv("{{upper (snake .Name)}}")
+	if {{.Name}} == "" {
+		log.Fatal("Environment variable {{upper (snake .Name)}} ({{.Description}}) must be defined.")
+	}
+	{{end}}
 }

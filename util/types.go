@@ -73,6 +73,9 @@ type BootstrapOpts struct {
 	// Generate indicates whether or not to generate bootstrap
 	Generate bool `json:"generate"`
 
+	// NoDB indicates that database connection should not be generated (default false)
+	NoDB bool `json:"no_db"`
+
 	// Settings represent list of settings to load during bootstrap into main package
 	Settings []BootstrapSetting `json:"settings"`
 }
@@ -82,14 +85,8 @@ type BootstrapSetting struct {
 	// Name represents name of setting
 	Name string `json:"name"`
 
-	// Type represents data type of setting
-	Type string `json:"type"`
-
 	// Description gives information on the setting (useful to display errors if not found)
 	Description string `json:"description"`
-
-	// FromDB indicates if setting comes from ENV variable or database (default)
-	FromDB bool `json:"from_env"`
 }
 
 // SchemaOpts represents options for schema generation

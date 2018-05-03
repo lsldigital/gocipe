@@ -10,8 +10,8 @@ func init() {
 	// define files
 	file2 := &embedded.EmbeddedFile{
 		Filename:    "bootstrap.go.tmpl",
-		FileModTime: time.Unix(1524658747, 0),
-		Content:     string("package main\n\nimport (\n\t\"database/sql\"\n\t\"log\"\n\t\"os\"\n\n\t\"github.com/joho/godotenv\"\n\t_ \"github.com/lib/pq\"\n)\n\nconst (\n\t//EnvironmentProd represents production environment\n\tEnvironmentProd = \"PROD\"\n\n\t//EnvironmentDev represents development environment\n\tEnvironmentDev  = \"DEV\"\n)\n\nvar (\n\tenv string\n    db  *sql.DB\n\t{{range .Settings}}\n\t// {{.Name}} {{.Description}}\n\t{{.Name}} {{.Type}}\n\t{{end}}\n)\n\nfunc bootstrap() {\n\tvar err error\n\n\tgodotenv.Load()\n\n\tdsn := os.Getenv(\"DSN\")\n\tenv = os.Getenv(\"ENV\")\n\n\tif env == \"\" {\n\t\tenv = EnvironmentProd\n\t}\n\n\tif dsn == \"\" {\n\t\tlog.Fatal(\"Environment variable DSN must be defined. Example: postgres://user:pass@host/db?sslmode=disable\")\n\t}\n\n\tdb, err = sql.Open(\"postgres\", dsn)\n\tif err == nil {\n\t\tlog.Println(\"Connected to database successfully.\")\n\t} else if (env == EnvironmentDev) {\n\t\tlog.Println(\"Database connection failed: \", err)\n\t} else {\n\t\tlog.Fatal(\"Database connection failed: \", err)\n\t}\n\n\terr = db.Ping()\n\tif err == nil {\n\t\tlog.Println(\"Pinged database successfully.\")\n\t} else if (env == EnvironmentDev) {\n\t\tlog.Println(\"Database ping failed: \", err)\n\t} else {\n\t\tlog.Fatal(\"Database ping failed: \", err)\n\t}\n}"),
+		FileModTime: time.Unix(1525371116, 0),
+		Content:     string("package main\n\nimport (\n\t\"database/sql\"\n\t\"log\"\n\t\"os\"\n\n\t\"github.com/joho/godotenv\"\n\t_ \"github.com/lib/pq\"\n)\n\nconst (\n\t//EnvironmentProd represents production environment\n\tEnvironmentProd = \"PROD\"\n\n\t//EnvironmentDev represents development environment\n\tEnvironmentDev  = \"DEV\"\n)\n\nvar (\n\tenv string\n    {{if not .NoDB}}db  *sql.DB{{end}}\n\t{{range .Settings}}\n\t// {{.Name}} {{.Description}}\n\t{{.Name}} string\n\t{{end}}\n)\n\nfunc bootstrap() {\n\tgodotenv.Load()\n\tenv = os.Getenv(\"ENV\")\n\n\tif env == \"\" {\n\t\tenv = EnvironmentProd\n\t}\n\n\t{{if not .NoDB}}\n\tdsn := os.Getenv(\"DSN\")\n\tif dsn == \"\" {\n\t\tlog.Fatal(\"Environment variable DSN must be defined. Example: postgres://user:pass@host/db?sslmode=disable\")\n\t}\n\n\tvar err error\n\tdb, err = sql.Open(\"postgres\", dsn)\n\tif err == nil {\n\t\tlog.Println(\"Connected to database successfully.\")\n\t} else if (env == EnvironmentDev) {\n\t\tlog.Println(\"Database connection failed: \", err)\n\t} else {\n\t\tlog.Fatal(\"Database connection failed: \", err)\n\t}\n\n\terr = db.Ping()\n\tif err == nil {\n\t\tlog.Println(\"Pinged database successfully.\")\n\t} else if (env == EnvironmentDev) {\n\t\tlog.Println(\"Database ping failed: \", err)\n\t} else {\n\t\tlog.Fatal(\"Database ping failed: \", err)\n\t}\n\t{{end}}\n\n\t{{range .Settings}}\n\t// {{.Name}} {{.Description}}\n\t{{.Name}} = os.Getenv(\"{{upper (snake .Name)}}\")\n\tif {{.Name}} == \"\" {\n\t\tlog.Fatal(\"Environment variable {{upper (snake .Name)}} ({{.Description}}) must be defined.\")\n\t}\n\t{{end}}\n}"),
 	}
 	file3 := &embedded.EmbeddedFile{
 		Filename:    "crud.go.tmpl",
@@ -120,8 +120,8 @@ func init() {
 	}
 	fileo := &embedded.EmbeddedFile{
 		Filename:    "vuetify_index.js.tmpl",
-		FileModTime: time.Unix(1524773669, 0),
-		Content:     string("import actions from \"./actions\";\nimport getters from \"./getters\";\nimport mutations from \"./mutations\";\nimport routes from \"./routes\";\n\nconst namespaced = true;\n\nconst state = {\n  entities: routes\n};\n\nexport default {\n  namespaced,\n  state,\n  actions,\n  getters,\n  mutations\n};"),
+		FileModTime: time.Unix(1524774338, 0),
+		Content:     string("import actions from \"./actions\";\nimport getters from \"./getters\";\nimport mutations from \"./mutations\";\nimport routes from \"./routes\";\n\nconst namespaced = true;\n\nconst state = {\n  entities: routes.routes\n};\n\nexport default {\n  namespaced,\n  state,\n  actions,\n  getters,\n  mutations\n};"),
 	}
 	filep := &embedded.EmbeddedFile{
 		Filename:    "vuetify_list.vue.tmpl",

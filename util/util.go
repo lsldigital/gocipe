@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"sync"
 	"text/template"
@@ -18,7 +19,36 @@ var (
 
 	// ErrorSkip is a pseudo-error to indicate code generation is skipped
 	ErrorSkip = errors.New("skipped generation")
+
+	reMatchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+	reMatchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
+
+	templatesFn template.FuncMap
 )
+
+func init() {
+	templatesFn = template.FuncMap{
+		"plus1": func(index int) int {
+			return index + 1
+		},
+		"widget_field": func(component string, widget string, field Field) (string, error) {
+			if widget == "" {
+				return "", nil
+			}
+			return ExecuteTemplate(component+"_editor-field-"+widget+".vue.tmpl", field)
+		},
+		"plural": func(str string) string {
+			return inflection.Plural(str)
+		},
+		"lower": func(str string) string {
+			return strings.ToLower(str)
+		},
+		"upper": func(str string) string {
+			return strings.ToUpper(str)
+		},
+		"snake": ToSnakeCase,
+	}
+}
 
 // GenerationWork represents generation work
 type GenerationWork struct {
@@ -88,24 +118,6 @@ func ExecuteTemplate(name string, data interface{}) (string, error) {
 		return "", err
 	}
 
-	templatesFn := template.FuncMap{
-		"plus1": func(index int) int {
-			return index + 1
-		},
-		"widget_field": func(component string, widget string, field Field) (string, error) {
-			if widget == "" {
-				return "", nil
-			}
-			return ExecuteTemplate(component+"_editor-field-"+widget+".vue.tmpl", field)
-		},
-		"plural": func(str string) string {
-			return inflection.Plural(str)
-		},
-		"lower": func(str string) string {
-			return strings.ToLower(str)
-		},
-	}
-
 	tpl, err := template.New(name).Funcs(templatesFn).Parse(raw)
 	if err != nil {
 		return "", err
@@ -117,4 +129,11 @@ func ExecuteTemplate(name string, data interface{}) (string, error) {
 	}
 
 	return output.String(), nil
+}
+
+// ToSnakeCase converts a string to snake case
+func ToSnakeCase(str string) string {
+	snake := reMatchFirstCap.ReplaceAllString(str, "${1}_${2}")
+	snake = reMatchAllCap.ReplaceAllString(snake, "${1}_${2}")
+	return strings.ToLower(snake)
 }
