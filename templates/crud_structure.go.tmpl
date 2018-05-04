@@ -7,3 +7,14 @@ type {{.Entity.Name}} struct {
 	{{.Property.Name}} *{{.Property.Type}} `json:"{{.Serialized}}"`
 	{{end}}{{end}}
 }
+
+// New returns an instance of {{.Entity.Name}}
+func New() *{{.Entity.Name}} {
+	entity := new({{.Entity.Name}})
+	entity.ID = new(int64)
+	{{range .Entity.Fields}}{{if ne .Property.Name "ID"}}
+	entity.{{.Property.Name}} = new({{.Property.Type}})
+	{{end}}{{end}}
+
+	return entity
+}
