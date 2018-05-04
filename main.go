@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"runtime"
 	"strings"
@@ -21,7 +23,12 @@ import (
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
+	toolset := initToolset()
+
 	var recipe *util.Recipe
+
+	noSkip := flag.Bool("noskip", false, "Do not skip overwriting existing files")
+	flag.Parse()
 
 	done := make(chan util.GeneratedCode)
 	work := util.GenerationWork{
@@ -33,7 +40,7 @@ func main() {
 		log.Fatalln("Usage: gocipe gocipe.json")
 	}
 
-	recipePath, err := util.GetAbsPath(os.Args[1])
+	recipePath, err := util.GetAbsPath(os.Args[len(os.Args)-1])
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -65,41 +72,40 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go func(recipePath string) {
-		var (
-			outlog, output           []string
-			written, skipped, failed int
-		)
 
-		aggregates := make(map[string][]util.GeneratedCode)
+	go processOutput(&wg, work, recipePath, toolset, *noSkip)
 
-		for generated := range done {
-			if generated.Error != nil {
-				outlog = append(outlog, fmt.Sprintf("[Error] Generation failed [%s]: %s", generated.Generator, generated.Error))
-				failed++
-			} else if generated.Aggregate {
-				a := aggregates[generated.Filename]
-				aggregates[generated.Filename] = append(a, generated)
-			} else {
-				l, err := saveGenerated(generated)
-				outlog = append(outlog, l)
+	work.Waitgroup.Wait()
+	close(done)
+	wg.Wait()
+}
 
-				if err == nil {
-					written++
-				} else if err == util.ErrorSkip {
-					skipped++
-				} else {
-					failed++
-				}
-			}
-			work.Waitgroup.Done()
-		}
+func processOutput(waitgroup *sync.WaitGroup, work util.GenerationWork, recipePath string, toolset util.Toolset, noSkip bool) {
 
-		for _, generated := range aggregates {
-			l, err := saveAggregate(generated)
+	var (
+		outlog, output, gofiles  []string
+		written, skipped, failed int
+		err                      error
+	)
+
+	aggregates := make(map[string][]util.GeneratedCode)
+
+	for generated := range work.Done {
+		if generated.Error != nil {
+			outlog = append(outlog, fmt.Sprintf("[Error] Generation failed [%s]: %s", generated.Generator, generated.Error))
+			failed++
+		} else if generated.Aggregate {
+			a := aggregates[generated.Filename]
+			aggregates[generated.Filename] = append(a, generated)
+		} else {
+			fname, l, err := saveGenerated(generated, noSkip)
 			outlog = append(outlog, l)
 
 			if err == nil {
+				if strings.HasSuffix(fname, ".go") {
+					gofiles = append(gofiles, fname)
+				}
+
 				written++
 			} else if err == util.ErrorSkip {
 				skipped++
@@ -107,59 +113,79 @@ func main() {
 				failed++
 			}
 		}
-
-		err = ioutil.WriteFile(recipePath+".log", []byte(strings.Join(outlog, "\n")), os.FileMode(0755))
-		if err != nil {
-			fmt.Printf("failed to write file log file %s.log: %s", recipePath, err)
-			return
-		}
-
-		if skipped > 0 {
-			output = append(output, fmt.Sprintf("Skipped %d files.", skipped))
-		}
-
-		if written > 0 {
-			output = append(output, fmt.Sprintf("Wrote %d files.", written))
-		}
-
-		if failed > 0 {
-			output = append(output, fmt.Sprintf("%d errors occurred during recipe generation.", failed))
-		}
-
-		output = append(output, fmt.Sprintf("See log file %s.log for details.", recipePath))
-		fmt.Println(strings.Join(output, " "))
-		wg.Done()
-	}(recipePath)
-
-	work.Waitgroup.Wait()
-	close(done)
-	wg.Wait()
-}
-
-func saveGenerated(generated util.GeneratedCode) (string, error) {
-	filename, err := util.GetAbsPath(generated.Filename)
-	if err != nil {
-		return fmt.Sprintf("[WriteError] cannot resolve path [%s] %s: %s", generated.Generator, generated.Filename, err), err
+		work.Waitgroup.Done()
 	}
 
-	if util.FileExists(filename) && generated.NoOverwrite {
-		return fmt.Sprintf("[Skip] skipping existing file [%s] %s", generated.Generator, generated.Filename), util.ErrorSkip
+	for _, generated := range aggregates {
+		fname, l, err := saveAggregate(generated, noSkip)
+		outlog = append(outlog, l)
+
+		if err == nil {
+			if strings.HasSuffix(fname, ".go") {
+				gofiles = append(gofiles, fname)
+			}
+
+			written++
+		} else if err == util.ErrorSkip {
+			skipped++
+		} else {
+			failed++
+		}
+	}
+
+	err = ioutil.WriteFile(recipePath+".log", []byte(strings.Join(outlog, "\n")), os.FileMode(0755))
+	if err != nil {
+		fmt.Printf("failed to write file log file %s.log: %s", recipePath, err)
+		return
+	}
+
+	if skipped > 0 {
+		output = append(output, fmt.Sprintf("Skipped %d files.", skipped))
+	}
+
+	if written > 0 {
+		output = append(output, fmt.Sprintf("Wrote %d files.", written))
+	}
+
+	if failed > 0 {
+		output = append(output, fmt.Sprintf("%d errors occurred during recipe generation.", failed))
+	}
+
+	if len(gofiles) > 0 {
+		postProcessGoFiles(toolset, gofiles)
+	}
+
+	output = append(output, fmt.Sprintf("See log file %s.log for details.", recipePath))
+	fmt.Println(strings.Join(output, " "))
+	waitgroup.Done()
+}
+
+// saveGenerated saves a generated file and returns absolute filename, log entry and error
+func saveGenerated(generated util.GeneratedCode, noSkip bool) (string, string, error) {
+	filename, err := util.GetAbsPath(generated.Filename)
+	if err != nil {
+		return "", fmt.Sprintf("[WriteError] cannot resolve path [%s] %s: %s", generated.Generator, generated.Filename, err), err
+	}
+
+	if !noSkip && util.FileExists(filename) && generated.NoOverwrite {
+		return "", fmt.Sprintf("[Skip] skipping existing file [%s] %s", generated.Generator, generated.Filename), util.ErrorSkip
 	}
 
 	var mode os.FileMode = 0755
 	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
-		return fmt.Sprintf("[WriteError] directory creation failed [%s] %s: %s", generated.Generator, generated.Filename, err), err
+		return "", fmt.Sprintf("[WriteError] directory creation failed [%s] %s: %s", generated.Generator, generated.Filename, err), err
 	}
 
 	err = ioutil.WriteFile(filename, []byte(generated.Code), mode)
 	if err != nil {
-		return fmt.Sprintf("[WriteError] failed to write file [%s] %s: %s", generated.Generator, generated.Filename, err), err
+		return "", fmt.Sprintf("[WriteError] failed to write file [%s] %s: %s", generated.Generator, generated.Filename, err), err
 	}
 
-	return fmt.Sprintf("[Wrote] %s", filename), nil
+	return filename, fmt.Sprintf("[Wrote] %s", filename), nil
 }
 
-func saveAggregate(aggregate []util.GeneratedCode) (string, error) {
+// saveAggregate saves aggregated files and returns absolute filename, log entry and error
+func saveAggregate(aggregate []util.GeneratedCode, noSkip bool) (string, string, error) {
 	var generated util.GeneratedCode
 
 	generated.Filename = aggregate[0].Filename
@@ -170,5 +196,63 @@ func saveAggregate(aggregate []util.GeneratedCode) (string, error) {
 		generated.Code += g.Code + "\n"
 	}
 
-	return saveGenerated(generated)
+	return saveGenerated(generated, noSkip)
+}
+
+func initToolset() util.Toolset {
+	var (
+		err error
+		ok  = true
+	)
+
+	goimports, err := exec.LookPath("goimports")
+	if err != nil {
+		fmt.Println(err)
+		ok = false
+	}
+
+	gofmt, err := exec.LookPath("gofmt")
+	if err != nil {
+		fmt.Println(err)
+		ok = false
+	}
+
+	if !ok {
+		log.Fatalln("Required tools missing: goimports and gofmt")
+	}
+
+	return util.Toolset{GoFmt: gofmt, GoImports: goimports}
+}
+
+// postProcessGoFiles executes goimports and gofmt on go files that have been generated
+func postProcessGoFiles(toolset util.Toolset, gofiles []string) {
+	var wg sync.WaitGroup
+	wg.Add(len(gofiles))
+
+	for _, file := range gofiles {
+		go func(file string) {
+			cmd := exec.Command(toolset.GoImports, "-w", file)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err := cmd.Run()
+
+			if err != nil {
+				fmt.Printf("Error running %s on %s: %s\n", toolset.GoImports, file, err)
+				return
+			}
+
+			cmd = exec.Command(toolset.GoFmt, "-w", file)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err = cmd.Run()
+
+			if err != nil {
+				fmt.Printf("Error running %s on %s: %s\n", toolset.GoFmt, file, err)
+			}
+
+			wg.Done()
+		}(file)
+	}
+
+	wg.Wait()
 }

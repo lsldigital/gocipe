@@ -53,7 +53,7 @@ func init() {
 // GenerationWork represents generation work
 type GenerationWork struct {
 	Waitgroup *sync.WaitGroup
-	Done      chan<- GeneratedCode
+	Done      chan GeneratedCode
 }
 
 // GeneratedCode represents code that has been generated and the intended file
@@ -75,6 +75,12 @@ type GeneratedCode struct {
 
 	// Error represents any error that may have occurred
 	Error error
+}
+
+// Toolset represents go tools used by the generators
+type Toolset struct {
+	GoImports string
+	GoFmt     string
 }
 
 // SetTemplates injects template box
