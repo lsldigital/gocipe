@@ -3,18 +3,18 @@ package {{.Package}}
 // {{.Entity.Name}} {{.Entity.Description}}
 type {{.Entity.Name}} struct {
 	ID        *int64  `json:"id"`
-	{{range .Entity.Fields}}{{if ne .Property.Name "ID"}}
+	{{- range .Entity.Fields}}
 	{{.Property.Name}} *{{.Property.Type}} `json:"{{.Serialized}}"`
-	{{end}}{{end}}
+	{{- end}}
 }
 
 // New returns an instance of {{.Entity.Name}}
 func New() *{{.Entity.Name}} {
 	entity := new({{.Entity.Name}})
 	entity.ID = new(int64)
-	{{range .Entity.Fields}}{{if ne .Property.Name "ID"}}
+	{{- range .Entity.Fields}}
 	entity.{{.Property.Name}} = new({{.Property.Type}})
-	{{end}}{{end}}
+	{{- end}}
 
 	return entity
 }

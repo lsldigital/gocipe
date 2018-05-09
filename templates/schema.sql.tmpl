@@ -1,6 +1,8 @@
 DROP TABLE IF EXISTS {{.Entity.Table}};
 
-CREATE TABLE {{.Entity.Table}} ({{range $i, $e := .Entity.Fields}}{{if ne .Schema.Field ""}}
+CREATE TABLE {{.Entity.Table}} (
+	"id" SERIAL,
+	{{- range $i, $e := .Entity.Fields}}{{if ne .Schema.Field ""}}
 	"{{.Schema.Field}}" {{$e.Schema.Type}}
 	{{- if not .Schema.Nullable}} NOT NULL{{end}}
 	{{- if ne .Schema.Default "" -}} DEFAULT {{.Schema.Default}}{{end}},

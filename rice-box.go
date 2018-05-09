@@ -35,8 +35,8 @@ func init() {
 	}
 	file7 := &embedded.EmbeddedFile{
 		Filename:    "crud_structure.go.tmpl",
-		FileModTime: time.Unix(1525473695, 0),
-		Content:     string("package {{.Package}}\n\n// {{.Entity.Name}} {{.Entity.Description}}\ntype {{.Entity.Name}} struct {\n\tID        *int64  `json:\"id\"`\n\t{{range .Entity.Fields}}{{if ne .Property.Name \"ID\"}}\n\t{{.Property.Name}} *{{.Property.Type}} `json:\"{{.Serialized}}\"`\n\t{{end}}{{end}}\n}\n\n// New returns an instance of {{.Entity.Name}}\nfunc New() *{{.Entity.Name}} {\n\tentity := new({{.Entity.Name}})\n\tentity.ID = new(int64)\n\t{{range .Entity.Fields}}{{if ne .Property.Name \"ID\"}}\n\tentity.{{.Property.Name}} = new({{.Property.Type}})\n\t{{end}}{{end}}\n\n\treturn entity\n}"),
+		FileModTime: time.Unix(1525882202, 0),
+		Content:     string("package {{.Package}}\n\n// {{.Entity.Name}} {{.Entity.Description}}\ntype {{.Entity.Name}} struct {\n\tID        *int64  `json:\"id\"`\n\t{{- range .Entity.Fields}}\n\t{{.Property.Name}} *{{.Property.Type}} `json:\"{{.Serialized}}\"`\n\t{{- end}}\n}\n\n// New returns an instance of {{.Entity.Name}}\nfunc New() *{{.Entity.Name}} {\n\tentity := new({{.Entity.Name}})\n\tentity.ID = new(int64)\n\t{{- range .Entity.Fields}}\n\tentity.{{.Property.Name}} = new({{.Property.Type}})\n\t{{- end}}\n\n\treturn entity\n}"),
 	}
 	file8 := &embedded.EmbeddedFile{
 		Filename:    "http.go.tmpl",
@@ -55,8 +55,8 @@ func init() {
 	}
 	fileb := &embedded.EmbeddedFile{
 		Filename:    "schema.sql.tmpl",
-		FileModTime: time.Unix(1525880519, 0),
-		Content:     string("DROP TABLE IF EXISTS {{.Entity.Table}};\n\nCREATE TABLE {{.Entity.Table}} ({{range $i, $e := .Entity.Fields}}{{if ne .Schema.Field \"\"}}\n\t\"{{.Schema.Field}}\" {{$e.Schema.Type}}\n\t{{- if not .Schema.Nullable}} NOT NULL{{end}}\n\t{{- if ne .Schema.Default \"\" -}} DEFAULT {{.Schema.Default}}{{end}},\n\t{{- end}}{{- end}}\n\tPRIMARY KEY (\"id\")\n);\n\n{{range .ManyManyFields}}\nDROP TABLE IF EXISTS {{.Relationship.Target.Table}};\n\nCREATE TABLE {{.Relationship.Target.Table}} (\n\t\"{{.Relationship.Target.ThisID}}\" INT NOT NULL,\n\t\"{{.Relationship.Target.ThatID}}\" INT NOT NULL\n);\n{{end}}"),
+		FileModTime: time.Unix(1525882121, 0),
+		Content:     string("DROP TABLE IF EXISTS {{.Entity.Table}};\n\nCREATE TABLE {{.Entity.Table}} (\n\t\"id\" SERIAL,\n\t{{- range $i, $e := .Entity.Fields}}{{if ne .Schema.Field \"\"}}\n\t\"{{.Schema.Field}}\" {{$e.Schema.Type}}\n\t{{- if not .Schema.Nullable}} NOT NULL{{end}}\n\t{{- if ne .Schema.Default \"\" -}} DEFAULT {{.Schema.Default}}{{end}},\n\t{{- end}}{{- end}}\n\tPRIMARY KEY (\"id\")\n);\n\n{{range .ManyManyFields}}\nDROP TABLE IF EXISTS {{.Relationship.Target.Table}};\n\nCREATE TABLE {{.Relationship.Target.Table}} (\n\t\"{{.Relationship.Target.ThisID}}\" INT NOT NULL,\n\t\"{{.Relationship.Target.ThatID}}\" INT NOT NULL\n);\n{{end}}"),
 	}
 	filec := &embedded.EmbeddedFile{
 		Filename:    "vuetify_actions.js.tmpl",
