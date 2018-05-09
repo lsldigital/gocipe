@@ -1,11 +1,10 @@
 DROP TABLE IF EXISTS {{.Entity.Table}};
 
 CREATE TABLE {{.Entity.Table}} ({{range $i, $e := .Entity.Fields}}{{if ne .Schema.Field ""}}
-	"{{.Schema.Field}}" 
-	{{$e.Schema.Type}}
-	{{if not .Schema.Nullable}} NOT NULL{{end}}
-	{{if ne .Schema.Default ""}} DEFAULT {{.Schema.Default}}{{end}},
-	{{end}}{{end}}
+	"{{.Schema.Field}}" {{$e.Schema.Type}}
+	{{- if not .Schema.Nullable}} NOT NULL{{end}}
+	{{- if ne .Schema.Default "" -}} DEFAULT {{.Schema.Default}}{{end}},
+	{{- end}}{{- end}}
 	PRIMARY KEY ("id")
 );
 
