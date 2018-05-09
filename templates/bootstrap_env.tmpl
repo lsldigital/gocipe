@@ -1,0 +1,3 @@
+# The following must be defined as well: ENV{{if not .Bootstrap.NoDB}}, DSN{{end}}{{if .HTTP.Generate}}, HTTP_PORT{{end}}
+{{range .Bootstrap.Settings}}{{upper (snake .Name)}} = "{{.Description}}"
+{{end}}
