@@ -10,8 +10,8 @@ func init() {
 	// define files
 	file2 := &embedded.EmbeddedFile{
 		Filename:    "bootstrap.go.tmpl",
-		FileModTime: time.Unix(1525372558, 0),
-		Content:     string("package main\n\nimport (\n\t\"database/sql\"\n\t\"log\"\n\t\"os\"\n\n\t\"github.com/joho/godotenv\"\n\t_ \"github.com/lib/pq\"\n)\n\nconst (\n\t//EnvironmentProd represents production environment\n\tEnvironmentProd = \"PROD\"\n\n\t//EnvironmentDev represents development environment\n\tEnvironmentDev  = \"DEV\"\n)\n\nvar (\n\tenv string\n\t{{if not .Bootstrap.NoDB}}db  *sql.DB{{end}}\n\t{{if .HTTP.Generate}}httpPort string{{end}}\n\t{{range .Bootstrap.Settings}}\n\t// {{.Name}} {{.Description}}\n\t{{.Name}} string\n\t{{end}}\n)\n\nfunc bootstrap() {\n\tgodotenv.Load()\n\tenv = os.Getenv(\"ENV\")\n\n\tif env == \"\" {\n\t\tenv = EnvironmentProd\n\t}\n\n\t{{if not .Bootstrap.NoDB}}\n\tdsn := os.Getenv(\"DSN\")\n\tif dsn == \"\" {\n\t\tlog.Fatal(\"Environment variable DSN must be defined. Example: postgres://user:pass@host/db?sslmode=disable\")\n\t}\n\n\tvar err error\n\tdb, err = sql.Open(\"postgres\", dsn)\n\tif err == nil {\n\t\tlog.Println(\"Connected to database successfully.\")\n\t} else if (env == EnvironmentDev) {\n\t\tlog.Println(\"Database connection failed: \", err)\n\t} else {\n\t\tlog.Fatal(\"Database connection failed: \", err)\n\t}\n\n\terr = db.Ping()\n\tif err == nil {\n\t\tlog.Println(\"Pinged database successfully.\")\n\t} else if (env == EnvironmentDev) {\n\t\tlog.Println(\"Database ping failed: \", err)\n\t} else {\n\t\tlog.Fatal(\"Database ping failed: \", err)\n\t}\n\t{{end}}\n\n\t{{if .HTTP.Generate}}\n\thttpPort = os.Getenv(\"HTTP_PORT\")\n\tif httpPort == \"\" {\n\t\thttpPort = \"{{.HTTP.Port}}\"\n\t}\n\t{{end}}\n\n\t{{range .Bootstrap.Settings}}\n\t// {{.Name}} {{.Description}}\n\t{{.Name}} = os.Getenv(\"{{upper (snake .Name)}}\")\n\tif {{.Name}} == \"\" {\n\t\tlog.Fatal(\"Environment variable {{upper (snake .Name)}} ({{.Description}}) must be defined.\")\n\t}\n\t{{end}}\n}"),
+		FileModTime: time.Unix(1525871205, 0),
+		Content:     string("package app\n\nimport (\n\t\"database/sql\"\n\t\"log\"\n\t\"os\"\n\n\t\"github.com/joho/godotenv\"\n\t_ \"github.com/lib/pq\"\n)\n\nconst (\n\t//EnvironmentProd represents production environment\n\tEnvironmentProd = \"PROD\"\n\n\t//EnvironmentDev represents development environment\n\tEnvironmentDev  = \"DEV\"\n)\n\nvar (\n\t// bootstrapped is a flag to prevent multiple bootstrapping\n\tbootstrapped = false\n\n\t// Env indicates in which environment (prod / dev) the application is running\n\tEnv string\n\t{{range .Bootstrap.Settings}}{{if .Public}}\n\t// {{.Name}} {{.Description}}\n\t{{.Name}} string\n\t{{end}}{{end}}\n)\n\n// Config represents application configuration loaded during bootstrap\ntype Config struct {\n\t{{if not .Bootstrap.NoDB}}DB  *sql.DB{{end}}\n\t{{if .HTTP.Generate}}HttpPort string{{end}}\n\t{{range .Bootstrap.Settings}}{{if not .Public}}\n\t// {{.Name}} {{.Description}}\n\t{{.Name}} string\n\t{{end}}{{end}}\n}\n\n// Boostrap loads environment variables and initializes the application\nfunc Bootstrap() *Config {\n\tvar config Config\n\n\tif bootstrapped {\n\t\treturn nil\n\t}\n\n\tgodotenv.Load()\n\n\tEnv = os.Getenv(\"ENV\")\n\tif Env == \"\" {\n\t\tEnv = EnvironmentProd\n\t}\n\n\t{{if not .Bootstrap.NoDB}}\n\tdsn := os.Getenv(\"DSN\")\n\tif dsn == \"\" {\n\t\tlog.Fatal(\"Environment variable DSN must be defined. Example: postgres://user:pass@host/db?sslmode=disable\")\n\t}\n\n\tvar err error\n\tconfig.DB, err = sql.Open(\"postgres\", dsn)\n\tif err == nil {\n\t\tlog.Println(\"Connected to database successfully.\")\n\t} else if (Env == EnvironmentDev) {\n\t\tlog.Println(\"Database connection failed: \", err)\n\t} else {\n\t\tlog.Fatal(\"Database connection failed: \", err)\n\t}\n\n\terr = config.DB.Ping()\n\tif err == nil {\n\t\tlog.Println(\"Pinged database successfully.\")\n\t} else if (Env == EnvironmentDev) {\n\t\tlog.Println(\"Database ping failed: \", err)\n\t} else {\n\t\tlog.Fatal(\"Database ping failed: \", err)\n\t}\n\t{{end}}\n\n\t{{if .HTTP.Generate}}\n\tconfig.HttpPort = os.Getenv(\"HTTP_PORT\")\n\tif config.HttpPort == \"\" {\n\t\tconfig.HttpPort = \"{{.HTTP.Port}}\"\n\t}\n\t{{end}}\n\n\t{{range .Bootstrap.Settings}}{{if not .Public}}\n\tconfig.{{.Name}} = os.Getenv(\"{{upper (snake .Name)}}\")\n\tif config.{{.Name}} == \"\" {\n\t\tlog.Fatal(\"Environment variable {{upper (snake .Name)}} ({{.Description}}) must be defined.\")\n\t}\n\t{{end}}{{end}}\n\n\t{{range .Bootstrap.Settings}}{{if .Public}}\n\t{{.Name}} = os.Getenv(\"{{upper (snake .Name)}}\")\n\tif {{.Name}} == \"\" {\n\t\tlog.Fatal(\"Environment variable {{upper (snake .Name)}} ({{.Description}}) must be defined.\")\n\t}\n\t{{end}}{{end}}\n\n\tos.Clearenv() //prevent non-authorized access\n\n\treturn &config\n}"),
 	}
 	file3 := &embedded.EmbeddedFile{
 		Filename:    "crud.go.tmpl",
@@ -35,8 +35,8 @@ func init() {
 	}
 	file7 := &embedded.EmbeddedFile{
 		Filename:    "http.go.tmpl",
-		FileModTime: time.Unix(1525371592, 0),
-		Content:     string("package main\n\nimport (\n\t\"log\"\n\t\"net/http\"\n\t\"os\"\n\t\"os/signal\"\n\t\"syscall\"\n\n\t\"github.com/gorilla/mux\"\n)\n\n// serve starts an http server\nfunc serve(listen string, route func(router *mux.Router) error) {\n\tvar err error\n\tsigs := make(chan os.Signal, 1)\n\tsignal.Notify(sigs, syscall.SIGTERM)\n\n\trouter := mux.NewRouter()\n\terr = route(router)\n\n\tif err != nil {\n\t\tlog.Fatal(\"Failed to register routes: \", err)\n\t}\n\n\tgo func() {\n\t\terr = http.ListenAndServe(listen, router)\n\t\tif err != nil {\n\t\t\tlog.Fatal(\"Failed to start http server: \", err)\n\t\t}\n\t}()\n\n\tlog.Println(\"Listening on \" + listen)\n\t<-sigs\n\tlog.Println(\"Server stopped\")\n}\n"),
+		FileModTime: time.Unix(1525871252, 0),
+		Content:     string("package app\n\nimport (\n\t\"log\"\n\t\"net/http\"\n\t\"os\"\n\t\"os/signal\"\n\t\"syscall\"\n\n\t\"github.com/gorilla/mux\"\n)\n\n// ServeHttp starts an http server\nfunc ServeHttp(listen string, route func(router *mux.Router) error) {\n\tvar err error\n\tsigs := make(chan os.Signal, 1)\n\tsignal.Notify(sigs, syscall.SIGTERM)\n\n\trouter := mux.NewRouter()\n\terr = route(router)\n\n\tif err != nil {\n\t\tlog.Fatal(\"Failed to register routes: \", err)\n\t}\n\n\tgo func() {\n\t\terr = http.ListenAndServe(listen, router)\n\t\tif err != nil {\n\t\t\tlog.Fatal(\"Failed to start http server: \", err)\n\t\t}\n\t}()\n\n\tlog.Println(\"Listening on \" + listen)\n\t<-sigs\n\tlog.Println(\"Server stopped\")\n}\n"),
 	}
 	file8 := &embedded.EmbeddedFile{
 		Filename:    "rest.go.tmpl",
@@ -147,7 +147,7 @@ func init() {
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1524773484, 0),
+		DirModTime: time.Unix(1525859677, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2, // "bootstrap.go.tmpl"
 			file3, // "crud.go.tmpl"
@@ -186,7 +186,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`templates`, &embedded.EmbeddedBox{
 		Name: `templates`,
-		Time: time.Unix(1524773484, 0),
+		Time: time.Unix(1525859677, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},

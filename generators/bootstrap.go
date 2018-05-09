@@ -26,6 +26,6 @@ func GenerateBootstrap(work util.GenerationWork, opts util.BootstrapOpts, httpOp
 		return err
 	}
 
-	work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Filename: "bootstrap.go", Code: code}
+	work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Filename: "app/bootstrap.go", Code: code}
 	return nil
 }

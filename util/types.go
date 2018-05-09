@@ -87,6 +87,9 @@ type BootstrapSetting struct {
 
 	// Description gives information on the setting (useful to display errors if not found)
 	Description string `json:"description"`
+
+	// Public indicates if setting should be accessible from all packages
+	Public bool `json:"public"`
 }
 
 // SchemaOpts represents options for schema generation

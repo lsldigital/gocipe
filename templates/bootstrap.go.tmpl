@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"database/sql"
@@ -18,21 +18,40 @@ const (
 )
 
 var (
-	env string
-	{{if not .Bootstrap.NoDB}}db  *sql.DB{{end}}
-	{{if .HTTP.Generate}}httpPort string{{end}}
-	{{range .Bootstrap.Settings}}
+	// bootstrapped is a flag to prevent multiple bootstrapping
+	bootstrapped = false
+
+	// Env indicates in which environment (prod / dev) the application is running
+	Env string
+	{{range .Bootstrap.Settings}}{{if .Public}}
 	// {{.Name}} {{.Description}}
 	{{.Name}} string
-	{{end}}
+	{{end}}{{end}}
 )
 
-func bootstrap() {
-	godotenv.Load()
-	env = os.Getenv("ENV")
+// Config represents application configuration loaded during bootstrap
+type Config struct {
+	{{if not .Bootstrap.NoDB}}DB  *sql.DB{{end}}
+	{{if .HTTP.Generate}}HttpPort string{{end}}
+	{{range .Bootstrap.Settings}}{{if not .Public}}
+	// {{.Name}} {{.Description}}
+	{{.Name}} string
+	{{end}}{{end}}
+}
 
-	if env == "" {
-		env = EnvironmentProd
+// Boostrap loads environment variables and initializes the application
+func Bootstrap() *Config {
+	var config Config
+
+	if bootstrapped {
+		return nil
+	}
+
+	godotenv.Load()
+
+	Env = os.Getenv("ENV")
+	if Env == "" {
+		Env = EnvironmentProd
 	}
 
 	{{if not .Bootstrap.NoDB}}
@@ -42,19 +61,19 @@ func bootstrap() {
 	}
 
 	var err error
-	db, err = sql.Open("postgres", dsn)
+	config.DB, err = sql.Open("postgres", dsn)
 	if err == nil {
 		log.Println("Connected to database successfully.")
-	} else if (env == EnvironmentDev) {
+	} else if (Env == EnvironmentDev) {
 		log.Println("Database connection failed: ", err)
 	} else {
 		log.Fatal("Database connection failed: ", err)
 	}
 
-	err = db.Ping()
+	err = config.DB.Ping()
 	if err == nil {
 		log.Println("Pinged database successfully.")
-	} else if (env == EnvironmentDev) {
+	} else if (Env == EnvironmentDev) {
 		log.Println("Database ping failed: ", err)
 	} else {
 		log.Fatal("Database ping failed: ", err)
@@ -62,17 +81,27 @@ func bootstrap() {
 	{{end}}
 
 	{{if .HTTP.Generate}}
-	httpPort = os.Getenv("HTTP_PORT")
-	if httpPort == "" {
-		httpPort = "{{.HTTP.Port}}"
+	config.HttpPort = os.Getenv("HTTP_PORT")
+	if config.HttpPort == "" {
+		config.HttpPort = "{{.HTTP.Port}}"
 	}
 	{{end}}
 
-	{{range .Bootstrap.Settings}}
-	// {{.Name}} {{.Description}}
+	{{range .Bootstrap.Settings}}{{if not .Public}}
+	config.{{.Name}} = os.Getenv("{{upper (snake .Name)}}")
+	if config.{{.Name}} == "" {
+		log.Fatal("Environment variable {{upper (snake .Name)}} ({{.Description}}) must be defined.")
+	}
+	{{end}}{{end}}
+
+	{{range .Bootstrap.Settings}}{{if .Public}}
 	{{.Name}} = os.Getenv("{{upper (snake .Name)}}")
 	if {{.Name}} == "" {
 		log.Fatal("Environment variable {{upper (snake .Name)}} ({{.Description}}) must be defined.")
 	}
-	{{end}}
+	{{end}}{{end}}
+
+	os.Clearenv() //prevent non-authorized access
+
+	return &config
 }

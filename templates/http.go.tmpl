@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"log"
@@ -10,8 +10,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// serve starts an http server
-func serve(listen string, route func(router *mux.Router) error) {
+// ServeHttp starts an http server
+func ServeHttp(listen string, route func(router *mux.Router) error) {
 	var err error
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM)
