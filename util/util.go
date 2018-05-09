@@ -75,6 +75,9 @@ type GeneratedCode struct {
 
 	// Error represents any error that may have occurred
 	Error error
+
+	// GeneratedHeaderFormat is used to prepend generated warning header on non-overwritable files. default: // %s
+	GeneratedHeaderFormat string
 }
 
 // Toolset represents go tools used by the generators
