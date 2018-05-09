@@ -49,14 +49,14 @@ func GenerateVuetify(work util.GenerationWork, restOpts util.RestOpts, opts util
 			if err == nil {
 				work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyList", Code: list, Filename: filename + "List.vue"}
 			} else {
-				work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyList", Error: err}
+				work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyList", Error: err, GeneratedHeaderFormat: "<-- %s -->"}
 			}
 
 			edit, err := util.ExecuteTemplate("vuetify_edit.vue.tmpl", data)
 			if err == nil {
 				work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyEdit", Code: edit, Filename: filename + "Edit.vue"}
 			} else {
-				work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyEdit", Error: err}
+				work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyEdit", Error: err, GeneratedHeaderFormat: "<-- %s -->"}
 			}
 		}(entity)
 	}
@@ -72,7 +72,7 @@ func GenerateVuetify(work util.GenerationWork, restOpts util.RestOpts, opts util
 		Entities []util.Entity
 	}{entities})
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleRoutes", Code: stub, Filename: path + "routes.js"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleRoutes", Code: stub, Filename: path + "routes.js", GeneratedHeaderFormat: "<-- %s -->"}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyModuleRoutes", Error: err}
 	}
