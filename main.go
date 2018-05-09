@@ -93,6 +93,7 @@ func processOutput(waitgroup *sync.WaitGroup, work util.GenerationWork, recipePa
 	)
 
 	aggregates := make(map[string][]util.GeneratedCode)
+	outlog = append(outlog, "[Recipe Hash] "+_recipeHash)
 
 	for generated := range work.Done {
 		if generated.Error != nil {
