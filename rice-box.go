@@ -35,8 +35,8 @@ func init() {
 	}
 	file7 := &embedded.EmbeddedFile{
 		Filename:    "crud_structure.go.tmpl",
-		FileModTime: time.Unix(1525882202, 0),
-		Content:     string("package {{.Package}}\n\n// {{.Entity.Name}} {{.Entity.Description}}\ntype {{.Entity.Name}} struct {\n\tID        *int64  `json:\"id\"`\n\t{{- range .Entity.Fields}}\n\t{{.Property.Name}} *{{.Property.Type}} `json:\"{{.Serialized}}\"`\n\t{{- end}}\n}\n\n// New returns an instance of {{.Entity.Name}}\nfunc New() *{{.Entity.Name}} {\n\tentity := new({{.Entity.Name}})\n\tentity.ID = new(int64)\n\t{{- range .Entity.Fields}}\n\tentity.{{.Property.Name}} = new({{.Property.Type}})\n\t{{- end}}\n\n\treturn entity\n}"),
+		FileModTime: time.Unix(1525882506, 0),
+		Content:     string("package {{.Package}}\n\n// {{.Entity.Name}} {{.Entity.Description}}\ntype {{.Entity.Name}} struct {\n\tID        *int64  `json:\"id\"`\n\t{{- range .Entity.Fields}}\n\t{{.Property.Name}} *{{.Property.Type}} `json:\"{{.Serialized}}\"`\n\t{{- end}}\n}\n\n// New returns an instance of {{.Entity.Name}}\nfunc New() *{{.Entity.Name}} {\n\treturn &{{.Entity.Name}}{\n\t\tID: new(int64),\n\t\t{{- range .Entity.Fields}}\n\t\t{{.Property.Name}}: new({{.Property.Type}}),\n\t\t{{- end}}\n\t}\n}"),
 	}
 	file8 := &embedded.EmbeddedFile{
 		Filename:    "http.go.tmpl",

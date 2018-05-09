@@ -10,11 +10,10 @@ type {{.Entity.Name}} struct {
 
 // New returns an instance of {{.Entity.Name}}
 func New() *{{.Entity.Name}} {
-	entity := new({{.Entity.Name}})
-	entity.ID = new(int64)
-	{{- range .Entity.Fields}}
-	entity.{{.Property.Name}} = new({{.Property.Type}})
-	{{- end}}
-
-	return entity
+	return &{{.Entity.Name}}{
+		ID: new(int64),
+		{{- range .Entity.Fields}}
+		{{.Property.Name}}: new({{.Property.Type}}),
+		{{- end}}
+	}
 }
