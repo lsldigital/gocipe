@@ -60,19 +60,30 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 				work.Done <- util.GeneratedCode{Generator: "GenerateCrud", Error: util.ErrorSkip}
 			}
 
+			if entity.PrimaryKey == "" {
+				entity.PrimaryKey = util.PrimaryKeySerial
+			}
+
+			if entity.PrimaryKey != util.PrimaryKeySerial {
+				sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", sqlPlaceholderCount))
+				sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("$%d", sqlPlaceholderCount))
+				structFieldsInsert = append(structFieldsInsert, "*entity.ID")
+
+				sqlPlaceholderCount++
+			}
+
 			for _, field := range entity.Fields {
 				if field.Relationship.Type == "" {
 					sqlfieldsSelect = append(sqlfieldsSelect, fmt.Sprintf("t.%s", field.Schema.Field))
 					structFieldsSelect = append(structFieldsSelect, fmt.Sprintf("entity.%s", field.Property.Name))
 
-					if field.Property.Name != "ID" {
-						sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", sqlPlaceholderCount))
-						sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf("%s = $%d", field.Schema.Field, sqlPlaceholderCount))
-						sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("$%d", sqlPlaceholderCount))
+					sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", sqlPlaceholderCount))
+					sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf("%s = $%d", field.Schema.Field, sqlPlaceholderCount))
+					sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("$%d", sqlPlaceholderCount))
 
-						structFieldsInsert = append(structFieldsInsert, fmt.Sprintf("*entity.%s", field.Property.Name))
-						structFieldsUpdate = append(structFieldsUpdate, fmt.Sprintf("*entity.%s", field.Property.Name))
-					}
+					structFieldsInsert = append(structFieldsInsert, fmt.Sprintf("*entity.%s", field.Property.Name))
+					structFieldsUpdate = append(structFieldsUpdate, fmt.Sprintf("*entity.%s", field.Property.Name))
+					sqlPlaceholderCount++
 
 					if field.Property.Name == "CreatedAt" {
 						data.BeforeInsert = append(data.BeforeInsert, "*entity.CreatedAt = time.Now()")
@@ -80,8 +91,6 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 						data.BeforeInsert = append(data.BeforeInsert, "*entity.UpdatedAt = time.Now()")
 						data.BeforeUpdate = append(data.BeforeUpdate, "*entity.UpdatedAt = time.Now()")
 					}
-
-					sqlPlaceholderCount++
 				} else {
 					joins = append(joins,
 						fmt.Sprintf("%s jt%d ON (t.%s = jt%d.%s)",

@@ -2,7 +2,7 @@ package {{.Package}}
 
 // {{.Entity.Name}} {{.Entity.Description}}
 type {{.Entity.Name}} struct {
-	ID        *int64  `json:"id"`
+	ID        *{{pkeyPropertyType .Entity.PrimaryKey}}  `json:"id"`
 	{{- range .Entity.Fields}}
 	{{.Property.Name}} *{{.Property.Type}} `json:"{{.Serialized}}"`
 	{{- end}}
@@ -11,7 +11,7 @@ type {{.Entity.Name}} struct {
 // New returns an instance of {{.Entity.Name}}
 func New() *{{.Entity.Name}} {
 	return &{{.Entity.Name}}{
-		ID: new(int64),
+		ID: new({{pkeyPropertyType .Entity.PrimaryKey}}),
 		{{- range .Entity.Fields}}
 		{{.Property.Name}}: new({{.Property.Type}}),
 		{{- end}}

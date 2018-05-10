@@ -47,6 +47,19 @@ func init() {
 			return strings.ToUpper(str)
 		},
 		"snake": ToSnakeCase,
+		"pkeyPropertyType": func(str string) (string, error) {
+			switch str {
+			case PrimaryKeySerial:
+				return "int64", nil
+			case PrimaryKeyInt:
+				return "int64", nil
+			case PrimaryKeyUUID:
+				return "string", nil
+			case PrimaryKeyString:
+				return "string", nil
+			}
+			return "", errors.New("invalid primary key type: " + str)
+		},
 	}
 }
 
