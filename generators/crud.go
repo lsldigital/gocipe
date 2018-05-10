@@ -36,6 +36,7 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 
 					HasRelationshipManyMany bool
 					ManyManyFields          []util.Field
+					Imports                 []string
 				}
 
 				sqlfieldsSelect []string
@@ -123,6 +124,10 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 			data.StructFieldsUpdate = strings.Join(structFieldsUpdate, ", ")
 			data.StructFieldsInsert = strings.Join(structFieldsInsert, ", ")
 
+			if entity.PrimaryKey == util.PrimaryKeyUUID {
+				data.Imports = append(data.Imports, `"github.com/satori/go.uuid"`)
+			}
+
 			if joinCount > 0 {
 				data.Joins = "INNER JOIN " + strings.Join(joins, " INNER JOIN ") + " "
 			}
@@ -147,9 +152,9 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 			if entity.Crud.Hooks.PreCreate || entity.Crud.Hooks.PostCreate || entity.Crud.Hooks.PreRead || entity.Crud.Hooks.PostRead || entity.Crud.Hooks.PreList || entity.Crud.Hooks.PostList || entity.Crud.Hooks.PreUpdate || entity.Crud.Hooks.PostUpdate || entity.Crud.Hooks.PreDelete || entity.Crud.Hooks.PostDelete {
 				hooks, e := util.ExecuteTemplate("crud_hooks.go.tmpl", struct {
 					Hooks   util.CrudHooks
-					Name    string
+					Entity  util.Entity
 					Package string
-				}{entity.Crud.Hooks, entity.Name, data.Package})
+				}{entity.Crud.Hooks, entity, data.Package})
 
 				if e == nil {
 					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_crud_hooks.go", data.Package, data.Package), NoOverwrite: true}

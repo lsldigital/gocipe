@@ -1,6 +1,9 @@
 package {{.Package}}
 
-import "database/sql"
+import (
+	"database/sql"
+	{{range .Imports}}{{.}}{{end}}
+)
 
 var db *sql.DB
 
@@ -57,7 +60,7 @@ func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
     if filters, err = crudPreList(filters); err != nil {
 		return nil, fmt.Errorf("error executing crudPreList() in List(filters) for entity '{{.Entity.Name}}': %s", err)
 	}
-    {{end}}
+	{{end}}
 	for i, filter := range filters {
 		segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
 		values = append(values, filter.Value)
@@ -316,6 +319,15 @@ func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 		return fmt.Errorf("error executing transaction statement in {{.Entity.Name}}: %s", err)
 	}
 	{{else}}
+	{{if eq .Entity.PrimaryKey "uuid" -}}
+	*entity.ID, err = uuid.NewV4()
+
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error generating uuid for {{.Entity.Name}}: %s", err)
+	}
+	{{- end}}
+
 	_, err = stmt.Exec({{.StructFieldsInsert}})
 	if err != nil {
 		tx.Rollback()

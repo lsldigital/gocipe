@@ -5,12 +5,12 @@ import (
 )
 
 {{if .Hooks.PreRead}}
-func crudPreGet(id int64) error {
+func crudPreGet(id {{pkeyPropertyType .Entity.PrimaryKey}}) error {
 	return nil
 }
 {{end}}
 {{if .Hooks.PostRead}}
-func crudPostGet(entity *{{.Name}}) error {
+func crudPostGet(entity *{{.Entity.Name}}) error {
 	return nil
 }
 {{end}}
@@ -21,41 +21,41 @@ func crudPreList(filters []models.ListFilter) ([]models.ListFilter, error) {
 }
 {{end}}
 {{if .Hooks.PostList}}
-func crudPostList(list []*{{.Name}}) ([]*{{.Name}}, error) {
+func crudPostList(list []*{{.Entity.Name}}) ([]*{{.Entity.Name}}, error) {
 	return list, nil
 }
 {{end}}
 
 {{if .Hooks.PreDelete}}
-func crudPreDelete(id int64, tx *sql.Tx) error {
+func crudPreDelete(id {{pkeyPropertyType .Entity.PrimaryKey}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
 {{if .Hooks.PostDelete}}
-func crudPostDelete(id int64, tx *sql.Tx) error {
+func crudPostDelete(id {{pkeyPropertyType .Entity.PrimaryKey}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
 
 
 {{if .Hooks.PreCreate }}
-func crudPreCreate(entity *{{.Name}}, tx *sql.Tx) error {
+func crudPreCreate(entity *{{.Entity.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
 {{if .Hooks.PreCreate }}
-func crudPostCreate(entity *{{.Name}}, tx *sql.Tx) error {
+func crudPostCreate(entity *{{.Entity.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
 
 {{if .Hooks.PreUpdate}}
-func crudPreUpdate(entity *{{.Name}}, tx *sql.Tx) error {
+func crudPreUpdate(entity *{{.Entity.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
 {{if .Hooks.PostUpdate}}
-func crudPostUpdate(entity *{{.Name}}, tx *sql.Tx) error {
+func crudPostUpdate(entity *{{.Entity.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}

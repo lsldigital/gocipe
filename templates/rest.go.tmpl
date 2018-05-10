@@ -40,18 +40,24 @@ func RegisterRoutes(router *mux.Router) {
 //RestGet is a REST endpoint for GET /{{.Endpoint}}/{id}
 func RestGet(w http.ResponseWriter, r *http.Request) {
 	var (
-		id       int64
+		id       {{pkeyPropertyType .Entity.PrimaryKey}}
 		err      error
 		response responseSingle
-		{{if or .Entity.Rest.Hooks.PreRead .Entity.Rest.Hooks.PostRead}}stop     bool{{end}}
+		{{if or .Entity.Rest.Hooks.PreRead .Entity.Rest.Hooks.PostRead -}}
+		stop     bool
+		{{- end}}
 	)
 
 	vars := mux.Vars(r)
+	{{if pkeyIsInt .Entity.PrimaryKey -}}
 	valid := false
 	if _, ok := vars["id"]; ok {
 		id, err = strconv.ParseInt(vars["id"], 10, 64)
 		valid = err == nil && id > 0
 	}
+	{{else}}
+	id, valid := vars["id"]
+	{{- end}}
 
 	if !valid {
 		w.Header().Set("Content-Type", "application/json")
@@ -223,7 +229,9 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"status": false, "messages": [{"type": "error", "text": "Failed to decode body"}]}`)
 		return
 	}
+	{{if pkeyIsAuto .Entity.PrimaryKey -}}
 	response.Entity.ID = nil
+	{{- end}}
 
 	tx, err = db.Begin()
 	if err != nil {
@@ -240,7 +248,7 @@ func RestCreate(w http.ResponseWriter, r *http.Request) {
 	} else if stop {
 		return
 	}
-    {{end}}
+	{{end}}
 
 	err = response.Entity.Save(tx, false)
 	if err != nil {
@@ -287,18 +295,24 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 	var (
 		err      error
 		rawbody  []byte
-		id       int64
+		id       {{pkeyPropertyType .Entity.PrimaryKey}}
 		response responseSingle
 		tx       *sql.Tx
-		{{if or .Entity.Rest.Hooks.PreUpdate .Entity.Rest.Hooks.PostUpdate}}stop     bool{{end}}
+		{{if or .Entity.Rest.Hooks.PreUpdate .Entity.Rest.Hooks.PostUpdate -}}
+		stop     bool
+		{{- end}}
 	)
 
 	vars := mux.Vars(r)
+	{{if pkeyIsInt .Entity.PrimaryKey -}}
 	valid := false
 	if _, ok := vars["id"]; ok {
 		id, err = strconv.ParseInt(vars["id"], 10, 64)
 		valid = err == nil && id > 0
 	}
+	{{else}}
+	id, valid := vars["id"]
+	{{- end}}
 
 	if !valid {
 		w.Header().Set("Content-Type", "application/json")
@@ -400,19 +414,25 @@ func RestUpdate(w http.ResponseWriter, r *http.Request) {
 //RestDelete is a REST endpoint for DELETE /{{.Endpoint}}/{id}
 func RestDelete(w http.ResponseWriter, r *http.Request) {
 	var (
-		id       int64
+		id       {{pkeyPropertyType .Entity.PrimaryKey}}
 		err      error
 		response responseSingle
 		tx       *sql.Tx
-		{{if or .Entity.Rest.Hooks.PreDelete .Entity.Rest.Hooks.PostDelete}}stop     bool{{end}}
+		{{if or .Entity.Rest.Hooks.PreDelete .Entity.Rest.Hooks.PostDelete -}}
+		stop     bool
+		{{- end}}
 	)
 
 	vars := mux.Vars(r)
+	{{if pkeyIsInt .Entity.PrimaryKey -}}
 	valid := false
 	if _, ok := vars["id"]; ok {
 		id, err = strconv.ParseInt(vars["id"], 10, 64)
 		valid = err == nil && id > 0
 	}
+	{{else}}
+	id, valid := vars["id"]
+	{{- end}}
 
 	if !valid {
 		w.Header().Set("Content-Type", "application/json")
