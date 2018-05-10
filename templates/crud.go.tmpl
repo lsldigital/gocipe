@@ -89,14 +89,10 @@ func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
 		{{end}}
 	}
 	{{range .ManyManyFields}}
-	if related, e := loadRelated(indexID, "{{.Relationship.Target.ThisID}}", "{{.Relationship.Target.ThatID}}", "{{.Relationship.Target.Table}}"); e == nil {
-		for i, v := range related {
-			indexID[i].{{.Property.Name}} = append(indexID[i].{{.Property.Name}}, v)
-		}
-	} else {
+	if e := loadRelated{{.Property.Name}}(indexID); e != nil {
 		return nil, err
 	}
-	{{end}}
+	{{- end}}
 
 	{{if .Entity.Crud.Hooks.PostList}}
 	if list, err = crudPostList(list); err != nil {
@@ -107,16 +103,15 @@ func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
 }
 
 {{if .HasRelationshipManyMany}}
-// loadRelated is a helper function to load related entities
-func loadRelated(indexID map[int64]*{{.Entity.Name}}, thisid string, thatid string, pivot string) (map[int64]int64, error) {
+{{range .ManyManyFields -}}
+// loadRelated{{.Property.Name}} is a helper function to load related {{.Property.Name}} entities
+func loadRelated{{.Property.Name}}(indexID map[{{pkeyPropertyType $.Entity.PrimaryKey}}]*{{$.Entity.Name}}) error {
 	var (
 		placeholder string
 		values  []interface{}
-		idthis  {{pkeyPropertyType .Entity.PrimaryKey}}
-		idthat  int64
+		idthis  {{pkeyPropertyType $.Entity.PrimaryKey}}
+		idthat  {{trimPrefix .Property.Type "[]"}}
 	)
-
-	related := make(map[int64]int64)
 
 	c := 1
 	for i := range indexID {
@@ -126,21 +121,22 @@ func loadRelated(indexID map[int64]*{{.Entity.Name}}, thisid string, thatid stri
 	}
 	placeholder = strings.TrimRight(placeholder, ",")
 
-	rows, err := db.Query("SELECT "+thisid+", "+thatid+" FROM "+pivot+" WHERE "+thisid+" IN ("+placeholder+")", values...)
+	rows, err := db.Query("SELECT {{.Relationship.Target.ThisID}}, {{.Relationship.Target.ThatID}} FROM {{.Relationship.Target.Table}} WHERE {{.Relationship.Target.ThisID}} IN ("+placeholder+")", values...)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for rows.Next() {
 		err = rows.Scan(&idthis, &idthat)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		related[idthis] = idthat
+		indexID[idthis].{{.Property.Name}} = idthat
 	}
 
-	return related, nil
+	return nil
 }
+{{- end}}
 {{end}}
 
 // Delete deletes a {{.Entity.Name}} record from database by id primary key
