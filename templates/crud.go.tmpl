@@ -69,7 +69,7 @@ func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
 
 	rows, err := db.Query(query+" ORDER BY id ASC", values...)
 	{{if .HasRelationshipManyMany}}
-	indexID := make(map[{{pkeyPropertyType .Entity.PrimaryKey}}]*%s)
+	indexID := make(map[{{pkeyPropertyType .Entity.PrimaryKey}}]*{{.Entity.Name}})
 	{{end}}
 	if err != nil {
 		return nil, err
@@ -112,7 +112,7 @@ func loadRelated(indexID map[int64]*{{.Entity.Name}}, thisid string, thatid stri
 	var (
 		placeholder string
 		values  []interface{}
-		idthis  int64
+		idthis  {{pkeyPropertyType .Entity.PrimaryKey}}
 		idthat  int64
 	)
 

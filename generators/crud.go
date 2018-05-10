@@ -99,8 +99,7 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 							field.Relationship.Target.ThisID,
 							joinCount,
 							field.Relationship.Target.ThatID))
-
-					data.JoinVarsDecl = append(data.JoinVarsDecl, fmt.Sprintf("j%d int64", joinCount))
+					data.JoinVarsDecl = append(data.JoinVarsDecl, fmt.Sprintf("j%d %s", joinCount, strings.TrimPrefix(field.Property.Type, "[]")))
 					data.JoinVarsAssgn = append(data.JoinVarsAssgn, fmt.Sprintf("entity.%s = append(entity.%s, j%d)", field.Property.Name, field.Property.Name, joinCount))
 					sqlfieldsSelect = append(sqlfieldsSelect, fmt.Sprintf("jt%d.%s", joinCount, field.Relationship.Target.ThatID))
 					structFieldsSelect = append(structFieldsSelect, fmt.Sprintf("&j%d, ", joinCount))

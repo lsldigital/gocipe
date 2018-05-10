@@ -46,20 +46,11 @@ func init() {
 		"upper": func(str string) string {
 			return strings.ToUpper(str)
 		},
-		"snake": ToSnakeCase,
-		"pkeyPropertyType": func(str string) (string, error) {
-			switch str {
-			case PrimaryKeySerial:
-				return "int64", nil
-			case PrimaryKeyInt:
-				return "int64", nil
-			case PrimaryKeyUUID:
-				return "string", nil
-			case PrimaryKeyString:
-				return "string", nil
-			}
-			return "", errors.New("invalid primary key type: " + str)
+		"trimPrefix": func(str, prefix string) string {
+			return strings.TrimPrefix(str, prefix)
 		},
+		"snake":            ToSnakeCase,
+		"pkeyPropertyType": GetPrimaryKeyDataType,
 	}
 }
 
@@ -158,4 +149,19 @@ func ToSnakeCase(str string) string {
 	snake := reMatchFirstCap.ReplaceAllString(str, "${1}_${2}")
 	snake = reMatchAllCap.ReplaceAllString(snake, "${1}_${2}")
 	return strings.ToLower(snake)
+}
+
+// GetPrimaryKeyDataType returns golang data type for a given PrimaryKey type
+func GetPrimaryKeyDataType(str string) (string, error) {
+	switch str {
+	case PrimaryKeySerial:
+		return "int64", nil
+	case PrimaryKeyInt:
+		return "int64", nil
+	case PrimaryKeyUUID:
+		return "string", nil
+	case PrimaryKeyString:
+		return "string", nil
+	}
+	return "", errors.New("invalid primary key type: " + str)
 }
