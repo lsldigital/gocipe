@@ -53,6 +53,7 @@ func init() {
 		"pkeyPropertyType": GetPrimaryKeyDataType,
 		"pkeyIsAuto":       GetPrimaryKeyDataIsAuto,
 		"pkeyIsInt":        GetPrimaryKeyDataIsInt,
+		"pkeyFieldType":    GetPrimaryKeyFieldType,
 	}
 }
 
@@ -164,6 +165,21 @@ func GetPrimaryKeyDataType(str string) (string, error) {
 		return "string", nil
 	case PrimaryKeyString:
 		return "string", nil
+	}
+	return "", errors.New("invalid primary key type: " + str)
+}
+
+// GetPrimaryKeyFieldType returns sql field data type for a given PrimaryKey type
+func GetPrimaryKeyFieldType(str string) (string, error) {
+	switch str {
+	case PrimaryKeySerial:
+		return "SERIAL", nil
+	case PrimaryKeyInt:
+		return "UNSIGNED INT", nil
+	case PrimaryKeyUUID:
+		return "CHAR(36)", nil
+	case PrimaryKeyString:
+		return "VARCHAR(255)", nil
 	}
 	return "", errors.New("invalid primary key type: " + str)
 }

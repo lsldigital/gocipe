@@ -20,6 +20,10 @@ func GenerateSchema(work util.GenerationWork, opts util.SchemaOpts, entities []u
 				}
 			)
 
+			if entity.PrimaryKey == "" {
+				entity.PrimaryKey = util.PrimaryKeySerial
+			}
+
 			if entity.Schema == nil {
 				entity.Schema = &opts
 			} else if entity.Schema.Path == "" {

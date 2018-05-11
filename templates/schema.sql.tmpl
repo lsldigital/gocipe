@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS {{.Entity.Table}};
 
 CREATE TABLE {{.Entity.Table}} (
-	"id" SERIAL,
+	"id" {{pkeyFieldType .Entity.PrimaryKey}},
 	{{- range $i, $e := .Entity.Fields}}{{if ne .Schema.Field ""}}
 	"{{.Schema.Field}}" {{$e.Schema.Type}}
 	{{- if not .Schema.Nullable}} NOT NULL{{end}}
@@ -14,7 +14,7 @@ CREATE TABLE {{.Entity.Table}} (
 DROP TABLE IF EXISTS {{.Relationship.Target.Table}};
 
 CREATE TABLE {{.Relationship.Target.Table}} (
-	"{{.Relationship.Target.ThisID}}" INT NOT NULL,
-	"{{.Relationship.Target.ThatID}}" INT NOT NULL
+	"{{.Relationship.Target.ThisID}}" {{pkeyFieldType $.Entity.PrimaryKey}} NOT NULL,
+	"{{.Relationship.Target.ThatID}}" {{.Relationship.ThatFieldType}} NOT NULL
 );
 {{end}}

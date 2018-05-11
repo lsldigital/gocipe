@@ -55,8 +55,8 @@ func init() {
 	}
 	fileb := &embedded.EmbeddedFile{
 		Filename:    "schema.sql.tmpl",
-		FileModTime: time.Unix(1525884148, 0),
-		Content:     string("DROP TABLE IF EXISTS {{.Entity.Table}};\n\nCREATE TABLE {{.Entity.Table}} (\n\t\"id\" SERIAL,\n\t{{- range $i, $e := .Entity.Fields}}{{if ne .Schema.Field \"\"}}\n\t\"{{.Schema.Field}}\" {{$e.Schema.Type}}\n\t{{- if not .Schema.Nullable}} NOT NULL{{end}}\n\t{{- if ne .Schema.Default \"\" -}} DEFAULT {{.Schema.Default}}{{end}},\n\t{{- end}}{{- end}}\n\tPRIMARY KEY (\"id\")\n);\n\n{{range .ManyManyFields}}\nDROP TABLE IF EXISTS {{.Relationship.Target.Table}};\n\nCREATE TABLE {{.Relationship.Target.Table}} (\n\t\"{{.Relationship.Target.ThisID}}\" INT NOT NULL,\n\t\"{{.Relationship.Target.ThatID}}\" INT NOT NULL\n);\n{{end}}"),
+		FileModTime: time.Unix(1526037749, 0),
+		Content:     string("DROP TABLE IF EXISTS {{.Entity.Table}};\n\nCREATE TABLE {{.Entity.Table}} (\n\t\"id\" {{pkeyFieldType .Entity.PrimaryKey}},\n\t{{- range $i, $e := .Entity.Fields}}{{if ne .Schema.Field \"\"}}\n\t\"{{.Schema.Field}}\" {{$e.Schema.Type}}\n\t{{- if not .Schema.Nullable}} NOT NULL{{end}}\n\t{{- if ne .Schema.Default \"\" -}} DEFAULT {{.Schema.Default}}{{end}},\n\t{{- end}}{{- end}}\n\tPRIMARY KEY (\"id\")\n);\n\n{{range .ManyManyFields}}\nDROP TABLE IF EXISTS {{.Relationship.Target.Table}};\n\nCREATE TABLE {{.Relationship.Target.Table}} (\n\t\"{{.Relationship.Target.ThisID}}\" {{pkeyFieldType $.Entity.PrimaryKey}} NOT NULL,\n\t\"{{.Relationship.Target.ThatID}}\" {{.Relationship.ThatFieldType}} NOT NULL\n);\n{{end}}"),
 	}
 	filec := &embedded.EmbeddedFile{
 		Filename:    "vuetify_actions.js.tmpl",

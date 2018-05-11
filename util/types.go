@@ -347,6 +347,9 @@ type FieldRelationshipTarget struct {
 
 	// ThatID represents the field in the other entity used for the relationship
 	ThatID string `json:"thatid"`
+
+	// ThatFieldType represents the field type of the other entity
+	ThatFieldType string `json:"thatfield_type"`
 }
 
 // WidgetOpts represents a UI widget
