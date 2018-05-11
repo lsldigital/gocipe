@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	// Load database driver
 	_ "github.com/lib/pq"
 )
 
@@ -32,14 +33,14 @@ var (
 // Config represents application configuration loaded during bootstrap
 type Config struct {
 	{{if not .Bootstrap.NoDB}}DB  *sql.DB{{end}}
-	{{if .HTTP.Generate}}HttpPort string{{end}}
+	{{if .HTTP.Generate}}HTTPPort string{{end}}
 	{{range .Bootstrap.Settings}}{{if not .Public}}
 	// {{.Name}} {{.Description}}
 	{{.Name}} string
 	{{end}}{{end}}
 }
 
-// Boostrap loads environment variables and initializes the application
+// Bootstrap loads environment variables and initializes the application
 func Bootstrap() *Config {
 	var config Config
 
@@ -81,9 +82,9 @@ func Bootstrap() *Config {
 	{{end}}
 
 	{{if .HTTP.Generate}}
-	config.HttpPort = os.Getenv("HTTP_PORT")
-	if config.HttpPort == "" {
-		config.HttpPort = "{{.HTTP.Port}}"
+	config.HTTPPort = os.Getenv("HTTP_PORT")
+	if config.HTTPPort == "" {
+		config.HTTPPort = "{{.HTTP.Port}}"
 	}
 	{{end}}
 
