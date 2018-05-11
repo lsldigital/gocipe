@@ -278,7 +278,9 @@ func (entity *{{.Entity.Name}}) Save(tx *sql.Tx, autocommit bool) error {
 // Prefer using Save rather than Insert directly.
 func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 	var (
+		{{- if pkeyIsAuto .Entity.PrimaryKey -}}
 		id  {{pkeyPropertyType .Entity.PrimaryKey}}
+		{{- end}}
 		err error
 		{{if .HasRelationshipManyMany}}
 		stmtMmany *sql.Stmt
