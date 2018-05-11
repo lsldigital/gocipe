@@ -18,14 +18,16 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 					Package string
 					Entity  util.Entity
 
-					SQLFieldsSelect string
-					SQLFieldsUpdate string
-					SQLFieldsInsert string
-					SQLPlaceholders string
+					SQLFieldsSelectGet  string
+					SQLFieldsSelectList string
+					SQLFieldsUpdate     string
+					SQLFieldsInsert     string
+					SQLPlaceholders     string
 
-					StructFieldsSelect string
-					StructFieldsUpdate string
-					StructFieldsInsert string
+					StructFieldsSelectGet  string
+					StructFieldsSelectList string
+					StructFieldsUpdate     string
+					StructFieldsInsert     string
 
 					Joins         string
 					JoinVarsDecl  []string
@@ -39,15 +41,17 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 					Imports                 []string
 				}
 
-				sqlfieldsSelect []string
-				sqlfieldsUpdate []string
-				sqlfieldsInsert []string
-				sqlPlaceholders []string
+				sqlfieldsSelectGet  []string
+				sqlfieldsSelectList []string
+				sqlfieldsUpdate     []string
+				sqlfieldsInsert     []string
+				sqlPlaceholders     []string
 
-				structFieldsSelect  []string
-				structFieldsUpdate  []string
-				structFieldsInsert  []string
-				sqlPlaceholderCount = 1
+				structFieldsSelectGet  []string
+				structFieldsSelectList []string
+				structFieldsUpdate     []string
+				structFieldsInsert     []string
+				sqlPlaceholderCount    = 1
 
 				joins     []string
 				joinCount int
@@ -75,8 +79,10 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 
 			for _, field := range entity.Fields {
 				if field.Relationship.Type == "" {
-					sqlfieldsSelect = append(sqlfieldsSelect, fmt.Sprintf("t.%s", field.Schema.Field))
-					structFieldsSelect = append(structFieldsSelect, fmt.Sprintf("entity.%s", field.Property.Name))
+					sqlfieldsSelectGet = append(sqlfieldsSelectGet, fmt.Sprintf("t.%s", field.Schema.Field))
+					sqlfieldsSelectList = append(sqlfieldsSelectList, fmt.Sprintf("t.%s", field.Schema.Field))
+					structFieldsSelectGet = append(structFieldsSelectGet, fmt.Sprintf("entity.%s", field.Property.Name))
+					structFieldsSelectList = append(structFieldsSelectList, fmt.Sprintf("entity.%s", field.Property.Name))
 
 					sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", sqlPlaceholderCount))
 					sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf("%s = $%d", field.Schema.Field, sqlPlaceholderCount))
@@ -101,9 +107,9 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 							joinCount,
 							field.Relationship.Target.ThatID))
 					data.JoinVarsDecl = append(data.JoinVarsDecl, fmt.Sprintf("j%d %s", joinCount, strings.TrimPrefix(field.Property.Type, "[]")))
-					data.JoinVarsAssgn = append(data.JoinVarsAssgn, fmt.Sprintf("entity.%s = append(entity.%s, j%d)", field.Property.Name, field.Property.Name, joinCount))
-					sqlfieldsSelect = append(sqlfieldsSelect, fmt.Sprintf("jt%d.%s", joinCount, field.Relationship.Target.ThatID))
-					structFieldsSelect = append(structFieldsSelect, fmt.Sprintf("&j%d, ", joinCount))
+					data.JoinVarsAssgn = append(data.JoinVarsAssgn, fmt.Sprintf("*entity.%s = append(*entity.%s, j%d)", field.Property.Name, field.Property.Name, joinCount))
+					sqlfieldsSelectGet = append(sqlfieldsSelectGet, fmt.Sprintf("jt%d.%s", joinCount, field.Relationship.Target.ThatID))
+					structFieldsSelectGet = append(structFieldsSelectGet, fmt.Sprintf("&j%d, ", joinCount))
 					joinCount++
 
 					if field.Relationship.Type == util.RelationshipTypeManyMany {
@@ -115,12 +121,14 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 
 			data.Entity = entity
 			data.Package = strings.ToLower(entity.Name)
-			data.SQLFieldsSelect = strings.Join(sqlfieldsSelect, ", ")
+			data.SQLFieldsSelectGet = strings.Join(sqlfieldsSelectGet, ", ")
+			data.SQLFieldsSelectList = strings.Join(sqlfieldsSelectList, ", ")
 			data.SQLFieldsUpdate = strings.Join(sqlfieldsUpdate, ", ")
 			data.SQLFieldsInsert = strings.Join(sqlfieldsInsert, ", ")
 			data.SQLPlaceholders = strings.Join(sqlPlaceholders, ", ")
 
-			data.StructFieldsSelect = strings.Join(structFieldsSelect, ", ")
+			data.StructFieldsSelectGet = strings.Join(structFieldsSelectGet, ", ")
+			data.StructFieldsSelectList = strings.Join(structFieldsSelectList, ", ")
 			data.StructFieldsUpdate = strings.Join(structFieldsUpdate, ", ")
 			data.StructFieldsInsert = strings.Join(structFieldsInsert, ", ")
 

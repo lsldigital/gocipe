@@ -20,7 +20,7 @@ func Get(id {{pkeyPropertyType .Entity.PrimaryKey}}) (*{{.Entity.Name}}, error) 
 		return nil, fmt.Errorf("error executing crudPreGet() in Get(%x) for entity '{{.Entity.Name}}': %s", id, err)
 	}
     {{end}}
-	rows, err := db.Query("SELECT {{.SQLFieldsSelect}} FROM {{.Entity.Table}} t {{.Joins}}WHERE id = $1 ORDER BY t.id ASC", id)
+	rows, err := db.Query("SELECT {{.SQLFieldsSelectGet}} FROM {{.Entity.Table}} t {{.Joins}}WHERE id = $1 ORDER BY t.id ASC", id)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func Get(id {{pkeyPropertyType .Entity.PrimaryKey}}) (*{{.Entity.Name}}, error) 
 	for rows.Next() {
 		{{range .JoinVarsDecl}}var {{.}}{{end}}
 
-		err := rows.Scan({{.StructFieldsSelect}})
+		err := rows.Scan({{.StructFieldsSelectGet}})
 		if err != nil {
 			return nil, err
 		} 
@@ -55,7 +55,7 @@ func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
 		err      error
 	)
 
-	query := "SELECT {{.SQLFieldsSelect}} FROM {{.Entity.Table}}"
+	query := "SELECT {{.SQLFieldsSelectList}} FROM {{.Entity.Table}}"
 	{{if .Entity.Crud.Hooks.PreList}}
     if filters, err = crudPreList(filters); err != nil {
 		return nil, fmt.Errorf("error executing crudPreList() in List(filters) for entity '{{.Entity.Name}}': %s", err)
@@ -81,7 +81,7 @@ func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
 	defer rows.Close()
 	for rows.Next() {
 		entity := New()
-		err := rows.Scan({{.StructFieldsSelect}})
+		err := rows.Scan({{.StructFieldsSelectList}})
 		if err != nil {
 			return nil, err
 		}
@@ -134,7 +134,7 @@ func loadRelated{{.Property.Name}}(indexID map[{{pkeyPropertyType $.Entity.Prima
 		if err != nil {
 			return err
 		}
-		indexID[idthis].{{.Property.Name}} = idthat
+		*indexID[idthis].{{.Property.Name}} = append(*indexID[idthis].{{.Property.Name}}, idthat)
 	}
 
 	return nil
@@ -320,12 +320,15 @@ func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 	}
 	{{else}}
 	{{if eq .Entity.PrimaryKey "uuid" -}}
-	*entity.ID, err = uuid.NewV4()
-
-	if err != nil {
+	idUUID, err := uuid.NewV4()
+	
+	if err == nil {
+		id = idUUID.String()
+	} else {
 		tx.Rollback()
 		return fmt.Errorf("error generating uuid for {{.Entity.Name}}: %s", err)
 	}
+	*entity.ID = id
 	{{- end}}
 
 	_, err = stmt.Exec({{.StructFieldsInsert}})
@@ -341,7 +344,7 @@ func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 		return fmt.Errorf("error preparing transaction statement in ManyManyInsert(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
 	}
 
-	for _, relatedID := range entity.{{.Property.Name}} {
+	for _, relatedID := range *entity.{{.Property.Name}} {
 		_, err = stmtMmany.Exec(entity.ID, relatedID)
 		if err != nil {
 			tx.Rollback()
@@ -402,13 +405,13 @@ func (entity *{{.Entity.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 	stmtMmany, err = tx.Prepare("DELETE FROM {{.Relationship.Target.Table}} WHERE {{.Relationship.Target.ThisID}} = $1")
 
 	if err != nil {
-		return fmt.Errorf("error preparing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", id, err)
+		return fmt.Errorf("error preparing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
 	}
 
-	_, err = stmtMmany.Exec(id)
+	_, err = stmtMmany.Exec(*entity.ID)
 	if err != nil {
 		tx.Rollback()
-		return fmt.Errorf("error executing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", id, err)
+		return fmt.Errorf("error executing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
 	}
 
 	stmtMmany, err = tx.Prepare("INSERT INTO {{.Relationship.Target.Table}} ({{.Relationship.Target.ThisID}}, {{.Relationship.Target.ThatID}}) VALUES ($1, $2)")
@@ -417,7 +420,7 @@ func (entity *{{.Entity.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 		return fmt.Errorf("error preparing transaction statement in ManyManyInsert(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
 	}
 
-	for _, relatedID := range entity.{{.Property.Name}} {
+	for _, relatedID := range *entity.{{.Property.Name}} {
 		_, err = stmtMmany.Exec(entity.ID, relatedID)
 		if err != nil {
 			tx.Rollback()
