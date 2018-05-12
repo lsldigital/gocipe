@@ -37,7 +37,7 @@ func GenerateBootstrap(work util.GenerationWork, opts util.BootstrapOpts, httpOp
 	}
 
 	work.Waitgroup.Add(1)
-	work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Filename: "app/bootstrap.go", Code: code}
+	work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Filename: "app/bootstrap.gocipe.go", Code: code}
 	work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Filename: ".env.dist", Code: env, GeneratedHeaderFormat: "# %s"}
 	return nil
 }

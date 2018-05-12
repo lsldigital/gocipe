@@ -48,7 +48,7 @@ func GenerateREST(work util.GenerationWork, opts util.RestOpts, entities []util.
 				}{entity.Rest.Hooks, entity, data.Package})
 
 				if e == nil {
-					work.Done <- util.GeneratedCode{Generator: "GenerateRESTHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_rest_hooks.go", data.Package, data.Package), NoOverwrite: true}
+					work.Done <- util.GeneratedCode{Generator: "GenerateRESTHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_rest_hooks.gocipe.go", data.Package, data.Package), NoOverwrite: true}
 				} else {
 					work.Done <- util.GeneratedCode{Generator: "GenerateRESTHooks", Error: e}
 				}
@@ -57,7 +57,7 @@ func GenerateREST(work util.GenerationWork, opts util.RestOpts, entities []util.
 			}
 
 			if err == nil {
-				work.Done <- util.GeneratedCode{Generator: "GenerateREST", Code: code, Filename: fmt.Sprintf("models/%s/%s_rest.go", data.Package, data.Package)}
+				work.Done <- util.GeneratedCode{Generator: "GenerateREST", Code: code, Filename: fmt.Sprintf("models/%s/%s_rest.gocipe.go", data.Package, data.Package)}
 			} else {
 				work.Done <- util.GeneratedCode{Generator: "GenerateREST", Error: fmt.Errorf("failed to load execute template: %s", err)}
 			}

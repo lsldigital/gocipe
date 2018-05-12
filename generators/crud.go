@@ -145,14 +145,14 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 				Package string
 			}{entity, data.Package})
 			if err == nil {
-				work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModel", Code: structure, Filename: fmt.Sprintf("models/%s/%s.go", data.Package, data.Package)}
+				work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModel", Code: structure, Filename: fmt.Sprintf("models/%s/%s.gocipe.go", data.Package, data.Package)}
 			} else {
 				work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModel", Error: fmt.Errorf("failed to load execute template: %s", err)}
 			}
 
 			code, err := util.ExecuteTemplate("crud.go.tmpl", data)
 			if err == nil {
-				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: fmt.Sprintf("models/%s/%s_crud.go", data.Package, data.Package)}
+				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: fmt.Sprintf("models/%s/%s_crud.gocipe.go", data.Package, data.Package)}
 			} else {
 				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to load execute template: %s", err)}
 			}
@@ -165,7 +165,7 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 				}{entity.Crud.Hooks, entity, data.Package})
 
 				if e == nil {
-					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_crud_hooks.go", data.Package, data.Package), NoOverwrite: true}
+					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s/%s_crud_hooks.gocipe.go", data.Package, data.Package), NoOverwrite: true}
 				} else {
 					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Error: e}
 				}
@@ -177,7 +177,7 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 
 	code, err := util.ExecuteTemplate("crud_filters.go.tmpl", struct{}{})
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: "models/filters.go"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: code, Filename: "models/filters.gocipe.go"}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to load execute template: %s", err)}
 	}

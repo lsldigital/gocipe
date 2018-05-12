@@ -20,6 +20,6 @@ func GenerateHTTP(work util.GenerationWork, opts util.HTTPOpts) error {
 		return err
 	}
 
-	work.Done <- util.GeneratedCode{Generator: "GenerateHTTP", Filename: "app/http.go", Code: code}
+	work.Done <- util.GeneratedCode{Generator: "GenerateHTTP", Filename: "app/http.gocipe.go", Code: code}
 	return nil
 }
