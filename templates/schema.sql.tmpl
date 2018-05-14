@@ -15,6 +15,6 @@ DROP TABLE IF EXISTS {{.Relationship.Target.Table}};
 
 CREATE TABLE {{.Relationship.Target.Table}} (
 	"{{.Relationship.Target.ThisID}}" {{pkeyFieldType $.Entity.PrimaryKey}} NOT NULL,
-	"{{.Relationship.Target.ThatID}}" {{.Relationship.ThatFieldType}} NOT NULL
+	"{{.Relationship.Target.ThatID}}" {{.Relationship.Target.ThatFieldType}} NOT NULL
 );
 {{end}}
