@@ -38,24 +38,14 @@ func crudPostDelete(id {{pkeyPropertyType .Entity.PrimaryKey}}, tx *sql.Tx) erro
 {{end}}
 
 
-{{if .Hooks.PreCreate }}
-func crudPreCreate(entity *{{.Entity.Name}}, tx *sql.Tx) error {
+{{if .Hooks.PreSave }}
+func crudPreSave(op string, entity *{{.Entity.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
-{{if .Hooks.PreCreate }}
-func crudPostCreate(entity *{{.Entity.Name}}, tx *sql.Tx) error {
+{{if .Hooks.PreSave }}
+func crudPostSave(op string, entity *{{.Entity.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
 
-{{if .Hooks.PreUpdate}}
-func crudPreUpdate(entity *{{.Entity.Name}}, tx *sql.Tx) error {
-	return nil
-}
-{{end}}
-{{if .Hooks.PostUpdate}}
-func crudPostUpdate(entity *{{.Entity.Name}}, tx *sql.Tx) error {
-	return nil
-}
-{{end}}

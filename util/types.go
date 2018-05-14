@@ -136,6 +136,9 @@ type CrudOpts struct {
 	// Delete indicates whether or not function for DELETE should be generated
 	Delete bool `json:"delete"`
 
+	// Merge indicates whether or not function for SQL Merge should be generated
+	Merge bool `json:"merge"`
+
 	// Hooks describes hooks options for CRUD generation
 	Hooks CrudHooks `json:"hooks"`
 }
@@ -143,11 +146,11 @@ type CrudOpts struct {
 // CrudHooks represents which crud hooks should be generated
 type CrudHooks struct {
 
-	// PreCreate allows hook function to be executed before Create operation is performed
-	PreCreate bool `json:"pre_create"`
+	// PreSave allows hook function to be executed before Save operation is performed
+	PreSave bool `json:"pre_save"`
 
-	// PostCreate allows hook function to be executed after Create operation is performed
-	PostCreate bool `json:"post_create"`
+	// PostSave allows hook function to be executed after Save operation is performed
+	PostSave bool `json:"post_save"`
 
 	// PreRead allows hook function to be executed before Read operation is performed
 	PreRead bool `json:"pre_read"`
@@ -160,12 +163,6 @@ type CrudHooks struct {
 
 	// PostList allows hook function to be executed after List operation is performed
 	PostList bool `json:"post_list"`
-
-	// PreUpdate allows hook function to be executed before Update operation is performed
-	PreUpdate bool `json:"pre_update"`
-
-	// PostUpdate allows hook function to be executed after Update operation is performed
-	PostUpdate bool `json:"post_update"`
 
 	// PreDelete allows hook function to be executed before Delete operation is performed
 	PreDelete bool `json:"pre_delete"`

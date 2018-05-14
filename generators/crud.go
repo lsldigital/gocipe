@@ -35,6 +35,7 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 
 					BeforeUpdate []string
 					BeforeInsert []string
+					BeforeMerge  []string
 
 					HasRelationshipManyMany bool
 					ManyManyFields          []util.Field
@@ -71,7 +72,7 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 
 			if entity.PrimaryKey != util.PrimaryKeySerial {
 				sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", sqlPlaceholderCount))
-				sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("$%d", sqlPlaceholderCount))
+				sqlfieldsInsert = append(sqlfieldsInsert, "id")
 				structFieldsInsert = append(structFieldsInsert, "*entity.ID")
 
 				sqlPlaceholderCount++
@@ -86,7 +87,7 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 
 					sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", sqlPlaceholderCount))
 					sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf("%s = $%d", field.Schema.Field, sqlPlaceholderCount))
-					sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("$%d", sqlPlaceholderCount))
+					sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("%s", field.Schema.Field))
 
 					structFieldsInsert = append(structFieldsInsert, fmt.Sprintf("*entity.%s", field.Property.Name))
 					structFieldsUpdate = append(structFieldsUpdate, fmt.Sprintf("*entity.%s", field.Property.Name))
@@ -94,9 +95,11 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 
 					if field.Property.Name == "CreatedAt" {
 						data.BeforeInsert = append(data.BeforeInsert, "*entity.CreatedAt = time.Now()")
+						data.BeforeMerge = append(data.BeforeMerge, "*entity.CreatedAt = time.Now()")
 					} else if field.Property.Name == "UpdatedAt" {
 						data.BeforeInsert = append(data.BeforeInsert, "*entity.UpdatedAt = time.Now()")
 						data.BeforeUpdate = append(data.BeforeUpdate, "*entity.UpdatedAt = time.Now()")
+						data.BeforeMerge = append(data.BeforeMerge, "*entity.UpdatedAt = time.Now()")
 					}
 				} else {
 					joins = append(joins,
@@ -156,8 +159,7 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 			} else {
 				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to load execute template: %s", err)}
 			}
-
-			if entity.Crud.Hooks.PreCreate || entity.Crud.Hooks.PostCreate || entity.Crud.Hooks.PreRead || entity.Crud.Hooks.PostRead || entity.Crud.Hooks.PreList || entity.Crud.Hooks.PostList || entity.Crud.Hooks.PreUpdate || entity.Crud.Hooks.PostUpdate || entity.Crud.Hooks.PreDelete || entity.Crud.Hooks.PostDelete {
+			if entity.Crud.Hooks.PreSave || entity.Crud.Hooks.PostSave || entity.Crud.Hooks.PreRead || entity.Crud.Hooks.PostRead || entity.Crud.Hooks.PreList || entity.Crud.Hooks.PostList || entity.Crud.Hooks.PreDelete || entity.Crud.Hooks.PostDelete {
 				hooks, e := util.ExecuteTemplate("crud_hooks.go.tmpl", struct {
 					Hooks   util.CrudHooks
 					Entity  util.Entity

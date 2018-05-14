@@ -268,14 +268,20 @@ func (entity *{{.Entity.Name}}) Delete(tx *sql.Tx, autocommit bool) error {
 
 // Save either inserts or updates a {{.Entity.Name}} record based on whether or not id is nil
 func (entity *{{.Entity.Name}}) Save(tx *sql.Tx, autocommit bool) error {
+	{{if pkeyIsAuto .Entity.PrimaryKey -}}
 	if entity.ID == nil {
 		return entity.Insert(tx, autocommit)
 	}
 	return entity.Update(tx, autocommit)
+	{{- else -}}
+	if entity.ID == nil {
+		return errors.New("primary key cannot be nil")
+	}
+	return entity.Merge(tx, autocommit)
+	{{end -}}
 }
 
 // Insert performs an SQL insert for {{.Entity.Name}} record and update instance with inserted id.
-// Prefer using Save rather than Insert directly.
 func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 	var (
 		{{- if pkeyIsAuto .Entity.PrimaryKey -}}
@@ -306,10 +312,10 @@ func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 		return err
 	}
 	{{- end}}
-	{{if .Entity.Crud.Hooks.PreCreate}}
-    if err := crudPreCreate(entity, tx); err != nil {
+	{{if .Entity.Crud.Hooks.PreSave}}
+    if err := crudPreSave("INSERT", entity, tx); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("error executing crudPreCreate() in {{.Entity.Name}}.Insert(): %s", err)
+		return fmt.Errorf("error executing crudPreSave() in {{.Entity.Name}}.Insert(): %s", err)
 	}
 	{{end}}
 	{{if eq .Entity.PrimaryKey "serial" -}}
@@ -354,10 +360,10 @@ func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 		}
 	}
 	{{end}}
-	{{if .Entity.Crud.Hooks.PostCreate}}
-	if err := crudPostCreate(entity, tx); err != nil {
+	{{if .Entity.Crud.Hooks.PostSave}}
+	if err := crudPostSave("INSERT", entity, tx); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("error executing crudPostCreate() in {{.Entity.Name}}.Insert(): %s", err)
+		return fmt.Errorf("error executing crudPostSave() in {{.Entity.Name}}.Insert(): %s", err)
 	}
 	{{end}}
 	if autocommit {
@@ -392,12 +398,12 @@ func (entity *{{.Entity.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 		return err
 	}
 
-	{{if .Entity.Crud.Hooks.PreUpdate}}
-    if err := crudPreUpdate(entity, tx); err != nil {
+	{{if .Entity.Crud.Hooks.PreSave}}
+    if err := crudPreSave("UPDATE", entity, tx); err != nil {
 		tx.Rollback()
-        return fmt.Errorf("error executing crudPreUpdate() in {{.Entity.Name}}.Update(): %s", err)
+        return fmt.Errorf("error executing crudPreSave() in {{.Entity.Name}}.Update(): %s", err)
 	}
-    {{end}}
+	{{end}}
 	_, err = stmt.Exec({{.StructFieldsUpdate}})
 	if err != nil {
 		tx.Rollback()
@@ -430,10 +436,10 @@ func (entity *{{.Entity.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 		}
 	}
 	{{end}}
-	{{if .Entity.Crud.Hooks.PostUpdate}}
-	if err := crudPostUpdate(entity, tx); err != nil {
+	{{if .Entity.Crud.Hooks.PostSave}}
+	if err := crudPostSave("UPDATE", entity, tx); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("error executing crudPostUpdate() in {{.Entity.Name}}.Update(): %s", err)
+		return fmt.Errorf("error executing crudPostSave() in {{.Entity.Name}}.Update(): %s", err)
 	}
 	{{end}}
 	if autocommit {
@@ -445,3 +451,85 @@ func (entity *{{.Entity.Name}}) Update(tx *sql.Tx, autocommit bool) error {
 
 	return nil
 }
+
+// Merge performs an SQL merge for {{.Entity.Name}} record.
+func (entity *{{.Entity.Name}}) Merge(tx *sql.Tx, autocommit bool) error {
+	var (
+		err error
+		{{if .HasRelationshipManyMany}}
+		stmtMmany *sql.Stmt
+		{{end}}
+	)
+
+	if tx == nil {
+		tx, err = db.Begin()
+		if err != nil {
+			return err
+		}
+	}
+
+	if entity.ID == nil {
+		return entity.Insert(tx, autocommit)
+	}
+
+	{{range .BeforeMerge}}{{.}}{{end}}
+
+	stmt, err := tx.Prepare(`INSERT INTO {{.Entity.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
+	ON CONFLICT {{.Entity.Table}}_pkey UPDATE {{.Entity.Table}} SET {{.SQLFieldsUpdate}} WHERE id = $1`)
+	if err != nil {
+		return err
+	}
+	{{if .Entity.Crud.Hooks.PreSave}}
+    if err := crudPreSave("MERGE", entity, tx); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing crudPreSave() in {{.Entity.Name}}.Merge(): %s", err)
+	}
+	{{end}}
+
+	_, err = stmt.Exec({{.StructFieldsUpdate}})
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in {{.Entity.Name}}: %s", err)
+	}
+	{{range .ManyManyFields}}
+	stmtMmany, err = tx.Prepare("DELETE FROM {{.Relationship.Target.Table}} WHERE {{.Relationship.Target.ThisID}} = $1")
+
+	if err != nil {
+		return fmt.Errorf("error preparing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
+	}
+
+	_, err = stmtMmany.Exec(*entity.ID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing transaction statement in ManyManyDelete(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
+	}
+	
+	stmtMmany, err = tx.Prepare("INSERT INTO {{.Relationship.Target.Table}} ({{.Relationship.Target.ThisID}}, {{.Relationship.Target.ThatID}}) VALUES ($1, $2)")
+	if err != nil {
+		return fmt.Errorf("error preparing transaction statement in ManyManyInsert(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
+	}
+
+	for _, relatedID := range *entity.{{.Property.Name}} {
+		_, err = stmtMmany.Exec(entity.ID, relatedID)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("error executing transaction statement in ManyManyInsert(%d) {{.Relationship.Target.ThisID}}-{{.Relationship.Target.ThatID}} for table '{{.Relationship.Target.Table}}': %s", *entity.ID, err)
+		}
+	}
+	{{end}}
+	{{if .Entity.Crud.Hooks.PostSave}}
+	if err := crudPostSave("MERGE", entity, tx); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error executing crudPostSave() in {{.Entity.Name}}.Merge(): %s", err)
+	}
+	{{end}}
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			return fmt.Errorf("error committing transaction in {{.Entity.Name}}.Merge(): %s", err)
+		}
+	}
+
+	return nil
+}
+
