@@ -96,7 +96,10 @@ func processOutput(waitgroup *sync.WaitGroup, work util.GenerationWork, recipePa
 	outlog = append(outlog, "[Recipe Hash] "+_recipeHash)
 
 	for generated := range work.Done {
-		if generated.Error != nil {
+		if generated.Error == util.ErrorSkip {
+			outlog = append(outlog, fmt.Sprintf("[Skipped] Generation skipped [%s]", generated.Generator))
+			skipped++
+		} else if generated.Error != nil {
 			outlog = append(outlog, fmt.Sprintf("[Error] Generation failed [%s]: %s", generated.Generator, generated.Error))
 			failed++
 		} else if generated.Aggregate {
