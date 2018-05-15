@@ -18,16 +18,20 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 					Package string
 					Entity  util.Entity
 
-					SQLFieldsSelectGet  string
-					SQLFieldsSelectList string
-					SQLFieldsUpdate     string
-					SQLFieldsInsert     string
-					SQLPlaceholders     string
+					SQLFieldsSelectGet    string
+					SQLFieldsSelectList   string
+					SQLFieldsUpdate       string
+					SQLFieldsInsert       string
+					SQLFieldsMergeInsert  string
+					SQLFieldsMergeUpdate  string
+					SQLPlaceholdersInsert string
+					SQLPlaceholdersMerge  string
 
 					StructFieldsSelectGet  string
 					StructFieldsSelectList string
 					StructFieldsUpdate     string
 					StructFieldsInsert     string
+					StructFieldsMerge      string
 
 					Joins         string
 					JoinVarsDecl  []string
@@ -42,16 +46,20 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 					Imports                 []string
 				}
 
-				sqlfieldsSelectGet  []string
-				sqlfieldsSelectList []string
-				sqlfieldsUpdate     []string
-				sqlfieldsInsert     []string
-				sqlPlaceholders     []string
+				sqlfieldsSelectGet    []string
+				sqlfieldsSelectList   []string
+				sqlfieldsUpdate       []string
+				sqlfieldsInsert       []string
+				sqlPlaceholdersInsert []string
+				sqlPlaceholdersMerge  []string
+				sqlFieldsMergeInsert  []string
+				sqlFieldsMergeUpdate  []string
 
 				structFieldsSelectGet  []string
 				structFieldsSelectList []string
 				structFieldsUpdate     []string
 				structFieldsInsert     []string
+				structFieldsMerge      []string
 				sqlPlaceholderCount    = 1
 
 				joins     []string
@@ -70,8 +78,12 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 				entity.PrimaryKey = util.PrimaryKeySerial
 			}
 
+			sqlFieldsMergeInsert = append(sqlFieldsMergeInsert, "id")
+			structFieldsMerge = append(structFieldsMerge, "*entity.ID")
+			sqlPlaceholdersMerge = append(sqlPlaceholdersMerge, fmt.Sprintf("$%d", sqlPlaceholderCount))
+
 			if entity.PrimaryKey != util.PrimaryKeySerial {
-				sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", sqlPlaceholderCount))
+				sqlPlaceholdersInsert = append(sqlPlaceholdersInsert, fmt.Sprintf("$%d", sqlPlaceholderCount))
 				sqlfieldsInsert = append(sqlfieldsInsert, "id")
 				structFieldsInsert = append(structFieldsInsert, "*entity.ID")
 
@@ -85,12 +97,17 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 					structFieldsSelectGet = append(structFieldsSelectGet, fmt.Sprintf("entity.%s", field.Property.Name))
 					structFieldsSelectList = append(structFieldsSelectList, fmt.Sprintf("entity.%s", field.Property.Name))
 
-					sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", sqlPlaceholderCount))
+					sqlPlaceholdersInsert = append(sqlPlaceholdersInsert, fmt.Sprintf("$%d", sqlPlaceholderCount))
+					sqlPlaceholdersMerge = append(sqlPlaceholdersMerge, fmt.Sprintf("$%d", sqlPlaceholderCount))
+
 					sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf("%s = $%d", field.Schema.Field, sqlPlaceholderCount))
+					sqlFieldsMergeUpdate = append(sqlFieldsMergeUpdate, fmt.Sprintf("%s = $%d", field.Schema.Field, sqlPlaceholderCount))
 					sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("%s", field.Schema.Field))
+					sqlFieldsMergeInsert = append(sqlFieldsMergeInsert, fmt.Sprintf("%s", field.Schema.Field))
 
 					structFieldsInsert = append(structFieldsInsert, fmt.Sprintf("*entity.%s", field.Property.Name))
 					structFieldsUpdate = append(structFieldsUpdate, fmt.Sprintf("*entity.%s", field.Property.Name))
+					structFieldsMerge = append(structFieldsMerge, fmt.Sprintf("*entity.%s", field.Property.Name))
 					sqlPlaceholderCount++
 
 					if field.Property.Name == "CreatedAt" {
@@ -128,12 +145,16 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 			data.SQLFieldsSelectList = strings.Join(sqlfieldsSelectList, ", ")
 			data.SQLFieldsUpdate = strings.Join(sqlfieldsUpdate, ", ")
 			data.SQLFieldsInsert = strings.Join(sqlfieldsInsert, ", ")
-			data.SQLPlaceholders = strings.Join(sqlPlaceholders, ", ")
+			data.SQLFieldsMergeInsert = strings.Join(sqlFieldsMergeInsert, ", ")
+			data.SQLFieldsMergeUpdate = strings.Join(sqlFieldsMergeUpdate, ", ")
+			data.SQLPlaceholdersInsert = strings.Join(sqlPlaceholdersInsert, ", ")
+			data.SQLPlaceholdersMerge = strings.Join(sqlPlaceholdersMerge, ", ")
 
 			data.StructFieldsSelectGet = strings.Join(structFieldsSelectGet, ", ")
 			data.StructFieldsSelectList = strings.Join(structFieldsSelectList, ", ")
 			data.StructFieldsUpdate = strings.Join(structFieldsUpdate, ", ")
 			data.StructFieldsInsert = strings.Join(structFieldsInsert, ", ")
+			data.StructFieldsMerge = strings.Join(structFieldsMerge, ", ")
 
 			if entity.PrimaryKey == util.PrimaryKeyUUID {
 				data.Imports = append(data.Imports, `"github.com/satori/go.uuid"`)

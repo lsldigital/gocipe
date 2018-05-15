@@ -250,6 +250,9 @@ type Entity struct {
 	// Table is the name of the database table for the entity
 	Table string `json:"table"`
 
+	// TableConstraints represents an array of table constraints for the table definition
+	TableConstraints []string `json:"table_constraints"`
+
 	// Description is a description of the entity
 	Description string `json:"description"`
 
