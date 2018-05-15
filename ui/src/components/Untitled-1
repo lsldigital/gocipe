@@ -1,0 +1,45 @@
+boostrap
+ generate bool
+ setting []obj 
+   - name text
+   - description text
+
+http
+ - generate bool
+ - port text
+
+schema
+ - create bool
+ - drop bool
+ - aggregate bool
+
+crud
+ - create, read, read_list, update, delete  bool
+ - hooks
+    - pre_create
+    - pre_read
+    - pre_read_list
+    - pre_update
+    - pre_delete
+    - post_create
+    - post_read
+    - post_read_list
+    - post_update
+    - post_delete  bool
+
+rest
+ - create, read, read_list, update, delete bool
+ - hooks
+    - pre_create
+    - pre_read
+    - pre_read_list
+    - pre_update
+    - pre_delete
+    - post_create
+    - post_read
+    - post_read_list
+    - post_update
+    - post_delete  bool
+ - prefix text
+
+vuetify
