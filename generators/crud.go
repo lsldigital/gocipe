@@ -90,6 +90,11 @@ func GenerateCrud(work util.GenerationWork, opts util.CrudOpts, entities []util.
 				sqlPlaceholderCount++
 			}
 
+			sqlfieldsSelectGet = append(sqlfieldsSelectGet, fmt.Sprintf("t.%s", "id"))
+			sqlfieldsSelectList = append(sqlfieldsSelectList, fmt.Sprintf("t.%s", "id"))
+			structFieldsSelectGet = append(structFieldsSelectGet, fmt.Sprintf("entity.%s", "ID"))
+			structFieldsSelectList = append(structFieldsSelectList, fmt.Sprintf("entity.%s", "ID"))
+
 			for _, field := range entity.Fields {
 				if field.Relationship.Type == "" {
 					sqlfieldsSelectGet = append(sqlfieldsSelectGet, fmt.Sprintf("t.%s", field.Schema.Field))

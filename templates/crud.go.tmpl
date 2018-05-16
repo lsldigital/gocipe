@@ -55,7 +55,7 @@ func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
 		err      error
 	)
 
-	query := "SELECT {{.SQLFieldsSelectList}} FROM {{.Entity.Table}}"
+	query := "SELECT {{.SQLFieldsSelectList}} FROM {{.Entity.Table}} t"
 	{{if .Entity.Crud.Hooks.PreList}}
     if filters, err = crudPreList(filters); err != nil {
 		return nil, fmt.Errorf("error executing crudPreList() in List(filters) for entity '{{.Entity.Name}}': %s", err)
