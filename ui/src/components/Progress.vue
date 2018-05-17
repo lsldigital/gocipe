@@ -2,56 +2,31 @@
   <v-flex xs12 pa-3>
     <v-stepper v-model="e1">
       <v-stepper-header>
-        <v-stepper-step :complete="e1 > 1" step="1">BOOTSTRAP</v-stepper-step>
-        <v-divider></v-divider>
-        <v-stepper-step :complete="e1 > 2" step="2">HTTP</v-stepper-step>
-        <v-divider></v-divider>
-        <v-stepper-step :complete="e1 > 3" step="3">SCHEMA</v-stepper-step>
-        <v-divider></v-divider>
-        <v-stepper-step :complete="e1 > 4" step="4">CRUD</v-stepper-step>
-        <v-divider></v-divider>
-        <v-stepper-step :complete="e1 > 5" step="5">REST API</v-stepper-step>
-        <v-divider></v-divider>
-        <v-stepper-step :complete="e1 > 6" step="6">VUETIFY</v-stepper-step>
-        <v-divider></v-divider>
-        <v-stepper-step step="7">ENTITIES</v-stepper-step>
-        </v-stepper-header>	 	
-      <v-stepper-items>
-      <v-stepper-content step="1" >
-        <page-bootstrap />
-        <v-btn color="primary" @click.native="e1 = 2">Continue</v-btn>
-        <v-btn flat>Cancel</v-btn>
-      </v-stepper-content>
-      <v-stepper-content step="2">
-        <page-http />
-        <v-btn color="primary" @click.native="e1 = 3">Continue</v-btn>
-        <v-btn flat>Cancel</v-btn>
-      </v-stepper-content>
-      <v-stepper-content step="3">
-        <page-schema />
-        <v-btn color="primary" @click.native="e1 = 4">Continue</v-btn>
-        <v-btn flat>Cancel</v-btn>
-      </v-stepper-content>
-      <v-stepper-content step="4">
-        <page-crud />
-        <v-btn color="primary" @click.native="e1 = 5">Continue</v-btn>
-        <v-btn flat>Cancel</v-btn>
-      </v-stepper-content>
-      <v-stepper-content step="5">
-        <page-rest />
-        <v-btn color="primary" @click.native="e1 = 6">Continue</v-btn>
-        <v-btn flat>Cancel</v-btn>
-      </v-stepper-content>
-        <v-stepper-content step="6">
-          <page-vuetify />
-          <v-btn color="primary" @click.native="e1 = 7">Continue</v-btn>
-          <v-btn flat>Cancel</v-btn>
-        </v-stepper-content>
-        <v-stepper-content step="7">
-          <v-card color="dark" class="mb-5" height="100%"></v-card>
+       <template  v-for="(step,key, index) in steps" >
+         <div v-if="index < 6">
+          <v-stepper-step :complete="e1 > index + 1" :step="index + 1">{{step}}</v-stepper-step>
+          <v-divider></v-divider>
+          </div>
+          <div v-else>
+          <v-stepper-step :step="index + 1">{{step}}</v-stepper-step>
+          </div>
+       </template>
+      </v-stepper-header>
+
+    <v-stepper-items>
+     
+      <v-stepper-content v-for="(step, key, index) in steps"  :step="key" >
+
+          <component :is="'page-'+steps[key]"></component>
+          <div v-if= "index < 6">
+          <v-btn color="primary" v-on:click="greet" @click.native="e1 = index+2">Continue</v-btn>
+          </div>
+
+          <div v-else>
           <v-btn color="primary" @click.native="e1 = 1">Continue</v-btn>
-          <v-btn flat>Cancel</v-btn>
-        </v-stepper-content>
+          </div>
+          <v-btn flat>Back</v-btn>
+      </v-stepper-content>
       </v-stepper-items>
     </v-stepper>
   </v-flex>
@@ -64,6 +39,8 @@ import PageHttp from '@/components/subpages/PageHttp.vue'
 import PageCrud from '@/components/subpages/PageCrud.vue'
 import PageRest from '@/components/subpages/PageRest.vue'
 import PageVuetify from '@/components/subpages/PageVuetify.vue'
+import PageEntities from '@/components/subpages/PageEntities.vue'
+
 export default {
     components: {
       PageBootstrap,
@@ -71,17 +48,27 @@ export default {
       PageHttp,
       PageCrud,
       PageRest,
-      PageVuetify
+      PageVuetify,
+      PageEntities
     },
     data () {
       return {
-        e1: 4
+        e1: 0,
+        steps: {1: "bootstrap", 2 : "http", 3: "schema", 4: "crud", 5: "rest", 6 : "vuetify", 7 : "entities"}
       }
     },
     methods: {
-      toggle (name) {
-        this.checkedValues[name] = !this.checkedValues[name]
-      }
+      // ...mapActions(['addbootstrap']),
+      // ...mapActions(['addhttp']),
+
+      // addtostore: function (event) {
+      //   if (this.e1 == 0) {
+      //     this.addbootstrap(this.boostrap);
+      //   } else if (this.e1 == 1) {
+      //     this.addhttp(this.addhttp)
+      //   }
+      // }
     }
-  }
+}
 </script>
+

@@ -2,6 +2,11 @@
 node_modules
 /dist
 
+#files with no meaning
+/ui/src/components/jsonbuilder.json
+/ui/src/components/Untitled-1
+
+
 # local env files
 .env.local
 .env.*.local

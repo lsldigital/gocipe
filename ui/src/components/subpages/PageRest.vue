@@ -180,11 +180,21 @@ export default {
       return {
         checkedValues: {
           rest_create: false,
+          rest_pre_create: false,
+          rest_post_create: false,
           rest_read: false,
-          rest_read_list:false,
+          rest_pre_read: false,
+          rest_post_read: false,
+          rest_read_list: false,
+          rest_pre_read_list: false,
+          rest_post_read_list: false,
           rest_update: false,
+          rest_update: false,
+          rest_pre_update: false,
+          rest_post_update: false,
           rest_delete: false,
-					
+          rest_pre_delete: false,
+          rest_post_delete: false
         }
       }
     },

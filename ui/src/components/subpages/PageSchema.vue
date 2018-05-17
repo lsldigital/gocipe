@@ -1,9 +1,9 @@
 <template>
   <v-card color="dark" class="mb-5" height="100%">
     <v-list two-line subheader>
-      <v-list-tile avatar @click="toggle('create')" class="pa-2">
+      <v-list-tile avatar @click="toggle('.create')" class="pa-2">
         <v-list-tile-action>
-          <v-checkbox v-model="checkedValues['create']" @click.prevent=""></v-checkbox>
+          <v-checkbox v-model="create" @click.prevent=""></v-checkbox>
         </v-list-tile-action>
         <v-list-tile-content>
           <v-list-tile-title>Create</v-list-tile-title>
@@ -39,16 +39,16 @@
 export default {
     data () {
       return {
-        checkedValues: {
-          create: false,
-          drop: false,
-          aggregate:false
-        }
+    schema: {
+        "create": true,
+        "drop": true,
+        "aggregate": true
+    }
       }
     },
     methods: {
       toggle (name) {
-        this.checkedValues[name] = !this.checkedValues[name]
+        this.schema.name = !this.schame.name
       }
     }
   }

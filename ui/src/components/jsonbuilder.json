@@ -1,0 +1,768 @@
+{
+    "bootstrap": {
+        "generate": true,
+        "settings": [
+            {
+                "name": "",
+                "type": "",
+                "description": "",
+                "env": false
+            }
+        ]
+    },
+    "http": {
+        "generate": true,
+        "prefix": "",
+        "port": "8888"
+    },
+    "schema": {
+        "create": true,
+        "drop": true,
+        "aggregate": true
+    },
+    "crud": {
+        "create": true,
+        "read": true,
+        "read_list": true,
+        "update": true,
+        "delete": true,
+        "hooks": {
+            "pre_create": true,
+            "post_create": true,
+            "pre_read": true,
+            "post_read": true,
+            "pre_list": true,
+            "post_list": true,
+            "pre_update": true,
+            "post_update": true,
+            "pre_delete": true,
+            "post_delete": true
+        }
+    },
+    "rest": {
+        "create": true,
+        "read": true,
+        "read_list": true,
+        "update": true,
+        "delete": true,
+        "hooks": {
+            "pre_create": true,
+            "post_create": true,
+            "pre_read": true,
+            "post_read": true,
+            "pre_list": true,
+            "post_list": true,
+            "pre_update": true,
+            "post_update": true,
+            "pre_delete": true,
+            "post_delete": true
+        }
+    },
+    "vuetify": {
+        "generate": true,
+        "module": "web"
+    },
+    "entities": [
+        {
+            "name": "Activity",
+            "table": "activities",
+            "description": "represents a user activity footprint recorded by a client. Should not contain personal data",
+            "fields": [
+                {
+                    "label": "ID",
+                    "serialized": "id",
+                    "property": {
+                        "name": "ID",
+                        "type": "int64"
+                    },
+                    "schema": {
+                        "field": "id",
+                        "type": "serial"
+                    }
+                },
+                {
+                    "label": "Property",
+                    "serialized": "property_id",
+                    "property": {
+                        "name": "PropertyID",
+                        "type": "int64"
+                    },
+                    "schema": {
+                        "field": "property_id",
+                        "type": "int"
+                    },
+                    "widget": {
+                        "type": "select-rel",
+                        "target": {
+                            "endpoint": "properties",
+                            "label": "name"
+                        }
+                    }
+                },
+                {
+                    "label": "Name",
+                    "serialized": "name",
+                    "property": {
+                        "name": "Name",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "name",
+                        "type": "varchar(255)"
+                    }
+                },
+                {
+                    "label": "Description",
+                    "serialized": "description",
+                    "property": {
+                        "name": "Description",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "description",
+                        "type": "text"
+                    }
+                },
+                {
+                    "label": "URL",
+                    "serialized": "url",
+                    "property": {
+                        "name": "URL",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "url",
+                        "type": "varchar(255)"
+                    }
+                },
+                {
+                    "label": "CreatedAt",
+                    "serialized": "created_at",
+                    "property": {
+                        "name": "CreatedAt",
+                        "type": "time"
+                    },
+                    "schema": {
+                        "field": "created_at",
+                        "type": "timestamp"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Organization",
+            "table": "organizations",
+            "description": "owns many properties",
+            "fields": [
+                {
+                    "label": "ID",
+                    "serialized": "id",
+                    "property": {
+                        "name": "ID",
+                        "type": "int64"
+                    },
+                    "schema": {
+                        "field": "id",
+                        "type": "serial"
+                    }
+                },
+                {
+                    "label": "Name",
+                    "serialized": "name",
+                    "property": {
+                        "name": "Name",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "name",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Description",
+                    "serialized": "description",
+                    "property": {
+                        "name": "Description",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "description",
+                        "type": "text"
+                    },
+                    "widget": {
+                        "type": "textarea"
+                    }
+                },
+                {
+                    "label": "Email",
+                    "serialized": "email",
+                    "property": {
+                        "name": "Email",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "email",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "URL",
+                    "serialized": "url",
+                    "property": {
+                        "name": "URL",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "url",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Permission",
+            "table": "permissions",
+            "description": "are granted to users via roles.",
+            "fields": [
+                {
+                    "label": "ID",
+                    "serialized": "id",
+                    "property": {
+                        "name": "ID",
+                        "type": "int64"
+                    },
+                    "schema": {
+                        "field": "id",
+                        "type": "serial"
+                    }
+                },
+                {
+                    "label": "Name",
+                    "serialized": "name",
+                    "property": {
+                        "name": "Name",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "name",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Description",
+                    "serialized": "description",
+                    "property": {
+                        "name": "Description",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "description",
+                        "type": "text"
+                    },
+                    "widget": {
+                        "type": "textarea"
+                    }
+                },
+                {
+                    "label": "Share",
+                    "serialized": "share",
+                    "property": {
+                        "name": "Share",
+                        "type": "int"
+                    },
+                    "schema": {
+                        "field": "share",
+                        "type": "int"
+                    },
+                    "widget": {
+                        "type": "select",
+                        "options": [
+                            {
+                                "value": "0",
+                                "label": "Private"
+                            },
+                            {
+                                "value": "1",
+                                "label": "Organization"
+                            },
+                            {
+                                "value": "2",
+                                "label": "Public"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "label": "Roles",
+                    "serialized": "roles",
+                    "property": {
+                        "name": "Roles",
+                        "type": "int64"
+                    },
+                    "schema": null,
+                    "relationship": {
+                        "type": "many-many",
+                        "target": {
+                            "entity": "role.Role",
+                            "table": "permissions_roles",
+                            "thisid": "permission_id",
+                            "thatid": "role_id" 
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Property",
+            "table": "properties",
+            "description": "represents an external service accessing this system",
+            "fields": [
+                {
+                    "label": "ID",
+                    "serialized": "id",
+                    "property": {
+                        "name": "ID",
+                        "type": "int64"
+                    },
+                    "schema": {
+                        "field": "id",
+                        "type": "serial"
+                    }
+                },
+                {
+                    "label": "Organization",
+                    "serialized": "organization_id",
+                    "property": {
+                        "name": "OrganizationID",
+                        "type": "int64"
+                    },
+                    "schema": {
+                        "field": "organization_id",
+                        "type": "int"
+                    },
+                    "widget": {
+                        "type": "select-rel",
+                        "target": {
+                            "endpoint": "organizations",
+                            "label": "name"
+                        }
+                    }
+                },
+                {
+                    "label": "Name",
+                    "serialized": "name",
+                    "property": {
+                        "name": "Name",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "name",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Description",
+                    "serialized": "description",
+                    "property": {
+                        "name": "Description",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "description",
+                        "type": "text"
+                    },
+                    "widget": {
+                        "type": "textarea"
+                    }
+                },
+                {
+                    "label": "Email",
+                    "serialized": "email",
+                    "property": {
+                        "name": "Email",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "email",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "URL",
+                    "serialized": "url",
+                    "property": {
+                        "name": "URL",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "url",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Policy",
+                    "serialized": "policy",
+                    "property": {
+                        "name": "Policy",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "policy",
+                        "type": "text"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "SecretKey",
+                    "serialized": "secretkey",
+                    "property": {
+                        "name": "SecretKey",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "secretkey",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "PublicKey",
+                    "serialized": "publickey",
+                    "property": {
+                        "name": "PublicKey",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "publickey",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Role",
+            "table": "roles",
+            "description": "represents a set of permissions that can be granted to a user",
+            "fields": [
+                {
+                    "label": "ID",
+                    "serialized": "id",
+                    "property": {
+                        "name": "ID",
+                        "type": "int64"
+                    },
+                    "schema": {
+                        "field": "id",
+                        "type": "serial"
+                    }
+                },
+                {
+                    "label": "Property",
+                    "serialized": "property_id",
+                    "property": {
+                        "name": "PropertyID",
+                        "type": "int64"
+                    },
+                    "schema": {
+                        "field": "property_id",
+                        "type": "int"
+                    },
+                    "widget": {
+                        "type": "select-rel",
+                        "target": {
+                            "endpoint": "properties",
+                            "label": "name"
+                        }
+                    }
+                },
+                {
+                    "label": "Name",
+                    "serialized": "name",
+                    "property": {
+                        "name": "Name",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "name",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Description",
+                    "serialized": "description",
+                    "property": {
+                        "name": "Description",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "description",
+                        "type": "text"
+                    },
+                    "widget": {
+                        "type": "textarea"
+                    }
+                },
+                {
+                    "label": "Permissions",
+                    "serialized": "permissions",
+                    "property": {
+                        "name": "Permissions",
+                        "type": "int64"
+                    },
+                    "schema": null,
+                    "relationship": {
+                        "type": "many-many",
+                        "target": {
+                            "entity": "permission.Permission",
+                            "table": "permissions_roles",
+                            "thisid": "role_id",
+                            "thatid": "permission_id" 
+                        }
+                    },
+                    "widget": {
+                        "type": "select-rel",
+                        "target": {
+                            "endpoint": "permissions",
+                            "label": "name"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "User",
+            "table": "users",
+            "description": "represents a user in the system",
+            "fields": [
+                {
+                    "label": "ID",
+                    "serialized": "id",
+                    "property": {
+                        "name": "ID",
+                        "type": "int64"
+                    },
+                    "schema": {
+                        "field": "id",
+                        "type": "serial"
+                    }
+                },
+                {
+                    "label": "Email",
+                    "serialized": "email",
+                    "property": {
+                        "name": "Email",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "email",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Password",
+                    "serialized": "password",
+                    "property": {
+                        "name": "Password",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "password",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "password"
+                    }
+                },
+                {
+                    "label": "Locale",
+                    "serialized": "locale",
+                    "nullable": true,
+                    "property": {
+                        "name": "Locale",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "locale",
+                        "type": "char",
+                        "default": "en"
+                    },
+                    "widget": {
+                        "type": "select",
+                        "options": [
+                            {
+                                "value": "en",
+                                "label": "English"
+                            },
+                            {
+                                "value": "fr",
+                                "label": "French"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "label": "Firstname",
+                    "serialized": "first_name",
+                    "nullable": true,
+                    "property": {
+                        "name": "Firstname",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "first_name",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Lastname",
+                    "serialized": "last_name",
+                    "nullable": true,
+                    "property": {
+                        "name": "Lastname",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "last_name",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Street",
+                    "serialized": "street",
+                    "nullable": true,
+                    "property": {
+                        "name": "Street",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "street",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Locality",
+                    "serialized": "locality",
+                    "nullable": true,
+                    "property": {
+                        "name": "Locality",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "locality",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Town",
+                    "serialized": "town",
+                    "nullable": true,
+                    "property": {
+                        "name": "Town",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "town",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Province",
+                    "serialized": "province",
+                    "nullable": true,
+                    "property": {
+                        "name": "Province",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "province",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "AreaCode",
+                    "serialized": "area_code",
+                    "nullable": true,
+                    "property": {
+                        "name": "AreaCode",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "area_code",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                },
+                {
+                    "label": "Country",
+                    "serialized": "country",
+                    "nullable": true,
+                    "property": {
+                        "name": "Country",
+                        "type": "string"
+                    },
+                    "schema": {
+                        "field": "country",
+                        "type": "varchar(255)"
+                    },
+                    "widget": {
+                        "type": "textfield"
+                    }
+                }
+            ]
+        }
+    ]
+}
