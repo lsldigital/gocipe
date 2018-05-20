@@ -1,9 +1,9 @@
 <template>
   <v-card color="dark" class="mb-5" height="100%">
     <v-list two-line subheader>
-      <v-list-tile avatar @click="toggle('.create')" class="pa-2">
+      <v-list-tile avatar @click="toggle('create')" class="pa-2">
         <v-list-tile-action>
-          <v-checkbox v-model="create" @click.prevent=""></v-checkbox>
+          <v-checkbox v-model="schema.create"></v-checkbox>
         </v-list-tile-action>
         <v-list-tile-content>
           <v-list-tile-title>Create</v-list-tile-title>
@@ -13,7 +13,7 @@
 			<v-divider></v-divider> 
       <v-list-tile avatar @click="toggle('drop')" class="pa-2">
         <v-list-tile-action>
-          <v-checkbox v-model="checkedValues['drop']" @click.prevent=""></v-checkbox>
+          <v-checkbox v-model="schema.drop"></v-checkbox>
         </v-list-tile-action>
         <v-list-tile-content>
         <v-list-tile-title>Drop</v-list-tile-title>
@@ -23,7 +23,7 @@
 			<v-divider></v-divider> 
       <v-list-tile avatar @click="toggle('aggregate')" class="pa-2">
         <v-list-tile-action>
-          <v-checkbox v-model="checkedValues['aggregate']" @click.prevent=""></v-checkbox>
+          <v-checkbox v-model="schema.aggregate"></v-checkbox>
         </v-list-tile-action>
         <v-list-tile-content>
         <v-list-tile-title>Aggregate</v-list-tile-title>
@@ -48,7 +48,17 @@ export default {
     },
     methods: {
       toggle (name) {
-        this.schema.name = !this.schame.name
+        if (name == "create") {
+          this.schema.create = !this.schema.create
+        }
+
+        if (name == "drop") {
+          this.schema.drop = !this.schema.drop
+        } 
+
+        if (name == "aggregate") {
+          this.schema.aggregate = !this.schema.aggregate
+        } 
       }
     }
   }

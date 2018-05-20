@@ -1,6 +1,6 @@
 <template>
     <v-card color="dark" class="mb-5" height="100%">
-        <v-list-tile avatar @click="toggle('bootstrap.generate')" class="pa-2">
+        <v-list-tile avatar @click="toggle('generate')" class="pa-2">
             <v-list-tile-action>
                 <v-checkbox v-model="bootstrap.generate"></v-checkbox>
             </v-list-tile-action>
@@ -15,22 +15,21 @@
         <v-layout class="borderwrapper" row wrap v-for="(row, index) in bootstrap.settings" v-bind:key="row.id" :v-model="nextid" >
          
             <v-flex xs3>
-              <v-subheader>Name</v-subheader>
+              <v-subheader>Name</v-subheader>		
             </v-flex>
 
             <v-flex xs7>
                 <v-text-field v-model="row.name" :id="'name'+index" :name="row.name"  label="Name" ></v-text-field>
             </v-flex>
 
-						<v-flex xs3>
+			<v-flex xs3>
               <v-subheader> Type</v-subheader>
             </v-flex>
 
             <v-flex xs7>
                 <v-text-field v-model="row.type" :id="'type'+index" :name="row.type"  label="Type" ></v-text-field>
             </v-flex>
-		
-
+	
             <v-flex xs3>
                 <v-subheader> Description</v-subheader>
             </v-flex>
@@ -42,23 +41,22 @@
             <v-flex xs3>
                 <v-subheader> Env </v-subheader>
             </v-flex>
-
- 						<v-flex xs7>
-							<v-list-tile avatar @click="toggle('row.env')">
-									<v-list-tile-action>
-											<v-checkbox v-model="row.env"></v-checkbox>
-									</v-list-tile-action>
-									<v-list-tile-content>
-											<v-list-tile-title>Env Variable</v-list-tile-title>		
-									</v-list-tile-content>
-							</v-list-tile>
- 						</v-flex>
+ 				<v-flex xs7>
+					<v-list-tile avatar @click="toggle('row.env')">
+							<v-list-tile-action>
+									<v-checkbox v-model="row.env"></v-checkbox>
+							</v-list-tile-action>
+							<v-list-tile-content>
+									<v-list-tile-title>Env Variable</v-list-tile-title>		
+							</v-list-tile-content>
+					</v-list-tile>
+ 				</v-flex>
      
-						<v-flex xs2 class="pa-1">
-							<v-btn dark @click="remEnv(index)">
-								<v-icon dark left  >remove_circle</v-icon>Remove
-							</v-btn>
-						</v-flex>
+				<v-flex xs2 class="pa-1">
+					<v-btn dark @click="remEnv(index)">
+						<v-icon dark left  >remove_circle</v-icon>Remove
+					</v-btn>
+				</v-flex>
         	</v-layout>
 					
 					<div style="{ color: white, border-bottom:10px }"></div>
@@ -92,14 +90,10 @@ export default {
     methods: {
 			...mapActions(['addbootstrap']),
 				
-      toggle (name) {
-
-				if (this.bootstrap.generate == true) {
-					this.bootstrap.generate =  false
-				} else {
-					this.bootstrap.generate =  true
-				}
-
+      		toggle (name) {
+				if ( name == "generate") {
+					this.bootstrap.generate =  !this.bootstrap.generate
+				} 
 			},
 			
     	clickme() {

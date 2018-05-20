@@ -19,7 +19,7 @@
 
           <component :is="'page-'+steps[key]"></component>
           <div v-if= "index < 6">
-          <v-btn color="primary" v-on:click="greet" @click.native="e1 = index+2">Continue</v-btn>
+          <v-btn color="primary"  @click.native="e1 = index+2">Continue</v-btn>
           </div>
 
           <div v-else>
