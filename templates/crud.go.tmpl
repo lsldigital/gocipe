@@ -55,7 +55,7 @@ func List(filters []models.ListFilter) ([]*{{.Entity.Name}}, error) {
 		err      error
 	)
 
-	query := "SELECT {{.SQLFieldsSelectList}} FROM {{.Entity.Table}}"
+	query := "SELECT {{.SQLFieldsSelectList}} FROM {{.Entity.Table}} t"
 	{{if .Entity.Crud.Hooks.PreList}}
     if filters, err = crudPreList(filters); err != nil {
 		return nil, fmt.Errorf("error executing crudPreList() in List(filters) for entity '{{.Entity.Name}}': %s", err)
@@ -302,12 +302,12 @@ func (entity *{{.Entity.Name}}) Insert(tx *sql.Tx, autocommit bool) error {
 	{{range .BeforeInsert}}{{.}}
 	{{end}}
 	{{if eq .Entity.PrimaryKey "serial" -}}
-	stmt, err := tx.Prepare("INSERT INTO {{.Entity.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
+	stmt, err := tx.Prepare("INSERT INTO {{.Entity.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholdersInsert}}) RETURNING id")
 	if err != nil {
 		return err
 	}
 	{{else}}
-	stmt, err := tx.Prepare("INSERT INTO {{.Entity.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}})")
+	stmt, err := tx.Prepare("INSERT INTO {{.Entity.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholdersInsert}})")
 	if err != nil {
 		return err
 	}
@@ -474,8 +474,8 @@ func (entity *{{.Entity.Name}}) Merge(tx *sql.Tx, autocommit bool) error {
 
 	{{range .BeforeMerge}}{{.}}{{end}}
 
-	stmt, err := tx.Prepare(`INSERT INTO {{.Entity.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
-	ON CONFLICT {{.Entity.Table}}_pkey UPDATE {{.Entity.Table}} SET {{.SQLFieldsUpdate}} WHERE id = $1`)
+	stmt, err := tx.Prepare(`INSERT INTO {{.Entity.Table}} ({{.SQLFieldsMergeInsert}}) VALUES ({{.SQLPlaceholdersMerge}}) 
+	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsMergeUpdate}}`)
 	if err != nil {
 		return err
 	}
@@ -486,7 +486,7 @@ func (entity *{{.Entity.Name}}) Merge(tx *sql.Tx, autocommit bool) error {
 	}
 	{{end}}
 
-	_, err = stmt.Exec({{.StructFieldsUpdate}})
+	_, err = stmt.Exec({{.StructFieldsMerge}})
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("error executing transaction statement in {{.Entity.Name}}: %s", err)

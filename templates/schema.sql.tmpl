@@ -7,6 +7,7 @@ CREATE TABLE {{.Entity.Table}} (
 	{{- if not .Schema.Nullable}} NOT NULL{{end}}
 	{{- if ne .Schema.Default "" -}} DEFAULT {{.Schema.Default}}{{end}},
 	{{- end}}{{- end}}
+	{{range .Entity.TableConstraints}}{{.}},{{end}}
 	PRIMARY KEY ("id")
 );
 
