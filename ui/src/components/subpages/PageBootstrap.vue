@@ -59,7 +59,7 @@
 				</v-flex>
         	</v-layout>
 					
-					<div style="{ color: white, border-bottom:10px }"></div>
+				<div style="{ color: white, border-bottom:10px }"></div>
 
         <v-flex xs12>
             <v-layout column align-center class="pa-3">
@@ -71,6 +71,13 @@
             </v-layout>
         </v-flex>    
     
+		  <v-divider></v-divider> <v-divider></v-divider> <v-divider></v-divider> 
+
+			<v-flex xs12 class="text-xs-center">
+    		<v-btn @click="addboots" icon color="primary">
+      		<i class="material-icons"> check_circle </i>
+      	</v-btn>
+			</v-flex>
     </v-card>
 </template>
 
@@ -82,22 +89,22 @@ export default {
     		bootstrap: {
         	"generate": false,
         	"settings": []
-				},
-				rows: [],
-				nextid: 0,
+			},
+			rows: [],
+			nextid: 0,
       }
     },
     methods: {
 			...mapActions(['addbootstrap']),
 				
-      		toggle (name) {
+      toggle (name) {
 				if ( name == "generate") {
 					this.bootstrap.generate =  !this.bootstrap.generate
 				} 
 			},
 			
-    	clickme() {
-    	  this.addbootstrap(this.boostrap);
+    	addboots() {
+    	  this.addbootstrap(this.bootstrap);
     	},
 
 			addEnv() {
@@ -108,10 +115,7 @@ export default {
 					"description": "",
 					"env": false
 				}
-
 				this.bootstrap.settings.push(obj)
-
-				console.log(this.bootstrap)
 			},
 
 			remEnv(index) {
@@ -130,6 +134,5 @@ export default {
 	border-top: 1px solid black;
 	padding-bottom: 20px;
 }
-
 
 </style>

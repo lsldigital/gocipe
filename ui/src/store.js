@@ -6,25 +6,27 @@ Vue.use(Vuex);
 const state = {
   gocipe: {
     bootstrap: {},
-    http: {}
+    http: {},
+    schema: {}
   }
 };
 
 const mutations = {
   addbootstrap(state, payload) {
-    state.gocipe.bootstrap = payload
+    // state.gocipe.bootstrap.bootstrap = payload
+    Vue.set(state.gocipe, "bootstrap", payload)
   },
-  addhttp(state, payload) {
-    state.gocipe.http = payload
-  },
+  addschema(state, payload) {
+    Vue.set(state.gocipe, "schema", payload)
+  }
 };
 
 const actions = {
   addbootstrap({ commit }, payload) {
     commit("addbootstrap", payload)
   },
-  addhttp({ commit }, payload) {
-    commit("addhttp", payload)
+  addschema({commit}, payload) {
+    commit("addschema", payload)
   }
 };
 

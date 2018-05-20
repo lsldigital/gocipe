@@ -17,23 +17,23 @@
                 </v-list-tile-content>
             </v-list-tile>
 
-            <v-list-tile @click="toggle('pre_create')" avatar="avatar" class="pa-2">
+            <v-list-tile @click="toggle('pre_save')" avatar="avatar" class="pa-2">
                 <v-list-tile-action>
-                    <v-checkbox  v-model="crud.hooks.pre_create"></v-checkbox>
+                    <v-checkbox  v-model="crud.hooks.pre_save"></v-checkbox>
                 </v-list-tile-action>
                 <v-list-tile-content>
-                    <v-list-tile-title>Pre Create</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Pre Create function for CRUD operations</v-list-tile-sub-title>
+                    <v-list-tile-title>Pre Save</v-list-tile-title>
+                    <v-list-tile-sub-title>Allow Pre Save function for CRUD operations</v-list-tile-sub-title>
                 </v-list-tile-content>
             </v-list-tile>
 
-            <v-list-tile @click="toggle('post_create')" avatar="avatar" class="pa-2">
+            <v-list-tile @click="toggle('post_save')" avatar="avatar" class="pa-2">
                 <v-list-tile-action>
-                    <v-checkbox  v-model="crud.hooks.post_create"></v-checkbox>
+                    <v-checkbox  v-model="crud.hooks.post_save"></v-checkbox>
                 </v-list-tile-action>
                 <v-list-tile-content>
-                    <v-list-tile-title>Post Create</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Post Create function for CRUD operations</v-list-tile-sub-title>
+                    <v-list-tile-title>Post Save</v-list-tile-title>
+                    <v-list-tile-sub-title>Allow Post Save function for CRUD operations</v-list-tile-sub-title>
                 </v-list-tile-content>
             </v-list-tile>
 
@@ -78,57 +78,6 @@
                 </v-list-tile-content>
             </v-list-tile>
 
-            <v-list-tile @click="toggle('pre_read_list')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox  v-model="crud.hooks.pre_read_list"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Pre Read List</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Pre Read List function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
-
-            <v-list-tile @click="toggle('post_read_list')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox  v-model="crud.hooks.post_read_list"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Post Read List</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Post Read List function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
-
-            <v-divider></v-divider>
-            <v-list-tile @click="toggle('update')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox  v-model="crud.update"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Update</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Update function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
-
-            <v-list-tile @click="toggle('pre_update')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox  v-model="crud.hooks.pre_update"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Pre Update</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Pre Update function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
-
-            <v-list-tile @click="toggle('post_update')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox  v-model="crud.hooks.post_update"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Post Update</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Post Update function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
-
             <v-divider></v-divider>
 
             <v-list-tile @click="toggle('delete')" avatar="avatar" class="pa-2">
@@ -160,6 +109,17 @@
                     <v-list-tile-sub-title>Allow Post Delete function for CRUD operations</v-list-tile-sub-title>
                 </v-list-tile-content>
             </v-list-tile>
+
+            <v-list-tile @click="toggle('merge')" avatar="avatar" class="pa-2">
+                <v-list-tile-action>
+                    <v-checkbox  v-model="crud.merge"></v-checkbox>
+                </v-list-tile-action>
+                <v-list-tile-content>
+                    <v-list-tile-title>merge</v-list-tile-title>
+                    <v-list-tile-sub-title>Allow function for SQL Merge to be generated </v-list-tile-sub-title>
+                </v-list-tile-content>
+            </v-list-tile>
+
         </v-list>
     </v-card>
 </template>
@@ -174,15 +134,14 @@
                     "read_list": true,
                     "update": true,
                     "delete": true,
+                    "merge": false,
                     "hooks": {
-                        "pre_create": false,
-                        "post_create": false,
+                        "pre_save": false,
+                        "post_save": false,
                         "pre_read": false,
                         "post_read": false,
                         "pre_list": false,
                         "post_list": false,
-                        "pre_update": false,
-                        "post_update": false,
                         "pre_delete": false,
                         "post_delete": false
                     }
@@ -192,6 +151,9 @@
         methods: {
             toggle(name) {
               console.log(name)
+                if (name == "merge") {
+                    this.crud.merge = !this.crud.merge
+                }
                 if (name == "create") {
                     this.crud.create = !this.crud.create
                 }
@@ -207,11 +169,11 @@
                 if (name == "delete") {
                     this.crud.delete = !this.crud.delete
                 }
-                if (name == "pre_create") {
-                    this.crud.hooks.pre_create = !this.crud.hooks.pre_create
+                if (name == "pre_save") {
+                    this.crud.hooks.pre_save = !this.crud.hooks.pre_save
                 }
-                if (name == "post_create") {
-                    this.crud.hooks.post_create = !this.crud.hooks.post_create
+                if (name == "post_save") {
+                    this.crud.hooks.post_save = !this.crud.hooks.post_save
                 }
                 if (name == "pre_read") {
                     this.crud.pre_read = !this.crud.hooks.pre_read
@@ -224,12 +186,6 @@
                 }
                 if (name == "post_list") {
                     this.crud.hooks.post_list = !this.crud.hooks.post_list
-                }
-                if (name == "pre_update") {
-                    this.crud.pre_update = !this.crud.hooks.pre_update
-                }
-                if (name == "post_update") {
-                    this.crud.hooks.post_update = !this.crud.hooks.post_update
                 }
                 if (name == "pre_delete") {
                     this.crud.pre_delete = !this.crud.hooks.pre_delete

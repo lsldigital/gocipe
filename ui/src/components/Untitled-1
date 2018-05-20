@@ -42,4 +42,37 @@ rest
     - post_delete  bool
  - prefix text
 
+entities : [    
+  {
+    "name": "",
+    "primary_key": "",
+    "table": "",
+    "table_constraints": [],
+    "description": "",
+    "fields": [],
+    "schema": {
+        "create": true,
+        "drop": true,
+        "aggregate": true,
+        "path": ""
+    },
+    "schema": {},
+    "crud": {},
+    "rest": {},
+    "vuetify": {}
+    }
+  }
+]
+
+name
+primary_key
+table
+table_constraints
+description
+fields
+schema
+crud
+rest
+vuetify
+
 vuetify
