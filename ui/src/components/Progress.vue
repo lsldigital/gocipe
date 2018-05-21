@@ -4,11 +4,11 @@
       <v-stepper-header>
        <template  v-for="(step,key, index) in steps" >
          <div v-if="index < 6">
-          <v-stepper-step :complete="e1 > index + 1" :step="index + 1">{{step}}</v-stepper-step>
+          <v-stepper-step :complete="e1 > index + 1" :step="index + 1"  ><a class="link-component" v-on:click="loadpage(key)"> {{step}} </a></v-stepper-step>
           <v-divider></v-divider>
           </div>
           <div v-else>
-          <v-stepper-step :step="index + 1">{{step}}</v-stepper-step>
+          <v-stepper-step :step="index + 1"><a class="link-component" v-on:click="loadpage(key)"> {{step}} </a></v-stepper-step>
           </div>
        </template>
       </v-stepper-header>
@@ -16,16 +16,13 @@
     <v-stepper-items>
      
       <v-stepper-content v-for="(step, key, index) in steps"  :step="key" >
-
           <component :is="'page-'+steps[key]"></component>
           <div v-if= "index < 6">
-          <v-btn color="primary"  v-on:click="setback" @click.native="e1 = index+2">Continue</v-btn>
-          
+            <v-btn color="primary"  v-on:click="setback" @click.native="e1 = index+2">Continue</v-btn>
           </div>
 
           <div v-else>
-          <v-btn color="primary" @click.native="e1 = 1">Continue</v-btn>
-          <!-- <v-btn @click.native="b1 = 0" flat>Back</v-btn> -->
+            <v-btn color="primary" @click.native="e1 = 1">Continue</v-btn>
           </div>
 
           <div v-if= "index < 1">
@@ -78,9 +75,13 @@ export default {
       setlastpage() {
         this.e1 = 7
         this.b1 = this.e1-1
+      },
+      loadpage(key) {
+        this.e1 = key 
+        this.b1 = this.e1-1
       }
       // ...mapActions(['addbootstrap']),
-      // ...mapActions(['addhttp']),
+      // ...mapActions(['addhttp']), 
       // addtostore: function (event) {
       //   if (this.e1 == 0) {
       //     this.addbootstrap(this.boostrap);
@@ -91,4 +92,10 @@ export default {
     }
 }
 </script>
+
+<style>
+.link-component {
+  color: white;
+}
+</style>
 
