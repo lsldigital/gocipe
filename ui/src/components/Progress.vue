@@ -19,13 +19,23 @@
 
           <component :is="'page-'+steps[key]"></component>
           <div v-if= "index < 6">
-          <v-btn color="primary"  @click.native="e1 = index+2">Continue</v-btn>
+          <v-btn color="primary"  v-on:click="setback" @click.native="e1 = index+2">Continue</v-btn>
+          
           </div>
 
           <div v-else>
           <v-btn color="primary" @click.native="e1 = 1">Continue</v-btn>
+          <!-- <v-btn @click.native="b1 = 0" flat>Back</v-btn> -->
           </div>
-          <v-btn flat>Back</v-btn>
+
+          <div v-if= "index < 1">
+            <v-btn @click.native="b1" v-on:click="setlastpage" flat>Back</v-btn>
+          </div>
+
+          <div v-else>
+            <v-btn @click.native="b1"  v-on:click="setpage" flat>Back</v-btn>
+          </div>
+
       </v-stepper-content>
       </v-stepper-items>
     </v-stepper>
@@ -54,13 +64,23 @@ export default {
     data () {
       return {
         e1: 0,
+        b1: 0,
         steps: {1: "bootstrap", 2 : "http", 3: "schema", 4: "crud", 5: "rest", 6 : "vuetify", 7 : "entities"}
       }
     },
     methods: {
+      setback() {
+        this.b1 = this.e1-1
+      },
+      setpage() {
+        this.e1 = this.e1-1
+      },
+      setlastpage() {
+        this.e1 = 7
+        this.b1 = this.e1-1
+      }
       // ...mapActions(['addbootstrap']),
       // ...mapActions(['addhttp']),
-
       // addtostore: function (event) {
       //   if (this.e1 == 0) {
       //     this.addbootstrap(this.boostrap);

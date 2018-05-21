@@ -7,7 +7,10 @@ const state = {
   gocipe: {
     bootstrap: {},
     http: {},
-    schema: {}
+    schema: {},
+    crud: {},
+    rest: {},
+    vuetify:{}
   }
 };
 
@@ -18,6 +21,18 @@ const mutations = {
   },
   addschema(state, payload) {
     Vue.set(state.gocipe, "schema", payload)
+  },
+  addhttp(state, payload) {
+    Vue.set(state.gocipe, "http", payload)
+  },
+  addcrud(state, payload) {
+    Vue.set(state.gocipe, "crud", payload)
+  },
+  addrest(state, payload) {
+    Vue.set(state.gocipe, "rest", payload)
+  },
+  addvuetify(state, payload) {
+    Vue.set(state.gocipe, "vuetify", payload)
   }
 };
 
@@ -27,6 +42,18 @@ const actions = {
   },
   addschema({commit}, payload) {
     commit("addschema", payload)
+  },
+  addhttp({commit}, payload) {
+    commit("addhttp", payload)
+  },
+  addcrud({commit}, payload) {
+    commit("addcrud", payload)
+  },
+  addrest({commit}, payload) {
+    commit("addrest", payload)
+  },
+  addvuetify({commit}, payload) {
+    commit("addvuetify", payload)
   }
 };
 

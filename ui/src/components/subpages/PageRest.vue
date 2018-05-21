@@ -141,10 +141,17 @@
                 </v-list-tile-content>
             </v-list-tile>
         </v-list>
+
+              <v-divider></v-divider> <v-divider></v-divider> <v-divider></v-divider>
+      <v-flex xs12 class="text-xs-center">
+    		<v-btn @click="pushrest" icon color="primary">
+      		<i class="material-icons"> check_circle </i>
+      	</v-btn>
+			</v-flex>
     </v-card>
 </template>
 <script>
-
+import { mapActions } from 'vuex';
     export default {
         data() {
             return {
@@ -170,8 +177,8 @@
             }
         },
         methods: {
+          ...mapActions(['addrest']),
             toggle(name) {
-
                 if (name == "create") {
                     this.rest.create = !this.rest.create
                 }
@@ -217,6 +224,9 @@
                 if (name == "post_delete") {
                     this.rest.hooks.post_delete = !this.rest.hooks.post_delete
                 }
+            },
+            pushrest() {
+              this.addrest(this.rest);
             }
         }
     }

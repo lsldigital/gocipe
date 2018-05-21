@@ -121,10 +121,17 @@
             </v-list-tile>
 
         </v-list>
+
+      <v-divider></v-divider> <v-divider></v-divider> <v-divider></v-divider>
+      <v-flex xs12 class="text-xs-center">
+    		<v-btn @click="pushcrud" icon color="primary">
+      		<i class="material-icons"> check_circle </i>
+      	</v-btn>
+			</v-flex>
     </v-card>
 </template>
 <script>
-
+    import { mapActions } from 'vuex';
     export default {
         data() {
             return {
@@ -149,6 +156,7 @@
             }
         },
         methods: {
+          ...mapActions(['addcrud']),
             toggle(name) {
               console.log(name)
                 if (name == "merge") {
@@ -193,6 +201,9 @@
                 if (name == "post_delete") {
                     this.crud.hooks.post_delete = !this.crud.hooks.post_delete
                 }
+            },
+            pushcrud() {
+              this.addcrud(this.crud);
             }
         }
     }

@@ -18,12 +18,17 @@
             </v-flex>
 
         </v-list-tile>
-
+      <v-divider></v-divider> <v-divider></v-divider> <v-divider></v-divider>
+      <v-flex xs12 class="text-xs-center">
+    		<v-btn @click="pushhttp" icon color="primary">
+      		<i class="material-icons"> check_circle </i>
+      	</v-btn>
+			</v-flex>
     </v-card>
 </template>
 
 <script>
-
+import { mapActions } from 'vuex';
     export default {
         data() {
             return {
@@ -35,10 +40,14 @@
             }
         },
         methods: {
+            ...mapActions(['addhttp']),
             toggle(name) {
                 if (name == "generate") {
                     this.http.generate = !this.http.generate
                 }
+            },
+            pushhttp() {
+              this.addhttp(this.http);
             }
         }
     }

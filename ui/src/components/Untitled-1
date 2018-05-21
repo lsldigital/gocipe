@@ -76,3 +76,119 @@ rest
 vuetify
 
 vuetify
+
+
+
+
+recipe : {
+    "bootstrap": {},
+    "http" : {},
+    "schema" : {},
+    "crud" : {},
+    "rest" : {},
+    "vuetify" : {},
+    "entities": []
+}
+
+# entities is not json labelled
+
+[
+    {
+        "name": "",
+        "primary_key": "",
+        "table": "",
+        "table_constraints": [],
+        "description": "",
+        "fields": [],
+        "schema": {
+            "create": true,
+            "drop": true,
+            "aggregate": true,
+            "path": "",
+        },
+        "crud": {
+            "create": true,
+            "read": true,
+            "read_list": true,
+            "update": true,
+            "delete": true,
+            "merge": true,
+            "hooks": {
+                "pre_save": false,
+                "post_save": false,
+                "pre_read": false,
+                "post_read": false,
+                "pre_list": false,
+                "post_list": false,
+                "pre_delete": false,
+                "post_delete": false
+            },
+        },
+        "rest": {
+            "create": true,
+            "read": true,
+            "read_list": true,
+            "update": true,
+            "delete": true,
+            "prefix": "",
+            "hooks": {
+                "pre_create": false,
+                "post_create": false, 
+                "pre_read": false,    
+                "post_read": false,   
+                "pre_list": false,    
+                "post_list": false,   
+                "pre_update": false,  
+                "post_update": false, 
+                "pre_delete": false,  
+                "post_delete": false   
+            },
+        },
+        "vuetify": {
+            "generate": true,
+            "module": ""
+        }
+    }
+]
+
+#table_constraints []string
+#fields []field
+
+field = {
+    "label": "",
+    "serialized": "",
+    "property": {
+        "name": "",
+        "type": ""
+    },
+    "schema": {
+        "field": "",
+        "type": ""
+    },
+    "relationship": {
+        "type": "",
+        "target": {
+            "entity":"",
+            "endpoint":"",
+            "query":"",
+            "table":"",
+            "thisid":"",
+            "thatid":"",
+            "thatfield_type":""
+        }
+    },
+    "widget": {
+        "type": "",
+        "options": [
+            {
+                "value": "",
+                "label": ""
+            }
+        ],
+        "target": {
+            "endpoint": "",
+            "label": ""
+        },
+    },
+    "filterable": true
+}j

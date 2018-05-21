@@ -34,7 +34,7 @@
 
 <v-divider></v-divider> <v-divider></v-divider> <v-divider></v-divider> 
 			<v-flex xs12 class="text-xs-center">
-    		<v-btn @click="pushschema" icon color="primary">
+    		<v-btn @click="addnewschema" icon color="primary">
       		<i class="material-icons"> check_circle </i>
       	</v-btn>
 			</v-flex>
@@ -69,7 +69,7 @@ export default {
         } 
       },
 
-      pushschema() {
+      addnewschema() {
     	  this.addschema(this.schema);
     	}
     }
