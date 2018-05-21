@@ -68,7 +68,7 @@ type Recipe struct {
 	Vuetify VuetifyOpts `json:"vuetify"`
 
 	// Entities lists entities to be generated
-	Entities []Entity
+	Entities []Entity `json:"entities"`
 }
 
 // HTTPOpts represents options for http function generation
@@ -164,11 +164,17 @@ type CrudHooks struct {
 	// PostList allows hook function to be executed after List operation is performed
 	PostList bool `json:"post_list"`
 
-	// PreDelete allows hook function to be executed before Delete operation is performed
-	PreDelete bool `json:"pre_delete"`
+	// PreDeleteSingle allows hook function to be executed before DeleteSingle operation is performed
+	PreDeleteSingle bool `json:"pre_delete_single"`
 
-	// PostDelete allows hook function to be executed after Delete operation is performed
-	PostDelete bool `json:"post_delete"`
+	// PostDeleteSingle allows hook function to be executed after DeleteSingle operation is performed
+	PostDeleteSingle bool `json:"post_delete_single"`
+
+	// PreDeleteMany allows hook function to be executed before DeleteMany operation is performed
+	PreDeleteMany bool `json:"pre_delete_many"`
+
+	// PostDeleteMany allows hook function to be executed after DeleteMany operation is performed
+	PostDeleteMany bool `json:"post_delete_many"`
 }
 
 // RestOpts represents which rest functions should be generated

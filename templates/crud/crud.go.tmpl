@@ -1,0 +1,25 @@
+package {{.Package}}
+
+import (
+	"context"
+	"database/sql"
+	{{range .Imports}}{{.}}{{end}}
+)
+
+var db *sql.DB
+
+// Inject allows injection of services into the package
+func Inject(database *sql.DB) {
+	db = database
+}
+
+{{.Get}}
+{{.List}}
+{{.DeleteSingle}}
+{{.DeleteMany}}
+{{.Save}}
+{{.Insert}}
+{{.Update}}
+{{.Merge}}
+{{range .SaveRelated}}{{.}}{{end}}
+{{range .LoadRelated}}{{.}}{{end}}

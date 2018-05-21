@@ -1,0 +1,66 @@
+// List returns a slice containing {{.EntityName}} records
+func List(ctx context.Context, filters []models.ListFilter) ([]*{{.EntityName}}, error) {
+	var (
+		list     []*{{.EntityName}}
+		segments []string
+		values   []interface{}
+		err      error
+		rows     *sql.Rows
+	)
+
+	query := "SELECT {{.SQLFields}} FROM {{.Table}}"
+	{{if .HasPreHook}}
+    if filters, err = crudPreList(ctx, filters); err != nil {
+		return nil, err
+	}
+	{{end}}
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		break
+	}
+
+	for i, filter := range filters {
+		segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
+		values = append(values, filter.Value)
+	}
+
+	if len(segments) != 0 {
+		query += " WHERE " + strings.Join(segments, " AND ")
+	}
+
+	rows, err = db.Query(query+" ORDER BY id ASC", values...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			break
+		}
+
+		entity := New()
+		err = rows.Scan({{.StructFields}})
+		if err != nil {
+			return nil, err
+		}
+
+		list = append(list, entity)
+	}
+	{{if .HasPostHook}}
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		if list, err = crudPostList(ctx, list); err != nil {
+			return nil, err
+		}
+	}
+	{{end}}
+	return list, nil
+}

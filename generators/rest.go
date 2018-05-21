@@ -13,6 +13,21 @@ func GenerateREST(work util.GenerationWork, opts util.RestOpts, entities []util.
 	work.Waitgroup.Add(len(entities) * 2) //2 jobs to be waited upon for each thread - _rest.go and _rest_hooks.go generation
 
 	for _, entity := range entities {
+		if !entity.Rest.Hooks.PreCreate &&
+			!entity.Rest.Hooks.PostCreate &&
+			!entity.Rest.Hooks.PreRead &&
+			!entity.Rest.Hooks.PostRead &&
+			!entity.Rest.Hooks.PreList &&
+			!entity.Rest.Hooks.PostList &&
+			!entity.Rest.Hooks.PreUpdate &&
+			!entity.Rest.Hooks.PostUpdate &&
+			!entity.Rest.Hooks.PreDelete &&
+			!entity.Rest.Hooks.PostDelete {
+			work.Waitgroup.Done()
+			work.Waitgroup.Done()
+			continue
+		}
+
 		go func(entity util.Entity) {
 			var (
 				data struct {

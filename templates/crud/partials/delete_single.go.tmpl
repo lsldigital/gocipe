@@ -1,0 +1,74 @@
+// Delete deletes a {{.EntityName}} record from database and sets id to nil
+func (entity *{{.EntityName}}) Delete(ctx context.Context, tx *sql.Tx, autocommit bool) error {
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+	id := *entity.ID
+
+	if tx == nil {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			tx, err = db.Begin()
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE id = $1")
+		if err != nil {
+			return err
+		}
+	}
+	{{if .HasPreHook}}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		if err = crudPreDelete(id, tx); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	{{end}}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		_, err = stmt.Exec(id)
+		if err == nil {
+			entity.ID = nil
+		} else {
+			tx.Rollback()
+			return err
+		}
+	}
+	{{if .HasPostHook}}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		if err = crudPostDelete(id, tx); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	{{end}}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		if autocommit {
+			err = tx.Commit()
+		}
+	}
+	
+	return nil
+}

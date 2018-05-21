@@ -1,0 +1,61 @@
+// SaveRelated{{.PropertyName}} is a helper function to save related {{.PropertyName}} entities
+func SaveRelated{{.PropertyName}}(ctx context.Context, idthis  {{pkeyPropertyType .PrimaryKey}}, relatedids {{.PropertyType}}) error {
+	var (
+		placeholder string
+		values  []interface{}
+		indices map[{{pkeyPropertyType .PrimaryKey}}]{{trimPrefix .PropertyType "[]"}}
+		idthis  {{pkeyPropertyType .PrimaryKey}}
+		idthat  {{trimPrefix .PropertyType "[]"}}
+		items   []{{.EntityName}}
+		stmt    *sql.Stmt
+	)
+
+	select {
+	case <-ctx.Done():
+		tx.Rollback()
+		return ctx.Err()
+	default:
+		break
+	}
+	
+	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThisID}} = $1")
+
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(*entity.ID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	select {
+	case <-ctx.Done():
+		tx.Rollback()
+		return ctx.Err()
+	default:
+		break
+	}
+
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThisID}}, {{.ThatID}}) VALUES ($1, $2)")
+	if err != nil {
+		return err
+	}
+
+	for _, relatedID := range *entity.{{.PropertyName}} {
+		select {
+		case <-ctx.Done():
+			tx.Rollback()
+			return ctx.Err()
+		default:
+			break
+		}
+
+		_, err = stmt.Exec(*entity.ID, relatedID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+}

@@ -1,0 +1,78 @@
+// Merge performs an SQL merge for {{.Entity.Name}} record.
+func (entity *{{.Entity.Name}}) Merge(ctx context.Context, tx *sql.Tx, autocommit bool) error {
+	var (
+		err error
+		stmt *sql.Stmt
+	)
+
+	if tx == nil {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			tx, err = db.Begin()
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if entity.ID == nil {
+		return entity.Insert(ctx, tx, autocommit)
+	}
+
+	{{range .Before}}{{.}}{{end}}
+
+	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
+	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`)
+	if err != nil {
+		return err
+	}
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		break
+	}
+	{{if .HasPreHook}}
+    if err = crudPreSave("MERGE", entity, tx); err != nil {
+		tx.Rollback()
+		return err
+	}
+	{{end}}
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		break
+	}
+	_, err = stmt.Exec({{.StructFieldsMerge}})
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	{{if .HasPostHook}}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		break
+	}
+	if err = crudPostSave("MERGE", entity, tx); err != nil {
+		tx.Rollback()
+		return err
+	}
+	{{end}}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		if autocommit {
+			err = tx.Commit()
+		}
+	}
+
+	return err
+}

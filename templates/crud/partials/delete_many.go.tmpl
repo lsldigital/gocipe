@@ -1,0 +1,83 @@
+// Delete deletes many {{.EntityName}} records from database using filter
+func Delete(ctx context.Context, filters []models.ListFilter, tx *sql.Tx, autocommit bool) error {
+	var (
+		err      error
+		stmt     *sql.Stmt
+		segments []string
+		values   []interface{}
+	)
+
+	if tx == nil {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			tx, err = db.Begin()
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	query := "DELETE FROM {{.Table}}"
+	{{if .HasPreHook}}
+    if filters, err = crudPreDeleteMany(ctx, filters); err != nil {
+		return err
+	}
+	{{end}}
+	select {
+	case <-ctx.Done():
+		tx.Rollback()
+		return ctx.Err()
+	default:
+		break
+	}
+
+	for i, filter := range filters {
+		segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
+		values = append(values, filter.Value)
+	}
+
+	if len(segments) != 0 {
+		query += " WHERE " + strings.Join(segments, " AND ")
+	}
+
+	stmt, err = db.Prepare(query)
+	if err != nil {
+		return err
+	}
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		_, err = stmt.Exec(values...)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	{{if .HasPostHook}}
+	select {
+	case <-ctx.Done():
+		tx.Rollback()
+		return ctx.Err()
+	default:
+		if err = crudPostDeleteMany(ctx, filters, tx); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	{{end}}
+	select {
+	case <-ctx.Done():
+		tx.Rollback()
+		return ctx.Err()
+	default:
+		if autocommit {
+			err = tx.Commit()
+		}
+	}
+
+	return err
+}
