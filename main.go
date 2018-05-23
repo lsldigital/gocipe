@@ -50,9 +50,14 @@ func main() {
 
 	work.Waitgroup.Add(5)
 
+	entities := make(map[string]util.Entity)
+	for _, entity := range recipe.Entities {
+		entities[entity.Name] = entity
+	}
+
 	go generators.GenerateBootstrap(work, recipe.Bootstrap, recipe.HTTP)
 	go generators.GenerateHTTP(work, recipe.HTTP)
-	go crud.Generate(work, recipe.Crud, recipe.Entities)
+	go crud.Generate(work, recipe.Crud, entities)
 	// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 	go generators.GenerateSchema(work, recipe.Schema, recipe.Entities)
 	go generators.GenerateVuetify(work, recipe.Rest, recipe.Vuetify, recipe.Entities)

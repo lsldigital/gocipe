@@ -30,7 +30,7 @@ type relationship struct {
 }
 
 // Generate returns generated code to run an http server
-func Generate(work util.GenerationWork, opts util.CrudOpts, entities []util.Entity) {
+func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]util.Entity) {
 	work.Waitgroup.Add(len(entities) * 3) //3 jobs to be waited upon for each thread - entity.go,  entity_crud.go and entity_crud_hooks.go generation
 
 	for _, entity := range entities {
@@ -49,7 +49,7 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entities []util.Enti
 				entity.PrimaryKey = util.PrimaryKeySerial
 			}
 
-			code, err = generateCrud(entity)
+			code, err = generateCrud(entity, entities)
 			if err == nil {
 				crud, err = util.ExecuteTemplate("crud/crud.go.tmpl", code)
 			}
@@ -106,7 +106,7 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entities []util.Enti
 	}
 }
 
-func generateCrud(entity util.Entity) (entityCrud, error) {
+func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCrud, error) {
 	var (
 		code entityCrud
 		err  error
@@ -115,41 +115,41 @@ func generateCrud(entity util.Entity) (entityCrud, error) {
 	code.Package = strings.ToLower(entity.Name)
 
 	if err == nil && entity.Crud.Create {
-		code.Insert, err = generateInsert(entity)
+		code.Insert, err = generateInsert(entities, entity)
 	}
 
 	if err == nil && entity.Crud.Read {
-		code.Get, err = generateGet(entity)
+		code.Get, err = generateGet(entities, entity)
 	}
 
 	if err == nil && entity.Crud.ReadList {
-		code.List, err = generateList(entity)
+		code.List, err = generateList(entities, entity)
 	}
 
 	if err == nil && entity.Crud.Update {
-		code.Update, err = generateUpdate(entity)
+		code.Update, err = generateUpdate(entities, entity)
 	}
 
 	if err == nil && entity.Crud.Delete {
-		code.DeleteMany, err = generateDeleteMany(entity)
+		code.DeleteMany, err = generateDeleteMany(entities, entity)
 		if err == nil {
-			code.DeleteSingle, err = generateDeleteSingle(entity)
+			code.DeleteSingle, err = generateDeleteSingle(entities, entity)
 		}
 	}
 
 	if err == nil && entity.Crud.Merge {
-		code.Merge, err = generateMerge(entity)
+		code.Merge, err = generateMerge(entities, entity)
 	}
 
 	if err == nil && entity.Crud.Create && entity.Crud.Update && entity.Crud.Merge {
-		code.Save, err = generateSave(entity)
+		code.Save, err = generateSave(entities, entity)
 	}
 
 	return code, err
 }
 
 // generateGet produces code for database retrieval of single entity (SELECT WHERE id)
-func generateGet(entity util.Entity) (string, error) {
+func generateGet(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var sqlfields, structfields []string
 
 	sqlfields = append(sqlfields, fmt.Sprintf("t.%s", "id"))
@@ -182,7 +182,7 @@ func generateGet(entity util.Entity) (string, error) {
 }
 
 // generateList produces code for database retrieval of list of entities with optional filters
-func generateList(entity util.Entity) (string, error) {
+func generateList(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var sqlfields, structfields []string
 
 	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
@@ -213,7 +213,7 @@ func generateList(entity util.Entity) (string, error) {
 }
 
 // generateDeleteSingle produces code for database deletion of single entity (DELETE WHERE id)
-func generateDeleteSingle(entity util.Entity) (string, error) {
+func generateDeleteSingle(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	return util.ExecuteTemplate("crud/partials/delete_single.go.tmpl", struct {
 		EntityName  string
 		Table       string
@@ -228,7 +228,7 @@ func generateDeleteSingle(entity util.Entity) (string, error) {
 }
 
 // generateDeleteMany produces code for database deletion of entity via filters
-func generateDeleteMany(entity util.Entity) (string, error) {
+func generateDeleteMany(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	return util.ExecuteTemplate("crud/partials/delete_many.go.tmpl", struct {
 		EntityName  string
 		PrimaryKey  string
@@ -245,7 +245,7 @@ func generateDeleteMany(entity util.Entity) (string, error) {
 }
 
 // generateSave produces code for database saving of entity
-func generateSave(entity util.Entity) (string, error) {
+func generateSave(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	return util.ExecuteTemplate("crud/partials/save.go.tmpl", struct {
 		EntityName string
 		PrimaryKey string
@@ -256,7 +256,7 @@ func generateSave(entity util.Entity) (string, error) {
 }
 
 // generateInsert produces code for database insertion of entity (INSERT INTO)
-func generateInsert(entity util.Entity) (string, error) {
+func generateInsert(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var (
 		before, sqlPlaceholders, sqlfields, structFields []string
 		hasRelationships                                 bool
@@ -315,7 +315,7 @@ func generateInsert(entity util.Entity) (string, error) {
 }
 
 // generateUpdate produces code for database update of entity (UPDATE)
-func generateUpdate(entity util.Entity) (string, error) {
+func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var (
 		before, sqlfields, structfields []string
 		hasRelationships                bool
@@ -362,7 +362,7 @@ func generateUpdate(entity util.Entity) (string, error) {
 }
 
 // generateMerge produces code for database merge of entity (INSERT/ON CONFLICT UPDATE)
-func generateMerge(entity util.Entity) (string, error) {
+func generateMerge(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var (
 		before          []string
 		sqlfieldsInsert []string
@@ -414,7 +414,7 @@ func generateMerge(entity util.Entity) (string, error) {
 }
 
 // generateSaveRelated produces code for database saving of related entities
-func generateSaveRelated(entity util.Entity) (string, error) {
+func generateSaveRelated(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	return util.ExecuteTemplate("crud/partials/saverelated.go.tmpl", struct {
 		PropertyName string
 		PrimaryKey   string
