@@ -156,10 +156,8 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 	structfields = append(structfields, fmt.Sprintf("entity.%s", "ID"))
 
 	for _, field := range entity.Fields {
-		if field.Relationship.Type == "" {
-			sqlfields = append(sqlfields, fmt.Sprintf("t.%s", field.Schema.Field))
-			structfields = append(structfields, fmt.Sprintf("entity.%s", field.Property.Name))
-		}
+		sqlfields = append(sqlfields, fmt.Sprintf("t.%s", field.Schema.Field))
+		structfields = append(structfields, fmt.Sprintf("entity.%s", field.Property.Name))
 	}
 
 	return util.ExecuteTemplate("crud/partials/get.go.tmpl", struct {
@@ -189,10 +187,8 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 	structfields = append(structfields, fmt.Sprintf("entity.%s", "ID"))
 
 	for _, field := range entity.Fields {
-		if field.Relationship.Type == "" {
-			sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
-			structfields = append(structfields, fmt.Sprintf("entity.%s", field.Property.Name))
-		}
+		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
+		structfields = append(structfields, fmt.Sprintf("entity.%s", field.Property.Name))
 	}
 
 	return util.ExecuteTemplate("crud/partials/list.go.tmpl", struct {
@@ -259,7 +255,6 @@ func generateSave(entities map[string]util.Entity, entity util.Entity) (string, 
 func generateInsert(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var (
 		before, sqlPlaceholders, sqlfields, structFields []string
-		hasRelationships                                 bool
 		count                                            int
 	)
 
@@ -272,45 +267,39 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 	}
 
 	for _, field := range entity.Fields {
-		if field.Relationship.Type == "" {
-			sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
-			sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
-			structFields = append(structFields, fmt.Sprintf("*entity.%s", field.Property.Name))
+		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
+		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
+		structFields = append(structFields, fmt.Sprintf("*entity.%s", field.Property.Name))
 
-			if field.Property.Name == "CreatedAt" {
-				before = append(before, "*entity.CreatedAt = time.Now()")
-			} else if field.Property.Name == "UpdatedAt" {
-				before = append(before, "*entity.UpdatedAt = time.Now()")
-			}
-		} else {
-			hasRelationships = true
+		if field.Property.Name == "CreatedAt" {
+			before = append(before, "*entity.CreatedAt = time.Now()")
+		} else if field.Property.Name == "UpdatedAt" {
+			before = append(before, "*entity.UpdatedAt = time.Now()")
 		}
 	}
 
 	return util.ExecuteTemplate("crud/partials/insert.go.tmpl", struct {
-		Before           []string
-		EntityName       string
-		HasRelationships bool
-		PrimaryKey       string
-		SQLFields        string
-		SQLPlaceholders  string
-		StructFields     string
-		Table            string
-		HasPreHook       bool
-		HasPostHook      bool
-		Relationships    []relationship
+		Before          []string
+		EntityName      string
+		PrimaryKey      string
+		SQLFields       string
+		SQLPlaceholders string
+		StructFields    string
+		Table           string
+		HasPreHook      bool
+		HasPostHook     bool
+		Relationships   []relationship
 	}{
-		Before:           before,
-		EntityName:       entity.Name,
-		HasRelationships: hasRelationships,
-		PrimaryKey:       entity.PrimaryKey,
-		SQLFields:        strings.Join(sqlfields, ", "),
-		SQLPlaceholders:  strings.Join(sqlPlaceholders, ", "),
-		StructFields:     strings.Join(structFields, ", "),
-		Table:            entity.Table,
-		HasPostHook:      entity.Crud.Hooks.PreSave,
-		HasPreHook:       entity.Crud.Hooks.PostSave,
-		Relationships:    nil,
+		Before:          before,
+		EntityName:      entity.Name,
+		PrimaryKey:      entity.PrimaryKey,
+		SQLFields:       strings.Join(sqlfields, ", "),
+		SQLPlaceholders: strings.Join(sqlPlaceholders, ", "),
+		StructFields:    strings.Join(structFields, ", "),
+		Table:           entity.Table,
+		HasPostHook:     entity.Crud.Hooks.PreSave,
+		HasPreHook:      entity.Crud.Hooks.PostSave,
+		Relationships:   nil,
 	})
 }
 
@@ -318,46 +307,39 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var (
 		before, sqlfields, structfields []string
-		hasRelationships                bool
 		count                           = 1
 	)
 
 	for _, field := range entity.Fields {
-		if field.Relationship.Type == "" {
-			sqlfields = append(sqlfields, fmt.Sprintf("%s = $%d", field.Schema.Field, count))
-			structfields = append(structfields, fmt.Sprintf("*entity.%s", field.Property.Name))
-			count++
+		sqlfields = append(sqlfields, fmt.Sprintf("%s = $%d", field.Schema.Field, count))
+		structfields = append(structfields, fmt.Sprintf("*entity.%s", field.Property.Name))
+		count++
 
-			if field.Property.Name == "CreatedAt" {
-				before = append(before, "*entity.CreatedAt = time.Now()")
-			} else if field.Property.Name == "UpdatedAt" {
-				before = append(before, "*entity.UpdatedAt = time.Now()")
-			}
-		} else {
-			hasRelationships = true
+		if field.Property.Name == "CreatedAt" {
+			before = append(before, "*entity.CreatedAt = time.Now()")
+		} else if field.Property.Name == "UpdatedAt" {
+			before = append(before, "*entity.UpdatedAt = time.Now()")
 		}
 	}
 
 	return util.ExecuteTemplate("crud/partials/update.go.tmpl", struct {
-		Before           []string
-		EntityName       string
-		HasPostHook      bool
-		HasPreHook       bool
-		HasRelationships bool
-		SQLFields        string
-		StructFields     string
-		Table            string
-		Relationships    []relationship
+		Before        []string
+		EntityName    string
+		HasPostHook   bool
+		HasPreHook    bool
+		SQLFields     string
+		StructFields  string
+		Table         string
+		Relationships []relationship
 	}{
-		EntityName:       entity.Name,
-		Table:            entity.Table,
-		HasRelationships: hasRelationships,
-		Before:           before,
-		SQLFields:        strings.Join(sqlfields, ", "),
-		StructFields:     strings.Join(structfields, ", "),
-		HasPreHook:       entity.Crud.Hooks.PreSave,
-		HasPostHook:      entity.Crud.Hooks.PostSave,
-		Relationships:    nil,
+		EntityName:    entity.Name,
+		Table:         entity.Table,
+		Before:        before,
+		SQLFields:     strings.Join(sqlfields, ", "),
+		StructFields:  strings.Join(structfields, ", "),
+		HasPreHook:    entity.Crud.Hooks.PreSave,
+		HasPostHook:   entity.Crud.Hooks.PostSave,
+		Relationships: nil,
 	})
 }
 
@@ -377,17 +359,15 @@ func generateMerge(entities map[string]util.Entity, entity util.Entity) (string,
 	sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
 
 	for _, field := range entity.Fields {
-		if field.Relationship.Type == "" {
-			sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
-			sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf("%s = $%d", field.Schema.Field, count))
-			sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("%s", field.Schema.Field))
-			structFields = append(structFields, fmt.Sprintf("*entity.%s", field.Property.Name))
+		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
+		sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf("%s = $%d", field.Schema.Field, count))
+		sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("%s", field.Schema.Field))
+		structFields = append(structFields, fmt.Sprintf("*entity.%s", field.Property.Name))
 
-			if field.Property.Name == "CreatedAt" {
-				before = append(before, "*entity.CreatedAt = time.Now()")
-			} else if field.Property.Name == "UpdatedAt" {
-				before = append(before, "*entity.UpdatedAt = time.Now()")
-			}
+		if field.Property.Name == "CreatedAt" {
+			before = append(before, "*entity.CreatedAt = time.Now()")
+		} else if field.Property.Name == "UpdatedAt" {
+			before = append(before, "*entity.UpdatedAt = time.Now()")
 		}
 		count++
 	}

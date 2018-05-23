@@ -274,6 +274,9 @@ type Entity struct {
 	// Fields is a list of fields for the entity
 	Fields []Field `json:"fields"`
 
+	// Relationships represent relationship information between this entity and others
+	Relationships []FieldRelationship `json:"relationships"`
+
 	// Schema describes options for Schema generation - overrides recipe level Schema config
 	Schema *SchemaOpts `json:"schema"`
 
@@ -300,9 +303,6 @@ type Field struct {
 
 	// Schema represents schema information for the field
 	Schema FieldSchema `json:"schema"`
-
-	// Relationship represents relationship information for the field
-	Relationship FieldRelationship `json:"relationship"`
 
 	// Widget represents widget information for the field
 	Widget WidgetOpts `json:"widget"`
@@ -337,25 +337,17 @@ type FieldSchema struct {
 
 // FieldRelationship represents a relationship between this entity and another
 type FieldRelationship struct {
-	// Type represents the type of relationship
-	Type string `json:"type"`
-	// Target represents the target of the relationship
-	Target FieldRelationshipTarget `json:"target"`
-}
-
-// FieldRelationshipTarget represents a target for a relationship
-type FieldRelationshipTarget struct {
-	// Entity represents the other entity in the relationship
+	// Entity is the name of the related entity
 	Entity string `json:"entity"`
 
-	// Endpoint represents the endpoint where query can be made
-	Endpoint string `json:"endpoint"`
+	// Type represents the type of relationship
+	Type string `json:"type"`
 
-	// Query represents the field to use in the query string
-	Query string `json:"query"`
+	// Name represents the property name to be used for this relationship
+	Name string `json:"name"`
 
-	// Table represents the other table in the relationship
-	Table string `json:"table"`
+	// JoinTable represents the other table in a many-many relationship
+	JoinTable string `json:"join_table"`
 
 	// ThisID represents the field in this entity used for the relationship
 	ThisID string `json:"thisid"`
@@ -363,8 +355,11 @@ type FieldRelationshipTarget struct {
 	// ThatID represents the field in the other entity used for the relationship
 	ThatID string `json:"thatid"`
 
-	// ThatFieldType represents the field type of the other entity
-	ThatFieldType string `json:"thatfield_type"`
+	// Eager indicates whether or not to eager load this relationship
+	Eager bool `json:"eager"`
+
+	// Full indicates whether or not to fully load this relationship or to load ids only
+	Full bool `json:"full"`
 }
 
 // WidgetOpts represents a UI widget
