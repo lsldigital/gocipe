@@ -30,8 +30,15 @@ type relationship struct {
 }
 
 // Generate returns generated code to run an http server
-func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]util.Entity) {
-	work.Waitgroup.Add(len(entities) * 3) //3 jobs to be waited upon for each thread - entity.go,  entity_crud.go and entity_crud_hooks.go generation
+func Generate(work util.GenerationWork, opts util.CrudOpts, entityList []util.Entity) {
+	entities, err := preprocessEntities(entityList)
+
+	if err != nil {
+		work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: err}
+		return
+	}
+
+	work.Waitgroup.Add(len(entityList) * 3) //3 jobs to be waited upon for each thread - entity.go,  entity_crud.go and entity_crud_hooks.go generation
 
 	for _, entity := range entities {
 		go func(entity util.Entity) {
@@ -60,10 +67,7 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]
 				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to execute template: %s", err)}
 			}
 
-			structure, err := util.ExecuteTemplate("crud/structure.go.tmpl", struct {
-				Entity  util.Entity
-				Package string
-			}{entity, code.Package})
+			structure, err := generateStructure(entities, entity)
 			if err == nil {
 				work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModel", Code: structure, Filename: fmt.Sprintf("models/%s/%s.gocipe.go", code.Package, code.Package)}
 			} else {
@@ -148,17 +152,126 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 	return code, err
 }
 
+func generateStructure(entities map[string]util.Entity, entity util.Entity) (string, error) {
+	var fields []struct {
+		Name       string
+		Type       string
+		Serialized string
+	}
+
+	var initialization []struct {
+		Name string
+		Type string
+	}
+
+	for _, field := range entity.Fields {
+		fields = append(fields, struct {
+			Name       string
+			Type       string
+			Serialized string
+		}{field.Property.Name, "*" + field.Property.Type, field.Serialized})
+
+		initialization = append(initialization, struct {
+			Name string
+			Type string
+		}{field.Property.Name, fmt.Sprintf("new(%s)", field.Property.Type)})
+	}
+
+	relation := func(rel util.Relationship, many, full bool) {
+		var t string
+		if full {
+			t = fmt.Sprintf("%s.%s", strings.ToLower(rel.Entity), rel.Entity)
+		} else {
+			t, _ = util.GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
+		}
+
+		if many {
+			t = "[]" + t
+		} else {
+			t = "*" + t
+		}
+
+		fields = append(fields, struct {
+			Name       string
+			Type       string
+			Serialized string
+		}{rel.Name, t, rel.Serialized})
+
+	}
+
+	for _, rel := range entity.Relationships {
+		switch rel.Type {
+		case util.RelationshipTypeOneOne:
+			fallthrough
+		case util.RelationshipTypeManyOne:
+			relation(rel, false, rel.Full)
+		case util.RelationshipTypeOneMany:
+			fallthrough
+		case util.RelationshipTypeManyMany:
+			relation(rel, true, rel.Full)
+		}
+	}
+
+	return util.ExecuteTemplate("crud/structure.go.tmpl", struct {
+		Package     string
+		Name        string
+		Description string
+		PrimaryKey  string
+		Fields      []struct {
+			Name       string
+			Type       string
+			Serialized string
+		}
+		Initialization []struct {
+			Name string
+			Type string
+		}
+	}{
+		Package:        strings.ToLower(entity.Name),
+		Name:           entity.Name,
+		Description:    entity.Description,
+		PrimaryKey:     entity.PrimaryKey,
+		Fields:         fields,
+		Initialization: initialization,
+	})
+}
+
 // generateGet produces code for database retrieval of single entity (SELECT WHERE id)
 func generateGet(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var sqlfields, structfields []string
+	var sqlfields, structfields []string //, after []string
 
-	sqlfields = append(sqlfields, fmt.Sprintf("t.%s", "id"))
+	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
 	structfields = append(structfields, fmt.Sprintf("entity.%s", "ID"))
 
 	for _, field := range entity.Fields {
-		sqlfields = append(sqlfields, fmt.Sprintf("t.%s", field.Schema.Field))
+		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
 		structfields = append(structfields, fmt.Sprintf("entity.%s", field.Property.Name))
 	}
+
+	// for _, rel := range entity.Relationships {
+	// 	switch rel.Type {
+	// 	case util.RelationshipTypeOneOne:
+	// 		if rel.Full {
+	// 			after = append(after, fmt.Sprintf("entity.%s, err = %s.Get(ctx, )"))
+	// 			after = append(after, fmt.Sprintf("entity.%s = %s.Get(ctx, )"))
+	// 			after = append(after, fmt.Sprintf("entity.%s = %s.Get(ctx, )"))
+	// 		} else {
+	// 			sqlfields = append(sqlfields, fmt.Sprintf("%s", rel.ThisID))
+	// 			structfields = append(structfields, fmt.Sprintf("entity.%s", rel.Name))
+	// 		}
+
+	// 	case util.RelationshipTypeOneMany:
+	// 		if rel.Full {
+	// 			after = append(after, fmt.Sprintf("entity.%s = %s.Get(ctx, )"))
+	// 		} else {
+	// 			sqlfields = append(sqlfields, fmt.Sprintf("%s", rel.ThisID))
+	// 			structfields = append(structfields, fmt.Sprintf("entity.%s", rel.Name))
+	// 		}
+
+	// 	case util.RelationshipTypeManyOne:
+	// 	case util.RelationshipTypeManyMany:
+	// 	}
+	// }
 
 	return util.ExecuteTemplate("crud/partials/get.go.tmpl", struct {
 		EntityName   string
@@ -379,6 +492,7 @@ func generateMerge(entities map[string]util.Entity, entity util.Entity) (string,
 		SQLFieldsInsert string
 		SQLPlaceholders string
 		SQLFieldsUpdate string
+		StructFields    string
 		HasPreHook      bool
 		HasPostHook     bool
 	}{
@@ -388,6 +502,7 @@ func generateMerge(entities map[string]util.Entity, entity util.Entity) (string,
 		SQLFieldsInsert: strings.Join(sqlfieldsInsert, ", "),
 		SQLPlaceholders: strings.Join(sqlPlaceholders, ", "),
 		SQLFieldsUpdate: strings.Join(sqlfieldsUpdate, ", "),
+		StructFields:    strings.Join(structFields, ", "),
 		HasPreHook:      entity.Crud.Hooks.PreSave,
 		HasPostHook:     entity.Crud.Hooks.PostSave,
 	})

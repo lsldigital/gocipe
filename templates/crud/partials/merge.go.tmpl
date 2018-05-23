@@ -1,5 +1,5 @@
-// Merge performs an SQL merge for {{.Entity.Name}} record.
-func (entity *{{.Entity.Name}}) Merge(ctx context.Context, tx *sql.Tx, autocommit bool) error {
+// Merge performs an SQL merge for {{.EntityName}} record.
+func (entity *{{.EntityName}}) Merge(ctx context.Context, tx *sql.Tx, autocommit bool) error {
 	var (
 		err error
 		stmt *sql.Stmt
@@ -48,7 +48,7 @@ func (entity *{{.Entity.Name}}) Merge(ctx context.Context, tx *sql.Tx, autocommi
 	default:
 		break
 	}
-	_, err = stmt.Exec({{.StructFieldsMerge}})
+	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
 		tx.Rollback()
 		return err

@@ -2,7 +2,6 @@ package generators
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/fluxynet/gocipe/util"
 )
@@ -37,12 +36,12 @@ func GenerateSchema(work util.GenerationWork, opts util.SchemaOpts, entities []u
 
 			data.Entity = entity
 
-			for _, field := range data.Entity.Fields {
-				if field.Relationship.Type == util.RelationshipTypeManyMany &&
-					strings.Compare(field.Relationship.Target.ThisID, field.Relationship.Target.ThatID) == 1 {
-					data.ManyManyFields = append(data.ManyManyFields, field)
-				}
-			}
+			// for _, field := range data.Entity.Fields {
+			// 	if field.Relationship.Type == util.RelationshipTypeManyMany &&
+			// 		strings.Compare(field.Relationship.Target.ThisID, field.Relationship.Target.ThatID) == 1 {
+			// 		data.ManyManyFields = append(data.ManyManyFields, field)
+			// 	}
+			// }
 
 			code, err := util.ExecuteTemplate("schema.sql.tmpl", data)
 

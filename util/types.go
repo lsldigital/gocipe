@@ -275,7 +275,7 @@ type Entity struct {
 	Fields []Field `json:"fields"`
 
 	// Relationships represent relationship information between this entity and others
-	Relationships []FieldRelationship `json:"relationships"`
+	Relationships []Relationship `json:"relationships"`
 
 	// Schema describes options for Schema generation - overrides recipe level Schema config
 	Schema *SchemaOpts `json:"schema"`
@@ -335,8 +335,8 @@ type FieldSchema struct {
 	Default string `json:"default"`
 }
 
-// FieldRelationship represents a relationship between this entity and another
-type FieldRelationship struct {
+// Relationship represents a relationship between this entity and another
+type Relationship struct {
 	// Entity is the name of the related entity
 	Entity string `json:"entity"`
 
@@ -345,6 +345,9 @@ type FieldRelationship struct {
 
 	// Name represents the property name to be used for this relationship
 	Name string `json:"name"`
+
+	// Serialized represents the name used when the relationship field is serialized
+	Serialized string `json:"serialized"`
 
 	// JoinTable represents the other table in a many-many relationship
 	JoinTable string `json:"join_table"`
