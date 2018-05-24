@@ -28,10 +28,14 @@ func Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.EntityNa
 		case <- ctx.Done():
 			return nil, ctx.Err()
 		default:
+			{{range .Before}}
+			{{.}}{{end}}
 			err = rows.Scan({{.StructFields}})
 			if err != nil {
 				return nil, err
 			}
+			{{range .After}}
+			{{.}}{{end}}
 		} 
 	}
 	{{if .HasPostHook}}

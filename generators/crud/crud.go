@@ -238,7 +238,7 @@ func generateStructure(entities map[string]util.Entity, entity util.Entity) (str
 
 // generateGet produces code for database retrieval of single entity (SELECT WHERE id)
 func generateGet(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var sqlfields, structfields []string //, after []string
+	var sqlfields, structfields, before, after []string
 
 	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
 	structfields = append(structfields, fmt.Sprintf("entity.%s", "ID"))
@@ -248,30 +248,51 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 		structfields = append(structfields, fmt.Sprintf("entity.%s", field.Property.Name))
 	}
 
-	// for _, rel := range entity.Relationships {
-	// 	switch rel.Type {
-	// 	case util.RelationshipTypeOneOne:
-	// 		if rel.Full {
-	// 			after = append(after, fmt.Sprintf("entity.%s, err = %s.Get(ctx, )"))
-	// 			after = append(after, fmt.Sprintf("entity.%s = %s.Get(ctx, )"))
-	// 			after = append(after, fmt.Sprintf("entity.%s = %s.Get(ctx, )"))
-	// 		} else {
-	// 			sqlfields = append(sqlfields, fmt.Sprintf("%s", rel.ThisID))
-	// 			structfields = append(structfields, fmt.Sprintf("entity.%s", rel.Name))
-	// 		}
+	relOneFull := func(rel util.Relationship, many bool) {
+		var method, id string
+		target := entities[rel.Name]
+		t, _ := util.GetPrimaryKeyDataType(target.PrimaryKey)
+		name := strings.ToLower(rel.Name)
 
-	// 	case util.RelationshipTypeOneMany:
-	// 		if rel.Full {
-	// 			after = append(after, fmt.Sprintf("entity.%s = %s.Get(ctx, )"))
-	// 		} else {
-	// 			sqlfields = append(sqlfields, fmt.Sprintf("%s", rel.ThisID))
-	// 			structfields = append(structfields, fmt.Sprintf("entity.%s", rel.Name))
-	// 		}
+		if many {
+			method = "List"
+			id = fmt.Sprintf(`[]ListFilter{ListFilter{Field: "id", Operation: "=", Value: %s_id}}`, name)
+		} else {
+			method = "Get"
+			id = fmt.Sprintf("%s_id", name)
+		}
 
-	// 	case util.RelationshipTypeManyOne:
-	// 	case util.RelationshipTypeManyMany:
-	// 	}
-	// }
+		before = append(before,
+			fmt.Sprintf("var %s_id %s",
+				strings.ToLower(rel.Name),
+				t,
+			),
+		)
+
+		structfields = append(structfields, fmt.Sprintf("&%s_id", name))
+
+		after = append(after,
+			fmt.Sprintf("entity.%s, err = %s.%s(ctx, %s)",
+				rel.Name, strings.ToLower(target.Name), method, id,
+			),
+		)
+
+		after = append(after, "if err != nil {")
+		after = append(after, "return nil, err")
+		after = append(after, "}")
+	}
+
+	for _, rel := range entity.Relationships {
+		switch rel.Type {
+		case util.RelationshipTypeOneOne:
+			relOneFull(rel, false)
+		case util.RelationshipTypeOneMany:
+			relOneFull(rel, false)
+
+		case util.RelationshipTypeManyOne:
+		case util.RelationshipTypeManyMany:
+		}
+	}
 
 	return util.ExecuteTemplate("crud/partials/get.go.tmpl", struct {
 		EntityName   string
@@ -279,6 +300,8 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 		Table        string
 		StructFields string
 		PrimaryKey   string
+		Before       []string
+		After        []string
 		HasPreHook   bool
 		HasPostHook  bool
 	}{
@@ -287,6 +310,8 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 		SQLFields:    strings.Join(sqlfields, ", "),
 		StructFields: strings.Join(structfields, ", "),
 		PrimaryKey:   entity.PrimaryKey,
+		Before:       before,
+		After:        after,
 		HasPreHook:   entity.Crud.Hooks.PreRead,
 		HasPostHook:  entity.Crud.Hooks.PostRead,
 	})
