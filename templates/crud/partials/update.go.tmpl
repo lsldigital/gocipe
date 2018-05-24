@@ -1,5 +1,6 @@
+
 // Update Will execute an SQLUpdate Statement for {{.EntityName}} in the database. Prefer using Save instead of Update directly.
-func (entity *{{.EntityName}}) Update(ctx context.Context, tx *sql.Tx, autocommit bool) error {
+func (repo {{.EntityName}}Repository) Update(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
 	var (
 		err error
 		stmt *sql.Stmt
@@ -8,11 +9,11 @@ func (entity *{{.EntityName}}) Update(ctx context.Context, tx *sql.Tx, autocommi
 	if tx == nil {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return entity, ctx.Err()
 		default:
-			tx, err = db.Begin()
+			tx, err = repo.db.Begin()
 			if err != nil {
-				return err
+				return entity, err
 			}
 		}
 	}
@@ -21,73 +22,73 @@ func (entity *{{.EntityName}}) Update(ctx context.Context, tx *sql.Tx, autocommi
 	select {
 	case <-ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
 
 	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1")
 	if err != nil {
-		return err
+		return entity, err
 	}
 
 	{{if .HasPreHook}}
 	select {
 	case <-ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
 
     if err = crudPreSave("UPDATE", entity, tx); err != nil {
 		tx.Rollback()
-        return err
+        return entity, err
 	}
 	{{end}}
 	select {
 	case <-ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
 	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
 		tx.Rollback()
-		return err
+		return entity, err
 	}
 	{{range .Relationships}}
 	select {
 	case <-ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
 	stmtRel, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThisID}} = $1")
 
 	if err != nil {
-		return err
+		return entity, err
 	}
 
 	_, err = stmtRel.Exec(*entity.ID)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return entity, err
 	}
 
 	stmtRel, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThisID}}, {{.ThatID}}) VALUES ($1, $2)")
 	
 	if err != nil {
-		return err
+		return entity, err
 	}
 
 	for _, relatedID := range *entity.{{.PropertyName}} {
 		select {
 		case <-ctx.Done():
 			tx.Rollback()
-			return ctx.Err()
+			return entity, ctx.Err()
 		default:
 			break
 		}
@@ -95,7 +96,7 @@ func (entity *{{.EntityName}}) Update(ctx context.Context, tx *sql.Tx, autocommi
 		_, err = stmtRel.Exec(*entity.ID, relatedID)
 		if err != nil {
 			tx.Rollback()
-			return err
+			return entity, err
 		}
 	}
 	{{end}}
@@ -103,25 +104,25 @@ func (entity *{{.EntityName}}) Update(ctx context.Context, tx *sql.Tx, autocommi
 	select {
 	case <-ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
 
 	if err = crudPostSave("UPDATE", entity, tx); err != nil {
 		tx.Rollback()
-		return err
+		return entity, err
 	}
 	{{end}}
 	select {
 	case <-ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		if autocommit {
 			err = tx.Commit()
 		}
 	}
 
-	return err
+	return entity, err
 }

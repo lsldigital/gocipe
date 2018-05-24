@@ -1,18 +1,11 @@
-package {{.Package}}
+package models
 
 import (
 	"context"
 	"database/sql"
 	{{range .Imports}}{{.}}{{end}}
 )
-
-var db *sql.DB
-
-// Inject allows injection of services into the package
-func Inject(database *sql.DB) {
-	db = database
-}
-
+{{.Structure}}
 {{.Get}}
 {{.List}}
 {{.DeleteSingle}}
@@ -21,5 +14,3 @@ func Inject(database *sql.DB) {
 {{.Insert}}
 {{.Update}}
 {{.Merge}}
-{{range .SaveRelated}}{{.}}{{end}}
-{{range .LoadRelated}}{{.}}{{end}}

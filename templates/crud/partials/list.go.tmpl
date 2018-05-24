@@ -1,7 +1,8 @@
+
 // List returns a slice containing {{.EntityName}} records
-func List(ctx context.Context, filters []models.ListFilter) ([]*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repository) List(ctx context.Context, filters []ListFilter, offset, limit int) ([]{{.EntityName}}, error) {
 	var (
-		list     []*{{.EntityName}}
+		list     []{{.EntityName}}
 		segments []string
 		values   []interface{}
 		err      error
@@ -30,7 +31,17 @@ func List(ctx context.Context, filters []models.ListFilter) ([]*{{.EntityName}},
 		query += " WHERE " + strings.Join(segments, " AND ")
 	}
 
-	rows, err = db.Query(query+" ORDER BY id ASC", values...)
+	if limit > -1 {
+		query += " LIMIT "+strconv.Itoa(limit)
+	}
+
+	if offset > -1 {
+		query += " OFFSET "+strconv.Itoa(limit)
+	}
+
+	query += " ORDER BY id ASC"
+
+	rows, err = repo.db.Query(query, values...)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +55,7 @@ func List(ctx context.Context, filters []models.ListFilter) ([]*{{.EntityName}},
 			break
 		}
 
-		entity := New()
+		entity := New{{.EntityName}}()
 		err = rows.Scan({{.StructFields}})
 		if err != nil {
 			return nil, err

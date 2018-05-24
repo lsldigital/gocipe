@@ -1,38 +1,39 @@
+
 // Get returns a single {{.EntityName}} from database by primary key
-func Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repository) Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) ({{.EntityName}}, error) {
 	var (
 		rows   *sql.Rows
 		err    error
-		entity = New()
+		entity = New{{.EntityName}}()
 	)
 	{{if .HasPreHook}}
     if err = crudPreGet(ctx, id); err != nil {
-		return nil, err
+		return entity, err
 	}
     {{end}}
 	select {
 	case <- ctx.Done():
-		return nil, ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
 
-	rows, err = db.Query("SELECT {{.SQLFields}} FROM {{.Table}} WHERE id = $1 ORDER BY .id ASC", id)
+	rows, err = repo.db.Query("SELECT {{.SQLFields}} FROM {{.Table}} WHERE id = $1 ORDER BY .id ASC", id)
 	if err != nil {
-		return nil, err
+		return entity, err
 	}
 
 	defer rows.Close()
 	if rows.Next() {
 		select {
 		case <- ctx.Done():
-			return nil, ctx.Err()
+			return entity, ctx.Err()
 		default:
 			{{range .Before}}
 			{{.}}{{end}}
 			err = rows.Scan({{.StructFields}})
 			if err != nil {
-				return nil, err
+				return entity, err
 			}
 			{{range .After}}
 			{{.}}{{end}}
@@ -41,10 +42,10 @@ func Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.EntityNa
 	{{if .HasPostHook}}
 	select {
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return entity, ctx.Err()
 	default:
 		if err = crudPostGet(ctx, entity); err != nil {
-			return nil, err
+			return entity, err
 		}
 	}
 	{{end}}

@@ -1,14 +1,15 @@
+
 // Save either inserts or updates a {{.EntityName}} record based on whether or not id is nil
-func (entity *{{.EntityName}}) Save(ctx context.Context, tx *sql.Tx, autocommit bool) error {
+func (repo {{.EntityName}}Repository) Save(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
 	{{if pkeyIsAuto .PrimaryKey -}}
 	if entity.ID == nil {
-		return entity.Insert(ctx, tx, autocommit)
+		return {{.EntityName}}Repo.Insert(ctx, entity, tx, autocommit)
 	}
-	return entity.Update(ctx, tx, autocommit)
+	return {{.EntityName}}Repo.Update(ctx, entity, tx, autocommit)
 	{{- else -}}
 	if entity.ID == nil {
-		return errors.New("primary key cannot be nil")
+		return entity, errors.New("primary key cannot be nil")
 	}
-	return entity.Merge(ctx, tx, autocommit)
+	return {{.EntityName}}Repo.Merge(ctx, entity, tx, autocommit)
 	{{end -}}
 }

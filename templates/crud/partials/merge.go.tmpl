@@ -1,5 +1,6 @@
+
 // Merge performs an SQL merge for {{.EntityName}} record.
-func (entity *{{.EntityName}}) Merge(ctx context.Context, tx *sql.Tx, autocommit bool) error {
+func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
 	var (
 		err error
 		stmt *sql.Stmt
@@ -8,17 +9,17 @@ func (entity *{{.EntityName}}) Merge(ctx context.Context, tx *sql.Tx, autocommit
 	if tx == nil {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return entity, ctx.Err()
 		default:
-			tx, err = db.Begin()
+			tx, err = repo.db.Begin()
 			if err != nil {
-				return err
+				return entity, err
 			}
 		}
 	}
 
 	if entity.ID == nil {
-		return entity.Insert(ctx, tx, autocommit)
+		return {{.EntityName}}Repo.Insert(ctx, entity, tx, autocommit)
 	}
 
 	{{range .Before}}{{.}}{{end}}
@@ -26,53 +27,53 @@ func (entity *{{.EntityName}}) Merge(ctx context.Context, tx *sql.Tx, autocommit
 	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
 	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`)
 	if err != nil {
-		return err
+		return entity, err
 	}
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
 	{{if .HasPreHook}}
     if err = crudPreSave("MERGE", entity, tx); err != nil {
 		tx.Rollback()
-		return err
+		return entity, err
 	}
 	{{end}}
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
 	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
 		tx.Rollback()
-		return err
+		return entity, err
 	}
 	{{if .HasPostHook}}
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
 	if err = crudPostSave("MERGE", entity, tx); err != nil {
 		tx.Rollback()
-		return err
+		return entity, err
 	}
 	{{end}}
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		if autocommit {
 			err = tx.Commit()
 		}
 	}
 
-	return err
+	return entity, err
 }

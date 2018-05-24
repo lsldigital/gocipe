@@ -25,7 +25,7 @@ func LoadRelated{{.PropertyName}}(ctx context.Context, entities []{{.EntityName}
 	}
 	placeholder = strings.TrimRight(placeholder, ",")
 
-	rows, err := db.Query("SELECT {{.ThisID}}, {{.ThatID}} FROM {{.Table}} WHERE {{.ThisID}} IN ("+placeholder+")", values...)
+	rows, err := repo.db.Query("SELECT {{.ThisID}}, {{.ThatID}} FROM {{.Table}} WHERE {{.ThisID}} IN ("+placeholder+")", values...)
 	if err != nil {
 		return err
 	}

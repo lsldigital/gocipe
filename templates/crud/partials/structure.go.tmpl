@@ -1,4 +1,3 @@
-package {{.Package}}
 
 // {{.Name}} {{.Description}}
 type {{.Name}} struct {
@@ -9,11 +8,16 @@ type {{.Name}} struct {
 }
 
 // New returns an instance of {{.Name}}
-func New() *{{.Name}} {
-	return &{{.Name}}{
+func New{{.Name}}() {{.Name}} {
+	return {{.Name}}{
 		ID: new({{pkeyPropertyType .PrimaryKey}}),
 		{{- range .Initialization}}
 		{{.Name}}: {{.Type}},
 		{{- end}}
 	}
+}
+
+// {{.Name}}Repository encapsulates operations that may be performed on the entity {{.Name}}
+type {{.Name}}Repository struct {
+	db *sql.DB
 }

@@ -1,5 +1,6 @@
-// Delete deletes many {{.EntityName}} records from database using filter
-func Delete(ctx context.Context, filters []models.ListFilter, tx *sql.Tx, autocommit bool) error {
+
+// DeleteMany deletes many {{.EntityName}} records from database using filter
+func (repo {{.EntityName}}Repository) DeleteMany(ctx context.Context, filters []ListFilter, tx *sql.Tx, autocommit bool) error {
 	var (
 		err      error
 		stmt     *sql.Stmt
@@ -12,7 +13,7 @@ func Delete(ctx context.Context, filters []models.ListFilter, tx *sql.Tx, autoco
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			tx, err = db.Begin()
+			tx, err = repo.db.Begin()
 			if err != nil {
 				return err
 			}
@@ -42,7 +43,7 @@ func Delete(ctx context.Context, filters []models.ListFilter, tx *sql.Tx, autoco
 		query += " WHERE " + strings.Join(segments, " AND ")
 	}
 
-	stmt, err = db.Prepare(query)
+	stmt, err = repo.db.Prepare(query)
 	if err != nil {
 		return err
 	}

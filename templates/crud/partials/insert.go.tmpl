@@ -1,5 +1,6 @@
+
 // Insert performs an SQL insert for {{.EntityName}} record and update instance with inserted id.
-func (entity *{{.EntityName}}) Insert(ctx context.Context, tx *sql.Tx, autocommit bool) error {
+func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
 	var (
 		{{- if pkeyIsAuto .PrimaryKey -}}
 		id  {{pkeyPropertyType .PrimaryKey}}
@@ -11,11 +12,11 @@ func (entity *{{.EntityName}}) Insert(ctx context.Context, tx *sql.Tx, autocommi
 	if tx == nil {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return entity, ctx.Err()
 		default:
-			tx, err = db.Begin()
+			tx, err = repo.db.Begin()
 			if err != nil {
-				return err
+				return entity, err
 			}
 		}
 	}
@@ -24,20 +25,20 @@ func (entity *{{.EntityName}}) Insert(ctx context.Context, tx *sql.Tx, autocommi
 	select {
 	case <-ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
 
 	{{if eq .PrimaryKey "serial" -}}
-	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNIentity, NG id")
 	if err != nil {
-		return err
+		return entity, err
 	}
 	{{else}}
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})")
 	if err != nil {
-		return err
+		return entity, err
 	}
 	{{- end}}
 
@@ -45,17 +46,17 @@ func (entity *{{.EntityName}}) Insert(ctx context.Context, tx *sql.Tx, autocommi
 	select {
 	case <-ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		if err = crudPreSave("INSERT", entity, tx); err != nil {
 			tx.Rollback()
-			return err
+			return entity, err
 		}
 	}
 	{{end}}
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
@@ -65,7 +66,7 @@ func (entity *{{.EntityName}}) Insert(ctx context.Context, tx *sql.Tx, autocommi
 		entity.ID = &id
 	} else {
 		tx.Rollback()
-		return err
+		return entity, err
 	}
 	{{else}}
 	{{if eq .PrimaryKey "uuid" -}}
@@ -75,7 +76,7 @@ func (entity *{{.EntityName}}) Insert(ctx context.Context, tx *sql.Tx, autocommi
 		id = idUUID.String()
 	} else {
 		tx.Rollback()
-		return err
+		return entity, err
 	}
 	*entity.ID = id
 	{{- end}}
@@ -83,7 +84,7 @@ func (entity *{{.EntityName}}) Insert(ctx context.Context, tx *sql.Tx, autocommi
 	select {
 	case <-ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
@@ -91,14 +92,14 @@ func (entity *{{.EntityName}}) Insert(ctx context.Context, tx *sql.Tx, autocommi
 	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
 		tx.Rollback()
-		return err
+		return entity, err
 	}
 	{{end}}
 	{{range .Relationships}}
 	select {
 	case <-ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
@@ -106,14 +107,14 @@ func (entity *{{.EntityName}}) Insert(ctx context.Context, tx *sql.Tx, autocommi
 	stmtRel, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThisID}}, {{.ThatID}}) VALUES ($1, $2)")
 	
 	if err != nil {
-		return err
+		return entity, err
 	}
 
 	for _, relatedID := range *entity.{{.PropertyName}} {
 		_, err = stmtRel.Exec(entity.ID, relatedID)
 		if err != nil {
 			tx.Rollback()
-			return err
+			return entity, err
 		}
 	}
 	{{end}}
@@ -121,25 +122,25 @@ func (entity *{{.EntityName}}) Insert(ctx context.Context, tx *sql.Tx, autocommi
 	select {
 	case <- ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		break
 	}
 	if err := crudPostSave("INSERT", entity, tx); err != nil {
 		tx.Rollback()
-		return err
+		return entity, err
 	}
 	{{end}}
 
 	select {
 	case <- ctx.Done():
 		tx.Rollback()
-		return ctx.Err()
+		return entity, ctx.Err()
 	default:
 		if autocommit {
 			err = tx.Commit()
 		}
 	}
 
-	return nil
+	return entity, nil
 }
