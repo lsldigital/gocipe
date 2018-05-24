@@ -4,7 +4,7 @@
     <v-divider></v-divider>
     <v-flex xs12>
       <v-layout color="black" column align-center class="pa-3">
-        <div class="text-xs-center">
+        <div class="text-xs-center widthscreen">
           <div>
             <Entity v-model="entities[index]" v-for="(entity, index) in entities" :key="index" />
 
@@ -54,5 +54,9 @@ export default {
   background-color: #00000026;
   height: 75px;
   padding-top: 8px;
+}
+
+.text-xs-center.widthscreen {
+  width: 100%;
 }
 </style>
