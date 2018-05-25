@@ -64,15 +64,6 @@
                     </v-flex>
                 </v-flex>
             </v-layout>
-            <v-flex xs12>
-                <v-layout column wrap>
-                    <v-divider></v-divider>
-                    <v-flex class=" mx-auto">
-                        <v-btn color="primary" @click="addgeneral" dark large>Next</v-btn>
-                    </v-flex>
-                    <v-divider></v-divider>
-                </v-layout>
-            </v-flex>
 
         </v-layout>
     </div>
@@ -100,11 +91,12 @@ export default {
       this.generaldata.table_constraints = [];
       this.generaldata.description = "";
     }
+    this.$emit("input", this.generaldata);
   },
   methods: {
-    addgeneral: function() {
-      this.$emit("input", this.generaldata);
-    },
+    // addgeneral: function() {
+    //   this.$emit("input", this.generaldata);
+    // },
     addconstraints() {
       this.generaldata.table_constraints.push("");
     },
@@ -125,7 +117,7 @@ export default {
 }
 
 button.addcustomcolor.btn.btn {
-  color: black;
+  color: white;
   background-color: #c6c6c6;
 }
 </style>

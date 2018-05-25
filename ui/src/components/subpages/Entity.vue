@@ -333,17 +333,6 @@ export default {
         filterable: true
       }
     };
-  },
-  methods: {
-    addfields() {
-      this.fields.push("");
-    },
-
-    toggle(name) {
-      if (name == "filterable") {
-        this.filterable = !this.filterable;
-      }
-    }
   }
 };
 </script>

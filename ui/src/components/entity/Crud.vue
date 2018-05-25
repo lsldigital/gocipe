@@ -1,41 +1,21 @@
 <template>
-    <div>
+    <div class="">
         <v-layout class="borderwrapper" row wrap>
-            <v-divider></v-divider>
             <v-layout row wrap>
                 <v-flex xs10>
-                    <v-subheader class="entityheader">Basic Information</v-subheader>
-                </v-flex>
-                <v-flex xs3>
-                    <v-subheader>Name</v-subheader>
+                    <v-subheader class="entityheader">Basic Crud operations</v-subheader>
                 </v-flex>
 
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.name" label="Name"></v-text-field>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.create" label="Create"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs3>
-                    <v-subheader> Primary Key</v-subheader>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.pre_save" label="Pre Save"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.primary_key" label="Primary Key"></v-text-field>
-                </v-flex>
-
-                <v-flex xs3>
-                    <v-subheader> Table</v-subheader>
-                </v-flex>
-
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.table" label="Table Name"></v-text-field>
-                </v-flex>
-
-                <v-flex xs3>
-                    <v-subheader> Description</v-subheader>
-                </v-flex>
-
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.description" label="Description"></v-text-field>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.post_save" label="Post Save"></v-checkbox>
                 </v-flex>
 
                 <v-flex xs12>
@@ -44,36 +24,71 @@
                     </v-layout>
                 </v-flex>
 
-                <v-flex xs12 class="marginbottom">
-                    <v-flex xs6 class=" mx-auto mb-5 mt-3">
-                        <v-layout column wrap>
-                            <div>
-                                <v-btn class="addcustomcolor" @click="addconstraints" large>Add Table Constraints</v-btn>
-                            </div>
-                            <div v-for="(constraint, index) in generaldata.table_constraints" :key="index">
-                                <v-list>
-                                    <v-list-tile>
-                                        <v-text-field v-model=" generaldata.table_constraints[index-1]" :label="'Constraint ' + ++index"></v-text-field>
-                                        <v-btn icon color="primary" v-on:click="remove(index)" dark>
-                                            <i class="material-icons">clear</i>
-                                        </v-btn>
-                                    </v-list-tile>
-                                </v-list>
-                            </div>
-                        </v-layout>
-                    </v-flex>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.read" label="Read"></v-checkbox>
                 </v-flex>
-            </v-layout>
-            <v-flex xs12>
-                <v-layout column wrap>
-                    <v-divider></v-divider>
-                    <v-flex class=" mx-auto">
-                        <v-btn color="primary" @click="addgeneral" dark large>Next</v-btn>
-                    </v-flex>
-                    <v-divider></v-divider>
-                </v-layout>
-            </v-flex>
 
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.pre_read" label="Pre Read"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.post_read" label="Post Read"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs12>
+                    <v-layout column wrap>
+                        <v-divider></v-divider>
+                    </v-layout>
+                </v-flex>
+
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.read_list" label="Read List"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.pre_list" label="Pre List"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.post_list" label="Post List"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs12>
+                    <v-layout column wrap>
+                        <v-divider></v-divider>
+                    </v-layout>
+                </v-flex>
+
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.delete" label="Delete"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.pre_delete" label="Pre Delete"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.post_delete" label="Post Delete"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs12>
+                    <v-layout column wrap>
+                        <v-divider></v-divider>
+                    </v-layout>
+                </v-flex>
+
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.merge" label="Merge"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs12>
+                    <v-layout column wrap>
+                        <v-divider></v-divider>
+                    </v-layout>
+                </v-flex>
+
+            </v-layout>
         </v-layout>
     </div>
 </template>
@@ -82,34 +97,48 @@
 export default {
   data() {
     return {
-      generaldata: {
-        name: "",
-        primary_key: "",
-        table: "",
-        table_constraints: [],
-        description: ""
+      crud: {
+        create: true,
+        read: true,
+        read_list: true,
+        update: true,
+        delete: true,
+        merge: true,
+        hooks: {
+          pre_save: false,
+          post_save: false,
+          pre_read: false,
+          post_read: false,
+          pre_list: false,
+          post_list: false,
+          pre_delete: false,
+          post_delete: false
+        }
       }
     };
   },
-
   mounted() {
     if (typeof this.value === "undefined") {
-      this.generaldata.name = "";
-      this.generaldata.primary_key = "";
-      this.generaldata.table = "";
-      this.generaldata.table_constraints = [];
-      this.generaldata.description = "";
+      this.crud.create = true;
+      this.crud.read = true;
+      this.crud.read_list = true;
+      this.crud.update = true;
+      this.crud.delete = true;
+      this.crud.merge = true;
+      this.crud.hooks.pre_save = false;
+      this.crud.hooks.post_save = false;
+      this.crud.hooks.pre_read = false;
+      this.crud.hooks.post_read = false;
+      this.crud.hooks.pre_list = false;
+      this.crud.hooks.post_list = false;
+      this.crud.hooks.pre_delete = false;
+      this.crud.hooks.post_delete = false;
     }
+    this.$emit("input", this.crud);
   },
   methods: {
-    addgeneral: function() {
-      this.$emit("input", this.generaldata);
-    },
-    addconstraints() {
-      this.generaldata.table_constraints.push("");
-    },
-    remove(index) {
-      this.generaldata.table_constraints.splice(index - 1, 1);
+    addCrud: function() {
+      //   this.$emit("input", this.crud);
     }
   }
 };

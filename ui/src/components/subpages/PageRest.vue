@@ -142,92 +142,94 @@
             </v-list-tile>
         </v-list>
 
-              <v-divider></v-divider> <v-divider></v-divider> <v-divider></v-divider>
-      <v-flex xs12 class="text-xs-center">
-    		<v-btn @click="pushrest" icon color="primary">
-      		<i class="material-icons"> check_circle </i>
-      	</v-btn>
-			</v-flex>
+        <v-divider></v-divider>
+        <v-divider></v-divider>
+        <v-divider></v-divider>
+        <v-flex xs12 class="text-xs-center">
+            <v-btn @click="pushrest" icon color="primary">
+                <i class="material-icons"> check_circle </i>
+            </v-btn>
+        </v-flex>
     </v-card>
 </template>
 <script>
-import { mapActions } from 'vuex';
-    export default {
-        data() {
-            return {
-                rest: {
-                    "create": true,
-                    "read": true,
-                    "read_list": true,
-                    "update": true,
-                    "delete": true,
-                    "hooks": {
-                        "pre_create": false,
-                        "post_create": false,
-                        "pre_read": false,
-                        "post_read": false,
-                        "pre_list": false,
-                        "post_list": false,
-                        "pre_update": false,
-                        "post_update": false,
-                        "pre_delete": false,
-                        "post_delete": false
-                    }
-                }
-            }
-        },
-        methods: {
-          ...mapActions(['addrest']),
-            toggle(name) {
-                if (name == "create") {
-                    this.rest.create = !this.rest.create
-                }
-                if (name == "read") {
-                    this.rest.read = !this.rest.read
-                }
-                if (name == "read_list") {
-                    this.rest.read_list = !this.rest.read_list
-                }
-                if (name == "update") {
-                    this.rest.update = !this.rest.update
-                }
-                if (name == "delete") {
-                    this.rest.delete = !this.rest.delete
-                }
-                if (name == "pre_create") {
-                    this.rest.hooks.pre_create = !this.rest.hooks.pre_create
-                }
-                if (name == "post_create") {
-                    this.rest.hooks.post_create = !this.rest.hooks.post_create
-                }
-                if (name == "pre_read") {
-                    this.rest.hooks.pre_read = !this.rest.hooks.pre_read
-                }
-                if (name == "post_read") {
-                    this.rest.hooks.post_read = !this.rest.hooks.post_read
-                }
-                if (name == "pre_list") {
-                    this.rest.hooks.pre_list = !this.rest.hooks.pre_list
-                }
-                if (name == "post_list") {
-                    this.rest.hooks.post_list = !this.rest.hooks.post_list
-                }
-                if (name == "pre_update") {
-                    this.rest.hooks.pre_update = !this.rest.hooks.pre_update
-                }
-                if (name == "post_update") {
-                    this.rest.hooks.post_update = !this.rest.hooks.post_update
-                }
-                if (name == "pre_delete") {
-                    this.rest.hooks.pre_delete = !this.rest.hooks.pre_delete
-                }
-                if (name == "post_delete") {
-                    this.rest.hooks.post_delete = !this.rest.hooks.post_delete
-                }
-            },
-            pushrest() {
-              this.addrest(this.rest);
-            }
+import { mapActions } from "vuex";
+export default {
+  data() {
+    return {
+      rest: {
+        create: true,
+        read: true,
+        read_list: true,
+        update: true,
+        delete: true,
+        hooks: {
+          pre_create: false,
+          post_create: false,
+          pre_read: false,
+          post_read: false,
+          pre_list: false,
+          post_list: false,
+          pre_update: false,
+          post_update: false,
+          pre_delete: false,
+          post_delete: false
         }
+      }
+    };
+  },
+  methods: {
+    ...mapActions(["addrest"]),
+    toggle(name) {
+      if (name == "create") {
+        this.rest.create = !this.rest.create;
+      }
+      if (name == "read") {
+        this.rest.read = !this.rest.read;
+      }
+      if (name == "read_list") {
+        this.rest.read_list = !this.rest.read_list;
+      }
+      if (name == "update") {
+        this.rest.update = !this.rest.update;
+      }
+      if (name == "delete") {
+        this.rest.delete = !this.rest.delete;
+      }
+      if (name == "pre_create") {
+        this.rest.hooks.pre_create = !this.rest.hooks.pre_create;
+      }
+      if (name == "post_create") {
+        this.rest.hooks.post_create = !this.rest.hooks.post_create;
+      }
+      if (name == "pre_read") {
+        this.rest.hooks.pre_read = !this.rest.hooks.pre_read;
+      }
+      if (name == "post_read") {
+        this.rest.hooks.post_read = !this.rest.hooks.post_read;
+      }
+      if (name == "pre_list") {
+        this.rest.hooks.pre_list = !this.rest.hooks.pre_list;
+      }
+      if (name == "post_list") {
+        this.rest.hooks.post_list = !this.rest.hooks.post_list;
+      }
+      if (name == "pre_update") {
+        this.rest.hooks.pre_update = !this.rest.hooks.pre_update;
+      }
+      if (name == "post_update") {
+        this.rest.hooks.post_update = !this.rest.hooks.post_update;
+      }
+      if (name == "pre_delete") {
+        this.rest.hooks.pre_delete = !this.rest.hooks.pre_delete;
+      }
+      if (name == "post_delete") {
+        this.rest.hooks.post_delete = !this.rest.hooks.post_delete;
+      }
+    },
+    pushrest() {
+      this.addrest(this.rest);
     }
+  }
+};
 </script>

@@ -6,11 +6,13 @@
       <v-layout color="black" column align-center class="pa-3">
         <div class="text-xs-center widthscreen">
           <div>
-            <Entity v-model="entities[index]" v-for="(entity, index) in entities" :key="index" />
+            <Entity v-model="entities[index]" v-for="(entity, index) in entities" :key="index">
 
+            </Entity>
             <div class="entity_btn_zone ">
+
               <v-btn class="addcustomcolor" @click="addEntity()" dark large>Add New Entity</v-btn>
-              <v-btn color="primary" dark large>Remove</v-btn>
+              <v-btn color="success" v-on:click="saveEntities()" dark large>Complete</v-btn>
             </div>
           </div>
         </div>
@@ -21,6 +23,7 @@
 
 <script>
 import Entity from "@/components/entity/Entity.vue";
+import { mapActions } from "vuex";
 export default {
   components: {
     Entity
@@ -31,9 +34,20 @@ export default {
       entities: []
     };
   },
+
   methods: {
+    ...mapActions(["addentities"]),
     addEntity() {
       this.entities.push({});
+    },
+    getentities() {
+      this.$emit("input", this.entities);
+    },
+    removeEntity(index) {
+      this.entities.splice(index, 1);
+    },
+    saveEntities() {
+      this.addentities(this.entities);
     }
   }
 };
@@ -58,5 +72,15 @@ export default {
 
 .text-xs-center.widthscreen {
   width: 100%;
+}
+
+button.addcustomcolor.btn.btn--large.theme--dark {
+  background-color: #ffffff !important;
+  color: black;
+}
+
+button.addcustomcolor1.btn.btn--large {
+  color: white;
+  background-color: #020202 !important;
 }
 </style>

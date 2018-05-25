@@ -1,78 +1,28 @@
 <template>
     <div>
         <v-layout class="borderwrapper" row wrap>
-            <v-divider></v-divider>
-            <v-layout row wrap>
-                <v-flex xs10>
-                    <v-subheader class="entityheader">Basic Information</v-subheader>
-                </v-flex>
-                <v-flex xs3>
-                    <v-subheader>Name</v-subheader>
-                </v-flex>
-
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.name" label="Name"></v-text-field>
-                </v-flex>
-
-                <v-flex xs3>
-                    <v-subheader> Primary Key</v-subheader>
-                </v-flex>
-
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.primary_key" label="Primary Key"></v-text-field>
-                </v-flex>
-
-                <v-flex xs3>
-                    <v-subheader> Table</v-subheader>
-                </v-flex>
-
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.table" label="Table Name"></v-text-field>
-                </v-flex>
-
-                <v-flex xs3>
-                    <v-subheader> Description</v-subheader>
-                </v-flex>
-
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.description" label="Description"></v-text-field>
-                </v-flex>
-
+            <v-layout class="wrapper" row wrap>
                 <v-flex xs12>
-                    <v-layout column wrap>
-                        <v-divider></v-divider>
-                    </v-layout>
+                    <v-subheader class="entityheader">Vuetify Widget Options</v-subheader>
+                </v-flex>
+                <v-flex xs3>
+                    <v-checkbox v-model="vuetify.generate" label="Generate" hint="Generate represents whether or not to generate vuetify assets"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs12 class="marginbottom">
-                    <v-flex xs6 class=" mx-auto mb-5 mt-3">
-                        <v-layout column wrap>
-                            <div>
-                                <v-btn class="addcustomcolor" @click="addconstraints" large>Add Table Constraints</v-btn>
-                            </div>
-                            <div v-for="(constraint, index) in generaldata.table_constraints" :key="index">
-                                <v-list>
-                                    <v-list-tile>
-                                        <v-text-field v-model=" generaldata.table_constraints[index-1]" :label="'Constraint ' + ++index"></v-text-field>
-                                        <v-btn icon color="primary" v-on:click="remove(index)" dark>
-                                            <i class="material-icons">clear</i>
-                                        </v-btn>
-                                    </v-list-tile>
-                                </v-list>
-                            </div>
-                        </v-layout>
-                    </v-flex>
+                <v-flex xs6>
+                    <v-text-field v-model="vuetify.module" id="module" label="Module" hint="Module represents the location where the gocipe module will be generated"></v-text-field>
                 </v-flex>
+
             </v-layout>
-            <v-flex xs12>
+            <!-- <v-flex xs12>
                 <v-layout column wrap>
                     <v-divider></v-divider>
                     <v-flex class=" mx-auto">
-                        <v-btn color="primary" @click="addgeneral" dark large>Next</v-btn>
+                        <v-btn color="info" v-on:click="addvuetify()" dark large>Add Widget</v-btn>
                     </v-flex>
                     <v-divider></v-divider>
                 </v-layout>
-            </v-flex>
+            </v-flex> -->
 
         </v-layout>
     </div>
@@ -82,35 +32,24 @@
 export default {
   data() {
     return {
-      generaldata: {
-        name: "",
-        primary_key: "",
-        table: "",
-        table_constraints: [],
-        description: ""
+      vuetify: {
+        generate: true,
+        module: ""
       }
     };
   },
 
   mounted() {
     if (typeof this.value === "undefined") {
-      this.generaldata.name = "";
-      this.generaldata.primary_key = "";
-      this.generaldata.table = "";
-      this.generaldata.table_constraints = [];
-      this.generaldata.description = "";
+      this.vuetify.generate = true;
+      this.vuetify.module = "";
     }
+    this.$emit("input", this.vuetify);
   },
   methods: {
-    addgeneral: function() {
-      this.$emit("input", this.generaldata);
-    },
-    addconstraints() {
-      this.generaldata.table_constraints.push("");
-    },
-    remove(index) {
-      this.generaldata.table_constraints.splice(index - 1, 1);
-    }
+    // addvuetify: function() {
+    //   this.$emit("input", this.vuetify);
+    // }
   }
 };
 </script>

@@ -40,10 +40,13 @@
         </v-stepper-content>
       </v-stepper-items>
     </v-stepper>
+
+    <v-btn @click="generateJson" color="success">generate json</v-btn>
   </v-flex>
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 import PageBootstrap from "@/components/subpages/PageBootstrap.vue";
 import PageSchema from "@/components/subpages/PageSchema.vue";
 import PageHttp from "@/components/subpages/PageHttp.vue";
@@ -79,6 +82,7 @@ export default {
     };
   },
   methods: {
+    ...mapGetters(["getgocipe"]),
     setback() {
       this.b1 = this.e1 - 1;
     },
@@ -92,6 +96,10 @@ export default {
     loadpage(key) {
       this.e1 = key;
       this.b1 = this.e1 - 1;
+    },
+    generateJson() {
+      var some = this.$store.getters.getgocipe;
+      console.log(some);
     }
 
     // ...mapActions(['addbootstrap']),
