@@ -1,11 +1,6 @@
 <template>
   <v-app id="inspire" dark>
-    <v-navigation-drawer
-      v-model="drawer"
-      clipped
-      fixed
-      app
-    >
+    <v-navigation-drawer v-model="drawer" clipped fixed app>
       <v-list dense>
         <v-list-tile>
           <v-list-tile-action>
@@ -43,12 +38,12 @@
 </template>
 
 <script>
-  export default {
-    data: () => ({
-      drawer: true
-    }),
-    props: {
-      source: String
-    }
+export default {
+  data: () => ({
+    drawer: true
+  }),
+  props: {
+    source: String
   }
+};
 </script>

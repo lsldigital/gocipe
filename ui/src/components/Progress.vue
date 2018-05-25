@@ -41,7 +41,13 @@
       </v-stepper-items>
     </v-stepper>
 
-    <v-btn @click="generateJson" color="success">generate json</v-btn>
+    <v-flex xs10>
+      <v-layout class=" mx-auto mb-5 mt-3" column wrap>
+        <div class="text-xs-center ">
+          <v-btn color="success" @click="generateJson">generate json</v-btn>
+        </div>
+      </v-layout>
+    </v-flex>
   </v-flex>
 </template>
 
@@ -65,6 +71,11 @@ export default {
     PageVuetify,
     PageEntities
   },
+  computed: {
+    ...mapGetters({
+      gocipe: "gocipe"
+    })
+  },
   data() {
     return {
       isActive: false,
@@ -82,7 +93,6 @@ export default {
     };
   },
   methods: {
-    ...mapGetters(["getgocipe"]),
     setback() {
       this.b1 = this.e1 - 1;
     },
@@ -97,20 +107,34 @@ export default {
       this.e1 = key;
       this.b1 = this.e1 - 1;
     },
-    generateJson() {
-      var some = this.$store.getters.getgocipe;
-      console.log(some);
+    generateJson: function(gocipe) {
+      var recipe = this.$store.state["gocipe"];
+      const data = JSON.stringify(recipe);
+      const blob = new Blob([data], { type: "text/plain" });
+      const e = document.createEvent("MouseEvents"),
+        a = document.createElement("a");
+      a.download = "gocipe.json";
+      a.href = window.URL.createObjectURL(blob);
+      a.dataset.downloadurl = ["text/json", a.download, a.href].join(":");
+      e.initEvent(
+        "click",
+        true,
+        false,
+        window,
+        0,
+        0,
+        0,
+        0,
+        0,
+        false,
+        false,
+        false,
+        false,
+        0,
+        null
+      );
+      a.dispatchEvent(e);
     }
-
-    // ...mapActions(['addbootstrap']),
-    // ...mapActions(['addhttp']),
-    // addtostore: function (event) {
-    //   if (this.e1 == 0) {
-    //     this.addbootstrap(this.boostrap);
-    //   } else if (this.e1 == 1) {
-    //     this.addhttp(this.addhttp)
-    //   }
-    // }
   }
 };
 </script>

@@ -1,0 +1,137 @@
+{
+    "bootstrap": {
+        "generate": true,
+        "settings": [
+            {
+                "name": "fdsff",
+                "type": "dsfs",
+                "description": "sdcds",
+                "env": true
+            }
+        ]
+    },
+    "http": {},
+    "schema": {
+        "create": true,
+        "drop": true,
+        "aggregate": true
+    },
+    "crud": {
+        "create": true,
+        "read": true,
+        "read_list": true,
+        "update": true,
+        "delete": true,
+        "merge": false,
+        "hooks": {
+            "pre_save": false,
+            "post_save": false,
+            "pre_read": false,
+            "post_read": false,
+            "pre_list": false,
+            "post_list": false,
+            "pre_delete": false,
+            "post_delete": false
+        }
+    },
+    "rest": {
+        "create": true,
+        "read": true,
+        "read_list": true,
+        "update": true,
+        "delete": true,
+        "hooks": {
+            "pre_create": false,
+            "post_create": false,
+            "pre_read": false,
+            "post_read": true,
+            "pre_list": false,
+            "post_list": false,
+            "pre_update": false,
+            "post_update": false,
+            "pre_delete": false,
+            "post_delete": false
+        }
+    },
+    "vuetify": {
+        "generate": true,
+        "module": "web"
+    },
+    "entities": [
+        {
+            "name": "dqfre",
+            "primary_key": "pack-plugin",
+            "table": "pack-plugin",
+            "table_constraints": [
+                "pack-plugin", "pack-plugin02"
+            ],
+            "description": "pack-plugin",
+            "crud": {
+                "create": true,
+                "read": true,
+                "read_list": true,
+                "update": true,
+                "delete": true,
+                "merge": true,
+                "hooks": {
+                    "pre_save": true,
+                    "post_save": true,
+                    "pre_read": false,
+                    "post_read": false,
+                    "pre_list": false,
+                    "post_list": true,
+                    "pre_delete": false,
+                    "post_delete": true
+                }
+            },
+            "schema": {
+                "create": true,
+                "drop": true,
+                "aggregate": true,
+                "path": "/api/"
+            },
+            "fields": [
+                {
+                    "label": "webpack-pl",
+                    "serialized": "jspon",
+                    "property": {
+                        "name": "webpack-pl",
+                        "type": "webpack-pl"
+                    },
+                    "schema": {
+                        "field": "",
+                        "type": "",
+                        "nullable": true,
+                        "default": "webpack-pl"
+                    },
+                    "relationship": {
+                        "type": "webpack-pl",
+                        "target": {
+                            "entity": "webpack-pl",
+                            "endpoint": "webpack-pl",
+                            "query": "webpack-pl",
+                            "table": "webpack-pl",
+                            "thisid": "webpack-pl",
+                            "thatid": "webpack-pl",
+                            "thatfield_type": ""
+                        }
+                    },
+                    "widget": {
+                        "type": "webpack-pl",
+                        "options": [],
+                        "target": {
+                            "endpoint": "webpack-pl",
+                            "label": "webpack-pl"
+                        },
+                        "multiple": true
+                    },
+                    "filterable": false
+                }
+            ],
+            "widget": {
+                "generate": true,
+                "module": "webpaack"
+            }
+        }
+    ]
+}

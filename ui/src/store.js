@@ -16,7 +16,7 @@ const state = {
 };
 
 const getters = {
-  getGocipe() {
+  gocipe(state) {
     return state.gocipe;
   }
 };
