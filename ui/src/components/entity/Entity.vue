@@ -52,6 +52,7 @@
 </template>
 
 <script>
+import gocipe from "../../assets/gocipe.json";
 import general from "@/components/entity/General.vue";
 import relationship from "@/components/entity/Relationship.vue";
 import widget from "@/components/entity/Widget.vue";
@@ -70,6 +71,7 @@ export default {
   props: ["value"],
   data() {
     return {
+      gocipe,
       tab: null,
       entity: null,
       crud: null,

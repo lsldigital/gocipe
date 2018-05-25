@@ -36,12 +36,14 @@ export default {
     };
   },
   mounted() {
-    if (this.gocipe.entities !== undefined) {
-      this.gocipe.entities.forEach(element => {
-        this.entities.push(element);
-      });
-    } else {
-      this.entities.push({});
+    if (this.gocipe.json == true) {
+      if (this.gocipe.entities !== undefined) {
+        this.gocipe.entities.forEach(element => {
+          this.entities.push(element);
+        });
+      } else {
+        this.entities.push({});
+      }
     }
   },
   methods: {
@@ -55,10 +57,7 @@ export default {
       this.addentities(this.entities);
     },
     removeEntities(index) {
-      console.log(index);
-
       if (index !== -1) {
-        console.log(this.entities.length);
         this.entities.splice(index, 1);
       }
     }

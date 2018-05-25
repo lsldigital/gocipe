@@ -12,12 +12,16 @@ const state = {
     rest: {},
     vuetify: {},
     entities: []
-  }
+  },
+  fromfile: false
 };
 
 const getters = {
   gocipe(state) {
     return state.gocipe;
+  },
+  fromfile(state) {
+    return state.fromfile;
   }
 };
 const mutations = {

@@ -182,65 +182,73 @@ export default {
   },
 
   mounted() {
-    if (this.gocipe.rest !== undefined) {
-      this.rest.create =
-        this.gocipe.rest.create === undefined ? true : this.gocipe.rest.create;
+    if (this.gocipe.json == true) {
+      if (this.gocipe.rest !== undefined) {
+        this.rest.create =
+          this.gocipe.rest.create === undefined
+            ? true
+            : this.gocipe.rest.create;
 
-      this.rest.read =
-        this.gocipe.rest.read === undefined ? true : this.gocipe.rest.read;
+        this.rest.read =
+          this.gocipe.rest.read === undefined ? true : this.gocipe.rest.read;
 
-      this.rest.read_list =
-        this.gocipe.rest.read_list === undefined
-          ? true
-          : this.gocipe.rest.read_list;
+        this.rest.read_list =
+          this.gocipe.rest.read_list === undefined
+            ? true
+            : this.gocipe.rest.read_list;
 
-      this.rest.update =
-        this.gocipe.rest.update === undefined ? true : this.gocipe.rest.update;
+        this.rest.update =
+          this.gocipe.rest.update === undefined
+            ? true
+            : this.gocipe.rest.update;
 
-      this.rest.delete =
-        this.gocipe.rest.delete === undefined ? true : this.gocipe.rest.delete;
+        this.rest.delete =
+          this.gocipe.rest.delete === undefined
+            ? true
+            : this.gocipe.rest.delete;
 
-      if (this.gocipe.rest.hooks !== undefined) {
-        this.rest.hooks.pre_create =
-          this.gocipe.rest.hooks.pre_create === undefined
-            ? false
-            : this.gocipe.rest.hooks.pre_create;
-        this.rest.hooks.post_create =
-          this.gocipe.rest.hooks.post_create === undefined
-            ? false
-            : this.gocipe.rest.hooks.post_create;
-        this.rest.hooks.pre_read =
-          this.gocipe.rest.hooks.pre_read === undefined
-            ? false
-            : this.gocipe.rest.hooks.pre_read;
-        this.rest.hooks.post_read =
-          this.gocipe.rest.hooks.post_read === undefined
-            ? false
-            : this.gocipe.rest.hooks.post_read;
-        this.rest.hooks.pre_list =
-          this.gocipe.rest.hooks.pre_list === undefined
-            ? false
-            : this.gocipe.rest.hooks.pre_list;
-        this.rest.hooks.post_list =
-          this.gocipe.rest.hooks.post_list === undefined
-            ? false
-            : this.gocipe.rest.hooks.post_list;
-        this.rest.hooks.pre_update =
-          this.gocipe.rest.hooks.pre_update === undefined
-            ? false
-            : this.gocipe.rest.hooks.pre_update;
-        this.rest.hooks.post_update =
-          this.gocipe.rest.hooks.post_update === undefined
-            ? false
-            : this.gocipe.rest.hooks.post_update;
-        this.rest.hooks.pre_delete =
-          this.gocipe.rest.hooks.pre_delete === undefined
-            ? false
-            : this.gocipe.rest.hooks.pre_delete;
-        this.rest.hooks.post_delete =
-          this.gocipe.rest.hooks.post_delete === undefined
-            ? false
-            : this.gocipe.rest.hooks.post_delete;
+        if (this.gocipe.rest.hooks !== undefined) {
+          this.rest.hooks.pre_create =
+            this.gocipe.rest.hooks.pre_create === undefined
+              ? false
+              : this.gocipe.rest.hooks.pre_create;
+          this.rest.hooks.post_create =
+            this.gocipe.rest.hooks.post_create === undefined
+              ? false
+              : this.gocipe.rest.hooks.post_create;
+          this.rest.hooks.pre_read =
+            this.gocipe.rest.hooks.pre_read === undefined
+              ? false
+              : this.gocipe.rest.hooks.pre_read;
+          this.rest.hooks.post_read =
+            this.gocipe.rest.hooks.post_read === undefined
+              ? false
+              : this.gocipe.rest.hooks.post_read;
+          this.rest.hooks.pre_list =
+            this.gocipe.rest.hooks.pre_list === undefined
+              ? false
+              : this.gocipe.rest.hooks.pre_list;
+          this.rest.hooks.post_list =
+            this.gocipe.rest.hooks.post_list === undefined
+              ? false
+              : this.gocipe.rest.hooks.post_list;
+          this.rest.hooks.pre_update =
+            this.gocipe.rest.hooks.pre_update === undefined
+              ? false
+              : this.gocipe.rest.hooks.pre_update;
+          this.rest.hooks.post_update =
+            this.gocipe.rest.hooks.post_update === undefined
+              ? false
+              : this.gocipe.rest.hooks.post_update;
+          this.rest.hooks.pre_delete =
+            this.gocipe.rest.hooks.pre_delete === undefined
+              ? false
+              : this.gocipe.rest.hooks.pre_delete;
+          this.rest.hooks.post_delete =
+            this.gocipe.rest.hooks.post_delete === undefined
+              ? false
+              : this.gocipe.rest.hooks.post_delete;
+        }
       }
     }
   },

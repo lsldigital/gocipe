@@ -99,13 +99,15 @@ export default {
     };
   },
   mounted() {
-    if (this.gocipe.bootstrap !== undefined) {
-      this.bootstrap.generate = this.gocipe.bootstrap.generate;
+    if (this.gocipe.json == true) {
+      if (this.gocipe.bootstrap !== undefined) {
+        this.bootstrap.generate = this.gocipe.bootstrap.generate;
 
-      if (this.gocipe.bootstrap.settings !== undefined) {
-        this.gocipe.bootstrap.settings.forEach(element => {
-          this.bootstrap.settings.push(element);
-        });
+        if (this.gocipe.bootstrap.settings !== undefined) {
+          this.gocipe.bootstrap.settings.forEach(element => {
+            this.bootstrap.settings.push(element);
+          });
+        }
       }
     }
   },
