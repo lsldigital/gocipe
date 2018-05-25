@@ -5,126 +5,97 @@
             <v-toolbar-title>Choose Desired Crud Operations</v-toolbar-title>
             <v-spacer></v-spacer>
         </v-toolbar>
+        <v-layout class="borderwrapper" row wrap>
+            <v-layout row wrap class="page_space">
+                <v-flex xs10>
+                    <v-subheader class="entityheader">Basic Crud operations</v-subheader>
+                </v-flex>
 
-        <v-list subheader="subheader" two-line="two-line">
-            <v-list-tile @click="toggle('create')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox v-model="crud.create"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Create</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Create function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.create" label="Create"></v-checkbox>
+                </v-flex>
 
-            <v-list-tile @click="toggle('pre_save')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox v-model="crud.hooks.pre_save"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Pre Save</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Pre Save function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.pre_save" label="Pre Save"></v-checkbox>
+                </v-flex>
 
-            <v-list-tile @click="toggle('post_save')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox v-model="crud.hooks.post_save"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Post Save</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Post Save function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.post_save" label="Post Save"></v-checkbox>
+                </v-flex>
 
-            <v-divider></v-divider>
-            <v-list-tile @click="toggle('read')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox v-model="crud.read"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Read</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Read function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
+                <v-flex xs12>
+                    <v-layout column wrap>
+                        <v-divider></v-divider>
+                    </v-layout>
+                </v-flex>
 
-            <v-list-tile @click="toggle('pre_read')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox v-model="crud.hooks.pre_read"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Pre Read</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Pre Read function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.read" label="Read"></v-checkbox>
+                </v-flex>
 
-            <v-list-tile @click="toggle('post_read')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox v-model="crud.hooks.post_read"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Post Read</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Post Read function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
-            <v-divider></v-divider>
-            <v-list-tile @click="toggle('read_list')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox v-model="crud.read_list"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Read List</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Read List function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.pre_read" label="Pre Read"></v-checkbox>
+                </v-flex>
 
-            <v-divider></v-divider>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.post_read" label="Post Read"></v-checkbox>
+                </v-flex>
 
-            <v-list-tile @click="toggle('delete')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox v-model="crud.delete"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Delete</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Delete function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
+                <v-flex xs12>
+                    <v-layout column wrap>
+                        <v-divider></v-divider>
+                    </v-layout>
+                </v-flex>
 
-            <v-list-tile @click="toggle('pre_delete')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox v-model="crud.hooks.pre_delete"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Pre Delete</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Pre Delete function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.read_list" label="Read List"></v-checkbox>
+                </v-flex>
 
-            <v-list-tile @click="toggle('post_delete')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox v-model="crud.hooks.post_delete"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>Post Delete</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow Post Delete function for CRUD operations</v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.pre_list" label="Pre List"></v-checkbox>
+                </v-flex>
 
-            <v-list-tile @click="toggle('merge')" avatar="avatar" class="pa-2">
-                <v-list-tile-action>
-                    <v-checkbox v-model="crud.merge"></v-checkbox>
-                </v-list-tile-action>
-                <v-list-tile-content>
-                    <v-list-tile-title>merge</v-list-tile-title>
-                    <v-list-tile-sub-title>Allow function for SQL Merge to be generated </v-list-tile-sub-title>
-                </v-list-tile-content>
-            </v-list-tile>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.post_list" label="Post List"></v-checkbox>
+                </v-flex>
 
-        </v-list>
+                <v-flex xs12>
+                    <v-layout column wrap>
+                        <v-divider></v-divider>
+                    </v-layout>
+                </v-flex>
 
-        <v-divider></v-divider>
-        <v-divider></v-divider>
-        <v-divider></v-divider>
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.delete" label="Delete"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.pre_delete" label="Pre Delete"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.hooks.post_delete" label="Post Delete"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs12>
+                    <v-layout column wrap>
+                        <v-divider></v-divider>
+                    </v-layout>
+                </v-flex>
+
+                <v-flex xs4>
+                    <v-checkbox v-model="crud.merge" label="Merge"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs12>
+                    <v-layout column wrap>
+                        <v-divider></v-divider>
+                    </v-layout>
+                </v-flex>
+
+            </v-layout>
+        </v-layout>
+
         <v-flex xs12 class="text-xs-center">
             <v-btn @click="pushcrud" icon color="primary">
                 <i class="material-icons"> check_circle </i>
@@ -134,9 +105,11 @@
 </template>
 <script>
 import { mapActions } from "vuex";
+import gocipe from "../../assets/gocipe.json";
 export default {
   data() {
     return {
+      gocipe,
       crud: {
         create: true,
         read: true,
@@ -157,56 +130,72 @@ export default {
       }
     };
   },
+  mounted() {
+    if (this.gocipe.crud !== undefined) {
+      console.log(this.gocipe.hooks);
+
+      if (this.gocipe.crud.hooks !== undefined) {
+        this.crud.hooks.pre_save =
+          this.gocipe.crud.hooks.pre_save !== undefined
+            ? this.gocipe.crud.hooks.pre_save
+            : false;
+        this.crud.hooks.post_save =
+          this.gocipe.crud.hooks.post_save !== undefined
+            ? this.gocipe.crud.hooks.post_save
+            : false;
+        this.crud.hooks.pre_read =
+          this.gocipe.crud.hooks.pre_read !== undefined
+            ? this.gocipe.crud.hooks.pre_read
+            : false;
+        this.crud.hooks.post_read =
+          this.gocipe.crud.hooks.post_read !== undefined
+            ? this.gocipe.crud.hooks.post_read
+            : false;
+        this.crud.hooks.pre_list =
+          this.gocipe.crud.hooks.pre_list !== undefined
+            ? this.gocipe.crud.hooks.pre_list
+            : false;
+        this.crud.hooks.post_list =
+          this.gocipe.crud.hooks.post_list !== undefined
+            ? this.gocipe.crud.hooks.post_list
+            : false;
+        this.crud.hooks.pre_delete =
+          this.gocipe.crud.hooks.pre_delete !== undefined
+            ? this.gocipe.crud.hooks.pre_delete
+            : false;
+        this.crud.hooks.post_delete =
+          this.gocipe.crud.hooks.post_delete !== undefined
+            ? this.gocipe.crud.hooks.post_delete
+            : false;
+      }
+
+      this.crud.create =
+        this.gocipe.crud.create === undefined ? false : this.gocipe.crud.create;
+      this.crud.read =
+        this.gocipe.crud.read === undefined ? false : this.gocipe.crud.read;
+      this.crud.read_list =
+        this.gocipe.crud.read_list === undefined
+          ? false
+          : this.gocipe.crud.read_list;
+      this.crud.update =
+        this.gocipe.crud.update === undefined ? false : this.gocipe.crud.update;
+      this.crud.delete =
+        this.gocipe.crud.delete === undefined ? false : this.gocipe.crud.delete;
+      this.crud.merge =
+        this.gocipe.crud.merge === undefined ? false : this.gocipe.crud.merge;
+    }
+  },
   methods: {
     ...mapActions(["addcrud"]),
-    toggle(name) {
-      console.log(name);
-      if (name == "merge") {
-        this.crud.merge = !this.crud.merge;
-      }
-      if (name == "create") {
-        this.crud.create = !this.crud.create;
-      }
-      if (name == "read") {
-        this.crud.read = !this.crud.read;
-      }
-      if (name == "read_list") {
-        this.crud.read_list = !this.crud.read_list;
-      }
-      if (name == "update") {
-        this.crud.update = !this.crud.update;
-      }
-      if (name == "delete") {
-        this.crud.delete = !this.crud.delete;
-      }
-      if (name == "pre_save") {
-        this.crud.hooks.pre_save = !this.crud.hooks.pre_save;
-      }
-      if (name == "post_save") {
-        this.crud.hooks.post_save = !this.crud.hooks.post_save;
-      }
-      if (name == "pre_read") {
-        this.crud.pre_read = !this.crud.hooks.pre_read;
-      }
-      if (name == "post_read") {
-        this.crud.hooks.post_read = !this.crud.hooks.post_read;
-      }
-      if (name == "pre_list") {
-        this.crud.pre_list = !this.crud.hooks.pre_list;
-      }
-      if (name == "post_list") {
-        this.crud.hooks.post_list = !this.crud.hooks.post_list;
-      }
-      if (name == "pre_delete") {
-        this.crud.pre_delete = !this.crud.hooks.pre_delete;
-      }
-      if (name == "post_delete") {
-        this.crud.hooks.post_delete = !this.crud.hooks.post_delete;
-      }
-    },
     pushcrud() {
       this.addcrud(this.crud);
     }
   }
 };
 </script>
+
+<style>
+.layout.page_space.row.wrap {
+  padding: 40px;
+}
+</style>

@@ -42,6 +42,9 @@ const mutations = {
   },
   addentities(state, payload) {
     Vue.set(state.gocipe, "entities", payload);
+  },
+  addexisting(state, payload) {
+    Vue.set(state, "gocipe", payload);
   }
 };
 
@@ -66,6 +69,9 @@ const actions = {
   },
   addentities({ commit }, payload) {
     commit("addentities", payload);
+  },
+  addexisting({ commit }, payload) {
+    commit("addexisting", payload);
   }
 };
 

@@ -45,9 +45,7 @@
     <!-- Name <input type="text" v-model="val.name" @change="update"> Description
         <input type="text" v-model="val.description" @change="update"> -->
     <!-- </div> -->
-    <v-btn class=" mx-auto" dark v-on:click="removeEntity(index)">
-      <v-icon dark left>remove_circle</v-icon>Delete
-    </v-btn>
+
     <!-- <v-btn color="success" v-on:click=" appendentities()">Complete</v-btn> -->
 
   </div>

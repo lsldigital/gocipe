@@ -43,7 +43,7 @@
 
     <v-flex xs10>
       <v-layout class=" mx-auto mb-5 mt-3" column wrap>
-        <div class="text-xs-center ">
+        <div class="text-xs-center">
           <v-btn color="success" @click="generateJson">generate json</v-btn>
         </div>
       </v-layout>
@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 import PageBootstrap from "@/components/subpages/PageBootstrap.vue";
 import PageSchema from "@/components/subpages/PageSchema.vue";
 import PageHttp from "@/components/subpages/PageHttp.vue";
@@ -71,11 +71,7 @@ export default {
     PageVuetify,
     PageEntities
   },
-  computed: {
-    ...mapGetters({
-      gocipe: "gocipe"
-    })
-  },
+
   data() {
     return {
       isActive: false,
@@ -92,6 +88,7 @@ export default {
       }
     };
   },
+
   methods: {
     setback() {
       this.b1 = this.e1 - 1;

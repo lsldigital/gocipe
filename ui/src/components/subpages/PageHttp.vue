@@ -18,37 +18,54 @@
             </v-flex>
 
         </v-list-tile>
-      <v-divider></v-divider> <v-divider></v-divider> <v-divider></v-divider>
-      <v-flex xs12 class="text-xs-center">
-    		<v-btn @click="pushhttp" icon color="primary">
-      		<i class="material-icons"> check_circle </i>
-      	</v-btn>
-			</v-flex>
+        <v-divider></v-divider>
+        <v-divider></v-divider>
+        <v-divider></v-divider>
+        <v-flex xs12 class="text-xs-center">
+            <v-btn @click="pushhttp" icon color="primary">
+                <i class="material-icons"> check_circle </i>
+            </v-btn>
+        </v-flex>
     </v-card>
 </template>
 
 <script>
-import { mapActions } from 'vuex';
-    export default {
-        data() {
-            return {
-                http: {
-                    "generate": false,
-                    "prefix": "",
-                    "port": ""
-                }
-            }
-        },
-        methods: {
-            ...mapActions(['addhttp']),
-            toggle(name) {
-                if (name == "generate") {
-                    this.http.generate = !this.http.generate
-                }
-            },
-            pushhttp() {
-              this.addhttp(this.http);
-            }
-        }
+import gocipe from "../../assets/gocipe.json";
+import { mapActions } from "vuex";
+export default {
+  data() {
+    return {
+      gocipe,
+      http: {
+        generate: false,
+        prefix: "",
+        port: ""
+      }
+    };
+  },
+  mounted() {
+    if (this.gocipe.http !== undefined) {
+      this.http.generate =
+        this.gocipe.http.generate === undefined
+          ? ""
+          : this.gocipe.http.generate;
+
+      this.http.prefix =
+        this.gocipe.http.prefix === undefined ? "" : this.gocipe.http.prefix;
+      this.http.port =
+        this.gocipe.http.port === undefined ? "" : this.gocipe.http.port;
     }
+  },
+  methods: {
+    ...mapActions(["addhttp"]),
+    toggle(name) {
+      if (name == "generate") {
+        this.http.generate = !this.http.generate;
+      }
+    },
+    pushhttp() {
+      this.addhttp(this.http);
+    }
+  }
+};
 </script>
