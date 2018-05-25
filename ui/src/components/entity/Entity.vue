@@ -78,11 +78,7 @@ export default {
       schema: null,
       widget: null,
       fields: [],
-      items: ["general", "relationship", "schema", "crud", "rest", "widget"],
-      val: {
-        name: "",
-        description: ""
-      }
+      items: ["general", "relationship", "schema", "crud", "rest", "widget"]
     };
   },
   mounted() {
@@ -91,16 +87,16 @@ export default {
     }
 
     this.entity.crud = this.crud;
-    this.$emit("input", this.val);
+    this.$emit("input", this.crud);
 
     this.entity.schema = this.schema;
-    this.$emit("input", this.val);
+    this.$emit("input", this.vschemaal);
 
     this.entity.fields = this.fields;
-    this.$emit("input", this.val);
+    this.$emit("input", this.fields);
 
     this.entity.widget = this.widget;
-    this.$emit("input", this.val);
+    this.$emit("input", this.widget);
 
     this.$emit("input", this.entity);
   },
