@@ -90,7 +90,18 @@ export default {
       this.generaldata.table = "";
       this.generaldata.table_constraints = [];
       this.generaldata.description = "";
+    } else {
+      console.log("dasd");
+      console.log(this.value);
     }
+
+    // if (this.value !== null) {
+    //   console.log("yahaa");
+    //   this.generaldata.name = this.value.name;
+    //   this.generaldata.primary_key = this.value.primary_key;
+    //   this.generaldata.table = this.value.table;
+    //   this.generaldata.description = this.value.description;
+    // }
     this.$emit("input", this.generaldata);
   },
   methods: {

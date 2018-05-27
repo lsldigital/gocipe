@@ -44,18 +44,17 @@ export default {
     };
   },
   mounted() {
-    if (this.gocipe.json == true) {
-      if (this.gocipe.http !== undefined) {
-        this.http.generate =
-          this.gocipe.http.generate === undefined
-            ? ""
-            : this.gocipe.http.generate;
+    this.gocipe = this.$store.state["gocipe"];
+    if (this.gocipe.http !== undefined) {
+      this.http.generate =
+        this.gocipe.http.generate === undefined
+          ? ""
+          : this.gocipe.http.generate;
 
-        this.http.prefix =
-          this.gocipe.http.prefix === undefined ? "" : this.gocipe.http.prefix;
-        this.http.port =
-          this.gocipe.http.port === undefined ? "" : this.gocipe.http.port;
-      }
+      this.http.prefix =
+        this.gocipe.http.prefix === undefined ? "" : this.gocipe.http.prefix;
+      this.http.port =
+        this.gocipe.http.port === undefined ? "" : this.gocipe.http.port;
     }
   },
   methods: {

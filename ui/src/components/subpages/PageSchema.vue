@@ -58,23 +58,20 @@ export default {
     };
   },
   mounted() {
-    if (this.gocipe.json == true) {
-      if (this.gocipe.schema !== undefined) {
-        this.schema.create =
-          this.gocipe.schema.create === undefined
-            ? true
-            : this.gocipe.schema.create;
+    this.gocipe = this.$store.state["gocipe"];
+    if (this.gocipe.schema !== undefined) {
+      this.schema.create =
+        this.gocipe.schema.create === undefined
+          ? true
+          : this.gocipe.schema.create;
 
-        this.schema.drop =
-          this.gocipe.schema.drop === undefined
-            ? true
-            : this.gocipe.schema.drop;
+      this.schema.drop =
+        this.gocipe.schema.drop === undefined ? true : this.gocipe.schema.drop;
 
-        this.schema.aggregate =
-          this.gocipe.schema.aggregate === undefined
-            ? true
-            : this.gocipe.schema.aggregate;
-      }
+      this.schema.aggregate =
+        this.gocipe.schema.aggregate === undefined
+          ? true
+          : this.gocipe.schema.aggregate;
     }
   },
   methods: {

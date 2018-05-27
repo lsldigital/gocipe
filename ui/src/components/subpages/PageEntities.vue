@@ -37,16 +37,15 @@ export default {
     };
   },
   mounted() {
-    if (this.gocipe.json == true) {
-      if (this.gocipe.entities !== undefined) {
-        this.gocipe.entities.forEach(element => {
-          this.entities.push(element);
-        });
-      } else {
-        //
-      }
+    this.gocipe = this.$store.state["gocipe"];
+
+    if (this.gocipe.entities !== undefined) {
+      this.gocipe.entities.forEach(element => {
+        this.entities.push(element);
+      });
+    } else {
+      this.entities.push({});
     }
-    this.entities.push({});
   },
   methods: {
     ...mapActions(["addentities"]),

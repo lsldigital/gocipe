@@ -83,7 +83,7 @@ export default {
   },
   mounted() {
     if (this.value !== null) {
-      this.val = this.value;
+      this.entity = this.value;
     }
 
     this.entity.crud = this.crud;

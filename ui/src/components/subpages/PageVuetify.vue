@@ -34,18 +34,17 @@ export default {
     };
   },
   mounted() {
-    if (this.gocipe.json == true) {
-      if (this.gocipe.vuetify !== undefined) {
-        this.vuetify.create =
-          this.gocipe.vuetify.generate === undefined
-            ? false
-            : this.gocipe.vuetify.generate;
+    this.gocipe = this.$store.state["gocipe"];
+    if (this.gocipe.vuetify !== undefined) {
+      this.vuetify.create =
+        this.gocipe.vuetify.generate === undefined
+          ? false
+          : this.gocipe.vuetify.generate;
 
-        this.vuetify.module =
-          this.gocipe.vuetify.module === undefined
-            ? ""
-            : this.gocipe.vuetify.module;
-      }
+      this.vuetify.module =
+        this.gocipe.vuetify.module === undefined
+          ? ""
+          : this.gocipe.vuetify.module;
     }
   },
   methods: {

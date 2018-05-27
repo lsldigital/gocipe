@@ -131,66 +131,59 @@ export default {
     };
   },
   mounted() {
-    if (this.gocipe.json == true) {
-      if (this.gocipe.crud !== undefined) {
-        console.log(this.gocipe.hooks);
+    this.gocipe = this.$store.state["gocipe"];
+    if (this.gocipe.crud !== undefined) {
+      console.log(this.gocipe.hooks);
 
-        if (this.gocipe.crud.hooks !== undefined) {
-          this.crud.hooks.pre_save =
-            this.gocipe.crud.hooks.pre_save !== undefined
-              ? this.gocipe.crud.hooks.pre_save
-              : false;
-          this.crud.hooks.post_save =
-            this.gocipe.crud.hooks.post_save !== undefined
-              ? this.gocipe.crud.hooks.post_save
-              : false;
-          this.crud.hooks.pre_read =
-            this.gocipe.crud.hooks.pre_read !== undefined
-              ? this.gocipe.crud.hooks.pre_read
-              : false;
-          this.crud.hooks.post_read =
-            this.gocipe.crud.hooks.post_read !== undefined
-              ? this.gocipe.crud.hooks.post_read
-              : false;
-          this.crud.hooks.pre_list =
-            this.gocipe.crud.hooks.pre_list !== undefined
-              ? this.gocipe.crud.hooks.pre_list
-              : false;
-          this.crud.hooks.post_list =
-            this.gocipe.crud.hooks.post_list !== undefined
-              ? this.gocipe.crud.hooks.post_list
-              : false;
-          this.crud.hooks.pre_delete =
-            this.gocipe.crud.hooks.pre_delete !== undefined
-              ? this.gocipe.crud.hooks.pre_delete
-              : false;
-          this.crud.hooks.post_delete =
-            this.gocipe.crud.hooks.post_delete !== undefined
-              ? this.gocipe.crud.hooks.post_delete
-              : false;
-        }
-
-        this.crud.create =
-          this.gocipe.crud.create === undefined
-            ? false
-            : this.gocipe.crud.create;
-        this.crud.read =
-          this.gocipe.crud.read === undefined ? false : this.gocipe.crud.read;
-        this.crud.read_list =
-          this.gocipe.crud.read_list === undefined
-            ? false
-            : this.gocipe.crud.read_list;
-        this.crud.update =
-          this.gocipe.crud.update === undefined
-            ? false
-            : this.gocipe.crud.update;
-        this.crud.delete =
-          this.gocipe.crud.delete === undefined
-            ? false
-            : this.gocipe.crud.delete;
-        this.crud.merge =
-          this.gocipe.crud.merge === undefined ? false : this.gocipe.crud.merge;
+      if (this.gocipe.crud.hooks !== undefined) {
+        this.crud.hooks.pre_save =
+          this.gocipe.crud.hooks.pre_save !== undefined
+            ? this.gocipe.crud.hooks.pre_save
+            : false;
+        this.crud.hooks.post_save =
+          this.gocipe.crud.hooks.post_save !== undefined
+            ? this.gocipe.crud.hooks.post_save
+            : false;
+        this.crud.hooks.pre_read =
+          this.gocipe.crud.hooks.pre_read !== undefined
+            ? this.gocipe.crud.hooks.pre_read
+            : false;
+        this.crud.hooks.post_read =
+          this.gocipe.crud.hooks.post_read !== undefined
+            ? this.gocipe.crud.hooks.post_read
+            : false;
+        this.crud.hooks.pre_list =
+          this.gocipe.crud.hooks.pre_list !== undefined
+            ? this.gocipe.crud.hooks.pre_list
+            : false;
+        this.crud.hooks.post_list =
+          this.gocipe.crud.hooks.post_list !== undefined
+            ? this.gocipe.crud.hooks.post_list
+            : false;
+        this.crud.hooks.pre_delete =
+          this.gocipe.crud.hooks.pre_delete !== undefined
+            ? this.gocipe.crud.hooks.pre_delete
+            : false;
+        this.crud.hooks.post_delete =
+          this.gocipe.crud.hooks.post_delete !== undefined
+            ? this.gocipe.crud.hooks.post_delete
+            : false;
       }
+
+      this.crud.create =
+        this.gocipe.crud.create === undefined ? false : this.gocipe.crud.create;
+      this.crud.read =
+        this.gocipe.crud.read === undefined ? false : this.gocipe.crud.read;
+      this.crud.read_list =
+        this.gocipe.crud.read_list === undefined
+          ? false
+          : this.gocipe.crud.read_list;
+      this.crud.update =
+        this.gocipe.crud.update === undefined ? false : this.gocipe.crud.update;
+      this.crud.delete =
+        this.gocipe.crud.delete === undefined ? false : this.gocipe.crud.delete;
+      this.crud.merge =
+        this.gocipe.crud.merge === undefined ? false : this.gocipe.crud.merge;
     }
   },
   methods: {
