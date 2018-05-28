@@ -9,7 +9,11 @@
                 <v-subheader>Name</v-subheader>
             </v-flex>
 
-            <v-flex xs7>
+            <v-flex xs7 v-if="value !== null">
+                <v-text-field v-model="value.label" label="Name" hint="Label is the label for the field"></v-text-field>
+            </v-flex>
+
+            <v-flex xs7 v-else>
                 <v-text-field v-model="field.label" label="Name" hint="Label is the label for the field"></v-text-field>
             </v-flex>
 
@@ -17,7 +21,10 @@
                 <v-subheader>Serialized</v-subheader>
             </v-flex>
 
-            <v-flex xs7>
+            <v-flex xs7 v-if="value !== null">
+                <v-text-field v-model="value.serialized" label="Serialized" hint="Serialized is the name of the field for serialization (e.g. json)"></v-text-field>
+            </v-flex>
+            <v-flex xs7 v-else>
                 <v-text-field v-model="field.serialized" label="Serialized" hint="Serialized is the name of the field for serialization (e.g. json)"></v-text-field>
             </v-flex>
 
@@ -25,10 +32,12 @@
                 <v-subheader>Filterable</v-subheader>
             </v-flex>
 
-            <v-flex xs7>
+            <v-flex xs7 v-if="value !== null">
+                <v-checkbox v-model="value.filterable"></v-checkbox>
+            </v-flex>
+            <v-flex xs7 v-else>
                 <v-checkbox v-model="field.filterable"></v-checkbox>
             </v-flex>
-
             <v-flex xs12>
                 <v-layout column wrap>
                     <v-divider></v-divider>
@@ -42,13 +51,19 @@
             <v-flex xs3>
                 <v-subheader>Name</v-subheader>
             </v-flex>
-            <v-flex xs7>
+            <v-flex xs7 v-if="value.property !== null">
+                <v-text-field v-model="value.property.name" label="Name" hint="Name is the name of the property"></v-text-field>
+            </v-flex>
+            <v-flex xs7 v-else>
                 <v-text-field v-model="field.property.name" label="Name" hint="Name is the name of the property"></v-text-field>
             </v-flex>
             <v-flex xs3>
                 <v-subheader>Type</v-subheader>
             </v-flex>
-            <v-flex xs7>
+            <v-flex xs7 v-if="value.property !== null">
+                <v-text-field v-model="value.property.type" label="Type" hint="Type is the data type of the property"></v-text-field>
+            </v-flex>
+            <v-flex xs7 v-else>
                 <v-text-field v-model="field.property.type" label="Type" hint="Type is the data type of the property"></v-text-field>
             </v-flex>
 
@@ -66,7 +81,10 @@
                 <v-subheader>Field</v-subheader>
             </v-flex>
 
-            <v-flex xs7>
+            <v-flex xs7 v-if="value.schema !== null">
+                <v-text-field v-model="value.schema.name" label="Field" hint="Field is the name of the field in database"></v-text-field>
+            </v-flex>
+            <v-flex xs7 v-else>
                 <v-text-field v-model="field.schema.name" label="Field" hint="Field is the name of the field in database"></v-text-field>
             </v-flex>
 
@@ -74,13 +92,20 @@
                 <v-subheader>Type</v-subheader>
             </v-flex>
 
-            <v-flex xs7>
+            <v-flex xs7 v-if="value.schema !== null">
+                <v-text-field v-model="value.schema.type" label="Type" hint="Type is the data type for the field in database"></v-text-field>
+            </v-flex>
+            <v-flex xs7 v-else>
                 <v-text-field v-model="field.schema.type" label="Type" hint="Type is the data type for the field in database"></v-text-field>
             </v-flex>
             <v-flex xs3>
                 <v-subheader>Nullable</v-subheader>
             </v-flex>
-            <v-flex xs7>
+            <v-flex xs7 v-if="value.schema !== null">
+                <v-checkbox v-model="value.schema.nullable"></v-checkbox>
+            </v-flex>
+
+            <v-flex xs7 v-else>
                 <v-checkbox v-model="field.schema.nullable"></v-checkbox>
             </v-flex>
 
@@ -88,7 +113,10 @@
                 <v-subheader>Default</v-subheader>
             </v-flex>
 
-            <v-flex xs7>
+            <v-flex xs7 v-if="value.schema !== null">
+                <v-text-field v-model="value.schema.default" label="Default" hint="Default provides the default value for this field in database"></v-text-field>
+            </v-flex>
+            <v-flex xs7 v-else>
                 <v-text-field v-model="field.schema.default" label="Default" hint="Default provides the default value for this field in database"></v-text-field>
             </v-flex>
 
@@ -106,13 +134,51 @@
                 <v-subheader>Type</v-subheader>
             </v-flex>
 
-            <v-flex xs7>
+            <v-flex xs7 v-if="value.relationship.type !== null">
+                <v-text-field v-model="value.relationship.type" label="Type" hint="Type represents the type of relationship"></v-text-field>
+            </v-flex>
+            <v-flex xs7 v-else>
                 <v-text-field v-model="field.relationship.type" label="Type" hint="Type represents the type of relationship"></v-text-field>
             </v-flex>
 
             <v-flex xs3></v-flex>
             <v-flex xs7>
-                <v-layout column wrap>
+                <v-layout column wrap v-if="value.relationship.target !== null">
+                    <v-subheader class="entityheader">Target
+
+                    </v-subheader>
+                    <i class="p_italic">Target represents the target of the relationship</i>
+
+                    <v-flex xs7>
+                        <v-text-field v-model="value.relationship.target.entity" label="Entity" hint="Entity represents the other entity in the relationship"></v-text-field>
+                    </v-flex>
+
+                    <v-flex xs7>
+                        <v-text-field v-model="value.relationship.target.endpoint" label="Endpoint" hint="Endpoint represents the endpoint where query can be made"></v-text-field>
+                    </v-flex>
+
+                    <v-flex xs7>
+                        <v-text-field v-model="value.relationship.target.query" label="Query" hint="Query represents the field to use in the query string"></v-text-field>
+                    </v-flex>
+
+                    <v-flex xs7>
+                        <v-text-field v-model="value.relationship.target.table" label="Table" hint="">Table represents the other table in the relationship</v-text-field>
+                    </v-flex>
+
+                    <v-flex xs7>
+                        <v-text-field v-model="value.relationship.target.thisid" label="This ID" hint="ThisID represents the field in this entity used for the relationship"></v-text-field>
+                    </v-flex>
+
+                    <v-flex xs7>
+                        <v-text-field v-model="value.relationship.target.thatid" label="That Id" hint="ThatID represents the field in the other entity used for the relationship"></v-text-field>
+                    </v-flex>
+
+                    <v-flex xs7>
+                        <v-text-field v-model="value.relationship.target.thatfield_type" label="That field type" hint="That Field Type represents the field type of the other entity"></v-text-field>
+                    </v-flex>
+                </v-layout>
+
+                <v-layout column wrap v-else>
                     <v-subheader class="entityheader">Target
 
                     </v-subheader>
@@ -267,6 +333,7 @@ export default {
       }
     };
   },
+  props: ["value"],
   mounted() {
     if (typeof this.value === "undefined") {
       this.field.label = "";

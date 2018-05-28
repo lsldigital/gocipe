@@ -144,9 +144,7 @@ export default {
           }
           var ent = [];
 
-          console.log();
           if (obj.entities !== undefined) {
-            console.log(obj.entities);
             this.addentities(obj.entities);
           }
         }).bind(this);

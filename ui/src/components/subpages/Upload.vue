@@ -1,43 +1,43 @@
 <template>
-    <v-flex xs12 pa-3>
+  <v-flex xs12 pa-3>
 
-        <v-flex xs10>
-            <v-layout class=" mx-auto mb-5 mt-3" column wrap>
-                <v-spacer></v-spacer>
-                <div column class="text-xs-center">
-                    <h2>Upload your gocipe file</h2>
-                    <input type="file" @change="onFileChange">
+    <v-flex xs10>
+      <v-layout class=" mx-auto mb-5 mt-3" column wrap>
+        <v-spacer></v-spacer>
+        <div column class="text-xs-center">
+          <h2>Upload your gocipe file</h2>
+          <input type="file" @change="onFileChange">
 
-                </div>
-            </v-layout>
-            <v-layout class=" mx-auto mb-5 mt-3" column wrap>
+        </div>
+      </v-layout>
+      <v-layout class=" mx-auto mb-5 mt-3" column wrap>
 
-                <div class="text-xs-center">
+        <div class="text-xs-center">
 
-                    <router-link class="applyupload" :to="{ name: 'home' }">Apply Changes from File</router-link>
+          <router-link class="applyupload" :to="{ name: 'home' }">Apply Changes from File</router-link>
 
-                </div>
-            </v-layout>
-        </v-flex>
-        <v-divider></v-divider>
-        <v-flex xs10>
-            <v-layout class=" mx-auto mb-5 mt-3" column wrap>
-                <div column class="text-xs-center">
-                    <h2>Or</h2>
-                    <h2>Create a New Gocipe file</h2>
-
-                </div>
-            </v-layout>
-            <v-layout class=" mx-auto mb-5 mt-3" column wrap>
-
-                <div class="text-xs-center">
-
-                    <router-link class="routeLink" :to="{ name: 'home' }">New Gocipe</router-link>
-
-                </div>
-            </v-layout>
-        </v-flex>
+        </div>
+      </v-layout>
     </v-flex>
+    <v-divider></v-divider>
+    <v-flex xs10>
+      <v-layout class=" mx-auto mb-5 mt-3" column wrap>
+        <div column class="text-xs-center">
+          <h2>Or</h2>
+          <h2>Create a New Gocipe file</h2>
+
+        </div>
+      </v-layout>
+      <v-layout class=" mx-auto mb-5 mt-3" column wrap>
+
+        <div class="text-xs-center">
+
+          <router-link class="routeLink" :to="{ name: 'home' }">New Gocipe</router-link>
+
+        </div>
+      </v-layout>
+    </v-flex>
+  </v-flex>
 </template>
 
 <script>
@@ -96,9 +96,7 @@ export default {
           }
           var ent = [];
 
-          console.log();
           if (obj.entities !== undefined) {
-            console.log(obj.entities);
             this.addentities(obj.entities);
           }
         }).bind(this);

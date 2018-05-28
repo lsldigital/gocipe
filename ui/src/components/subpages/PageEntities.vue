@@ -29,7 +29,6 @@ export default {
   components: {
     Entity
   },
-
   data() {
     return {
       gocipe,
@@ -40,12 +39,22 @@ export default {
     this.gocipe = this.$store.state["gocipe"];
 
     if (this.gocipe.entities !== undefined) {
-      this.gocipe.entities.forEach(element => {
-        this.entities.push(element);
-      });
+      var i;
+      for (i = 0; i < this.gocipe.entities.length; i++) {
+        this.entities.push(this.gocipe.entities[i]);
+      }
+
+      // this.gocipe.entities.forEach(element => {
+      console.log(this.entities);
+
+      //   this.entities[count].label = element.label;
+      //   this.entities[count].table = element.table;
+      // });
     } else {
       this.entities.push({});
     }
+
+    console.log(this.entities);
   },
   methods: {
     ...mapActions(["addentities"]),

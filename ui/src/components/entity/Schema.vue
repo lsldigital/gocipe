@@ -7,19 +7,32 @@
                     <v-subheader class="entityheader"> Schema Options</v-subheader>
                 </v-flex>
 
-                <v-flex xs2 class="mx-auto">
+                <v-flex xs2 class="mx-auto" v-if="value !== null">
+                    <v-checkbox v-model="value.create" label="Create" hint="Create whether or not to generate CREATE TABLE"></v-checkbox>
+                </v-flex>
+                <v-flex xs2 class="mx-auto" v-else>
                     <v-checkbox v-model="schema.create" label="Create" hint="Create whether or not to generate CREATE TABLE"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs2 class="mx-auto">
+                <v-flex xs2 class="mx-auto" v-if="value !== null">
+                    <v-checkbox v-model="value.drop" label="Drop" hint="Drop whether or not to generate DROP IF EXISTS before CREATE"></v-checkbox>
+                </v-flex>
+                <v-flex xs2 class="mx-auto" v-else>
                     <v-checkbox v-model="schema.drop" label="Drop" hint="Drop whether or not to generate DROP IF EXISTS before CREATE"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs2 class="mx-auto">
+                <v-flex xs2 class="mx-auto" v-if="value !== null">
+                    <v-checkbox v-model="value.aggregate" label="Aggregate" hint="Aggregate whether or not to generate schema into single file instead of separate files"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs2 class="mx-auto" v-else>
                     <v-checkbox v-model="schema.aggregate" label="Aggregate" hint="Aggregate whether or not to generate schema into single file instead of separate files"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs10 class="mx-auto">
+                <v-flex xs10 class="mx-auto" v-if="value !== null">
+                    <v-text-field v-model="value.path" label="Path" hint="Path indicates in which path to generate the schema sql file"></v-text-field>
+                </v-flex>
+                <v-flex xs10 class="mx-auto" v-else>
                     <v-text-field v-model="schema.path" label="Path" hint="Path indicates in which path to generate the schema sql file"></v-text-field>
                 </v-flex>
 
@@ -51,9 +64,9 @@ export default {
       }
     };
   },
-
+  props: ["value"],
   mounted() {
-    if (typeof this.value === "undefined") {
+    if (typeof this.value === undefined) {
       this.schema.create = true;
       this.schema.drop = true;
       this.schema.aggregate = true;

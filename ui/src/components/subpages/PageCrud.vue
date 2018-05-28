@@ -133,8 +133,6 @@ export default {
   mounted() {
     this.gocipe = this.$store.state["gocipe"];
     if (this.gocipe.crud !== undefined) {
-      console.log(this.gocipe.hooks);
-
       if (this.gocipe.crud.hooks !== undefined) {
         this.crud.hooks.pre_save =
           this.gocipe.crud.hooks.pre_save !== undefined

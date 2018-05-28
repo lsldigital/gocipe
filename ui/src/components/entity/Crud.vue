@@ -6,15 +6,27 @@
                     <v-subheader class="entityheader">Basic Crud operations</v-subheader>
                 </v-flex>
 
-                <v-flex xs4>
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.create" label="Create"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4 v-else>
                     <v-checkbox v-model="crud.create" label="Create"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs4>
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.hooks.pre_save" label="Pre Save"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4 v-else>
                     <v-checkbox v-model="crud.hooks.pre_save" label="Pre Save"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs4>
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.hooks.post_save" label="Post Save"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4 v-else>
                     <v-checkbox v-model="crud.hooks.post_save" label="Post Save"></v-checkbox>
                 </v-flex>
 
@@ -24,15 +36,27 @@
                     </v-layout>
                 </v-flex>
 
-                <v-flex xs4>
-                    <v-checkbox v-model="crud.read" label="Read"></v-checkbox>
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.read" label="Read"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs4>
+                <v-flex xs4 v-else>
+                    <v-checkbox v-model="crud.read" label="Create"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.hooks.pre_read" label="Pre Read"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4 v-else>
                     <v-checkbox v-model="crud.hooks.pre_read" label="Pre Read"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs4>
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.hooks.post_read" label="Post Read"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4 v-else>
                     <v-checkbox v-model="crud.hooks.post_read" label="Post Read"></v-checkbox>
                 </v-flex>
 
@@ -42,16 +66,28 @@
                     </v-layout>
                 </v-flex>
 
-                <v-flex xs4>
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.read_list" label="Read List"></v-checkbox>
+                </v-flex>
+
+                <v-flex>
                     <v-checkbox v-model="crud.read_list" label="Read List"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs4>
-                    <v-checkbox v-model="crud.hooks.pre_list" label="Pre List"></v-checkbox>
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.hooks.pre_list" label="Pre List"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs4>
-                    <v-checkbox v-model="crud.hooks.post_list" label="Post List"></v-checkbox>
+                <v-flex>
+                    <v-checkbox v-model="crud.read_list" label="Read List"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.hooks.post_list" label="Post List"></v-checkbox>
+                </v-flex>
+
+                <v-flex>
+                    <v-checkbox v-model="crud.read_list" label="Read List"></v-checkbox>
                 </v-flex>
 
                 <v-flex xs12>
@@ -60,15 +96,27 @@
                     </v-layout>
                 </v-flex>
 
-                <v-flex xs4>
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.delete" label="Delete"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4 v-else>
                     <v-checkbox v-model="crud.delete" label="Delete"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs4>
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.hooks.pre_delete" label="Pre Delete"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4 v-else>
                     <v-checkbox v-model="crud.hooks.pre_delete" label="Pre Delete"></v-checkbox>
                 </v-flex>
 
-                <v-flex xs4>
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.hooks.post_delete" label="Post Delete"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4 v-else>
                     <v-checkbox v-model="crud.hooks.post_delete" label="Post Delete"></v-checkbox>
                 </v-flex>
 
@@ -78,7 +126,11 @@
                     </v-layout>
                 </v-flex>
 
-                <v-flex xs4>
+                <v-flex xs4 v-if="value !== null">
+                    <v-checkbox v-model="value.merge" label="Merge"></v-checkbox>
+                </v-flex>
+
+                <v-flex xs4 v-else>
                     <v-checkbox v-model="crud.merge" label="Merge"></v-checkbox>
                 </v-flex>
 
@@ -117,14 +169,15 @@ export default {
       }
     };
   },
+  props: ["value"],
   mounted() {
-    if (typeof this.value === "undefined") {
-      this.crud.create = true;
-      this.crud.read = true;
-      this.crud.read_list = true;
-      this.crud.update = true;
-      this.crud.delete = true;
-      this.crud.merge = true;
+    if (typeof this.value === undefined) {
+      this.crud.create = false;
+      this.crud.read = false;
+      this.crud.read_list = false;
+      this.crud.update = false;
+      this.crud.delete = false;
+      this.crud.merge = false;
       this.crud.hooks.pre_save = false;
       this.crud.hooks.post_save = false;
       this.crud.hooks.pre_read = false;
@@ -136,11 +189,7 @@ export default {
     }
     this.$emit("input", this.crud);
   },
-  methods: {
-    addCrud: function() {
-      //   this.$emit("input", this.crud);
-    }
-  }
+  methods: {}
 };
 </script>
 

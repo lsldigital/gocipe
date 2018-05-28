@@ -2,7 +2,7 @@
   <div>
     <v-layout row wrap class="borderwrapper" v-for="(field, index) in fields" :key="index">
 
-      <fieldcomponent v-model="fields[index]" />
+      <fieldcomponent v-model="value[index]" />
 
       <v-btn class=" mx-auto" dark v-on:click="remove(index)">
         <v-icon dark left>remove_circle</v-icon>Delete Field

@@ -1,5 +1,6 @@
 <template>
   <div>
+
     <v-toolbar color="transparent" dark tabs>
       <v-tabs slot="extension" v-model="tab" color="transparent" grow>
         <v-tabs-slider color="blue"></v-tabs-slider>
@@ -34,7 +35,7 @@
           </div>
 
           <div v-else>
-            <component :is="item" v-model="entity"></component>
+            <component :is="item " v-model="entity"></component>
           </div>
 
         </v-card>
@@ -42,11 +43,11 @@
     </v-tabs-items>
 
     <!-- <div> -->
-    <!-- Name <input type="text" v-model="val.name" @change="update"> Description
-        <input type="text" v-model="val.description" @change="update"> -->
+    <!-- Name <input type="text " v-model="val.name " @change="update "> Description
+        <input type="text " v-model="val.description " @change="update "> -->
     <!-- </div> -->
 
-    <!-- <v-btn color="success" v-on:click=" appendentities()">Complete</v-btn> -->
+    <!-- <v-btn color="success " v-on:click=" appendentities() ">Complete</v-btn> -->
 
   </div>
 </template>
@@ -82,15 +83,19 @@ export default {
     };
   },
   mounted() {
-    if (this.value !== null) {
-      this.entity = this.value;
+    if (typeof this.value !== undefined) {
+      this.crud = this.value.crud;
+      this.schema = this.value.schema;
+      this.widget = this.value.widget;
     }
+
+    console.log(this.entity);
 
     this.entity.crud = this.crud;
     this.$emit("input", this.crud);
 
     this.entity.schema = this.schema;
-    this.$emit("input", this.vschemaal);
+    this.$emit("input", this.schema);
 
     this.entity.fields = this.fields;
     this.$emit("input", this.fields);

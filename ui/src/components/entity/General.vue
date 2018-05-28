@@ -1,5 +1,6 @@
 <template>
     <div>
+        {{value}}
         <v-layout class="borderwrapper" row wrap>
             <v-divider></v-divider>
             <v-layout row wrap>
@@ -10,32 +11,32 @@
                     <v-subheader>Name</v-subheader>
                 </v-flex>
 
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.name" label="Name"></v-text-field>
+                <v-flex xs7 v-if="value !== null">
+                    <v-text-field v-model="value.label" label="Name"></v-text-field>
                 </v-flex>
 
                 <v-flex xs3>
                     <v-subheader> Primary Key</v-subheader>
                 </v-flex>
 
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.primary_key" label="Primary Key"></v-text-field>
+                <v-flex xs7 v-if="value !== null">
+                    <v-text-field v-model="value.primary_key" label="Primary Key"></v-text-field>
                 </v-flex>
 
                 <v-flex xs3>
                     <v-subheader> Table</v-subheader>
                 </v-flex>
 
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.table" label="Table Name"></v-text-field>
+                <v-flex xs7 v-if="value !== null">
+                    <v-text-field v-model="value.table" label="Table Name"></v-text-field>
                 </v-flex>
 
                 <v-flex xs3>
                     <v-subheader> Description</v-subheader>
                 </v-flex>
 
-                <v-flex xs7>
-                    <v-text-field v-model="generaldata.description" label="Description"></v-text-field>
+                <v-flex xs7 v-if="value !== null">
+                    <v-text-field v-model="value.description" label="Description"></v-text-field>
                 </v-flex>
 
                 <v-flex xs12>
@@ -50,15 +51,17 @@
                             <div>
                                 <v-btn class="addcustomcolor" @click="addconstraints" large>Add Table Constraints</v-btn>
                             </div>
-                            <div v-for="(constraint, index) in generaldata.table_constraints" :key="index">
-                                <v-list>
-                                    <v-list-tile>
-                                        <v-text-field v-model=" generaldata.table_constraints[index-1]" :label="'Constraint ' + ++index"></v-text-field>
-                                        <v-btn icon color="primary" v-on:click="remove(index)" dark>
-                                            <i class="material-icons">clear</i>
-                                        </v-btn>
-                                    </v-list-tile>
-                                </v-list>
+                            <div v-if="value !== null">
+                                <div v-for="(constraint, index) in value.table_constraints" :key="index">
+                                    <v-list>
+                                        <v-list-tile>
+                                            <v-text-field v-model=" value.table_constraints[index-1]" :label="'Constraint ' + ++index"></v-text-field>
+                                            <v-btn icon color="primary" v-on:click="remove(index)" dark>
+                                                <i class="material-icons">clear</i>
+                                            </v-btn>
+                                        </v-list-tile>
+                                    </v-list>
+                                </div>
                             </div>
                         </v-layout>
                     </v-flex>
@@ -74,7 +77,7 @@ export default {
   data() {
     return {
       generaldata: {
-        name: "",
+        label: "",
         primary_key: "",
         table: "",
         table_constraints: [],
@@ -82,21 +85,17 @@ export default {
       }
     };
   },
-
+  props: ["value"],
   mounted() {
-    if (typeof this.value === "undefined") {
-      this.generaldata.name = "";
+    if (typeof this.value === undefined) {
+      this.generaldata.label = "";
       this.generaldata.primary_key = "";
       this.generaldata.table = "";
       this.generaldata.table_constraints = [];
       this.generaldata.description = "";
-    } else {
-      console.log("dasd");
-      console.log(this.value);
     }
 
     // if (this.value !== null) {
-    //   console.log("yahaa");
     //   this.generaldata.name = this.value.name;
     //   this.generaldata.primary_key = this.value.primary_key;
     //   this.generaldata.table = this.value.table;
