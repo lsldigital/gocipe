@@ -91,6 +91,7 @@ type GeneratedCode struct {
 type Toolset struct {
 	GoImports string
 	GoFmt     string
+	Protoc    string
 }
 
 // SetTemplates injects template box

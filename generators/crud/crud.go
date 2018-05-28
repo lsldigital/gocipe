@@ -62,7 +62,7 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entityList []util.En
 			}
 
 			if err == nil {
-				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: crud, Filename: fmt.Sprintf("models/%s.gocipe.go", strings.ToLower(entity.Name))}
+				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: crud, Filename: fmt.Sprintf("models/%s_repo.gocipe.go", strings.ToLower(entity.Name))}
 			} else {
 				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to execute template: %s", err)}
 			}
@@ -95,6 +95,14 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entityList []util.En
 		}(entity)
 	}
 
+	work.Waitgroup.Add(1)
+	proto, err := generateProtobuf(entities)
+	if err == nil {
+		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Code: proto, Filename: "proto/models.proto"}
+	} else {
+		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Error: fmt.Errorf("failed to load execute template: %s", err)}
+	}
+
 	models, err := util.ExecuteTemplate("crud/models.go.tmpl", struct {
 		Entities []util.Entity
 	}{entityList})
@@ -110,10 +118,6 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 		code entityCrud
 		err  error
 	)
-
-	{
-		code.Structure, err = generateStructure(entities, entity)
-	}
 
 	if err == nil && entity.Crud.Create {
 		code.Insert, err = generateInsert(entities, entity)
@@ -154,63 +158,11 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 	var sqlfields, structfields, before, after []string
 
 	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
-	structfields = append(structfields, fmt.Sprintf("entity.%s", "ID"))
+	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 
 	for _, field := range entity.Fields {
 		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
-		structfields = append(structfields, fmt.Sprintf("entity.%s", field.Property.Name))
-	}
-
-	relOneFull := func(rel util.Relationship, many bool) {
-		var method, id string
-		target := entities[rel.Name]
-		t, _ := util.GetPrimaryKeyDataType(target.PrimaryKey)
-		name := strings.ToLower(rel.Name)
-
-		if many {
-			method = "List"
-			id = fmt.Sprintf(`[]ListFilter{ListFilter{Field: "id", Operation: "=", Value: %sID}}, -1, -1`, name)
-		} else {
-			method = "Get"
-			id = fmt.Sprintf("%sID", name)
-		}
-
-		before = append(before,
-			fmt.Sprintf("var %sID %s",
-				strings.ToLower(rel.Name),
-				t,
-			),
-		)
-
-		structfields = append(structfields, fmt.Sprintf("&%sID", name))
-
-		after = append(after,
-			fmt.Sprintf("if r, err := %sRepo.%s(ctx, %s); err == nil {",
-				target.Name, method, id,
-			),
-		)
-
-		if many {
-			after = append(after, fmt.Sprintf("	entity.%s = r", rel.Name))
-		} else {
-			after = append(after, fmt.Sprintf("	entity.%s = &r", rel.Name))
-		}
-
-		after = append(after, "} else {")
-		after = append(after, "	return entity, err")
-		after = append(after, "}")
-	}
-
-	for _, rel := range entity.Relationships {
-		switch rel.Type {
-		case util.RelationshipTypeOneOne:
-			relOneFull(rel, false)
-		case util.RelationshipTypeOneMany:
-			relOneFull(rel, true)
-
-		case util.RelationshipTypeManyOne:
-		case util.RelationshipTypeManyMany:
-		}
+		structfields = append(structfields, fmt.Sprintf("&entity.%s", field.Property.Name))
 	}
 
 	return util.ExecuteTemplate("crud/partials/get.go.tmpl", struct {
@@ -245,7 +197,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 
 	for _, field := range entity.Fields {
 		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
-		structfields = append(structfields, fmt.Sprintf("entity.%s", field.Property.Name))
+		structfields = append(structfields, fmt.Sprintf("&entity.%s", field.Property.Name))
 	}
 
 	return util.ExecuteTemplate("crud/partials/list.go.tmpl", struct {
@@ -318,7 +270,7 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 	if entity.PrimaryKey != util.PrimaryKeySerial {
 		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
 		sqlfields = append(sqlfields, "id")
-		structFields = append(structFields, "*entity.ID")
+		structFields = append(structFields, "entity.ID")
 
 		count++
 	}
@@ -326,12 +278,12 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 	for _, field := range entity.Fields {
 		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
 		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
-		structFields = append(structFields, fmt.Sprintf("*entity.%s", field.Property.Name))
+		structFields = append(structFields, fmt.Sprintf("entity.%s", field.Property.Name))
 
 		if field.Property.Name == "CreatedAt" {
-			before = append(before, "*entity.CreatedAt = time.Now()")
+			before = append(before, "entity.CreatedAt = time.Now()")
 		} else if field.Property.Name == "UpdatedAt" {
-			before = append(before, "*entity.UpdatedAt = time.Now()")
+			before = append(before, "entity.UpdatedAt = time.Now()")
 		}
 	}
 
@@ -345,7 +297,6 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 		Table           string
 		HasPreHook      bool
 		HasPostHook     bool
-		Relationships   []relationship
 	}{
 		Before:          before,
 		EntityName:      entity.Name,
@@ -356,7 +307,6 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 		Table:           entity.Table,
 		HasPostHook:     entity.Crud.Hooks.PreSave,
 		HasPreHook:      entity.Crud.Hooks.PostSave,
-		Relationships:   nil,
 	})
 }
 
@@ -369,13 +319,13 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 
 	for _, field := range entity.Fields {
 		sqlfields = append(sqlfields, fmt.Sprintf("%s = $%d", field.Schema.Field, count))
-		structfields = append(structfields, fmt.Sprintf("*entity.%s", field.Property.Name))
+		structfields = append(structfields, fmt.Sprintf("entity.%s", field.Property.Name))
 		count++
 
 		if field.Property.Name == "CreatedAt" {
-			before = append(before, "*entity.CreatedAt = time.Now()")
+			before = append(before, "entity.CreatedAt = time.Now()")
 		} else if field.Property.Name == "UpdatedAt" {
-			before = append(before, "*entity.UpdatedAt = time.Now()")
+			before = append(before, "entity.UpdatedAt = time.Now()")
 		}
 	}
 
@@ -412,19 +362,19 @@ func generateMerge(entities map[string]util.Entity, entity util.Entity) (string,
 	)
 
 	sqlfieldsInsert = append(sqlfieldsInsert, "id")
-	structFields = append(structFields, "*entity.ID")
+	structFields = append(structFields, "entity.ID")
 	sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
 
 	for _, field := range entity.Fields {
 		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
 		sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf("%s = $%d", field.Schema.Field, count))
 		sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("%s", field.Schema.Field))
-		structFields = append(structFields, fmt.Sprintf("*entity.%s", field.Property.Name))
+		structFields = append(structFields, fmt.Sprintf("entity.%s", field.Property.Name))
 
 		if field.Property.Name == "CreatedAt" {
-			before = append(before, "*entity.CreatedAt = time.Now()")
+			before = append(before, "entity.CreatedAt = time.Now()")
 		} else if field.Property.Name == "UpdatedAt" {
-			before = append(before, "*entity.UpdatedAt = time.Now()")
+			before = append(before, "entity.UpdatedAt = time.Now()")
 		}
 		count++
 	}

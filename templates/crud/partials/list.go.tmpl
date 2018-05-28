@@ -55,7 +55,7 @@ func (repo {{.EntityName}}Repository) List(ctx context.Context, filters []ListFi
 			break
 		}
 
-		entity := New{{.EntityName}}()
+		var entity {{.EntityName}}
 		err = rows.Scan({{.StructFields}})
 		if err != nil {
 			return nil, err

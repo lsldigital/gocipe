@@ -27,11 +27,6 @@ func preprocessEntities(raw []util.Entity) (map[string]util.Entity, error) {
 			if field.Schema.Field == "" {
 				field.Schema.Field = strings.ToLower(field.Property.Name)
 			}
-
-			if field.Serialized == "" {
-				field.Serialized = strings.ToLower(field.Schema.Field)
-			}
-
 			entity.Fields[i] = field
 		}
 
@@ -94,10 +89,6 @@ func preprocessEntities(raw []util.Entity) (map[string]util.Entity, error) {
 				} else {
 					rel.Name = strings.Title(rel.Entity)
 				}
-			}
-
-			if rel.Serialized == "" {
-				rel.Serialized = strings.ToLower(rel.Name)
 			}
 		}
 	}

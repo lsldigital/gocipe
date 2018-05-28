@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package models;
+
+{{range .Imports -}}
+{{.}}
+{{- end}}
+
+{{ range .Entities -}}
+// {{.Name}} {{.Description}}
+message {{.Name}} { {{ range .Fields }}
+	{{.Type}} {{.Name}} = {{.Index}};
+{{- end}}
+}
+
+{{end}}

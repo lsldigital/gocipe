@@ -60,4 +60,6 @@ func main() {
 	work.Waitgroup.Wait()
 	close(work.Done)
 	wg.Wait()
+
+	postProcessProtofiles(toolset)
 }

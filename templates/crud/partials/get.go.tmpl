@@ -4,7 +4,7 @@ func (repo {{.EntityName}}Repository) Get(ctx context.Context, id {{pkeyProperty
 	var (
 		rows   *sql.Rows
 		err    error
-		entity = New{{.EntityName}}()
+		entity {{.EntityName}}
 	)
 	{{if .HasPreHook}}
     if err = crudPreGet(ctx, id); err != nil {

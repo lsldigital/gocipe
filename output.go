@@ -161,21 +161,34 @@ func initToolset() util.Toolset {
 
 	goimports, err := exec.LookPath("goimports")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Required tool goimports not found: ", err)
 		ok = false
 	}
 
 	gofmt, err := exec.LookPath("gofmt")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Required tool gofmt not found: ", err)
+		ok = false
+	}
+
+	protoc, err := exec.LookPath("protoc")
+	if err != nil {
+		fmt.Println("Required tool protoc not found: ", err)
+		ok = false
+	}
+
+	_, err = exec.LookPath("protoc-gen-go")
+	if err != nil {
+		fmt.Println("Required tool protoc-gen-go not found: ", err)
+		fmt.Println("Install using go get -u github.com/golang/protobuf/protoc-gen-go")
 		ok = false
 	}
 
 	if !ok {
-		log.Fatalln("Required tools missing: goimports and gofmt")
+		log.Fatalln("Please install above tools before continuing.")
 	}
 
-	return util.Toolset{GoFmt: gofmt, GoImports: goimports}
+	return util.Toolset{GoFmt: gofmt, GoImports: goimports, Protoc: protoc}
 }
 
 // postProcessGoFiles executes goimports and gofmt on go files that have been generated
@@ -210,4 +223,16 @@ func postProcessGoFiles(toolset util.Toolset, gofiles []string) {
 	}
 
 	wg.Wait()
+}
+
+func postProcessProtofiles(toolset util.Toolset) {
+	cmd := exec.Command(toolset.Protoc, "-I=proto", "--go_out=models", "proto/models.proto")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+
+	if err != nil {
+		fmt.Printf("Error running %s: %s\n", toolset.Protoc, err)
+		return
+	}
 }

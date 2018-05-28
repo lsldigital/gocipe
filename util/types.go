@@ -295,9 +295,6 @@ type Field struct {
 	// Label is the label for the field
 	Label string `json:"label"`
 
-	// Serialized is the name of the field for serialization (e.g. json)
-	Serialized string `json:"serialized"`
-
 	// Property represents code property information for the field
 	Property FieldProperty `json:"property"`
 
@@ -346,9 +343,6 @@ type Relationship struct {
 	// Name represents the property name to be used for this relationship
 	Name string `json:"name"`
 
-	// Serialized represents the name used when the relationship field is serialized
-	Serialized string `json:"serialized"`
-
 	// JoinTable represents the other table in a many-many relationship
 	JoinTable string `json:"join_table"`
 
@@ -357,12 +351,6 @@ type Relationship struct {
 
 	// ThatID represents the field in the other entity used for the relationship
 	ThatID string `json:"thatid"`
-
-	// Eager indicates whether or not to eager load this relationship
-	Eager bool `json:"eager"`
-
-	// Full indicates whether or not to fully load this relationship or to load ids only
-	Full bool `json:"full"`
 }
 
 // WidgetOpts represents a UI widget

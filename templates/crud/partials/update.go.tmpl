@@ -58,48 +58,6 @@ func (repo {{.EntityName}}Repository) Update(ctx context.Context, entity {{.Enti
 		tx.Rollback()
 		return entity, err
 	}
-	{{range .Relationships}}
-	select {
-	case <-ctx.Done():
-		tx.Rollback()
-		return entity, ctx.Err()
-	default:
-		break
-	}
-	stmtRel, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThisID}} = $1")
-
-	if err != nil {
-		return entity, err
-	}
-
-	_, err = stmtRel.Exec(*entity.ID)
-	if err != nil {
-		tx.Rollback()
-		return entity, err
-	}
-
-	stmtRel, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThisID}}, {{.ThatID}}) VALUES ($1, $2)")
-	
-	if err != nil {
-		return entity, err
-	}
-
-	for _, relatedID := range *entity.{{.PropertyName}} {
-		select {
-		case <-ctx.Done():
-			tx.Rollback()
-			return entity, ctx.Err()
-		default:
-			break
-		}
-
-		_, err = stmtRel.Exec(*entity.ID, relatedID)
-		if err != nil {
-			tx.Rollback()
-			return entity, err
-		}
-	}
-	{{end}}
 	{{if .HasPostHook}}
 	select {
 	case <-ctx.Done():
