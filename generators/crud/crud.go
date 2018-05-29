@@ -98,7 +98,7 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entityList []util.En
 	work.Waitgroup.Add(1)
 	proto, err := generateProtobuf(entities)
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Code: proto, Filename: "proto/models.proto"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Code: proto, Filename: "proto/entities.proto"}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Error: fmt.Errorf("failed to load execute template: %s", err)}
 	}
@@ -159,6 +159,20 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 					return code, err
 				}
 				code.LoadRelated = append(code.LoadRelated, c)
+			case util.RelationshipTypeOneMany:
+				c, err := generateLoadRelatedOneMany(entities, entity, rel)
+				if err != nil {
+					return code, err
+				}
+				code.LoadRelated = append(code.LoadRelated, c)
+			case util.RelationshipTypeManyOne:
+				if rel.Full {
+					c, err := generateLoadRelatedManyOne(entities, entity, rel)
+					if err != nil {
+						return code, err
+					}
+					code.LoadRelated = append(code.LoadRelated, c)
+				}
 			}
 		}
 	}

@@ -46,11 +46,12 @@ func generateProtobuf(entities map[string]util.Entity) (string, error) {
 
 		for _, rel := range entity.Relationships {
 			var t string
+			related := entities[rel.Entity]
 
 			if rel.Full {
-				t = rel.Entity
+				t = related.Name
 			} else {
-				t, err = util.GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
+				t, err = util.GetPrimaryKeyDataType(related.PrimaryKey)
 				if err != nil {
 					return "", err
 				}
@@ -64,7 +65,15 @@ func generateProtobuf(entities map[string]util.Entity) (string, error) {
 			case util.RelationshipTypeOneMany:
 				ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name, Type: "repeated " + t})
 			case util.RelationshipTypeManyOne:
-				ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name, Type: t})
+				f, err := util.GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
+				if err != nil {
+					return "", err
+				}
+				if rel.Full {
+					ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name, Type: t})
+					count++
+				}
+				ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name + "ID", Type: f})
 			}
 
 			count++
