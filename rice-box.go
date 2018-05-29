@@ -20,8 +20,8 @@ func init() {
 	}
 	file5 := &embedded.EmbeddedFile{
 		Filename:    "crud/crud.go.tmpl",
-		FileModTime: time.Unix(1527181163, 0),
-		Content:     string("package models\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n\t{{range .Imports}}{{.}}{{end}}\n)\n{{.Structure}}\n{{.Get}}\n{{.List}}\n{{.DeleteSingle}}\n{{.DeleteMany}}\n{{.Save}}\n{{.Insert}}\n{{.Update}}\n{{.Merge}}"),
+		FileModTime: time.Unix(1527579973, 0),
+		Content:     string("package models\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n\t{{range .Imports}}{{.}}{{end}}\n)\n{{.Structure}}\n{{.Get}}\n{{.List}}\n{{.DeleteSingle}}\n{{.DeleteMany}}\n{{.Save}}\n{{.Insert}}\n{{.Update}}\n{{.Merge}}\n{{range .LoadRelated}}{{.}}{{end}}"),
 	}
 	file6 := &embedded.EmbeddedFile{
 		Filename:    "crud/hooks.go.tmpl",
@@ -59,9 +59,9 @@ func init() {
 		Content:     string("\n// List returns a slice containing {{.EntityName}} records\nfunc (repo {{.EntityName}}Repository) List(ctx context.Context, filters []ListFilter, offset, limit int) ([]{{.EntityName}}, error) {\n\tvar (\n\t\tlist     []{{.EntityName}}\n\t\tsegments []string\n\t\tvalues   []interface{}\n\t\terr      error\n\t\trows     *sql.Rows\n\t)\n\n\tquery := \"SELECT {{.SQLFields}} FROM {{.Table}}\"\n\t{{if .HasPreHook}}\n    if filters, err = crudPreList(ctx, filters); err != nil {\n\t\treturn nil, err\n\t}\n\t{{end}}\n\tselect {\n\tcase <-ctx.Done():\n\t\treturn nil, ctx.Err()\n\tdefault:\n\t\tbreak\n\t}\n\n\tfor i, filter := range filters {\n\t\tsegments = append(segments, filter.Field+\" \"+filter.Operation+\" $\"+strconv.Itoa(i+1))\n\t\tvalues = append(values, filter.Value)\n\t}\n\n\tif len(segments) != 0 {\n\t\tquery += \" WHERE \" + strings.Join(segments, \" AND \")\n\t}\n\n\tif limit > -1 {\n\t\tquery += \" LIMIT \"+strconv.Itoa(limit)\n\t}\n\n\tif offset > -1 {\n\t\tquery += \" OFFSET \"+strconv.Itoa(limit)\n\t}\n\n\tquery += \" ORDER BY id ASC\"\n\n\trows, err = repo.db.Query(query, values...)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tdefer rows.Close()\n\tfor rows.Next() {\n\t\tselect {\n\t\tcase <-ctx.Done():\n\t\t\treturn nil, ctx.Err()\n\t\tdefault:\n\t\t\tbreak\n\t\t}\n\n\t\tvar entity {{.EntityName}}\n\t\t{{range .Before}}{{.}}{{end}}\n\n\t\terr = rows.Scan({{.StructFields}})\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\t\n\t\t{{range .After}}{{.}}{{end}}\n\n\t\tlist = append(list, entity)\n\t}\n\t{{if .HasPostHook}}\n\tselect {\n\tcase <-ctx.Done():\n\t\treturn nil, ctx.Err()\n\tdefault:\n\t\tif list, err = crudPostList(ctx, list); err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t}\n\t{{end}}\n\treturn list, nil\n}"),
 	}
 	filee := &embedded.EmbeddedFile{
-		Filename:    "crud/partials/loadrelated.go.tmpl",
-		FileModTime: time.Unix(1527181487, 0),
-		Content:     string("// LoadRelated{{.PropertyName}} is a helper function to load related {{.PropertyName}} entities\nfunc LoadRelated{{.PropertyName}}(ctx context.Context, entities []{{.EntityName}}) ([]{{.EntityName}}, error) {\n\tvar (\n\t\tplaceholder string\n\t\tvalues  []interface{}\n\t\tindices map[{{pkeyPropertyType .PrimaryKey}}]{{trimPrefix .PropertyType \"[]\"}}\n\t\tidthis  {{pkeyPropertyType .PrimaryKey}}\n\t\tidthat  {{trimPrefix .PropertyType \"[]\"}}\n\t\titems   []{{.EntityName}}\n\t)\n\n\tselect {\n\tcase <-ctx.Done():\n\t\treturn nil, ctx.Err()\n\tdefault:\n\t\tbreak\n\t}\n\n\tc := 1\n\tfor i, entity := range entities {\n\t\tplaceholder += \"$\" + strconv.Itoa(c) + \",\"\n\t\tindices[entity.ID] = entity\n\t\tvalues = append(values, i)\n\t\tc++\n\t}\n\tplaceholder = strings.TrimRight(placeholder, \",\")\n\n\trows, err := repo.db.Query(\"SELECT {{.ThisID}}, {{.ThatID}} FROM {{.Table}} WHERE {{.ThisID}} IN (\"+placeholder+\")\", values...)\n\tif err != nil {\n\t\treturn err\n\t}\n\n\tselect {\n\tcase <-ctx.Done():\n\t\treturn nil, ctx.Err()\n\tdefault:\n\t\tbreak\n\t}\n\n\tfor rows.Next() {\n\t\terr = rows.Scan(&idthis, &idthat)\n\t\tif err != nil {\n\t\t\treturn err\n\t\t}\n\t\tindices[idthis].{{.PropertyName}} = append(*indexID[idthis].{{.PropertyName}}, idthat)\n\t}\n\n\treturn nil\n}"),
+		Filename:    "crud/partials/loadrelated_manymany.go.tmpl",
+		FileModTime: time.Unix(1527580917, 0),
+		Content:     string("// LoadRelated{{.PropertyName}} is a helper function to load related {{.PropertyName}} entities\nfunc (repo {{.ThisEntity}}Repository) LoadRelated{{.PropertyName}}(ctx context.Context, entities []{{.ThisEntity}}) error {\n\tvar (\n\t\tplaceholder string\n\t\tvalues  []interface{}\n\t\tindices map[{{.ThisType}}]{{.ThisEntity}}\n\t)\n\n\tselect {\n\tcase <-ctx.Done():\n\t\treturn ctx.Err()\n\tdefault:\n\t\tbreak\n\t}\n\n\tc := 1\n\tfor i, entity := range entities {\n\t\tplaceholder += \"$\" + strconv.Itoa(c) + \",\"\n\t\tindices[entity.ID] = entity\n\t\tvalues = append(values, i)\n\t\tc++\n\t}\n\tplaceholder = strings.TrimRight(placeholder, \",\")\n\n\t{{if .Full}}\n\trows, err := repo.db.Query(`\n\t\tSELECT j.{{.ThisID}}, {{.SQLFields}} FROM {{.ThatTable}} t \n\t\tINNER JOIN {{.JoinTable}} j ON t.id = j.{{.ThatID}}\n\t\tWHERE j.{{.ThisID}} IN (`+placeholder+`)\n\t`, values...)\n\tif err != nil {\n\t\treturn err\n\t}\n\t{{else}}\n\trows, err := repo.db.Query(\"SELECT {{.ThisID}}, {{.ThatID}} FROM {{.JoinTable}} WHERE {{.ThisID}} IN (\"+placeholder+\")\", values...)\n\tif err != nil {\n\t\treturn err\n\t}\n\t{{end}}\n\n\tselect {\n\tcase <-ctx.Done():\n\t\treturn ctx.Err()\n\tdefault:\n\t\tbreak\n\t}\n\n\tfor rows.Next() {\n\t\tvar (\n\t\t\tentity {{.ThisEntity}}\n\t\t\tthisID {{.ThisType}}\n\t\t\t{{if .Full -}}\n\t\t\tthatEntity {{.ThatEntity}}\n\t\t\t{{- else -}}\n\t\t\tthatID {{.ThatType}}\n\t\t\t{{- end -}}\n\t\t)\n\t\t{{if .Full}}\n\t\terr = rows.Scan(&thisID, {{.StructFields}})\n\t\t{{- else -}}\n\t\terr = rows.Scan(&thisID, &thatID)\n\t\t{{end}}\n\t\tif err != nil {\n\t\t\treturn err\n\t\t}\n\t\tentity = indices[thisID]\n\t\t{{if .Full}}\n\t\tentity.{{.PropertyName}} = append(entity.{{.PropertyName}}, &thatEntity)\n\t\t{{else}}\n\t\tentity.{{.PropertyName}} = append(entity.{{.PropertyName}}, thatID)\n\t\t{{end}}\n\t\tselect {\n\t\tcase <-ctx.Done():\n\t\t\treturn ctx.Err()\n\t\tdefault:\n\t\t\tbreak\n\t\t}\n\t}\n\n\treturn nil\n}"),
 	}
 	filef := &embedded.EmbeddedFile{
 		Filename:    "crud/partials/merge.go.tmpl",
@@ -250,14 +250,14 @@ func init() {
 	}
 	dir8 := &embedded.EmbeddedDir{
 		Filename:   "crud/partials",
-		DirModTime: time.Unix(1527505215, 0),
+		DirModTime: time.Unix(1527579772, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file9, // "crud/partials/delete_many.go.tmpl"
 			filea, // "crud/partials/delete_single.go.tmpl"
 			fileb, // "crud/partials/get.go.tmpl"
 			filec, // "crud/partials/insert.go.tmpl"
 			filed, // "crud/partials/list.go.tmpl"
-			filee, // "crud/partials/loadrelated.go.tmpl"
+			filee, // "crud/partials/loadrelated_manymany.go.tmpl"
 			filef, // "crud/partials/merge.go.tmpl"
 			fileg, // "crud/partials/save.go.tmpl"
 			fileh, // "crud/partials/saverelated.go.tmpl"
@@ -287,45 +287,45 @@ func init() {
 			"crud/partials": dir8,
 		},
 		Files: map[string]*embedded.EmbeddedFile{
-			"bootstrap.go.tmpl":                        file2,
-			"bootstrap_env.tmpl":                       file3,
-			"crud/crud.go.tmpl":                        file5,
-			"crud/hooks.go.tmpl":                       file6,
-			"crud/models.go.tmpl":                      file7,
-			"crud/partials/delete_many.go.tmpl":        file9,
-			"crud/partials/delete_single.go.tmpl":      filea,
-			"crud/partials/get.go.tmpl":                fileb,
-			"crud/partials/insert.go.tmpl":             filec,
-			"crud/partials/list.go.tmpl":               filed,
-			"crud/partials/loadrelated.go.tmpl":        filee,
-			"crud/partials/merge.go.tmpl":              filef,
-			"crud/partials/save.go.tmpl":               fileg,
-			"crud/partials/saverelated.go.tmpl":        fileh,
-			"crud/partials/update.go.tmpl":             filei,
-			"crud/protobuf.proto.tmpl":                 filej,
-			"crud/structure.go.tmpl":                   filek,
-			"http.go.tmpl":                             filel,
-			"rest.go.tmpl":                             filem,
-			"rest_hooks.go.tmpl":                       filen,
-			"schema.sql.tmpl":                          fileo,
-			"vuetify_actions.js.tmpl":                  filep,
-			"vuetify_edit.vue.tmpl":                    fileq,
-			"vuetify_editor-field-checkbox.vue.tmpl":   filer,
-			"vuetify_editor-field-date.vue.tmpl":       files,
-			"vuetify_editor-field-number.vue.tmpl":     filet,
-			"vuetify_editor-field-password.vue.tmpl":   fileu,
-			"vuetify_editor-field-select-rel.vue.tmpl": filev,
-			"vuetify_editor-field-select.vue.tmpl":     filew,
-			"vuetify_editor-field-textarea.vue.tmpl":   filex,
-			"vuetify_editor-field-textfield.vue.tmpl":  filey,
-			"vuetify_editor-field-time.vue.tmpl":       filez,
-			"vuetify_editor-field-toggle.vue.tmpl":     file10,
-			"vuetify_getters.js.tmpl":                  file11,
-			"vuetify_index.js.tmpl":                    file12,
-			"vuetify_list.vue.tmpl":                    file13,
-			"vuetify_mutations.js.tmpl":                file14,
-			"vuetify_routes.js.tmpl":                   file15,
-			"vuetify_types.js.tmpl":                    file16,
+			"bootstrap.go.tmpl":                          file2,
+			"bootstrap_env.tmpl":                         file3,
+			"crud/crud.go.tmpl":                          file5,
+			"crud/hooks.go.tmpl":                         file6,
+			"crud/models.go.tmpl":                        file7,
+			"crud/partials/delete_many.go.tmpl":          file9,
+			"crud/partials/delete_single.go.tmpl":        filea,
+			"crud/partials/get.go.tmpl":                  fileb,
+			"crud/partials/insert.go.tmpl":               filec,
+			"crud/partials/list.go.tmpl":                 filed,
+			"crud/partials/loadrelated_manymany.go.tmpl": filee,
+			"crud/partials/merge.go.tmpl":                filef,
+			"crud/partials/save.go.tmpl":                 fileg,
+			"crud/partials/saverelated.go.tmpl":          fileh,
+			"crud/partials/update.go.tmpl":               filei,
+			"crud/protobuf.proto.tmpl":                   filej,
+			"crud/structure.go.tmpl":                     filek,
+			"http.go.tmpl":                               filel,
+			"rest.go.tmpl":                               filem,
+			"rest_hooks.go.tmpl":                         filen,
+			"schema.sql.tmpl":                            fileo,
+			"vuetify_actions.js.tmpl":                    filep,
+			"vuetify_edit.vue.tmpl":                      fileq,
+			"vuetify_editor-field-checkbox.vue.tmpl":     filer,
+			"vuetify_editor-field-date.vue.tmpl":         files,
+			"vuetify_editor-field-number.vue.tmpl":       filet,
+			"vuetify_editor-field-password.vue.tmpl":     fileu,
+			"vuetify_editor-field-select-rel.vue.tmpl":   filev,
+			"vuetify_editor-field-select.vue.tmpl":       filew,
+			"vuetify_editor-field-textarea.vue.tmpl":     filex,
+			"vuetify_editor-field-textfield.vue.tmpl":    filey,
+			"vuetify_editor-field-time.vue.tmpl":         filez,
+			"vuetify_editor-field-toggle.vue.tmpl":       file10,
+			"vuetify_getters.js.tmpl":                    file11,
+			"vuetify_index.js.tmpl":                      file12,
+			"vuetify_list.vue.tmpl":                      file13,
+			"vuetify_mutations.js.tmpl":                  file14,
+			"vuetify_routes.js.tmpl":                     file15,
+			"vuetify_types.js.tmpl":                      file16,
 		},
 	})
 }

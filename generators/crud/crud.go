@@ -150,6 +150,19 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 		code.Save, err = generateSave(entities, entity)
 	}
 
+	if err == nil {
+		for _, rel := range entity.Relationships {
+			switch rel.Type {
+			case util.RelationshipTypeManyMany:
+				c, err := generateLoadRelatedManyMany(entities, entity, rel)
+				if err != nil {
+					return code, err
+				}
+				code.LoadRelated = append(code.LoadRelated, c)
+			}
+		}
+	}
+
 	return code, err
 }
 

@@ -1,0 +1,67 @@
+package crud
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/fluxynet/gocipe/util"
+)
+
+func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
+	var sqlfields, structfields, before, after []string
+
+	sqlfields = append(sqlfields, fmt.Sprintf("t.%s", "id"))
+	structfields = append(structfields, fmt.Sprintf("entity.%s", "ID"))
+	related := entities[rel.Entity]
+
+	thisType, _ := util.GetPrimaryKeyDataType(entity.PrimaryKey)
+	thatType, _ := util.GetPrimaryKeyDataType(related.PrimaryKey)
+
+	for _, field := range related.Fields {
+		if field.Property.Type == "time" {
+			prop := strings.ToLower(field.Property.Name)
+			before = append(before, fmt.Sprintf("var %s time.Time", prop))
+			structfields = append(structfields, fmt.Sprintf("&%s", prop))
+			after = append(after, fmt.Sprintf("entity.%s, _ = ptypes.TimestampProto(%s)", field.Property.Name, prop))
+		} else {
+			structfields = append(structfields, fmt.Sprintf("&entity.%s", field.Property.Name))
+		}
+		sqlfields = append(sqlfields, fmt.Sprintf("t.%s", field.Schema.Field))
+	}
+
+	return util.ExecuteTemplate("crud/partials/loadrelated_manymany.go.tmpl", struct {
+		ThisEntity   string
+		ThatEntity   string
+		SQLFields    string
+		StructFields string
+		JoinTable    string
+		ThisType     string
+		ThatTable    string
+		ThatType     string
+		ThisID       string
+		ThatID       string
+		PropertyName string
+		Before       []string
+		After        []string
+		Full         bool
+		HasPreHook   bool
+		HasPostHook  bool
+	}{
+		ThisEntity:   entity.Name,
+		ThatEntity:   related.Name,
+		JoinTable:    rel.JoinTable,
+		ThisType:     thisType,
+		ThatTable:    related.Table,
+		ThatType:     thatType,
+		ThisID:       strings.ToLower(entity.Name) + "_id",
+		ThatID:       strings.ToLower(related.Name) + "_id",
+		PropertyName: rel.Name,
+		SQLFields:    strings.Join(sqlfields, ", "),
+		StructFields: strings.Join(structfields, ", "),
+		Before:       before,
+		After:        after,
+		Full:         rel.Full,
+		HasPreHook:   entity.Crud.Hooks.PreList,
+		HasPostHook:  entity.Crud.Hooks.PostList,
+	})
+}

@@ -351,6 +351,12 @@ type Relationship struct {
 
 	// ThatID represents the field in the other entity used for the relationship
 	ThatID string `json:"thatid"`
+
+	// Eager indicates whether or not to eager load this relationship
+	Eager bool `json:"eager"`
+
+	// Full indicates whether or not to fully load this relationship or to load ids only
+	Full bool `json:"full"`
 }
 
 // WidgetOpts represents a UI widget

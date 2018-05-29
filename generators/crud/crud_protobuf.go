@@ -25,21 +25,51 @@ func generateProtobuf(entities map[string]util.Entity) (string, error) {
 	for _, entity := range entities {
 		var ent = protoEntity{Name: entity.Name, Description: entity.Description}
 		pkey, err := util.GetPrimaryKeyDataType(entity.PrimaryKey)
+		count := 1
 
 		if err != nil {
 			return "", err
 		}
 
-		ent.Fields = append(ent.Fields, protoField{Index: 1, Name: "ID", Type: pkey})
+		ent.Fields = append(ent.Fields, protoField{Index: count, Name: "ID", Type: pkey})
+		count++
 
-		for i, field := range entity.Fields {
+		for _, field := range entity.Fields {
 			t := field.Property.Type
 			if field.Property.Type == "time" {
 				hasTime = true
 				t = "google.protobuf.Timestamp"
 			}
-			ent.Fields = append(ent.Fields, protoField{Index: i + 2, Name: field.Property.Name, Type: t})
+			ent.Fields = append(ent.Fields, protoField{Index: count, Name: field.Property.Name, Type: t})
+			count++
 		}
+
+		for _, rel := range entity.Relationships {
+			var t string
+
+			if rel.Full {
+				t = rel.Entity
+			} else {
+				t, err = util.GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
+				if err != nil {
+					return "", err
+				}
+			}
+
+			switch rel.Type {
+			case util.RelationshipTypeManyMany:
+				ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name, Type: "repeated " + t})
+			case util.RelationshipTypeOneOne:
+				ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name, Type: t})
+			case util.RelationshipTypeOneMany:
+				ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name, Type: "repeated " + t})
+			case util.RelationshipTypeManyOne:
+				ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name, Type: t})
+			}
+
+			count++
+		}
+
 		ents = append(ents, ent)
 	}
 
