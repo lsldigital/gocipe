@@ -11,35 +11,29 @@
       </v-tabs>
     </v-toolbar>
     <v-tabs-items v-model="tab">
-      <v-tab-item v-for="item in items" :key="item">
-        <v-card flat>
 
-          <div v-if="item == 'relationship'">
-            <component :is="item" v-model="fields"></component>
+      <v-card flat>
+        <v-tab-item>
+          <general v-model="entity"></general>
+        </v-tab-item>
+        <v-tab-item>
+          <relationship v-model="entity.fields"></relationship>
+        </v-tab-item>
+        <v-tab-item>
+          <schema v-model="entity.schema"></schema>
+        </v-tab-item>
 
-          </div>
+        <v-tab-item>
+          <crud v-model="entity.crud"></crud>
+        </v-tab-item>
+        <v-tab-item>
+          <rest v-model="entity.rest"></rest>
+        </v-tab-item>
+        <v-tab-item>
+          <widget v-model="entity.widget"></widget>
+        </v-tab-item>
+      </v-card>
 
-          <div v-else-if="item == 'crud'">
-            <component :is="item" v-model="crud"></component>
-
-          </div>
-
-          <div v-else-if="item == 'schema'">
-            <component :is="item" v-model="schema"></component>
-
-          </div>
-
-          <div v-else-if="item == 'widget'">
-            <component :is="item" v-model="widget"></component>
-
-          </div>
-
-          <div v-else>
-            <component :is="item " v-model="entity"></component>
-          </div>
-
-        </v-card>
-      </v-tab-item>
     </v-tabs-items>
 
     <!-- <div> -->
@@ -74,61 +68,23 @@ export default {
     return {
       gocipe,
       tab: null,
-      entity: null,
-      crud: null,
-      schema: null,
-      widget: null,
-      fields: [],
+      entity: {
+        crud: null,
+        schema: null,
+        widget: null,
+        fields: []
+      },
       items: ["general", "relationship", "schema", "crud", "rest", "widget"]
     };
   },
   mounted() {
     if (typeof this.value !== undefined) {
-      this.crud = this.value.crud;
-      this.schema = this.value.schema;
-      this.widget = this.value.widget;
+      this.entity = this.value;
     }
-
     console.log(this.entity);
-
-    this.entity.crud = this.crud;
-    this.$emit("input", this.crud);
-
-    this.entity.schema = this.schema;
-    this.$emit("input", this.schema);
-
-    this.entity.fields = this.fields;
-    this.$emit("input", this.fields);
-
-    this.entity.widget = this.widget;
-    this.$emit("input", this.widget);
-
     this.$emit("input", this.entity);
   },
-  methods: {
-    // appendtoEntity() {
-    //   this.entity.fields = this.fields;
-    //   this.$emit("input", this.val);
-    // },
-    // appendcrud() {
-    //   this.entity.crud = this.crud;
-    //   this.$emit("input", this.val);
-    // },
-    // appendschema() {
-    //   this.entity.schema = this.schema;
-    //   this.$emit("input", this.val);
-    // },
-    // appendwidget() {
-    //   this.entity.widget = this.widget;
-    //   this.$emit("input", this.val);
-    // },
-    // appendentities() {
-    //   this.$emit("input", this.entity);
-    // },
-    // next() {
-    //   this.tab++;
-    // }
-  }
+  methods: {}
 };
 </script>
 

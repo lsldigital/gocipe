@@ -43,23 +43,69 @@ export default {
       for (i = 0; i < this.gocipe.entities.length; i++) {
         this.entities.push(this.gocipe.entities[i]);
       }
-
-      // this.gocipe.entities.forEach(element => {
-      console.log(this.entities);
-
-      //   this.entities[count].label = element.label;
-      //   this.entities[count].table = element.table;
-      // });
     } else {
       this.entities.push({});
     }
-
-    console.log(this.entities);
   },
   methods: {
     ...mapActions(["addentities"]),
     addEntity() {
-      this.entities.push({});
+      this.entities.push({
+        name: "",
+        primary_key: "",
+        table: "",
+        table_constraints: [],
+        description: "",
+        fields: [],
+        schema: {
+          create: true,
+          drop: true,
+          aggregate: true,
+          path: ""
+        },
+        crud: {
+          create: true,
+          read: true,
+          read_list: true,
+          update: true,
+          delete: true,
+          merge: true,
+          hooks: {
+            pre_save: false,
+            post_save: false,
+            pre_read: false,
+            post_read: false,
+            pre_list: false,
+            post_list: false,
+            pre_delete: false,
+            post_delete: false
+          }
+        },
+        rest: {
+          create: true,
+          read: true,
+          read_list: true,
+          update: true,
+          delete: true,
+          prefix: "",
+          hooks: {
+            pre_create: false,
+            post_create: false,
+            pre_read: false,
+            post_read: false,
+            pre_list: false,
+            post_list: false,
+            pre_update: false,
+            post_update: false,
+            pre_delete: false,
+            post_delete: false
+          }
+        },
+        widget: {
+          generate: true,
+          module: ""
+        }
+      });
     },
     getentities() {
       this.$emit("input", this.entities);
