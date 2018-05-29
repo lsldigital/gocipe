@@ -20,7 +20,7 @@ func preprocessEntities(raw []util.Entity) (map[string]util.Entity, error) {
 		}
 
 		if entity.Table == "" {
-			entity.Table = inflection.Plural(strings.ToLower(entity.Table))
+			entity.Table = inflection.Plural(strings.ToLower(entity.Name))
 		}
 
 		for i, field := range entity.Fields {
@@ -91,6 +91,7 @@ func preprocessEntities(raw []util.Entity) (map[string]util.Entity, error) {
 				}
 			}
 		}
+		entities[entity.Name] = entity
 	}
 
 	return entities, err
