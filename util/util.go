@@ -49,11 +49,12 @@ func init() {
 		"trimPrefix": func(str, prefix string) string {
 			return strings.TrimPrefix(str, prefix)
 		},
-		"snake":            ToSnakeCase,
-		"pkeyPropertyType": GetPrimaryKeyDataType,
-		"pkeyIsAuto":       GetPrimaryKeyDataIsAuto,
-		"pkeyIsInt":        GetPrimaryKeyDataIsInt,
-		"pkeyFieldType":    GetPrimaryKeyFieldType,
+		"snake":                ToSnakeCase,
+		"pkeyPropertyType":     GetPrimaryKeyDataType,
+		"pkeyPropertyEmptyVal": GetPrimaryKeyEmptyVal,
+		"pkeyIsAuto":           GetPrimaryKeyDataIsAuto,
+		"pkeyIsInt":            GetPrimaryKeyDataIsInt,
+		"pkeyFieldType":        GetPrimaryKeyFieldType,
 	}
 }
 
@@ -166,6 +167,21 @@ func GetPrimaryKeyDataType(str string) (string, error) {
 		return "string", nil
 	case PrimaryKeyString:
 		return "string", nil
+	}
+	return "", errors.New("invalid primary key type: " + str)
+}
+
+// GetPrimaryKeyEmptyVal returns empty value for primary key
+func GetPrimaryKeyEmptyVal(str string) (string, error) {
+	switch str {
+	case PrimaryKeySerial:
+		return "0", nil
+	case PrimaryKeyInt:
+		return "0", nil
+	case PrimaryKeyUUID:
+		return `""`, nil
+	case PrimaryKeyString:
+		return `""`, nil
 	}
 	return "", errors.New("invalid primary key type: " + str)
 }

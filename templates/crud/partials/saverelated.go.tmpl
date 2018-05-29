@@ -24,7 +24,7 @@ func SaveRelated{{.PropertyName}}(ctx context.Context, idthis  {{pkeyPropertyTyp
 		return err
 	}
 
-	_, err = stmt.Exec(*entity.ID)
+	_, err = stmt.Exec(entity.ID)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -52,7 +52,7 @@ func SaveRelated{{.PropertyName}}(ctx context.Context, idthis  {{pkeyPropertyTyp
 			break
 		}
 
-		_, err = stmt.Exec(*entity.ID, relatedID)
+		_, err = stmt.Exec(entity.ID, relatedID)
 		if err != nil {
 			tx.Rollback()
 			return err

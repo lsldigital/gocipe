@@ -18,7 +18,7 @@ func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.Entit
 		}
 	}
 
-	if entity.ID == nil {
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
 		return {{.EntityName}}Repo.Insert(ctx, entity, tx, autocommit)
 	}
 
@@ -54,6 +54,9 @@ func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.Entit
 		tx.Rollback()
 		return entity, err
 	}
+
+	{{range .After}}{{.}}{{end}}
+
 	{{if .HasPostHook}}
 	select {
 	case <-ctx.Done():

@@ -22,14 +22,6 @@ func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.Enti
 	}
 	{{range .Before}}{{.}}{{end}}
 
-	select {
-	case <-ctx.Done():
-		tx.Rollback()
-		return entity, ctx.Err()
-	default:
-		break
-	}
-
 	{{if eq .PrimaryKey "serial" -}}
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNIentity, NG id")
 	if err != nil {
@@ -41,6 +33,8 @@ func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.Enti
 		return entity, err
 	}
 	{{- end}}
+
+	{{range .After}}{{.}}{{end}}
 
 	{{if .HasPreHook}}
 	select {
@@ -78,7 +72,7 @@ func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.Enti
 		tx.Rollback()
 		return entity, err
 	}
-	*entity.ID = id
+	entity.ID = id
 	{{- end}}
 
 	select {

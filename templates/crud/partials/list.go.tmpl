@@ -56,10 +56,14 @@ func (repo {{.EntityName}}Repository) List(ctx context.Context, filters []ListFi
 		}
 
 		var entity {{.EntityName}}
+		{{range .Before}}{{.}}{{end}}
+
 		err = rows.Scan({{.StructFields}})
 		if err != nil {
 			return nil, err
 		}
+		
+		{{range .After}}{{.}}{{end}}
 
 		list = append(list, entity)
 	}

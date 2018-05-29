@@ -153,79 +153,17 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 	return code, err
 }
 
-// generateGet produces code for database retrieval of single entity (SELECT WHERE id)
-func generateGet(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var sqlfields, structfields, before, after []string
-
-	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
-	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
-
-	for _, field := range entity.Fields {
-		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
-		structfields = append(structfields, fmt.Sprintf("&entity.%s", field.Property.Name))
-	}
-
-	return util.ExecuteTemplate("crud/partials/get.go.tmpl", struct {
-		EntityName   string
-		SQLFields    string
-		Table        string
-		StructFields string
-		PrimaryKey   string
-		Before       []string
-		After        []string
-		HasPreHook   bool
-		HasPostHook  bool
-	}{
-		EntityName:   entity.Name,
-		Table:        entity.Table,
-		SQLFields:    strings.Join(sqlfields, ", "),
-		StructFields: strings.Join(structfields, ", "),
-		PrimaryKey:   entity.PrimaryKey,
-		Before:       before,
-		After:        after,
-		HasPreHook:   entity.Crud.Hooks.PreRead,
-		HasPostHook:  entity.Crud.Hooks.PostRead,
-	})
-}
-
-// generateList produces code for database retrieval of list of entities with optional filters
-func generateList(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var sqlfields, structfields []string
-
-	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
-	structfields = append(structfields, fmt.Sprintf("entity.%s", "ID"))
-
-	for _, field := range entity.Fields {
-		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
-		structfields = append(structfields, fmt.Sprintf("&entity.%s", field.Property.Name))
-	}
-
-	return util.ExecuteTemplate("crud/partials/list.go.tmpl", struct {
-		EntityName   string
-		SQLFields    string
-		StructFields string
-		Table        string
-		HasPreHook   bool
-		HasPostHook  bool
-	}{
-		EntityName:   entity.Name,
-		Table:        entity.Table,
-		SQLFields:    strings.Join(sqlfields, ", "),
-		StructFields: strings.Join(structfields, ", "),
-		HasPreHook:   entity.Crud.Hooks.PreList,
-		HasPostHook:  entity.Crud.Hooks.PostList,
-	})
-}
-
 // generateDeleteSingle produces code for database deletion of single entity (DELETE WHERE id)
 func generateDeleteSingle(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	return util.ExecuteTemplate("crud/partials/delete_single.go.tmpl", struct {
 		EntityName  string
+		PrimaryKey  string
 		Table       string
 		HasPreHook  bool
 		HasPostHook bool
 	}{
 		EntityName:  entity.Name,
+		PrimaryKey:  entity.PrimaryKey,
 		Table:       entity.Table,
 		HasPreHook:  entity.Crud.Hooks.PreDeleteSingle,
 		HasPostHook: entity.Crud.Hooks.PostDeleteSingle,
@@ -257,148 +195,6 @@ func generateSave(entities map[string]util.Entity, entity util.Entity) (string, 
 	}{
 		EntityName: entity.Name,
 		PrimaryKey: entity.PrimaryKey,
-	})
-}
-
-// generateInsert produces code for database insertion of entity (INSERT INTO)
-func generateInsert(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var (
-		before, sqlPlaceholders, sqlfields, structFields []string
-		count                                            int
-	)
-
-	if entity.PrimaryKey != util.PrimaryKeySerial {
-		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
-		sqlfields = append(sqlfields, "id")
-		structFields = append(structFields, "entity.ID")
-
-		count++
-	}
-
-	for _, field := range entity.Fields {
-		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
-		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
-		structFields = append(structFields, fmt.Sprintf("entity.%s", field.Property.Name))
-
-		if field.Property.Name == "CreatedAt" {
-			before = append(before, "entity.CreatedAt = time.Now()")
-		} else if field.Property.Name == "UpdatedAt" {
-			before = append(before, "entity.UpdatedAt = time.Now()")
-		}
-	}
-
-	return util.ExecuteTemplate("crud/partials/insert.go.tmpl", struct {
-		Before          []string
-		EntityName      string
-		PrimaryKey      string
-		SQLFields       string
-		SQLPlaceholders string
-		StructFields    string
-		Table           string
-		HasPreHook      bool
-		HasPostHook     bool
-	}{
-		Before:          before,
-		EntityName:      entity.Name,
-		PrimaryKey:      entity.PrimaryKey,
-		SQLFields:       strings.Join(sqlfields, ", "),
-		SQLPlaceholders: strings.Join(sqlPlaceholders, ", "),
-		StructFields:    strings.Join(structFields, ", "),
-		Table:           entity.Table,
-		HasPostHook:     entity.Crud.Hooks.PreSave,
-		HasPreHook:      entity.Crud.Hooks.PostSave,
-	})
-}
-
-// generateUpdate produces code for database update of entity (UPDATE)
-func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var (
-		before, sqlfields, structfields []string
-		count                           = 1
-	)
-
-	for _, field := range entity.Fields {
-		sqlfields = append(sqlfields, fmt.Sprintf("%s = $%d", field.Schema.Field, count))
-		structfields = append(structfields, fmt.Sprintf("entity.%s", field.Property.Name))
-		count++
-
-		if field.Property.Name == "CreatedAt" {
-			before = append(before, "entity.CreatedAt = time.Now()")
-		} else if field.Property.Name == "UpdatedAt" {
-			before = append(before, "entity.UpdatedAt = time.Now()")
-		}
-	}
-
-	return util.ExecuteTemplate("crud/partials/update.go.tmpl", struct {
-		Before        []string
-		EntityName    string
-		HasPostHook   bool
-		HasPreHook    bool
-		SQLFields     string
-		StructFields  string
-		Table         string
-		Relationships []relationship
-	}{
-		EntityName:    entity.Name,
-		Table:         entity.Table,
-		Before:        before,
-		SQLFields:     strings.Join(sqlfields, ", "),
-		StructFields:  strings.Join(structfields, ", "),
-		HasPreHook:    entity.Crud.Hooks.PreSave,
-		HasPostHook:   entity.Crud.Hooks.PostSave,
-		Relationships: nil,
-	})
-}
-
-// generateMerge produces code for database merge of entity (INSERT/ON CONFLICT UPDATE)
-func generateMerge(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var (
-		before          []string
-		sqlfieldsInsert []string
-		sqlfieldsUpdate []string
-		sqlPlaceholders []string
-		structFields    []string
-		count           = 0
-	)
-
-	sqlfieldsInsert = append(sqlfieldsInsert, "id")
-	structFields = append(structFields, "entity.ID")
-	sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
-
-	for _, field := range entity.Fields {
-		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
-		sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf("%s = $%d", field.Schema.Field, count))
-		sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("%s", field.Schema.Field))
-		structFields = append(structFields, fmt.Sprintf("entity.%s", field.Property.Name))
-
-		if field.Property.Name == "CreatedAt" {
-			before = append(before, "entity.CreatedAt = time.Now()")
-		} else if field.Property.Name == "UpdatedAt" {
-			before = append(before, "entity.UpdatedAt = time.Now()")
-		}
-		count++
-	}
-
-	return util.ExecuteTemplate("crud/partials/merge.go.tmpl", struct {
-		EntityName      string
-		Before          []string
-		Table           string
-		SQLFieldsInsert string
-		SQLPlaceholders string
-		SQLFieldsUpdate string
-		StructFields    string
-		HasPreHook      bool
-		HasPostHook     bool
-	}{
-		EntityName:      entity.Name,
-		Before:          before,
-		Table:           entity.Table,
-		SQLFieldsInsert: strings.Join(sqlfieldsInsert, ", "),
-		SQLPlaceholders: strings.Join(sqlPlaceholders, ", "),
-		SQLFieldsUpdate: strings.Join(sqlfieldsUpdate, ", "),
-		StructFields:    strings.Join(structFields, ", "),
-		HasPreHook:      entity.Crud.Hooks.PreSave,
-		HasPostHook:     entity.Crud.Hooks.PostSave,
 	})
 }
 

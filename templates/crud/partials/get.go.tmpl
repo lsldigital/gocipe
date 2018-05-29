@@ -29,15 +29,17 @@ func (repo {{.EntityName}}Repository) Get(ctx context.Context, id {{pkeyProperty
 		case <- ctx.Done():
 			return entity, ctx.Err()
 		default:
-			{{range .Before}}
-			{{.}}{{end}}
-			err = rows.Scan({{.StructFields}})
-			if err != nil {
-				return entity, err
-			}
-			{{range .After}}
-			{{.}}{{end}}
-		} 
+			break
+		}
+
+		{{range .Before}}{{.}}{{end}}
+
+		err = rows.Scan({{.StructFields}})
+		if err != nil {
+			return entity, err
+		}
+		
+		{{range .After}}{{.}}{{end}}
 	}
 	{{if .HasPostHook}}
 	select {

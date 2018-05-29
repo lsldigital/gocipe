@@ -24,6 +24,13 @@ func generateProtobuf(entities map[string]util.Entity) (string, error) {
 
 	for _, entity := range entities {
 		var ent = protoEntity{Name: entity.Name, Description: entity.Description}
+		pkey, err := util.GetPrimaryKeyDataType(entity.PrimaryKey)
+
+		if err != nil {
+			return "", err
+		}
+
+		ent.Fields = append(ent.Fields, protoField{Index: 1, Name: "ID", Type: pkey})
 
 		for i, field := range entity.Fields {
 			t := field.Property.Type
@@ -31,7 +38,7 @@ func generateProtobuf(entities map[string]util.Entity) (string, error) {
 				hasTime = true
 				t = "google.protobuf.Timestamp"
 			}
-			ent.Fields = append(ent.Fields, protoField{Index: i + 1, Name: field.Property.Name, Type: t})
+			ent.Fields = append(ent.Fields, protoField{Index: i + 2, Name: field.Property.Name, Type: t})
 		}
 		ents = append(ents, ent)
 	}

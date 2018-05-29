@@ -5,7 +5,7 @@ func (repo {{.EntityName}}Repository) Delete(ctx context.Context, entity {{.Enti
 		err  error
 		stmt *sql.Stmt
 	)
-	id := *entity.ID
+	id := entity.ID
 
 	if tx == nil {
 		select {
@@ -45,7 +45,7 @@ func (repo {{.EntityName}}Repository) Delete(ctx context.Context, entity {{.Enti
 	default:
 		_, err = stmt.Exec(id)
 		if err == nil {
-			entity.ID = nil
+			entity.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
 		} else {
 			tx.Rollback()
 			return entity, err

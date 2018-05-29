@@ -17,20 +17,15 @@ func (repo {{.EntityName}}Repository) Update(ctx context.Context, entity {{.Enti
 			}
 		}
 	}
-	{{range .Before}}{{.}}
-	{{end}}
-	select {
-	case <-ctx.Done():
-		tx.Rollback()
-		return entity, ctx.Err()
-	default:
-		break
-	}
+	
+	{{range .Before}}{{.}}{{end}}
 
 	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1")
 	if err != nil {
 		return entity, err
 	}
+
+	{{range .After}}{{.}}{{end}}
 
 	{{if .HasPreHook}}
 	select {
