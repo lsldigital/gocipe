@@ -9,14 +9,13 @@ func (repo {{.EntityName}}Repository) DeleteMany(ctx context.Context, filters []
 	)
 
 	if tx == nil {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			tx, err = repo.db.Begin()
-			if err != nil {
-				return err
-			}
+		if err = util.CheckContext(ctx); err != nil {
+			return err
+		}
+		
+		tx, err = repo.db.Begin()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -26,12 +25,9 @@ func (repo {{.EntityName}}Repository) DeleteMany(ctx context.Context, filters []
 		return err
 	}
 	{{end}}
-	select {
-	case <-ctx.Done():
+	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return ctx.Err()
-	default:
-		break
+		return err
 	}
 
 	for i, filter := range filters {
@@ -48,36 +44,35 @@ func (repo {{.EntityName}}Repository) DeleteMany(ctx context.Context, filters []
 		return err
 	}
 
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-		_, err = stmt.Exec(values...)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-	}
-	{{if .HasPostHook}}
-	select {
-	case <-ctx.Done():
+	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return ctx.Err()
-	default:
-		if err = crudPostDeleteMany(ctx, filters, tx); err != nil {
-			tx.Rollback()
-			return err
-		}
+		return err
+	}
+
+	_, err = stmt.Exec(values...)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	{{if .HasPostHook}}
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err = crudPostDeleteMany(ctx, filters, tx); err != nil {
+		tx.Rollback()
+		return err
 	}
 	{{end}}
-	select {
-	case <-ctx.Done():
+	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return ctx.Err()
-	default:
-		if autocommit {
-			err = tx.Commit()
-		}
+		return err
+	}
+
+	if autocommit {
+		err = tx.Commit()
 	}
 
 	return err

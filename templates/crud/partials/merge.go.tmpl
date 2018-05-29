@@ -7,14 +7,13 @@ func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.Entit
 	)
 
 	if tx == nil {
-		select {
-		case <-ctx.Done():
-			return entity, ctx.Err()
-		default:
-			tx, err = repo.db.Begin()
-			if err != nil {
-				return entity, err
-			}
+		if err = util.CheckContext(ctx); err != nil {
+			return entity, err
+		}
+		
+		tx, err = repo.db.Begin()
+		if err != nil {
+			return entity, err
 		}
 	}
 
@@ -30,11 +29,8 @@ func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.Entit
 		return entity, err
 	}
 
-	select {
-	case <-ctx.Done():
-		return entity, ctx.Err()
-	default:
-		break
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
 	}
 	{{if .HasPreHook}}
     if err = crudPreSave("MERGE", entity, tx); err != nil {
@@ -43,11 +39,8 @@ func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.Entit
 	}
 	{{end}}
 
-	select {
-	case <-ctx.Done():
-		return entity, ctx.Err()
-	default:
-		break
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
 	}
 	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
@@ -58,24 +51,21 @@ func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.Entit
 	{{range .After}}{{.}}{{end}}
 
 	{{if .HasPostHook}}
-	select {
-	case <-ctx.Done():
-		return entity, ctx.Err()
-	default:
-		break
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
 	}
 	if err = crudPostSave("MERGE", entity, tx); err != nil {
 		tx.Rollback()
 		return entity, err
 	}
 	{{end}}
-	select {
-	case <-ctx.Done():
-		return entity, ctx.Err()
-	default:
-		if autocommit {
-			err = tx.Commit()
-		}
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
+	}
+
+	if autocommit {
+		err = tx.Commit()
 	}
 
 	return entity, err

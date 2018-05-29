@@ -1,0 +1,15 @@
+package util
+
+import (
+	"context"
+)
+
+// CheckContext returns an error if context is done
+func CheckContext(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		return nil
+	}
+}

@@ -9,6 +9,7 @@ import (
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/fluxynet/gocipe/generators"
 	"github.com/fluxynet/gocipe/generators/crud"
+	utils "github.com/fluxynet/gocipe/generators/util"
 	"github.com/fluxynet/gocipe/util"
 )
 
@@ -39,7 +40,7 @@ func main() {
 
 	util.SetTemplates(rice.MustFindBox("templates"))
 
-	work.Waitgroup.Add(5)
+	work.Waitgroup.Add(6)
 
 	if err != nil {
 		log.Fatalln(err)
@@ -51,6 +52,7 @@ func main() {
 	// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 	go generators.GenerateSchema(work, recipe.Schema, recipe.Entities)
 	go generators.GenerateVuetify(work, recipe.Rest, recipe.Vuetify, recipe.Entities)
+	go utils.Generate(work)
 
 	var wg sync.WaitGroup
 	wg.Add(1)

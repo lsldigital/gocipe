@@ -15,11 +15,8 @@ func (repo {{.EntityName}}Repository) List(ctx context.Context, filters []ListFi
 		return nil, err
 	}
 	{{end}}
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-		break
+	if err = util.CheckContext(ctx); err != nil {
+		return nil, err
 	}
 
 	for i, filter := range filters {
@@ -48,11 +45,8 @@ func (repo {{.EntityName}}Repository) List(ctx context.Context, filters []ListFi
 
 	defer rows.Close()
 	for rows.Next() {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-			break
+		if err = util.CheckContext(ctx); err != nil {
+			return nil, err
 		}
 
 		var entity {{.EntityName}}
@@ -68,13 +62,12 @@ func (repo {{.EntityName}}Repository) List(ctx context.Context, filters []ListFi
 		list = append(list, entity)
 	}
 	{{if .HasPostHook}}
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-		if list, err = crudPostList(ctx, list); err != nil {
-			return nil, err
-		}
+	if err = util.CheckContext(ctx); err != nil {
+		return nil, err
+	}
+
+	if list, err = crudPostList(ctx, list); err != nil {
+		return nil, err
 	}
 	{{end}}
 	return list, nil

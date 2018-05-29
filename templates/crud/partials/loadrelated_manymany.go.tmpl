@@ -1,16 +1,14 @@
 // LoadRelated{{.PropertyName}} is a helper function to load related {{.PropertyName}} entities
 func (repo {{.ThisEntity}}Repository) LoadRelated{{.PropertyName}}(ctx context.Context, entities ...{{.ThisEntity}}) error {
 	var (
+		err error
 		placeholder string
 		values  []interface{}
 		indices = make(map[{{.ThisType}}][]*{{.ThisEntity}})
 	)
 
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-		break
+	if err = util.CheckContext(ctx); err != nil {
+		return err
 	}
 
 	c := 1
@@ -38,11 +36,8 @@ func (repo {{.ThisEntity}}Repository) LoadRelated{{.PropertyName}}(ctx context.C
 	}
 	{{end}}
 
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-		break
+	if err = util.CheckContext(ctx); err != nil {
+		return err
 	}
 
 	for rows.Next() {
@@ -77,11 +72,8 @@ func (repo {{.ThisEntity}}Repository) LoadRelated{{.PropertyName}}(ctx context.C
 			{{- end}}
 		}
 		
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			break
+		if err = util.CheckContext(ctx); err != nil {
+			return err
 		}
 	}
 

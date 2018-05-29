@@ -8,67 +8,64 @@ func (repo {{.EntityName}}Repository) Delete(ctx context.Context, entity {{.Enti
 	id := entity.ID
 
 	if tx == nil {
-		select {
-		case <-ctx.Done():
-			return entity, ctx.Err()
-		default:
-			tx, err = repo.db.Begin()
-			if err != nil {
-				return entity, err
-			}
+		if err = util.CheckContext(ctx); err != nil {
+			return entity, err
 		}
-	}
 
-	select {
-	case <-ctx.Done():
-		return entity, ctx.Err()
-	default:
-		stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE id = $1")
+		tx, err = repo.db.Begin()
 		if err != nil {
 			return entity, err
 		}
 	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
+	}
+
+	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE id = $1")
+	if err != nil {
+		return entity, err
+	}
 	{{if .HasPreHook}}
-	select {
-	case <-ctx.Done():
-		return entity, ctx.Err()
-	default:
-		if err = crudPreDelete(id, tx); err != nil {
-			tx.Rollback()
-			return entity, err
-		}
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
+	}
+
+	if err = crudPreDelete(id, tx); err != nil {
+		tx.Rollback()
+		return entity, err
 	}
 	{{end}}
-	select {
-	case <-ctx.Done():
-		return entity, ctx.Err()
-	default:
-		_, err = stmt.Exec(id)
-		if err == nil {
-			entity.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
-		} else {
-			tx.Rollback()
-			return entity, err
-		}
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	
+	_, err = stmt.Exec(id)
+	if err == nil {
+		entity.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
+	} else {
+		tx.Rollback()
+		return entity, err
 	}
 	{{if .HasPostHook}}
-	select {
-	case <-ctx.Done():
-		return entity, ctx.Err()
-	default:
-		if err = crudPostDelete(id, tx); err != nil {
-			tx.Rollback()
-			return entity, err
-		}
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	
+	if err = crudPostDelete(id, tx); err != nil {
+		tx.Rollback()
+		return entity, err
 	}
 	{{end}}
-	select {
-	case <-ctx.Done():
-		return entity, ctx.Err()
-	default:
-		if autocommit {
-			err = tx.Commit()
-		}
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+
+	if autocommit {
+		err = tx.Commit()
 	}
 	
 	return entity, nil
