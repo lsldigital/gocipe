@@ -1,4 +1,4 @@
-package crud
+package main
 
 import (
 	"fmt"

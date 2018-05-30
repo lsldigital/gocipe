@@ -2,20 +2,39 @@ package generators
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/jinzhu/inflection"
 
 	"github.com/fluxynet/gocipe/util"
 )
 
+// RelatedTable represents a related table to be created by schema generation
+type RelatedTable struct {
+	Table    string
+	ThisID   string
+	ThisType string
+	ThatID   string
+	ThatType string
+}
+
+// RelatedField represents a related field to be added to the table during schema generation
+type RelatedField struct {
+	Name string
+	Type string
+}
+
 // GenerateSchema returns generated database schema creation code
-func GenerateSchema(work util.GenerationWork, opts util.SchemaOpts, entities []util.Entity) error {
+func GenerateSchema(work util.GenerationWork, opts util.SchemaOpts, entities map[string]util.Entity) error {
 
 	work.Waitgroup.Add(len(entities))
 	for _, entity := range entities {
 		go func(entity util.Entity) {
 			var (
 				data struct {
-					Entity         util.Entity
-					ManyManyFields []util.Field
+					Entity        util.Entity
+					RelatedFields []RelatedField
+					RelatedTables []RelatedTable
 				}
 			)
 
@@ -36,12 +55,23 @@ func GenerateSchema(work util.GenerationWork, opts util.SchemaOpts, entities []u
 
 			data.Entity = entity
 
-			// for _, field := range data.Entity.Fields {
-			// 	if field.Relationship.Type == util.RelationshipTypeManyMany &&
-			// 		strings.Compare(field.Relationship.Target.ThisID, field.Relationship.Target.ThatID) == 1 {
-			// 		data.ManyManyFields = append(data.ManyManyFields, field)
-			// 	}
-			// }
+			for _, rel := range entity.Relationships {
+				related := entities[rel.Entity]
+				if rel.Type == util.RelationshipTypeManyOne {
+					n := strings.ToLower(related.Name) + "_id"
+					t, _ := util.GetPrimaryKeyFieldType(related.PrimaryKey)
+					data.RelatedFields = append(data.RelatedFields, RelatedField{Name: n, Type: t})
+				} else if rel.Type == util.RelationshipTypeManyMany && strings.Compare(entity.Table, related.Table) > 0 {
+					table := inflection.Plural(related.Table) + "_" + inflection.Plural(entity.Table)
+					thisID := inflection.Plural(entity.Table) + "_id"
+					thatID := inflection.Plural(related.Table) + "_id"
+					thisType, _ := util.GetPrimaryKeyFieldType(entity.PrimaryKey)
+					thatType, _ := util.GetPrimaryKeyFieldType(related.PrimaryKey)
+					data.RelatedTables = append(data.RelatedTables,
+						RelatedTable{Table: table, ThisID: thisID, ThisType: thisType, ThatID: thatID, ThatType: thatType},
+					)
+				}
+			}
 
 			code, err := util.ExecuteTemplate("schema.sql.tmpl", data)
 

@@ -325,9 +325,6 @@ type FieldSchema struct {
 	// Type is the data type for the field in database
 	Type string `json:"type"`
 
-	// Nullable indicates if null values are allowed in database for this field
-	Nullable bool `json:"nullable"`
-
 	// Default provides the default value for this field in database
 	Default string `json:"default"`
 }

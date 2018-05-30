@@ -27,6 +27,14 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
 	}
 
+	for _, rel := range entity.Relationships {
+		related := entities[rel.Entity]
+		if rel.Type == util.RelationshipTypeManyOne {
+			structfields = append(structfields, fmt.Sprintf("&entity.%s", rel.Name+"ID"))
+			sqlfields = append(sqlfields, fmt.Sprintf("%s", strings.ToLower(related.Name)+"_id"))
+		}
+	}
+
 	return util.ExecuteTemplate("crud/partials/get.go.tmpl", struct {
 		EntityName   string
 		SQLFields    string

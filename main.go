@@ -46,11 +46,16 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	entities, err := preprocessEntities(recipe.Entities)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	go generators.GenerateBootstrap(work, recipe.Bootstrap, recipe.HTTP)
 	go generators.GenerateHTTP(work, recipe.HTTP)
-	go crud.Generate(work, recipe.Crud, recipe.Entities)
+	go crud.Generate(work, recipe.Crud, entities)
 	// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
-	go generators.GenerateSchema(work, recipe.Schema, recipe.Entities)
+	go generators.GenerateSchema(work, recipe.Schema, entities)
 	go generators.GenerateVuetify(work, recipe.Rest, recipe.Vuetify, recipe.Entities)
 	go utils.Generate(work)
 
