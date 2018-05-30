@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/fluxynet/gocipe/util"
+	"github.com/jinzhu/inflection"
 )
 
 func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
@@ -31,6 +32,7 @@ func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.En
 
 	return util.ExecuteTemplate("crud/partials/loadrelated_manymany.go.tmpl", struct {
 		ThisEntity   string
+		Funcname     string
 		ThatEntity   string
 		SQLFields    string
 		StructFields string
@@ -48,6 +50,7 @@ func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.En
 		HasPostHook  bool
 	}{
 		ThisEntity:   entity.Name,
+		Funcname:     inflection.Plural(strings.Title(strings.ToLower(rel.Name))),
 		ThatEntity:   related.Name,
 		JoinTable:    rel.JoinTable,
 		ThisType:     thisType,
@@ -90,6 +93,7 @@ func generateLoadRelatedOneMany(entities map[string]util.Entity, entity util.Ent
 
 	return util.ExecuteTemplate("crud/partials/loadrelated_onemany.go.tmpl", struct {
 		ThisEntity   string
+		Funcname     string
 		ThatEntity   string
 		SQLFields    string
 		StructFields string
@@ -106,6 +110,7 @@ func generateLoadRelatedOneMany(entities map[string]util.Entity, entity util.Ent
 		HasPostHook  bool
 	}{
 		ThisEntity:   entity.Name,
+		Funcname:     inflection.Plural(strings.Title(strings.ToLower(rel.Name))),
 		ThatEntity:   related.Name,
 		ThisType:     thisType,
 		ThatTable:    related.Table,
@@ -147,6 +152,7 @@ func generateLoadRelatedManyOne(entities map[string]util.Entity, entity util.Ent
 
 	return util.ExecuteTemplate("crud/partials/loadrelated_manyone.go.tmpl", struct {
 		ThisEntity   string
+		Funcname     string
 		ThatEntity   string
 		SQLFields    string
 		StructFields string
@@ -161,6 +167,7 @@ func generateLoadRelatedManyOne(entities map[string]util.Entity, entity util.Ent
 		HasPostHook  bool
 	}{
 		ThisEntity:   entity.Name,
+		Funcname:     inflection.Plural(strings.Title(strings.ToLower(rel.Name))),
 		ThatEntity:   related.Name,
 		ThisID:       rel.Name + "ID",
 		ThisType:     thisType,

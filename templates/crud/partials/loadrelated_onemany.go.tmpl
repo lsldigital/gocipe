@@ -1,5 +1,5 @@
-// LoadRelated{{.PropertyName}} is a helper function to load related {{.PropertyName}} entities
-func (repo {{.ThisEntity}}Repository) LoadRelated{{.PropertyName}}(ctx context.Context, entities ...{{.ThisEntity}}) error {
+// Load{{.Funcname}} is a helper function to load related {{.PropertyName}} entities
+func (repo {{.ThisEntity}}Repository) Load{{.Funcname}}(ctx context.Context, entities ...{{.ThisEntity}}) error {
 	var (
 		err error
 		placeholder string
