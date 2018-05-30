@@ -11,7 +11,7 @@ func (repo {{.EntityName}}Repository) List(ctx context.Context, filters []ListFi
 
 	query := "SELECT {{.SQLFields}} FROM {{.Table}}"
 	{{if .HasPreHook}}
-    if filters, err = crudPreList(ctx, filters); err != nil {
+    if filters, err = repo.preList(ctx, filters); err != nil {
 		return nil, err
 	}
 	{{end}}
@@ -66,7 +66,7 @@ func (repo {{.EntityName}}Repository) List(ctx context.Context, filters []ListFi
 		return nil, err
 	}
 
-	if list, err = crudPostList(ctx, list); err != nil {
+	if list, err = repo.postList(ctx, list); err != nil {
 		return nil, err
 	}
 	{{end}}

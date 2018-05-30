@@ -7,7 +7,7 @@ func (repo {{.EntityName}}Repository) Get(ctx context.Context, id {{pkeyProperty
 		entity {{.EntityName}}
 	)
 	{{if .HasPreHook}}
-    if err = crudPreGet(ctx, id); err != nil {
+    if err = repo.preGet(ctx, id); err != nil {
 		return entity, err
 	}
     {{end}}
@@ -41,7 +41,7 @@ func (repo {{.EntityName}}Repository) Get(ctx context.Context, id {{pkeyProperty
 		return entity, err
 	}
 
-	if err = crudPostGet(ctx, entity); err != nil {
+	if err = repo.postGet(ctx, &entity); err != nil {
 		return entity, err
 	}
 	{{end}}

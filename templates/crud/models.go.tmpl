@@ -6,6 +6,12 @@ var (
 	{{- end}}
 )
 
+const (
+	OperationMerge  byte = 'M'
+	OperationInsert byte = 'I'
+	OperationUpdate byte = 'U'
+)
+
 // Init is responsible to initialize all repositories
 func Init(database *sql.DB) {
 	{{range .Entities}}

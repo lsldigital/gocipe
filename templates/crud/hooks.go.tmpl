@@ -1,49 +1,58 @@
 package models
 import (
+	"context"
 	"database/sql"
 )
 
 {{if .Hooks.PreRead}}
-func crudPreGet(id {{pkeyPropertyType .Entity.PrimaryKey}}) error {
+func (repo {{.Name}}Repository) preGet(ctx context, id {{pkeyPropertyType .Entity.PrimaryKey}}) error {
 	return nil
 }
 {{end}}
 {{if .Hooks.PostRead}}
-func crudPostGet(entity *{{.Entity.Name}}) error {
+func (repo {{.Name}}Repository) postGet(ctx context, entity *{{.Entity.Name}}) error {
 	return nil
 }
 {{end}}
 
 {{if .Hooks.PreList}}
-func crudPreList(filters []models.ListFilter) ([]models.ListFilter, error) {
+func (repo {{.Name}}Repository) preList(ctx context, filters []models.ListFilter) ([]models.ListFilter, error) {
 	return filters, nil
 }
 {{end}}
 {{if .Hooks.PostList}}
-func crudPostList(list []*{{.Entity.Name}}) ([]*{{.Entity.Name}}, error) {
+func (repo {{.Name}}Repository) postList(ctx context, list []{{.Entity.Name}}) ([]{{.Entity.Name}}, error) {
 	return list, nil
 }
 {{end}}
 
 {{if .Hooks.PreDelete}}
-func crudPreDelete(id {{pkeyPropertyType .Entity.PrimaryKey}}, tx *sql.Tx) error {
+func (repo {{.Name}}Repository) preDelete(ctx context, tx *sql.Tx, id {{pkeyPropertyType .Entity.PrimaryKey}}) error {
+	return nil
+}
+
+func (repo {{.Name}}Repository) preDeleteMany(ctx context, tx *sql.Tx, filters []ListFilter) ([]ListFilter, error) {
 	return nil
 }
 {{end}}
 {{if .Hooks.PostDelete}}
-func crudPostDelete(id {{pkeyPropertyType .Entity.PrimaryKey}}, tx *sql.Tx) error {
+func (repo {{.Name}}Repository) postDelete(ctx context, tx *sql.Tx, id {{pkeyPropertyType .Entity.PrimaryKey}}) error {
+	return nil
+}
+
+func (repo {{.Name}}Repository) postDeleteMany(ctx context, tx *sql.Tx, filters []ListFilter) ([]ListFilter, error) {
 	return nil
 }
 {{end}}
 
 
 {{if .Hooks.PreSave }}
-func crudPreSave(op string, entity *{{.Entity.Name}}, tx *sql.Tx) error {
+func (repo {{.Name}}Repository) preSave(ctx context, tx *sql.Tx, op byte, entity *{{.Entity.Name}}) error {
 	return nil
 }
 {{end}}
 {{if .Hooks.PreSave }}
-func crudPostSave(op string, entity *{{.Entity.Name}}, tx *sql.Tx) error {
+func (repo {{.Name}}Repository) postSave(ctx context, tx *sql.Tx, op byte, entity *{{.Entity.Name}}) error {
 	return nil
 }
 {{end}}

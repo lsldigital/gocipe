@@ -31,7 +31,7 @@ func (repo {{.EntityName}}Repository) Update(ctx context.Context, entity {{.Enti
 		return entity, err
 	}
 
-    if err = crudPreSave("UPDATE", entity, tx); err != nil {
+    if err = repo.preSave(ctx, tx, models.OperationUpdate, &entity); err != nil {
 		tx.Rollback()
         return entity, err
 	}
@@ -51,7 +51,7 @@ func (repo {{.EntityName}}Repository) Update(ctx context.Context, entity {{.Enti
 		return entity, err
 	}
 
-	if err = crudPostSave("UPDATE", entity, tx); err != nil {
+	if err = repo.postSave(ctx, "UPDATE", entity, tx); err != nil {
 		tx.Rollback()
 		return entity, err
 	}

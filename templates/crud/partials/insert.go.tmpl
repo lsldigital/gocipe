@@ -40,7 +40,7 @@ func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.Enti
 		return entity, err
 	}
 	
-	if err = crudPreSave("INSERT", entity, tx); err != nil {
+	if err = repo.preSave(ctx, tx, models.OperationInsert, &entity); err != nil {
 		tx.Rollback()
 		return entity, err
 	}
@@ -86,7 +86,7 @@ func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.Enti
 		tx.Rollback()
 		return entity, err
 	}
-	if err := crudPostSave("INSERT", entity, tx); err != nil {
+	if err := repo.postSave(ctx, "INSERT", entity, tx); err != nil {
 		tx.Rollback()
 		return entity, err
 	}

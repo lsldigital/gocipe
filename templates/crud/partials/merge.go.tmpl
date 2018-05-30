@@ -33,7 +33,7 @@ func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.Entit
 		return entity, err
 	}
 	{{if .HasPreHook}}
-    if err = crudPreSave("MERGE", entity, tx); err != nil {
+    if err = repo.preSave(ctx, tx, models.OperationMerge, &entity); err != nil {
 		tx.Rollback()
 		return entity, err
 	}
@@ -55,7 +55,7 @@ func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.Entit
 		tx.Rollback()
 		return entity, err
 	}
-	if err = crudPostSave("MERGE", entity, tx); err != nil {
+	if err = repo.postSave(ctx, "MERGE", entity, tx); err != nil {
 		tx.Rollback()
 		return entity, err
 	}

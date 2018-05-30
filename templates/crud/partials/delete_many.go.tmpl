@@ -21,7 +21,7 @@ func (repo {{.EntityName}}Repository) DeleteMany(ctx context.Context, filters []
 
 	query := "DELETE FROM {{.Table}}"
 	{{if .HasPreHook}}
-    if filters, err = crudPreDeleteMany(ctx, filters); err != nil {
+    if filters, err = repo.preDeleteMany(ctx, tx, filters); err != nil {
 		return err
 	}
 	{{end}}
@@ -61,7 +61,7 @@ func (repo {{.EntityName}}Repository) DeleteMany(ctx context.Context, filters []
 		return err
 	}
 
-	if err = crudPostDeleteMany(ctx, filters, tx); err != nil {
+	if err = repo.postDeleteMany(ctx, tx, filters); err != nil {
 		tx.Rollback()
 		return err
 	}
