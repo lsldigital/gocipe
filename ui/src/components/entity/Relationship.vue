@@ -48,27 +48,11 @@ export default {
         console.log("error");
       }
     }
-
-    console.log("relationship mount");
-    console.log(this.fields);
-    console.log("relationship mount");
     this.$emit("input", this.fields);
   },
   watch: {
     value: function(query) {
-      // console.log("this is Relation watch query");
-      // console.log(query);
-      // var i;
-      // try {
-      //   for (i = 0; this.query.length; i++) {
-      //     this.fields.push(this.query[i]);
-      //   }
-      // } catch (err) {
-      //   console.log("errpr has occured");
-      // }
-      console.log("this.fields in relationship component");
       this.fields = query;
-      console.log(this.fields);
     }
   },
   methods: {

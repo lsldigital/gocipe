@@ -81,10 +81,17 @@ export default {
     if (typeof this.value !== undefined) {
       this.entity = this.value;
     }
-    console.log(this.entity);
     this.$emit("input", this.entity);
   },
-  methods: {}
+  methods: {},
+  watch: {
+    // entity: {
+    //   handler(val) {
+    //     console.log(val);
+    //   },
+    //   deep: true
+    // }
+  }
 };
 </script>
 

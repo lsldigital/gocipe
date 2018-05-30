@@ -87,6 +87,12 @@ export default {
     value: function(query) {
       this.generaldata = query;
     }
+    // generaldata: {
+    //   handler(val) {
+    //     console.log(val);
+    //   },
+    //   deep: true
+    // }
   },
   mounted() {
     if (this.value !== undefined) {

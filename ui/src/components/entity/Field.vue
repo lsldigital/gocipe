@@ -272,14 +272,10 @@ export default {
     if (this.value !== undefined) {
       this.field = this.value;
     }
-    console.log("field in");
-    console.log(this.field);
     this.$emit("input", this.field);
   },
   watch: {
     value: function(query) {
-      console.log("watch field");
-      console.log(query);
       this.field = query;
     }
   },

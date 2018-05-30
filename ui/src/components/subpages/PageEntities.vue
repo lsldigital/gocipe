@@ -5,8 +5,11 @@
       <v-layout color="black" column align-center class="pa-3">
         <div class="text-xs-center widthscreen">
           <div v-for="(entity, index) in entities" :key="index">
-            <Entity v-model="entities[index]"> </Entity>
-            <v-btn class=" mx-auto" dark v-on:click="removeEntities(index)">
+
+            {{index}}
+            <!-- <input v-model="entity.name" type="text" /> -->
+            <Entity :value="entity" :key="index" />
+            <v-btn class=" mx-auto" dark v-on:click="removeEntity(entities[index])">
               <v-icon dark left>remove_circle</v-icon>Delete
             </v-btn>
           </div>
@@ -32,7 +35,8 @@ export default {
   data() {
     return {
       gocipe,
-      entities: []
+      entities: [],
+      status_del: false
     };
   },
   mounted() {
@@ -48,7 +52,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions(["addentities"]),
+    ...mapActions(["addentities"], ["deleteentity"]),
     addEntity() {
       this.entities.push({
         name: "",
@@ -113,10 +117,41 @@ export default {
     saveEntities() {
       this.addentities(this.entities);
     },
-    removeEntities(index) {
-      if (index !== -1) {
-        this.entities.splice(index, 1);
-      }
+    removeEntity(obj) {
+      // this.deleteentity(obj);bj
+
+      this.$store.dispatch("removeentity", obj);
+      // this.gocipe = this.$store.state["gocipe"];
+      this.entities = [];
+
+      this.status_del = true;
+    }
+    // removeEntity(index) {
+    //   console.log(index);
+
+    //   this.entities.splice(index, 1);
+
+    //   // this.$nextTick(() => {
+    //   //   this.show = true;
+    //   //   let temp = this.entities;
+
+    //   //   if (index !== -1) {
+    //   //     temp.splice(index, 1);
+    //   //   }
+    //   //   this.$nextTick(() => {
+    //   //     console.log("re-render end");
+    //   //   });
+    //   // });
+
+    //   // Entity.render();
+    //   console.log(this.entities);
+    // }
+  },
+
+  updated() {
+    if (this.status_del == true) {
+      this.gocipe = this.$store.state["gocipe"];
+      this.entities = this.gocipe.entities;
     }
   }
 };
