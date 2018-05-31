@@ -28,12 +28,13 @@ var (
 	// {{.Name}} {{.Description}}
 	{{.Name}} string
 	{{end}}{{end}}
+	{{if .Bootstrap.Assets}}Assets *rice.Box{{end}}
 )
 
 // Config represents application configuration loaded during bootstrap
 type Config struct {
 	{{if not .Bootstrap.NoDB}}DB  *sql.DB{{end}}
-	{{if .HTTP.Generate}}HTTPPort string{{end}}
+	HTTPPort string
 	{{range .Bootstrap.Settings}}{{if not .Public}}
 	// {{.Name}} {{.Description}}
 	{{.Name}} string
@@ -81,12 +82,10 @@ func Bootstrap() *Config {
 	}
 	{{end}}
 
-	{{if .HTTP.Generate}}
 	config.HTTPPort = os.Getenv("HTTP_PORT")
 	if config.HTTPPort == "" {
-		config.HTTPPort = "{{.HTTP.Port}}"
+		config.HTTPPort = "{{.Bootstrap.HTTPPort}}"
 	}
-	{{end}}
 
 	{{range .Bootstrap.Settings}}{{if not .Public}}
 	config.{{.Name}} = os.Getenv("{{upper (snake .Name)}}")

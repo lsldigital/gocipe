@@ -99,6 +99,12 @@ type BootstrapOpts struct {
 
 	// Settings represent list of settings to load during bootstrap into main package
 	Settings []BootstrapSetting `json:"settings"`
+
+	// Assets indicates that we want to have an assets folder (using rice)
+	Assets bool `json:"assets"`
+
+	// HTTPPort represents port to listen to by default
+	HTTPPort string `json:"http_port"`
 }
 
 // BootstrapSetting represents a setting required by the application and loaded during bootstrap

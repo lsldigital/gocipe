@@ -14,6 +14,9 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
+// NoHeaderFormat is a special string to indicate no header in generated files
+const NoHeaderFormat = "---"
+
 var (
 	templates *rice.Box
 

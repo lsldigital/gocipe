@@ -8,6 +8,7 @@ import (
 
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/fluxynet/gocipe/generators"
+	"github.com/fluxynet/gocipe/generators/application"
 	"github.com/fluxynet/gocipe/generators/crud"
 	utils "github.com/fluxynet/gocipe/generators/util"
 	"github.com/fluxynet/gocipe/util"
@@ -35,28 +36,25 @@ func main() {
 	recipe, err := loadRecipe()
 
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("[loadRecipe]", err)
 	}
 
 	util.SetTemplates(rice.MustFindBox("templates"))
 
 	work.Waitgroup.Add(6)
 
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	entities, err := preprocessEntities(recipe.Entities)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("preprocessEntities", err)
 	}
 
-	go generators.GenerateBootstrap(work, recipe.Bootstrap, recipe.HTTP)
-	go generators.GenerateHTTP(work, recipe.HTTP)
+	go generators.GenerateBootstrap(work, recipe.Bootstrap)
+	// go generators.GenerateHTTP(work, recipe.HTTP)
 	go crud.Generate(work, recipe.Crud, entities)
 	// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 	go generators.GenerateSchema(work, recipe.Schema, entities)
 	go generators.GenerateVuetify(work, recipe.Rest, recipe.Vuetify, recipe.Entities)
+	go application.Generate(work, recipe.Bootstrap)
 	go utils.Generate(work)
 
 	var wg sync.WaitGroup
