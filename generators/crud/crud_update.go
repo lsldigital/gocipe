@@ -16,7 +16,7 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 
 	for _, field := range entity.Fields {
 		if field.Property.Name == "UpdatedAt" {
-			before = append(before, "entity.UpdatedAt = timestamp.TimestampNow()")
+			before = append(before, "entity.UpdatedAt = ptypes.TimestampNow()")
 		}
 
 		sqlfields = append(sqlfields, fmt.Sprintf("%s = $%d", field.Schema.Field, count))

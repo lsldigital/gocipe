@@ -21,7 +21,8 @@ func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.Entit
 		return {{.EntityName}}Repo.Insert(ctx, entity, tx, autocommit)
 	}
 
-	{{range .Before}}{{.}}{{end}}
+	{{range .Before}}{{.}}
+	{{end}}
 
 	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
 	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`)
@@ -48,7 +49,8 @@ func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.Entit
 		return entity, err
 	}
 
-	{{range .After}}{{.}}{{end}}
+	{{range .After}}{{.}}
+	{{end}}
 
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {

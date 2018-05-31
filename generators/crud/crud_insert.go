@@ -22,9 +22,9 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 
 	for _, field := range entity.Fields {
 		if field.Property.Name == "CreatedAt" {
-			before = append(before, "entity.CreatedAt = timestamp.TimestampNow()")
+			before = append(before, "entity.CreatedAt = ptypes.TimestampNow()")
 		} else if field.Property.Name == "UpdatedAt" {
-			before = append(before, "entity.UpdatedAt = timestamp.TimestampNow()")
+			before = append(before, "entity.UpdatedAt = ptypes.TimestampNow()")
 		}
 
 		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))

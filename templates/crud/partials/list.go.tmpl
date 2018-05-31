@@ -50,14 +50,16 @@ func (repo {{.EntityName}}Repository) List(ctx context.Context, filters []ListFi
 		}
 
 		var entity {{.EntityName}}
-		{{range .Before}}{{.}}{{end}}
+		{{range .Before}}{{.}}
+		{{end}}
 
 		err = rows.Scan({{.StructFields}})
 		if err != nil {
 			return nil, err
 		}
 		
-		{{range .After}}{{.}}{{end}}
+		{{range .After}}{{.}}
+		{{end}}
 
 		list = append(list, entity)
 	}

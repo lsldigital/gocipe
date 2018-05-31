@@ -35,12 +35,14 @@ func (repo {{.ThisEntity}}Repository) Load{{.Funcname}}(ctx context.Context, ent
 			thatID {{.ThatType}}
 			thatEntity {{.ThatEntity}}
 		)
-		{{range .Before}}{{.}}{{end}}
+		{{range .Before}}{{.}}
+		{{end}}
 		err = rows.Scan(&thatID, {{.StructFields}})
 		if err != nil {
 			return err
 		}
-		{{range .After}}{{.}}{{end}}
+		{{range .After}}{{.}}
+		{{end}}
 
 		for _, ent := range indices[thatID] {
 			ent.{{.PropertyName}} = &thatEntity

@@ -19,7 +19,8 @@ func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.Enti
 			return entity, err
 		}
 	}
-	{{range .Before}}{{.}}{{end}}
+	{{range .Before}}{{.}}
+	{{end}}
 
 	{{if eq .PrimaryKey "serial" -}}
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNIentity, NG id")
@@ -33,7 +34,8 @@ func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.Enti
 	}
 	{{- end}}
 
-	{{range .After}}{{.}}{{end}}
+	{{range .After}}{{.}}
+	{{end}}
 
 	{{if .HasPreHook}}
 	if err = util.CheckContext(ctx); err != nil {
