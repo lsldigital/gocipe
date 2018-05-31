@@ -1,0 +1,17 @@
+package models
+
+import (
+	"context"
+	"database/sql"
+	{{range .Imports}}{{.}}{{end}}
+)
+{{.Structure}}
+{{.Get}}
+{{.List}}
+{{.DeleteSingle}}
+{{.DeleteMany}}
+{{.Save}}
+{{.Insert}}
+{{.Update}}
+{{.Merge}}
+{{range .LoadRelated}}{{.}}{{end}}

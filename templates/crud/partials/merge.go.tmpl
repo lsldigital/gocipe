@@ -1,0 +1,82 @@
+
+// Merge performs an SQL merge for {{.EntityName}} record.
+func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+	var (
+		err error
+		stmt *sql.Stmt
+	)
+
+	if tx == nil {
+		select {
+		case <-ctx.Done():
+			return entity, ctx.Err()
+		default:
+			tx, err = repo.db.Begin()
+			if err != nil {
+				return entity, err
+			}
+		}
+	}
+
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return {{.EntityName}}Repo.Insert(ctx, entity, tx, autocommit)
+	}
+
+	{{range .Before}}{{.}}{{end}}
+
+	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
+	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`)
+	if err != nil {
+		return entity, err
+	}
+
+	select {
+	case <-ctx.Done():
+		return entity, ctx.Err()
+	default:
+		break
+	}
+	{{if .HasPreHook}}
+    if err = crudPreSave("MERGE", entity, tx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	{{end}}
+
+	select {
+	case <-ctx.Done():
+		return entity, ctx.Err()
+	default:
+		break
+	}
+	_, err = stmt.Exec({{.StructFields}})
+	if err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+
+	{{range .After}}{{.}}{{end}}
+
+	{{if .HasPostHook}}
+	select {
+	case <-ctx.Done():
+		return entity, ctx.Err()
+	default:
+		break
+	}
+	if err = crudPostSave("MERGE", entity, tx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	{{end}}
+	select {
+	case <-ctx.Done():
+		return entity, ctx.Err()
+	default:
+		if autocommit {
+			err = tx.Commit()
+		}
+	}
+
+	return entity, err
+}

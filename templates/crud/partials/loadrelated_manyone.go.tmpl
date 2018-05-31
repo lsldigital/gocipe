@@ -1,0 +1,63 @@
+// LoadRelated{{.PropertyName}} is a helper function to load related {{.PropertyName}} entities
+func (repo {{.ThisEntity}}Repository) LoadRelated{{.PropertyName}}(ctx context.Context, entities ...{{.ThisEntity}}) error {
+	var (
+		placeholder string
+		values  []interface{}
+		indices = make(map[{{.ThatType}}][]*{{.ThisEntity}})
+	)
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		break
+	}
+
+	c := 1
+	for _, entity := range entities {
+		placeholder += "$" + strconv.Itoa(c) + ","
+		indices[entity.{{.ThisID}}] = append(indices[entity.{{.ThisID}}], &entity)
+		values = append(values, entity.{{.ThisID}})
+		c++
+	}
+	placeholder = strings.TrimRight(placeholder, ",")
+	rows, err := repo.db.Query(`
+		SELECT id, {{.SQLFields}} FROM {{.ThatTable}} WHERE id IN (`+placeholder+`)
+	`, values...)
+	if err != nil {
+		return err
+	}
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		break
+	}
+
+	for rows.Next() {
+		var (
+			thatID {{.ThatType}}
+			thatEntity {{.ThatEntity}}
+		)
+		{{range .Before}}{{.}}{{end}}
+		err = rows.Scan(&thatID, {{.StructFields}})
+		if err != nil {
+			return err
+		}
+		{{range .After}}{{.}}{{end}}
+
+		for _, ent := range indices[thatID] {
+			ent.{{.PropertyName}} = &thatEntity
+		}
+		
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			break
+		}
+	}
+
+	return nil
+}

@@ -1,0 +1,28 @@
+package models
+
+var (
+	{{range .Entities}}
+	{{.Name}}Repo {{.Name}}Repository
+	{{- end}}
+)
+
+// Init is responsible to initialize all repositories
+func Init(database *sql.DB) {
+	{{range .Entities}}
+	{{.Name}}Repo = {{.Name}}Repository{db: database}
+	{{- end}}
+}
+
+//ListFilter represents a filter to apply during listing (crud)
+type ListFilter struct {
+	Field     string
+	Operation string
+	Value     interface{}
+}
+
+{{range .Entities -}}
+// {{.Name}}Repository encapsulates operations that may be performed on the entity {{.Name}}
+type {{.Name}}Repository struct {
+	db *sql.DB
+}
+{{end}}

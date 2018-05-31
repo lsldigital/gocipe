@@ -1,0 +1,81 @@
+
+// List returns a slice containing {{.EntityName}} records
+func (repo {{.EntityName}}Repository) List(ctx context.Context, filters []ListFilter, offset, limit int) ([]{{.EntityName}}, error) {
+	var (
+		list     []{{.EntityName}}
+		segments []string
+		values   []interface{}
+		err      error
+		rows     *sql.Rows
+	)
+
+	query := "SELECT {{.SQLFields}} FROM {{.Table}}"
+	{{if .HasPreHook}}
+    if filters, err = crudPreList(ctx, filters); err != nil {
+		return nil, err
+	}
+	{{end}}
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		break
+	}
+
+	for i, filter := range filters {
+		segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
+		values = append(values, filter.Value)
+	}
+
+	if len(segments) != 0 {
+		query += " WHERE " + strings.Join(segments, " AND ")
+	}
+
+	if limit > -1 {
+		query += " LIMIT "+strconv.Itoa(limit)
+	}
+
+	if offset > -1 {
+		query += " OFFSET "+strconv.Itoa(limit)
+	}
+
+	query += " ORDER BY id ASC"
+
+	rows, err = repo.db.Query(query, values...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			break
+		}
+
+		var entity {{.EntityName}}
+		{{range .Before}}{{.}}{{end}}
+
+		err = rows.Scan({{.StructFields}})
+		if err != nil {
+			return nil, err
+		}
+		
+		{{range .After}}{{.}}{{end}}
+
+		list = append(list, entity)
+	}
+	{{if .HasPostHook}}
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		if list, err = crudPostList(ctx, list); err != nil {
+			return nil, err
+		}
+	}
+	{{end}}
+	return list, nil
+}
