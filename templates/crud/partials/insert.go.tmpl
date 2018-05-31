@@ -1,6 +1,6 @@
 
 // Insert performs an SQL insert for {{.EntityName}} record and update instance with inserted id.
-func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
 	var (
 		{{- if pkeyIsAuto .PrimaryKey -}}
 		id  {{pkeyPropertyType .PrimaryKey}}

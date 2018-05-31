@@ -1,6 +1,6 @@
 
 // Delete deletes a {{.EntityName}} record from database and sets id to nil
-func (repo {{.EntityName}}Repository) Delete(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
 	var (
 		err  error
 		stmt *sql.Stmt

@@ -1,6 +1,6 @@
 
 // Save either inserts or updates a {{.EntityName}} record based on whether or not id is nil
-func (repo {{.EntityName}}Repository) Save(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) Save(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
 	{{if pkeyIsAuto .PrimaryKey -}}
 	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
 		return {{.EntityName}}Repo.Insert(ctx, entity, tx, autocommit)

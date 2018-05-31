@@ -52,6 +52,13 @@ func init() {
 		"trimPrefix": func(str, prefix string) string {
 			return strings.TrimPrefix(str, prefix)
 		},
+		"DerefCrudOpts": func(c *CrudOpts) (CrudOpts, error) {
+			if c == nil {
+				return CrudOpts{}, errors.New("schema opts is nil")
+			}
+			return *c, nil
+		},
+		"RelFuncName":          RelFuncName,
 		"snake":                ToSnakeCase,
 		"pkeyPropertyType":     GetPrimaryKeyDataType,
 		"pkeyPropertyEmptyVal": GetPrimaryKeyEmptyVal,
@@ -232,4 +239,9 @@ func GetPrimaryKeyDataIsInt(str string) (bool, error) {
 		return false, nil
 	}
 	return false, errors.New("invalid primary key type: " + str)
+}
+
+// RelFuncName returns function name for a relationship repository function
+func RelFuncName(rel Relationship) string {
+	return inflection.Plural(strings.Title(strings.ToLower(rel.Name)))
 }

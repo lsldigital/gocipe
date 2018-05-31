@@ -7,6 +7,18 @@ import (
 	"github.com/fluxynet/gocipe/util"
 )
 
+// // RepoCodes that must be analysed for interface generation
+// var (
+// 	RepoCodes []RepoCode
+// 	repoChan  = make(chan RepoCode)
+// )
+
+// // RepoCode represents generated code for a crud repo, which will be used to extract an interface
+// type RepoCode struct {
+// 	SourceFile string
+// 	TargetFile string
+// }
+
 type entityCrud struct {
 	Imports      []string
 	Structure    string
@@ -33,6 +45,12 @@ type relationship struct {
 func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]util.Entity) {
 	work.Waitgroup.Add(len(entities) * 2) //2 jobs to be waited upon for each thread - entity.go and entity_crud_hooks.go generation
 
+	// go func() { // Handle adding repo codes to the list of repo codes
+	// 	for r := range repoChan {
+	// 		RepoCodes = append(RepoCodes, r)
+	// 	}
+	// }()
+
 	for _, entity := range entities {
 		go func(entity util.Entity) {
 			var (
@@ -41,21 +59,20 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]
 				err  error
 			)
 
-			if entity.Crud == nil {
-				entity.Crud = &opts
-			}
-
-			if entity.PrimaryKey == "" {
-				entity.PrimaryKey = util.PrimaryKeySerial
-			}
-
 			code, err = generateCrud(entity, entities)
 			if err == nil {
 				crud, err = util.ExecuteTemplate("crud/crud.go.tmpl", code)
 			}
 
+			// if err == nil {
+			// 	crud, err = generateInterface(crud)
+			// }
+
 			if err == nil {
-				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: crud, Filename: fmt.Sprintf("models/%s_repo.gocipe.go", strings.ToLower(entity.Name))}
+				fname := fmt.Sprintf("models/%s_repo.gocipe.go", strings.ToLower(entity.Name))
+				// target := fmt.Sprintf("models/%s_repository.gocipe.go", strings.ToLower(entity.Name))
+				// repoChan <- RepoCode{SourceFile: fname, TargetFile: target}
+				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: crud, Filename: fname}
 			} else {
 				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to execute template: %s", err)}
 			}

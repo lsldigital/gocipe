@@ -8,7 +8,7 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
-func preprocessEntities(raw []util.Entity) (map[string]util.Entity, error) {
+func preprocessEntities(raw []util.Entity, crudOpts util.CrudOpts) (map[string]util.Entity, error) {
 	var (
 		err error
 	)
@@ -28,6 +28,14 @@ func preprocessEntities(raw []util.Entity) (map[string]util.Entity, error) {
 				field.Schema.Field = strings.ToLower(field.Property.Name)
 			}
 			entity.Fields[i] = field
+		}
+
+		if entity.Crud == nil {
+			entity.Crud = &crudOpts
+		}
+
+		if entity.PrimaryKey == "" {
+			entity.PrimaryKey = util.PrimaryKeySerial
 		}
 
 		entities[entity.Name] = entity

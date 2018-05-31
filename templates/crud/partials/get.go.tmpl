@@ -1,6 +1,6 @@
 
 // Get returns a single {{.EntityName}} from database by primary key
-func (repo {{.EntityName}}Repository) Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) ({{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) ({{.EntityName}}, error) {
 	var (
 		rows   *sql.Rows
 		err    error

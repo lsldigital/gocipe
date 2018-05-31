@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/fluxynet/gocipe/util"
-	"github.com/jinzhu/inflection"
 )
 
 func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
@@ -50,7 +49,7 @@ func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.En
 		HasPostHook  bool
 	}{
 		ThisEntity:   entity.Name,
-		Funcname:     inflection.Plural(strings.Title(strings.ToLower(rel.Name))),
+		Funcname:     util.RelFuncName(rel),
 		ThatEntity:   related.Name,
 		JoinTable:    rel.JoinTable,
 		ThisType:     thisType,
@@ -110,7 +109,7 @@ func generateLoadRelatedOneMany(entities map[string]util.Entity, entity util.Ent
 		HasPostHook  bool
 	}{
 		ThisEntity:   entity.Name,
-		Funcname:     inflection.Plural(strings.Title(strings.ToLower(rel.Name))),
+		Funcname:     util.RelFuncName(rel),
 		ThatEntity:   related.Name,
 		ThisType:     thisType,
 		ThatTable:    related.Table,
@@ -167,7 +166,7 @@ func generateLoadRelatedManyOne(entities map[string]util.Entity, entity util.Ent
 		HasPostHook  bool
 	}{
 		ThisEntity:   entity.Name,
-		Funcname:     inflection.Plural(strings.Title(strings.ToLower(rel.Name))),
+		Funcname:     util.RelFuncName(rel),
 		ThatEntity:   related.Name,
 		ThisID:       rel.Name + "ID",
 		ThisType:     thisType,

@@ -43,7 +43,7 @@ func main() {
 
 	work.Waitgroup.Add(6)
 
-	entities, err := preprocessEntities(recipe.Entities)
+	entities, err := preprocessEntities(recipe.Entities, recipe.Crud)
 	if err != nil {
 		log.Fatalln("preprocessEntities", err)
 	}

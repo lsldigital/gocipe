@@ -1,6 +1,6 @@
 
 // Merge performs an SQL merge for {{.EntityName}} record.
-func (repo {{.EntityName}}Repository) Merge(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
 	var (
 		err error
 		stmt *sql.Stmt

@@ -1,6 +1,6 @@
 
 // Update Will execute an SQLUpdate Statement for {{.EntityName}} in the database. Prefer using Save instead of Update directly.
-func (repo {{.EntityName}}Repository) Update(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
 	var (
 		err error
 		stmt *sql.Stmt
