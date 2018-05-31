@@ -10,17 +10,17 @@ func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.Enti
 	)
 
 	if tx == nil {
-		select {
-		case <-ctx.Done():
-			return entity, ctx.Err()
-		default:
-			tx, err = repo.db.Begin()
-			if err != nil {
-				return entity, err
-			}
+		if err = util.CheckContext(ctx); err != nil {
+			return entity, err
+		}
+		
+		tx, err = repo.db.Begin()
+		if err != nil {
+			return entity, err
 		}
 	}
-	{{range .Before}}{{.}}{{end}}
+	{{range .Before}}{{.}}
+	{{end}}
 
 	{{if eq .PrimaryKey "serial" -}}
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNIentity, NG id")
@@ -34,25 +34,22 @@ func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.Enti
 	}
 	{{- end}}
 
-	{{range .After}}{{.}}{{end}}
+	{{range .After}}{{.}}
+	{{end}}
 
 	{{if .HasPreHook}}
-	select {
-	case <-ctx.Done():
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
+	}
+	
+	if err = repo.preSave(ctx, tx, models.OperationInsert, &entity); err != nil {
 		tx.Rollback()
-		return entity, ctx.Err()
-	default:
-		if err = crudPreSave("INSERT", entity, tx); err != nil {
-			tx.Rollback()
-			return entity, err
-		}
+		return entity, err
 	}
 	{{end}}
-	select {
-	case <-ctx.Done():
-		return entity, ctx.Err()
-	default:
-		break
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
 	}
 	{{if eq .PrimaryKey "serial" -}}
 	err = stmt.QueryRow({{.StructFields}}).Scan(&id)
@@ -75,12 +72,9 @@ func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.Enti
 	entity.ID = id
 	{{- end}}
 
-	select {
-	case <-ctx.Done():
+	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, ctx.Err()
-	default:
-		break
+		return entity, err
 	}
 
 	_, err = stmt.Exec({{.StructFields}})
@@ -90,27 +84,23 @@ func (repo {{.EntityName}}Repository) Insert(ctx context.Context, entity {{.Enti
 	}
 	{{end}}
 	{{if .HasPostHook}}
-	select {
-	case <- ctx.Done():
+	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, ctx.Err()
-	default:
-		break
+		return entity, err
 	}
-	if err := crudPostSave("INSERT", entity, tx); err != nil {
+	if err := repo.postSave(ctx, "INSERT", entity, tx); err != nil {
 		tx.Rollback()
 		return entity, err
 	}
 	{{end}}
 
-	select {
-	case <- ctx.Done():
+	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, ctx.Err()
-	default:
-		if autocommit {
-			err = tx.Commit()
-		}
+		return entity, err
+	}
+
+	if autocommit {
+		err = tx.Commit()
 	}
 
 	return entity, nil

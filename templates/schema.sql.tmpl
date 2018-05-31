@@ -3,19 +3,21 @@ DROP TABLE IF EXISTS {{.Entity.Table}};
 CREATE TABLE {{.Entity.Table}} (
 	"id" {{pkeyFieldType .Entity.PrimaryKey}},
 	{{- range $i, $e := .Entity.Fields}}{{if ne .Schema.Field ""}}
-	"{{.Schema.Field}}" {{$e.Schema.Type}}
-	{{- if not .Schema.Nullable}} NOT NULL{{end}}
+	"{{.Schema.Field}}" {{$e.Schema.Type}} NOT NULL
 	{{- if ne .Schema.Default "" -}} DEFAULT {{.Schema.Default}}{{end}},
 	{{- end}}{{- end}}
+	{{- range .RelatedFields}}
+	"{{.Name}}" {{.Type}} NOT NULL,
+	{{end}}
 	{{range .Entity.TableConstraints}}{{.}},{{end}}
 	PRIMARY KEY ("id")
 );
 
-{{range .ManyManyFields}}
-DROP TABLE IF EXISTS {{.Relationship.Target.Table}};
+{{range .RelatedTables}}
+DROP TABLE IF EXISTS {{.Table}};
 
-CREATE TABLE {{.Relationship.Target.Table}} (
-	"{{.Relationship.Target.ThisID}}" {{pkeyFieldType $.Entity.PrimaryKey}} NOT NULL,
-	"{{.Relationship.Target.ThatID}}" {{.Relationship.ThatFieldType}} NOT NULL
+CREATE TABLE {{.Table}} (
+	"{{.ThisID}}" {{.ThisType}} NOT NULL,
+	"{{.ThatID}}" {{.ThatType}} NOT NULL
 );
 {{end}}

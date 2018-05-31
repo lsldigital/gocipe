@@ -1,16 +1,14 @@
-// LoadRelated{{.PropertyName}} is a helper function to load related {{.PropertyName}} entities
-func (repo {{.ThisEntity}}Repository) LoadRelated{{.PropertyName}}(ctx context.Context, entities ...{{.ThisEntity}}) error {
+// Load{{.Funcname}} is a helper function to load related {{.PropertyName}} entities
+func (repo {{.ThisEntity}}Repository) Load{{.Funcname}}(ctx context.Context, entities ...{{.ThisEntity}}) error {
 	var (
+		err error
 		placeholder string
 		values  []interface{}
 		indices = make(map[{{.ThatType}}][]*{{.ThisEntity}})
 	)
 
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-		break
+	if err = util.CheckContext(ctx); err != nil {
+		return err
 	}
 
 	c := 1
@@ -28,11 +26,8 @@ func (repo {{.ThisEntity}}Repository) LoadRelated{{.PropertyName}}(ctx context.C
 		return err
 	}
 
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-		break
+	if err = util.CheckContext(ctx); err != nil {
+		return err
 	}
 
 	for rows.Next() {
@@ -40,22 +35,21 @@ func (repo {{.ThisEntity}}Repository) LoadRelated{{.PropertyName}}(ctx context.C
 			thatID {{.ThatType}}
 			thatEntity {{.ThatEntity}}
 		)
-		{{range .Before}}{{.}}{{end}}
+		{{range .Before}}{{.}}
+		{{end}}
 		err = rows.Scan(&thatID, {{.StructFields}})
 		if err != nil {
 			return err
 		}
-		{{range .After}}{{.}}{{end}}
+		{{range .After}}{{.}}
+		{{end}}
 
 		for _, ent := range indices[thatID] {
 			ent.{{.PropertyName}} = &thatEntity
 		}
 		
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			break
+		if err = util.CheckContext(ctx); err != nil {
+			return err
 		}
 	}
 

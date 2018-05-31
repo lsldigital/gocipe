@@ -30,15 +30,8 @@ type relationship struct {
 }
 
 // Generate returns generated code to run an http server
-func Generate(work util.GenerationWork, opts util.CrudOpts, entityList []util.Entity) {
-	entities, err := preprocessEntities(entityList)
-
-	if err != nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: err}
-		return
-	}
-
-	work.Waitgroup.Add(len(entityList) * 2) //2 jobs to be waited upon for each thread - entity.go and entity_crud_hooks.go generation
+func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]util.Entity) {
+	work.Waitgroup.Add(len(entities) * 2) //2 jobs to be waited upon for each thread - entity.go and entity_crud_hooks.go generation
 
 	for _, entity := range entities {
 		go func(entity util.Entity) {
@@ -104,8 +97,8 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entityList []util.En
 	}
 
 	models, err := util.ExecuteTemplate("crud/models.go.tmpl", struct {
-		Entities []util.Entity
-	}{entityList})
+		Entities map[string]util.Entity
+	}{entities})
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Code: models, Filename: "models/models.gocipe.go"}
 	} else {

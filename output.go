@@ -41,6 +41,8 @@ func processOutput(waitgroup *sync.WaitGroup, work util.GenerationWork, toolset 
 			if err == nil {
 				if strings.HasSuffix(fname, ".go") {
 					gofiles = append(gofiles, fname)
+				} else if strings.HasSuffix(fname, ".sh") {
+					os.Chmod(fname, 0755)
 				}
 
 				written++
@@ -114,7 +116,7 @@ func saveGenerated(generated util.GeneratedCode, noSkip bool) (string, string, e
 	}
 
 	var code []byte
-	if generated.NoOverwrite {
+	if generated.NoOverwrite || generated.GeneratedHeaderFormat == util.NoHeaderFormat {
 		code = []byte(generated.Code)
 	} else {
 		var generatedHeaderFormat string

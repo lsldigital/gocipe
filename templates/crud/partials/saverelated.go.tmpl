@@ -10,12 +10,8 @@ func SaveRelated{{.PropertyName}}(ctx context.Context, idthis  {{pkeyPropertyTyp
 		stmt    *sql.Stmt
 	)
 
-	select {
-	case <-ctx.Done():
-		tx.Rollback()
-		return ctx.Err()
-	default:
-		break
+	if err = util.CheckContext(ctx); err != nil {
+		return err
 	}
 	
 	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThisID}} = $1")
@@ -30,12 +26,9 @@ func SaveRelated{{.PropertyName}}(ctx context.Context, idthis  {{pkeyPropertyTyp
 		return err
 	}
 
-	select {
-	case <-ctx.Done():
+	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return ctx.Err()
-	default:
-		break
+		return err
 	}
 
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThisID}}, {{.ThatID}}) VALUES ($1, $2)")
@@ -44,12 +37,9 @@ func SaveRelated{{.PropertyName}}(ctx context.Context, idthis  {{pkeyPropertyTyp
 	}
 
 	for _, relatedID := range *entity.{{.PropertyName}} {
-		select {
-		case <-ctx.Done():
+		if err = util.CheckContext(ctx); err != nil {
 			tx.Rollback()
-			return ctx.Err()
-		default:
-			break
+			return err
 		}
 
 		_, err = stmt.Exec(entity.ID, relatedID)

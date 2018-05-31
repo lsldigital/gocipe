@@ -7,46 +7,40 @@ func (repo {{.EntityName}}Repository) Update(ctx context.Context, entity {{.Enti
 	)
 
 	if tx == nil {
-		select {
-		case <-ctx.Done():
-			return entity, ctx.Err()
-		default:
-			tx, err = repo.db.Begin()
-			if err != nil {
-				return entity, err
-			}
+		if err = util.CheckContext(ctx); err != nil {
+			return entity, err
+		}
+
+		tx, err = repo.db.Begin()
+		if err != nil {
+			return entity, err
 		}
 	}
 	
-	{{range .Before}}{{.}}{{end}}
+	{{range .Before}}{{.}}
+	{{end}}
 
 	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1")
 	if err != nil {
 		return entity, err
 	}
 
-	{{range .After}}{{.}}{{end}}
+	{{range .After}}{{.}}
+	{{end}}
 
 	{{if .HasPreHook}}
-	select {
-	case <-ctx.Done():
-		tx.Rollback()
-		return entity, ctx.Err()
-	default:
-		break
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
 	}
 
-    if err = crudPreSave("UPDATE", entity, tx); err != nil {
+    if err = repo.preSave(ctx, tx, models.OperationUpdate, &entity); err != nil {
 		tx.Rollback()
         return entity, err
 	}
 	{{end}}
-	select {
-	case <-ctx.Done():
+	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, ctx.Err()
-	default:
-		break
+		return entity, err
 	}
 	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
@@ -54,27 +48,23 @@ func (repo {{.EntityName}}Repository) Update(ctx context.Context, entity {{.Enti
 		return entity, err
 	}
 	{{if .HasPostHook}}
-	select {
-	case <-ctx.Done():
+	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, ctx.Err()
-	default:
-		break
+		return entity, err
 	}
 
-	if err = crudPostSave("UPDATE", entity, tx); err != nil {
+	if err = repo.postSave(ctx, "UPDATE", entity, tx); err != nil {
 		tx.Rollback()
 		return entity, err
 	}
 	{{end}}
-	select {
-	case <-ctx.Done():
+	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, ctx.Err()
-	default:
-		if autocommit {
-			err = tx.Commit()
-		}
+		return entity, err
+	}
+
+	if autocommit {
+		err = tx.Commit()
 	}
 
 	return entity, err

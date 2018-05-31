@@ -1,16 +1,29 @@
 package models
 
 var (
+	db *sql.DB
 	{{range .Entities}}
 	{{.Name}}Repo {{.Name}}Repository
 	{{- end}}
 )
 
+const (
+	OperationMerge  byte = 'M'
+	OperationInsert byte = 'I'
+	OperationUpdate byte = 'U'
+)
+
 // Init is responsible to initialize all repositories
 func Init(database *sql.DB) {
+	db = database
 	{{range .Entities}}
 	{{.Name}}Repo = {{.Name}}Repository{db: database}
 	{{- end}}
+}
+
+// StartTransaction initiates a database transaction
+func StartTransaction() (*sql.Tx, error) {
+	return db.Begin()
 }
 
 //ListFilter represents a filter to apply during listing (crud)

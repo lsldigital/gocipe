@@ -99,6 +99,12 @@ type BootstrapOpts struct {
 
 	// Settings represent list of settings to load during bootstrap into main package
 	Settings []BootstrapSetting `json:"settings"`
+
+	// Assets indicates that we want to have an assets folder (using rice)
+	Assets bool `json:"assets"`
+
+	// HTTPPort represents port to listen to by default
+	HTTPPort string `json:"http_port"`
 }
 
 // BootstrapSetting represents a setting required by the application and loaded during bootstrap
@@ -324,9 +330,6 @@ type FieldSchema struct {
 
 	// Type is the data type for the field in database
 	Type string `json:"type"`
-
-	// Nullable indicates if null values are allowed in database for this field
-	Nullable bool `json:"nullable"`
 
 	// Default provides the default value for this field in database
 	Default string `json:"default"`
