@@ -108,7 +108,7 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]
 	work.Waitgroup.Add(1)
 	proto, err := generateProtobuf(entities)
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Code: proto, Filename: "proto/entities.proto"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Code: proto, Filename: "proto/models.proto"}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Error: fmt.Errorf("failed to load execute template: %s", err)}
 	}

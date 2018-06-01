@@ -27,6 +27,12 @@ var (
 	reMatchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 	templatesFn template.FuncMap
+
+	// ProjectImportPath represents GO import path for the project at hand
+	ProjectImportPath string
+
+	// WorkingDir represents current working directory
+	WorkingDir string
 )
 
 func init() {

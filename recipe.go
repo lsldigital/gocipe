@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/fluxynet/gocipe/util"
 )
@@ -40,6 +41,15 @@ func loadRecipe() (*util.Recipe, error) {
 	if err != nil {
 		return nil, fmt.Errorf("recipe decoding failed: %s", err)
 	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	util.WorkingDir = wd
+	util.ProjectImportPath = strings.TrimPrefix(wd, os.Getenv("GOPATH")+"/src/")
+	os.Getenv("GOPATH")
 
 	return &recipe, nil
 }

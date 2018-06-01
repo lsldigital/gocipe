@@ -228,7 +228,8 @@ func postProcessGoFiles(toolset util.Toolset, gofiles []string) {
 }
 
 func postProcessProtofiles(toolset util.Toolset) {
-	cmd := exec.Command(toolset.Protoc, "-I=proto", "--go_out=models", "proto/entities.proto")
+	p := os.Getenv("GOPATH") + "/src"
+	cmd := exec.Command(toolset.Protoc, "-I=proto", "--go_out="+p, "proto/models.proto")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()

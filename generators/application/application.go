@@ -2,6 +2,8 @@ package application
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/fluxynet/gocipe/util"
 )
@@ -23,7 +25,11 @@ func Generate(work util.GenerationWork, bootOpts util.BootstrapOpts) {
 	}
 
 	work.Waitgroup.Add(1)
-	genservice, err := util.ExecuteTemplate("application/gen-service.sh.tmpl", struct{}{})
+	genservice, err := util.ExecuteTemplate("application/gen-service.sh.tmpl", struct {
+		GeneratePath string
+	}{
+		GeneratePath: "$GOPATH" + strings.TrimPrefix(util.WorkingDir, os.Getenv("GOPATH")) + "/services",
+	})
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateGenService", Code: genservice, Filename: "gen-service.sh", NoOverwrite: false, GeneratedHeaderFormat: util.NoHeaderFormat}
 	} else {

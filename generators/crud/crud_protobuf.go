@@ -87,7 +87,8 @@ func generateProtobuf(entities map[string]util.Entity) (string, error) {
 	}
 
 	return util.ExecuteTemplate("crud/protobuf.proto.tmpl", struct {
-		Entities []protoEntity
-		Imports  []string
-	}{ents, imports})
+		Entities          []protoEntity
+		Imports           []string
+		ProjectImportPath string
+	}{ents, imports, util.ProjectImportPath})
 }
