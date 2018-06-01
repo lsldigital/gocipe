@@ -7,7 +7,7 @@ if [ "$1" == "" ]; then
 	exit 1
 fi
 
-if [ ! -f "${CURRENT_DIR}/vendor" ]; then
+if [ ! -d "${CURRENT_DIR}/vendor" ]; then
     echo "vendor folder not found in ${CURRENT_DIR}"
     echo "Running dep init"
     dep init
