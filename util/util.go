@@ -142,6 +142,14 @@ func FileExists(f string) bool {
 	return err == nil
 }
 
+// DeleteIfExists deletes a file if exists
+func DeleteIfExists(f string) {
+	f, err := GetAbsPath(f)
+	if err == nil && FileExists(f) {
+		os.Remove(f)
+	}
+}
+
 // ExecuteTemplate applies templating a text/template template given data and returns the string output
 func ExecuteTemplate(name string, data interface{}) (string, error) {
 	var output bytes.Buffer

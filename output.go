@@ -238,4 +238,23 @@ func postProcessProtofiles(toolset util.Toolset) {
 		fmt.Printf("Error running %s: %s\n", toolset.Protoc, err)
 		return
 	}
+
+	// cmd = exec.Command(
+	// 	toolset.Protoc,
+	// 	`-I=proto`,
+	// 	`--plugin="protoc-gen-ts=`+util.WorkingDir+`/web/node_modules/.bin/protoc-gen-ts"`,
+	// 	`--js_out="binary:`+util.WorkingDir+`/web/src/services"`,
+	// 	`--ts_out="`+util.WorkingDir+`/web/src/services"`,
+	// 	`proto/models.proto`,
+	// )
+
+	// cmd.Stdout = os.Stdout
+	// cmd.Stderr = os.Stderr
+	// cmd.Dir = util.WorkingDir
+	// err = cmd.Run()
+
+	// if err != nil {
+	// 	fmt.Printf("Error running %s: %s\n", toolset.Protoc, err)
+	// 	return
+	// }
 }

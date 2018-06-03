@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -15,11 +14,7 @@ import (
 func loadRecipe() (*util.Recipe, error) {
 	var recipe util.Recipe
 
-	if len(os.Args) == 1 {
-		return nil, errors.New("no recipe provided. usage: gocipe gocipe.json")
-	}
-
-	recipePath, err := util.GetAbsPath(os.Args[len(os.Args)-1])
+	recipePath, err := util.GetAbsPath("gocipe.json")
 	if err != nil {
 		return nil, err
 	}

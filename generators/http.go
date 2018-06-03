@@ -9,6 +9,7 @@ import (
 // GenerateHTTP returns generated code to run an http server
 func GenerateHTTP(work util.GenerationWork, opts util.HTTPOpts) error {
 	if !opts.Generate {
+		util.DeleteIfExists("app/http.gocipe.go")
 		work.Done <- util.GeneratedCode{Generator: "GenerateHTTP", Error: util.ErrorSkip}
 		return nil
 	}

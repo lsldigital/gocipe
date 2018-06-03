@@ -43,15 +43,23 @@ type relationship struct {
 
 // Generate returns generated code to run an http server
 func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]util.Entity) {
-	work.Waitgroup.Add(len(entities) * 2) //2 jobs to be waited upon for each thread - entity.go and entity_crud_hooks.go generation
-
-	// go func() { // Handle adding repo codes to the list of repo codes
-	// 	for r := range repoChan {
-	// 		RepoCodes = append(RepoCodes, r)
-	// 	}
-	// }()
+	generateAny := false
+	work.Waitgroup.Add(len(entities) * 2) //2 threads per entities. for models and models_hooks
 
 	for _, entity := range entities {
+		generateForEntity := entity.Crud.Create || entity.Crud.Read || entity.Crud.ReadList ||
+			entity.Crud.Update || entity.Crud.Delete || entity.Crud.Merge
+
+		generateAny = generateAny || generateForEntity
+
+		if !generateForEntity {
+			util.DeleteIfExists(fmt.Sprintf("models/%s_repo.gocipe.go", strings.ToLower(entity.Name)))
+			util.DeleteIfExists(fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(entity.Name)))
+			work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUD[%s]", entity.Name), Error: util.ErrorSkip}
+			work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUDHooks[%s]", entity.Name), Error: util.ErrorSkip}
+			continue
+		}
+
 		go func(entity util.Entity) {
 			var (
 				code entityCrud
@@ -64,17 +72,11 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]
 				crud, err = util.ExecuteTemplate("crud/crud.go.tmpl", code)
 			}
 
-			// if err == nil {
-			// 	crud, err = generateInterface(crud)
-			// }
-
 			if err == nil {
 				fname := fmt.Sprintf("models/%s_repo.gocipe.go", strings.ToLower(entity.Name))
-				// target := fmt.Sprintf("models/%s_repository.gocipe.go", strings.ToLower(entity.Name))
-				// repoChan <- RepoCode{SourceFile: fname, TargetFile: target}
-				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Code: crud, Filename: fname}
+				work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUD[%s]", entity.Name), Code: crud, Filename: fname}
 			} else {
-				work.Done <- util.GeneratedCode{Generator: "GenerateCRUD", Error: fmt.Errorf("failed to execute template: %s", err)}
+				work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUD[%s]", entity.Name), Error: fmt.Errorf("failed to execute template: %s", err)}
 			}
 
 			hasHooks := entity.Crud.Hooks.PreSave ||
@@ -95,31 +97,35 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]
 				}{entity.Crud.Hooks, entity})
 
 				if err == nil {
-					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Code: hooks, Filename: fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(entity.Name)), NoOverwrite: true}
+					work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUDHooks[%s]", entity.Name), Code: hooks, Filename: fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(entity.Name)), NoOverwrite: true}
 				} else {
-					work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Error: err}
+					work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUDHooks[%s]", entity.Name), Error: err}
 				}
 			} else {
-				work.Done <- util.GeneratedCode{Generator: "GenerateCRUDHooks", Error: util.ErrorSkip}
+				work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUDHooks[%s]", entity.Name), Error: util.ErrorSkip}
 			}
 		}(entity)
 	}
 
 	work.Waitgroup.Add(1)
+	if generateAny {
+		models, err := util.ExecuteTemplate("crud/models.go.tmpl", struct {
+			Entities map[string]util.Entity
+		}{entities})
+		if err == nil {
+			work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Code: models, Filename: "models/models.gocipe.go"}
+		} else {
+			work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Error: fmt.Errorf("failed to load execute template: %s", err)}
+		}
+	} else {
+		work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Error: util.ErrorSkip}
+	}
+
 	proto, err := generateProtobuf(entities)
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Code: proto, Filename: "proto/models.proto"}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Error: fmt.Errorf("failed to load execute template: %s", err)}
-	}
-
-	models, err := util.ExecuteTemplate("crud/models.go.tmpl", struct {
-		Entities map[string]util.Entity
-	}{entities})
-	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Code: models, Filename: "models/models.gocipe.go"}
-	} else {
-		work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Error: fmt.Errorf("failed to load execute template: %s", err)}
 	}
 }
 
