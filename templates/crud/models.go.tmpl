@@ -71,15 +71,15 @@ type {{.Name}}Repository interface {
 {{- $ThisEntity := .Name -}}
 {{range .Relationships -}}
 {{if eq .Type "many-many" -}}
-	// Load{{.Funcname}} is a helper function to load related {{.Name}} entities
+	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
 	Load{{RelFuncName .}}(ctx context.Context, entities ...{{$ThisEntity}}) error {
 {{end -}}
 {{if eq .Type "one-many" -}}
-	// Load{{.Funcname}} is a helper function to load related {{.Name}} entities
+	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
 	Load{{RelFuncName .}}(ctx context.Context, entities ...{{$ThisEntity}}) error {
 {{end -}}
 {{if eq .Type "many-one" -}}
-	// Load{{.Funcname}} is a helper function to load related {{.Name}} entities
+	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
 	Load{{RelFuncName .}}(ctx context.Context, entities ...{{$ThisEntity}}) error {
 {{end -}}
 {{end -}}
