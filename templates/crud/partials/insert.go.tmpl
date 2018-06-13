@@ -23,7 +23,7 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity {{.En
 	{{end}}
 
 	{{if eq .PrimaryKey "serial" -}}
-	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNIentity, NG id")
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
 	if err != nil {
 		return entity, err
 	}
@@ -54,7 +54,7 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity {{.En
 	{{if eq .PrimaryKey "serial" -}}
 	err = stmt.QueryRow({{.StructFields}}).Scan(&id)
 	if err == nil {
-		entity.ID = &id
+		entity.ID = id
 	} else {
 		tx.Rollback()
 		return entity, err
