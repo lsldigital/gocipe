@@ -28,6 +28,8 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, filters []List
 		query += " WHERE " + strings.Join(segments, " AND ")
 	}
 
+	query += " ORDER BY id ASC"
+
 	if limit > -1 {
 		query += " LIMIT "+strconv.Itoa(limit)
 	}
@@ -35,8 +37,6 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, filters []List
 	if offset > -1 {
 		query += " OFFSET "+strconv.Itoa(limit)
 	}
-
-	query += " ORDER BY id ASC"
 
 	rows, err = repo.db.Query(query, values...)
 	if err != nil {
