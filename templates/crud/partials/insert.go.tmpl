@@ -61,14 +61,8 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity {{.En
 	}
 	{{else}}
 	{{if eq .PrimaryKey "uuid" -}}
-	idUUID, err := uuid.NewV4()
-	
-	if err == nil {
-		id = idUUID.String()
-	} else {
-		tx.Rollback()
-		return entity, err
-	}
+	idUUID := uuid.NewV4()
+	id = idUUID.String()
 	entity.ID = id
 	{{- end}}
 

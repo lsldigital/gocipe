@@ -131,12 +131,17 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]
 
 func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCrud, error) {
 	var (
-		code entityCrud
-		err  error
+		code       entityCrud
+		importUUID bool
+		err        error
 	)
 
 	if err == nil && entity.Crud.Create {
 		code.Insert, err = generateInsert(entities, entity)
+
+		if entity.PrimaryKey == util.PrimaryKeyUUID {
+			importUUID = true
+		}
 	}
 
 	if err == nil && entity.Crud.Read {
@@ -191,6 +196,10 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 				}
 			}
 		}
+	}
+
+	if importUUID {
+		code.Imports = append(code.Imports, `uuid "github.com/satori/go.uuid"`)
 	}
 
 	return code, err
