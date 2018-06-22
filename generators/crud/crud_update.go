@@ -11,8 +11,9 @@ import (
 func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var (
 		before, after, sqlfields, structfields []string
-		count                                  = 1
+		count                                  = 2
 	)
+	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 
 	for _, field := range entity.Fields {
 		if field.Property.Name == "UpdatedAt" {
