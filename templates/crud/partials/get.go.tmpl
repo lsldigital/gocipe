@@ -37,6 +37,8 @@ func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id {{pkeyProper
 		
 		{{range .After}}{{.}}
 		{{end}}
+	} else {
+		return entity, moderrors.RecordNotFoundError
 	}
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {

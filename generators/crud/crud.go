@@ -121,6 +121,20 @@ func Generate(work util.GenerationWork, opts util.CrudOpts, entities map[string]
 		work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Error: util.ErrorSkip}
 	}
 
+	work.Waitgroup.Add(1)
+	if generateAny {
+		models, err := util.ExecuteTemplate("crud/moderrors.go.tmpl", struct {
+			Entities map[string]util.Entity
+		}{entities})
+		if err == nil {
+			work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModelErrors", Code: models, Filename: "models/moderrors/errors.gocipe.go"}
+		} else {
+			work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModelErrors", Error: fmt.Errorf("failed to load execute template: %s", err)}
+		}
+	} else {
+		work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModelErrors", Error: util.ErrorSkip}
+	}
+
 	proto, err := generateProtobuf(entities)
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Code: proto, Filename: "proto/models.proto"}
