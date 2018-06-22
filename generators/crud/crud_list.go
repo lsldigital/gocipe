@@ -12,7 +12,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 	var sqlfields, structfields, before, after []string
 
 	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
-	structfields = append(structfields, fmt.Sprintf("entity.%s", "ID"))
+	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 
 	for _, field := range entity.Fields {
 		if field.Property.Type == "time" {
