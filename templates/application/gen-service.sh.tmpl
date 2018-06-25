@@ -41,7 +41,7 @@ if [ ! -f "${CURRENT_DIR}/web/node_modules/.bin/protoc-gen-ts" ]; then
     npm install --save-dev ts-protoc-gen
 fi
 
-if [ ! -d {{.GeneratePath}}/${1}]; then
+if [ ! -d {{.GeneratePath}}/${1} ]; then
     mkdir -p {{.GeneratePath}}/${1}
 fi
 
@@ -58,4 +58,4 @@ fi
 protoc -I "${CURRENT_DIR}/proto" \
     --plugin="protoc-gen-ts=${CURRENT_DIR}/web/node_modules/.bin/protoc-gen-ts" \
     --js_out="import_style=commonjs,binary:${CURRENT_DIR}/web/src/services" \
-    --ts_out="service=true:${CURRENT_DIR}/web/src/services" "${CURRENT_DIR}/proto/${1}.proto"
+    --ts_out="service=true:${CURRENT_DIR}/web/src/services" "${CURRENT_DIR}/proto/service_${1}.proto"
