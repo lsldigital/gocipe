@@ -41,10 +41,21 @@ if [ ! -f "${CURRENT_DIR}/web/node_modules/.bin/protoc-gen-ts" ]; then
     npm install --save-dev ts-protoc-gen
 fi
 
+if [ ! -d {{.GeneratePath}}/${1}]; then
+    mkdir -p {{.GeneratePath}}/${1}
+fi
 
 cd ${CURRENT_DIR}
-protoc -I "${CURRENT_DIR}/proto" "${CURRENT_DIR}/proto/${1}" --go_out=plugins=grpc:{{.GeneratePath}}
+protoc -I "${CURRENT_DIR}/proto" "${CURRENT_DIR}/proto/${1}.proto" --go_out=plugins=grpc:{{.GeneratePath}}/${1}
+
+if [ -f "${CURRENT_DIR}/proto/models.proto" ]; then
+    protoc -I "${CURRENT_DIR}/proto" \
+    --plugin="protoc-gen-ts=${CURRENT_DIR}/web/node_modules/.bin/protoc-gen-ts" \
+    --js_out="import_style=commonjs,binary:${CURRENT_DIR}/web/src/services" \
+    --ts_out="${CURRENT_DIR}/web/src/services" "${CURRENT_DIR}/proto/models.proto"
+fi
+
 protoc -I "${CURRENT_DIR}/proto" \
     --plugin="protoc-gen-ts=${CURRENT_DIR}/web/node_modules/.bin/protoc-gen-ts" \
     --js_out="import_style=commonjs,binary:${CURRENT_DIR}/web/src/services" \
-    --ts_out="service=true:${CURRENT_DIR}/web/src/services" "${CURRENT_DIR}/proto/${1}"
+    --ts_out="service=true:${CURRENT_DIR}/web/src/services" "${CURRENT_DIR}/proto/${1}.proto"
