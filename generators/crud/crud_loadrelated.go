@@ -11,7 +11,7 @@ func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.En
 	var sqlfields, structfields, before, after []string
 
 	sqlfields = append(sqlfields, fmt.Sprintf("t.%s", "id"))
-	structfields = append(structfields, fmt.Sprintf("entity.%s", "ID"))
+	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 	related := entities[rel.Entity]
 
 	thisType, _ := util.GetPrimaryKeyDataType(entity.PrimaryKey)
@@ -72,7 +72,7 @@ func generateLoadRelatedOneMany(entities map[string]util.Entity, entity util.Ent
 	var sqlfields, structfields, before, after []string
 
 	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
-	structfields = append(structfields, fmt.Sprintf("entity.%s", "ID"))
+	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 	related := entities[rel.Entity]
 
 	thisType, _ := util.GetPrimaryKeyDataType(entity.PrimaryKey)
