@@ -201,11 +201,13 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 				}
 				code.LoadRelated = append(code.LoadRelated, c)
 			case util.RelationshipTypeManyOne:
-				c, err := generateLoadRelatedManyOne(entities, entity, rel)
-				if err != nil {
-					return code, err
+				if rel.Full {
+					c, err := generateLoadRelatedManyOne(entities, entity, rel)
+					if err != nil {
+						return code, err
+					}
+					code.LoadRelated = append(code.LoadRelated, c)
 				}
-				code.LoadRelated = append(code.LoadRelated, c)
 			}
 		}
 	}
