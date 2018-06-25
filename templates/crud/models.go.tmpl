@@ -3,6 +3,7 @@ package models
 var (
 	db *sql.DB
 	{{range .Entities}}
+	// {{.Name}}Repo provides interaction with database content repository for {{.Name}}
 	{{.Name}}Repo {{.Name}}Repository
 	{{- end}}
 )
