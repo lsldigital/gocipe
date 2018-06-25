@@ -9,8 +9,11 @@ var (
 )
 
 const (
+	// OperationMerge indicates a Merge save operation is under way
 	OperationMerge  byte = 'M'
+	// OperationInsert indicates a Insert save operation is under way
 	OperationInsert byte = 'I'
+	// OperationUpdate indicates a Update save operation is under way
 	OperationUpdate byte = 'U'
 )
 
@@ -79,7 +82,7 @@ type {{.Name}}Repository interface {
 	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
 	Load{{RelFuncName .}}(ctx context.Context, entities ...{{$ThisEntity}}) error
 {{end -}}
-{{if and (.Full (eq .Type "many-one")) -}}
+{{if and .Full (eq .Type "many-one") -}}
 	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
 	Load{{RelFuncName .}}(ctx context.Context, entities ...{{$ThisEntity}}) error
 {{end -}}
