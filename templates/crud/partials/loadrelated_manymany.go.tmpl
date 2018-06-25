@@ -44,8 +44,7 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 		var (
 			thisID {{.ThisType}}
 			{{if .Full -}}
-			entity {{.ThisEntity}}
-			thatEntity {{.ThatEntity}}
+			entity {{.ThatEntity}}
 			{{- else -}}
 			thatID {{.ThatType}}
 			{{- end -}}
@@ -68,7 +67,7 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 
 		for _, ent := range indices[thisID] {
 			{{if .Full -}}
-			ent.{{.PropertyName}} = append(ent.{{.PropertyName}}, &thatEntity)
+			ent.{{.PropertyName}} = append(ent.{{.PropertyName}}, &entity)
 			{{- else -}}
 			ent.{{.PropertyName}} = append(ent.{{.PropertyName}}, thatID)
 			{{- end}}
