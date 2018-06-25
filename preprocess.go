@@ -19,9 +19,7 @@ func preprocessEntities(raw []util.Entity, crudOpts util.CrudOpts) (map[string]u
 			return nil, fmt.Errorf("entity #%d name cannot be blank", i)
 		}
 
-		if entity.Table == "" {
-			entity.Table = inflection.Plural(strings.ToLower(entity.Name))
-		}
+		entity.Table = inflection.Plural(strings.ToLower(entity.Name))
 
 		for i, field := range entity.Fields {
 			if field.Schema.Field == "" {
