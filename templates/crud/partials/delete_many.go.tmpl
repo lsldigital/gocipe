@@ -6,6 +6,7 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, filters 
 		stmt     *sql.Stmt
 		segments []string
 		values   []interface{}
+		query    string
 	)
 
 	if tx == nil {
@@ -19,7 +20,6 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, filters 
 		}
 	}
 
-	query := "DELETE FROM {{.Table}}"
 	{{if .HasPreHook}}
     if filters, err = repo.preDeleteMany(ctx, tx, filters); err != nil {
 		return err
@@ -36,10 +36,23 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, filters 
 	}
 
 	if len(segments) != 0 {
-		query += " WHERE " + strings.Join(segments, " AND ")
+		query = " WHERE " + strings.Join(segments, " AND ")
 	}
 
-	stmt, err = repo.db.Prepare(query)
+	{{range .Relationships}}{{if eq .Type "many-many"}}
+	stmt, err = repo.db.Prepare("DELETE FROM {{.JoinTable}} WHERE {{.ThatID}} id IN (SELECT id FROM {{$.Table}}"+query+")")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(values...)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	{{end}}{{end}}
+
+	stmt, err = repo.db.Prepare("DELETE FROM {{.Table}}"+query)
 	if err != nil {
 		return err
 	}

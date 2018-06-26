@@ -227,35 +227,56 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 
 // generateDeleteSingle produces code for database deletion of single entity (DELETE WHERE id)
 func generateDeleteSingle(entities map[string]util.Entity, entity util.Entity) (string, error) {
+	var post []string
+
+	for _, rel := range entity.Relationships {
+		if rel.Type == util.RelationshipTypeManyMany {
+			if rel.Full {
+				post = append(post, fmt.Sprintf("repo.Save%s(ctx, entity.ID, []*%s{}, tx, false)", util.RelFuncName(rel), rel.Entity))
+			} else {
+				pkType, err := util.GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
+				if err != nil {
+					return "", err
+				}
+
+				post = append(post, fmt.Sprintf("repo.Save%s(ctx, entity.ID, []%s{}, tx, false)", util.RelFuncName(rel), pkType))
+			}
+		}
+	}
+
 	return util.ExecuteTemplate("crud/partials/delete_single.go.tmpl", struct {
 		EntityName  string
 		PrimaryKey  string
 		Table       string
 		HasPreHook  bool
 		HasPostHook bool
+		Post        []string
 	}{
 		EntityName:  entity.Name,
 		PrimaryKey:  entity.PrimaryKey,
 		Table:       entity.Table,
 		HasPreHook:  entity.Crud.Hooks.PreDeleteSingle,
 		HasPostHook: entity.Crud.Hooks.PostDeleteSingle,
+		Post:        post,
 	})
 }
 
 // generateDeleteMany produces code for database deletion of entity via filters
 func generateDeleteMany(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	return util.ExecuteTemplate("crud/partials/delete_many.go.tmpl", struct {
-		EntityName  string
-		PrimaryKey  string
-		Table       string
-		HasPreHook  bool
-		HasPostHook bool
+		EntityName    string
+		PrimaryKey    string
+		Table         string
+		HasPreHook    bool
+		HasPostHook   bool
+		Relationships []util.Relationship
 	}{
-		EntityName:  entity.Name,
-		PrimaryKey:  entity.PrimaryKey,
-		Table:       entity.Table,
-		HasPreHook:  entity.Crud.Hooks.PreDeleteMany,
-		HasPostHook: entity.Crud.Hooks.PostDeleteMany,
+		EntityName:    entity.Name,
+		PrimaryKey:    entity.PrimaryKey,
+		Table:         entity.Table,
+		HasPreHook:    entity.Crud.Hooks.PreDeleteMany,
+		HasPostHook:   entity.Crud.Hooks.PostDeleteMany,
+		Relationships: entity.Relationships,
 	})
 }
 

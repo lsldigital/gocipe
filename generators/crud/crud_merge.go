@@ -41,6 +41,12 @@ func generateMerge(entities map[string]util.Entity, entity util.Entity) (string,
 		count++
 	}
 
+	for _, rel := range entity.Relationships {
+		if rel.Type == util.RelationshipTypeManyMany {
+			after = append(after, fmt.Sprintf("repo.Save%s(ctx, entity.ID, entity.%s, tx, false)", util.RelFuncName(rel), rel.Name))
+		}
+	}
+
 	return util.ExecuteTemplate("crud/partials/merge.go.tmpl", struct {
 		EntityName      string
 		PrimaryKey      string

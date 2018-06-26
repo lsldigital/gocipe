@@ -10,8 +10,8 @@ import (
 // generateUpdate produces code for database update of entity (UPDATE)
 func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var (
-		before, after, sqlfields, structfields []string
-		count                                  = 2
+		before, after, post, sqlfields, structfields []string
+		count                                        = 2
 	)
 	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 
@@ -32,9 +32,16 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 		count++
 	}
 
+	for _, rel := range entity.Relationships {
+		if rel.Type == util.RelationshipTypeManyMany {
+			post = append(post, fmt.Sprintf("repo.Save%s(ctx, entity.ID, entity.%s, tx, false)", util.RelFuncName(rel), rel.Name))
+		}
+	}
+
 	return util.ExecuteTemplate("crud/partials/update.go.tmpl", struct {
 		Before        []string
 		After         []string
+		Post          []string
 		EntityName    string
 		HasPostHook   bool
 		HasPreHook    bool
@@ -46,6 +53,7 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 		EntityName:    entity.Name,
 		Table:         entity.Table,
 		Before:        before,
+		Post:          post,
 		After:         after,
 		SQLFields:     strings.Join(sqlfields, ", "),
 		StructFields:  strings.Join(structfields, ", "),

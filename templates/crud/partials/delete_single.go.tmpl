@@ -48,6 +48,10 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity {{.En
 		tx.Rollback()
 		return entity, err
 	}
+	
+	{{range .Post}}{{.}}
+	{{end}}
+
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
