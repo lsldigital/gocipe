@@ -287,13 +287,13 @@ func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, re
 		PropertyType string
 		EntityName   string
 		Table        string
-		ThisID       string
-		ThatID       string
+		Funcname     string
 	}{
 		PropertyName: rel.Name,
 		PrimaryKey:   entity.PrimaryKey,
 		PropertyType: entities[rel.Name].PrimaryKey,
 		EntityName:   entity.Name,
 		Table:        table,
+		Funcname:     util.RelFuncName(rel),
 	})
 }
