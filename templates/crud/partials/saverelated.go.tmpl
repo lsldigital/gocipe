@@ -1,5 +1,5 @@
-// Save{{.Funcname}} is a helper function to save related {{.PropertyName}} entities
-func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, idthis  {{pkeyPropertyType .PrimaryKey}}, relatedids []{{pkeyPropertyType .PropertyType}}, tx *sql.Tx, autocommit bool) error {
+// Save{{.Funcname}} is a helper function to save related {{.PropertyName}} IDs in a pivot table (many-many relationship)
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, idthis {{pkeyPropertyType .PrimaryKey}}, relatedids []{{pkeyPropertyType .PropertyType}}, tx *sql.Tx, autocommit bool) error {
 	var (
 		stmt *sql.Stmt
 		err  error
@@ -16,7 +16,7 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, i
 		}
 	}
 	
-	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThisID}} = $1")
+	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThisColumn}} = $1")
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, i
 		return err
 	}
 
-	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThisID}}, {{.ThatID}}) VALUES ($1, $2)")
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThisColumn}}, {{.ThatColumn}}) VALUES ($1, $2)")
 	if err != nil {
 		return err
 	}

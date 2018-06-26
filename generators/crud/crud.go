@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/fluxynet/gocipe/util"
-	"github.com/jinzhu/inflection"
 )
 
 // // RepoCodes that must be analysed for interface generation
@@ -273,14 +272,6 @@ func generateSave(entities map[string]util.Entity, entity util.Entity) (string, 
 
 // generateSaveRelated produces code for database saving of related entities
 func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
-	var table string
-
-	if strings.Compare(entity.Table, entities[rel.Name].Table) > 0 {
-		table = inflection.Plural(entities[rel.Name].Table) + "_" + inflection.Plural(entity.Table)
-	} else {
-		table = inflection.Plural(inflection.Plural(entity.Table) + "_" + entities[rel.Name].Table)
-	}
-
 	return util.ExecuteTemplate("crud/partials/saverelated.go.tmpl", struct {
 		PropertyName string
 		PrimaryKey   string
@@ -288,12 +279,16 @@ func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, re
 		EntityName   string
 		Table        string
 		Funcname     string
+		ThisColumn   string
+		ThatColumn   string
 	}{
 		PropertyName: rel.Name,
 		PrimaryKey:   entity.PrimaryKey,
 		PropertyType: entities[rel.Name].PrimaryKey,
 		EntityName:   entity.Name,
-		Table:        table,
+		Table:        rel.JoinTable,
 		Funcname:     util.RelFuncName(rel),
+		ThisColumn:   rel.ThisID,
+		ThatColumn:   rel.ThatID,
 	})
 }
