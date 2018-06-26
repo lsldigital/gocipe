@@ -65,6 +65,9 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity {{.En
 
 	if autocommit {
 		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
 	}
 
 	return entity, err

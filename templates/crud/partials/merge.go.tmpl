@@ -68,6 +68,9 @@ func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity {{.Ent
 
 	if autocommit {
 		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
 	}
 
 	return entity, err

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/fluxynet/gocipe/util"
+	"github.com/jinzhu/inflection"
 )
 
 // // RepoCodes that must be analysed for interface generation
@@ -194,6 +195,12 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 					return code, err
 				}
 				code.LoadRelated = append(code.LoadRelated, c)
+
+				c, err = generateSaveRelated(entities, entity, rel)
+				if err != nil {
+					return code, err
+				}
+				code.SaveRelated = append(code.SaveRelated, c)
 			case util.RelationshipTypeOneMany:
 				c, err := generateLoadRelatedOneMany(entities, entity, rel)
 				if err != nil {
@@ -265,7 +272,15 @@ func generateSave(entities map[string]util.Entity, entity util.Entity) (string, 
 }
 
 // generateSaveRelated produces code for database saving of related entities
-func generateSaveRelated(entities map[string]util.Entity, entity util.Entity) (string, error) {
+func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
+	var table string
+
+	if strings.Compare(entity.Table, entities[rel.Name].Table) > 0 {
+		table = inflection.Plural(entities[rel.Name].Table) + "_" + inflection.Plural(entity.Table)
+	} else {
+		table = inflection.Plural(inflection.Plural(entity.Table) + "_" + entities[rel.Name].Table)
+	}
+
 	return util.ExecuteTemplate("crud/partials/saverelated.go.tmpl", struct {
 		PropertyName string
 		PrimaryKey   string
@@ -275,12 +290,10 @@ func generateSaveRelated(entities map[string]util.Entity, entity util.Entity) (s
 		ThisID       string
 		ThatID       string
 	}{
-		PropertyName: "",
-		PrimaryKey:   "",
-		PropertyType: "",
-		EntityName:   "",
-		Table:        "",
-		ThisID:       "",
-		ThatID:       "",
+		PropertyName: rel.Name,
+		PrimaryKey:   entity.PrimaryKey,
+		PropertyType: entities[rel.Name].PrimaryKey,
+		EntityName:   entity.Name,
+		Table:        table,
 	})
 }

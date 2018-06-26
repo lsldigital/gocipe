@@ -73,6 +73,9 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, filters 
 
 	if autocommit {
 		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
 	}
 
 	return err

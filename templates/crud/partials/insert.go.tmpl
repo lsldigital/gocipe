@@ -95,7 +95,10 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity {{.En
 
 	if autocommit {
 		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
 	}
 
-	return entity, nil
+	return entity, err
 }

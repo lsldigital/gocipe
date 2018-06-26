@@ -1,26 +1,27 @@
 // SaveRelated{{.PropertyName}} is a helper function to save related {{.PropertyName}} entities
-func SaveRelated{{.PropertyName}}(ctx context.Context, idthis  {{pkeyPropertyType .PrimaryKey}}, relatedids {{.PropertyType}}) error {
+func (repo {{.EntityName}}Repositorium) SaveRelated{{.PropertyName}}(ctx context.Context, idthis  {{pkeyPropertyType .PrimaryKey}}, relatedids []{{pkeyPropertyType .PropertyType}}, tx *sql.Tx, autocommit bool) error {
 	var (
-		placeholder string
-		values  []interface{}
-		indices map[{{pkeyPropertyType .PrimaryKey}}]{{trimPrefix .PropertyType "[]"}}
-		idthis  {{pkeyPropertyType .PrimaryKey}}
-		idthat  {{trimPrefix .PropertyType "[]"}}
-		items   []{{.EntityName}}
-		stmt    *sql.Stmt
+		stmt *sql.Stmt
+		err  error
 	)
 
-	if err = util.CheckContext(ctx); err != nil {
-		return err
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			return err
+		}
+		
+		tx, err = repo.db.Begin()
+		if err != nil {
+			return err
+		}
 	}
 	
 	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThisID}} = $1")
-
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(entity.ID)
+	_, err = stmt.Exec(idthis)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -36,16 +37,25 @@ func SaveRelated{{.PropertyName}}(ctx context.Context, idthis  {{pkeyPropertyTyp
 		return err
 	}
 
-	for _, relatedID := range *entity.{{.PropertyName}} {
+	for _, relatedID := range relatedids {
 		if err = util.CheckContext(ctx); err != nil {
 			tx.Rollback()
 			return err
 		}
 
-		_, err = stmt.Exec(entity.ID, relatedID)
+		_, err = stmt.Exec(idthis, relatedID)
 		if err != nil {
 			tx.Rollback()
 			return err
 		}
 	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
+	}
+
+	return err
 }

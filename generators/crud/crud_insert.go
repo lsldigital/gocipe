@@ -1,6 +1,7 @@
 package crud
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -9,7 +10,7 @@ import (
 
 // generateInsert produces code for database insertion of entity (INSERT INTO)
 func generateInsert(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var before, after, sqlPlaceholders, sqlfields, structFields []string
+	var before, after, sqlPlaceholders, sqlfields, structFields, pivotTables []string
 	count := 1
 
 	if entity.PrimaryKey != util.PrimaryKeySerial {
@@ -41,6 +42,16 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 		count++
 	}
 
+	for _, rel := range entity.Relationships {
+		switch rel.Type {
+		case util.RelationshipTypeManyMany:
+			tableName, err := getTableName(entities, rel.Name)
+			if err == nil {
+				pivotTables = append(pivotTables, tableName)
+			}
+		}
+	}
+
 	return util.ExecuteTemplate("crud/partials/insert.go.tmpl", struct {
 		Before          []string
 		After           []string
@@ -52,6 +63,7 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 		Table           string
 		HasPreHook      bool
 		HasPostHook     bool
+		PivotTables     []string
 	}{
 		Before:          before,
 		After:           after,
@@ -63,5 +75,16 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 		Table:           entity.Table,
 		HasPostHook:     entity.Crud.Hooks.PreSave,
 		HasPreHook:      entity.Crud.Hooks.PostSave,
+		PivotTables:     pivotTables,
 	})
+}
+
+func getTableName(entities map[string]util.Entity, name string) (string, error) {
+	for _, entity := range entities {
+		if entity.Name == name {
+			return entity.Table, nil
+		}
+	}
+
+	return "", errors.New("Entity '" + name + "' not found")
 }
