@@ -272,6 +272,20 @@ func generateSave(entities map[string]util.Entity, entity util.Entity) (string, 
 
 // generateSaveRelated produces code for database saving of related entities
 func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
+	var (
+		thatType string
+		err      error
+	)
+
+	if rel.Full {
+		thatType = "*" + entities[rel.Name].Name
+	} else {
+		thatType, err = util.GetPrimaryKeyDataType(entities[rel.Name].PrimaryKey)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	return util.ExecuteTemplate("crud/partials/saverelated.go.tmpl", struct {
 		PropertyName string
 		PrimaryKey   string
@@ -281,6 +295,8 @@ func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, re
 		Funcname     string
 		ThisColumn   string
 		ThatColumn   string
+		ThatType     string
+		Full         bool
 	}{
 		PropertyName: rel.Name,
 		PrimaryKey:   entity.PrimaryKey,
@@ -290,5 +306,7 @@ func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, re
 		Funcname:     util.RelFuncName(rel),
 		ThisColumn:   rel.ThisID,
 		ThatColumn:   rel.ThatID,
+		ThatType:     thatType,
+		Full:         rel.Full,
 	})
 }

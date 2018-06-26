@@ -77,6 +77,10 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity {{.En
 		return entity, err
 	}
 	{{end}}
+
+	{{range .Post}}{{.}}
+	{{end}}
+
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
