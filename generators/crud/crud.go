@@ -299,9 +299,9 @@ func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, re
 	)
 
 	if rel.Full {
-		thatType = "*" + entities[rel.Name].Name
+		thatType = "*" + entities[rel.Entity].Name
 	} else {
-		thatType, err = util.GetPrimaryKeyDataType(entities[rel.Name].PrimaryKey)
+		thatType, err = util.GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
 		if err != nil {
 			return "", err
 		}
@@ -321,7 +321,7 @@ func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, re
 	}{
 		PropertyName: rel.Name,
 		PrimaryKey:   entity.PrimaryKey,
-		PropertyType: entities[rel.Name].PrimaryKey,
+		PropertyType: entities[rel.Entity].PrimaryKey,
 		EntityName:   entity.Name,
 		Table:        rel.JoinTable,
 		Funcname:     util.RelFuncName(rel),
