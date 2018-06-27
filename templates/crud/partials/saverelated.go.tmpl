@@ -16,7 +16,7 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, i
 		}
 	}
 	
-	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThisColumn}} = $1")
+	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1")
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, i
 		return err
 	}
 
-	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThisColumn}}, {{.ThatColumn}}) VALUES ($1, $2)")
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)")
 	if err != nil {
 		return err
 	}
