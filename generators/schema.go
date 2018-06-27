@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jinzhu/inflection"
-
 	"github.com/fluxynet/gocipe/util"
 )
 
@@ -62,9 +60,9 @@ func GenerateSchema(work util.GenerationWork, opts util.SchemaOpts, entities map
 					t, _ := util.GetPrimaryKeyFieldType(related.PrimaryKey)
 					data.RelatedFields = append(data.RelatedFields, RelatedField{Name: n, Type: t})
 				} else if rel.Type == util.RelationshipTypeManyMany && strings.Compare(entity.Table, related.Table) > 0 {
-					table := inflection.Plural(related.Table) + "_" + inflection.Plural(entity.Table)
-					thisID := strings.ToLower(entity.Name) + "_id"
-					thatID := strings.ToLower(related.Name) + "_id"
+					table := rel.JoinTable
+					thisID := rel.ThisID
+					thatID := rel.ThatID
 					thisType, _ := util.GetPrimaryKeyFieldType(entity.PrimaryKey)
 					thatType, _ := util.GetPrimaryKeyFieldType(related.PrimaryKey)
 					data.RelatedTables = append(data.RelatedTables,
