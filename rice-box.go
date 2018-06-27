@@ -100,7 +100,7 @@ func init() {
 	}
 	filen := &embedded.EmbeddedFile{
 		Filename:    "crud/partials/saverelated.go.tmpl",
-		FileModTime: time.Unix(1530108223, 0),
+		FileModTime: time.Unix(1530135493, 0),
 		Content:     string("// Save{{.Funcname}} is a helper function to save related {{.PropertyName}} IDs in a pivot table (many-many relationship)\nfunc (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, idthis {{pkeyPropertyType .PrimaryKey}}, relatives []{{.ThatType}}, tx *sql.Tx, autocommit bool) error {\n\tvar (\n\t\tstmt *sql.Stmt\n\t\terr  error\n\t)\n\n\tif tx == nil {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn err\n\t\t}\n\t\t\n\t\ttx, err = repo.db.Begin()\n\t\tif err != nil {\n\t\t\treturn err\n\t\t}\n\t}\n\t\n\tstmt, err = tx.Prepare(\"DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1\")\n\tif err != nil {\n\t\treturn err\n\t}\n\n\t_, err = stmt.Exec(idthis)\n\tif err != nil {\n\t\ttx.Rollback()\n\t\treturn err\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn err\n\t}\n\n\tstmt, err = tx.Prepare(\"INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)\")\n\tif err != nil {\n\t\treturn err\n\t}\n\n\tfor _, rel := range relatives {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn err\n\t\t}\n\t\t\n\t\t_, err = stmt.Exec(idthis, rel.ID)\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn err\n\t\t}\n\t}\n\n\tif autocommit {\n\t\terr = tx.Commit()\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t}\n\t}\n\n\treturn err\n}"),
 	}
 	fileo := &embedded.EmbeddedFile{
@@ -284,7 +284,7 @@ func init() {
 	}
 	dirc := &embedded.EmbeddedDir{
 		Filename:   "crud/partials",
-		DirModTime: time.Unix(1530108788, 0),
+		DirModTime: time.Unix(1530135493, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			filed, // "crud/partials/delete_many.go.tmpl"
 			filee, // "crud/partials/delete_single.go.tmpl"
