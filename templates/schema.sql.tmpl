@@ -20,4 +20,10 @@ CREATE TABLE {{.Table}} (
 	"{{.ThisID}}" {{.ThisType}} NOT NULL,
 	"{{.ThatID}}" {{.ThatType}} NOT NULL
 );
+
+DROP INDEX IF EXISTS {{.Table}}_{{.ThisID}};
+DROP INDEX IF EXISTS {{.Table}}_{{.ThatID}};
+
+CREATE INDEX {{.Table}}_{{.ThisID}} ON {{.Table}} ({{.ThisID}});
+CREATE INDEX {{.Table}}_{{.ThatID}} ON {{.Table}} ({{.ThatID}});
 {{end}}
