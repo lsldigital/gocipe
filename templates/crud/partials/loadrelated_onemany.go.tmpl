@@ -21,19 +21,12 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 	}
 	placeholder = strings.TrimRight(placeholder, ",")
 
-	{{if .Full}}
 	rows, err := repo.db.Query(`
 		SELECT {{.ThisID}}, {{.SQLFields}} FROM {{.ThatTable}} WHERE {{.ThisID}} IN (`+placeholder+`)
 	`, values...)
 	if err != nil {
 		return err
 	}
-	{{else}}
-	rows, err := repo.db.Query("SELECT {{.ThisID}}, {{.ThatID}} FROM {{.ThatTable}} WHERE {{.ThisID}} IN ("+placeholder+")", values...)
-	if err != nil {
-		return err
-	}
-	{{end}}
 
 	if err = util.CheckContext(ctx); err != nil {
 		return err
@@ -42,13 +35,9 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 	for rows.Next() {
 		var (
 			thisID {{.ThisType}}
-			{{if .Full -}}
 			entity {{.ThatEntity}}
-			{{- else -}}
-			thatID {{.ThatType}}
-			{{- end -}}
 		)
-		{{if .Full -}}
+		
 		{{range .Before}}{{.}}
 		{{end}}
 		err = rows.Scan(&thisID, {{.StructFields}})
@@ -57,19 +46,9 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 		}
 		{{range .After}}{{.}}
 		{{end}}
-		{{- else -}}
-		err = rows.Scan(&thisID, &thatID)
-		if err != nil {
-			return err
-		}
-		{{- end}}
-
+		
 		for _, ent := range indices[thisID] {
-			{{if .Full -}}
 			ent.{{.PropertyName}} = append(ent.{{.PropertyName}}, &entity)
-			{{- else -}}
-			ent.{{.PropertyName}} = append(ent.{{.PropertyName}}, thatID)
-			{{- end}}
 		}
 		
 		if err = util.CheckContext(ctx); err != nil {

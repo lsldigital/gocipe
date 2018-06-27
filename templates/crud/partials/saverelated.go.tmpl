@@ -42,12 +42,8 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, i
 			tx.Rollback()
 			return err
 		}
-
-		{{if .Full -}}
+		
 		_, err = stmt.Exec(idthis, rel.ID)
-		{{else}}
-		_, err = stmt.Exec(idthis, rel)
-		{{end}}
 		if err != nil {
 			tx.Rollback()
 			return err

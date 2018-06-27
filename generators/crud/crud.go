@@ -207,13 +207,11 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 				}
 				code.LoadRelated = append(code.LoadRelated, c)
 			case util.RelationshipTypeManyOne:
-				if rel.Full {
-					c, err := generateLoadRelatedManyOne(entities, entity, rel)
-					if err != nil {
-						return code, err
-					}
-					code.LoadRelated = append(code.LoadRelated, c)
+				c, err := generateLoadRelatedManyOne(entities, entity, rel)
+				if err != nil {
+					return code, err
 				}
+				code.LoadRelated = append(code.LoadRelated, c)
 			}
 		}
 	}
@@ -231,16 +229,12 @@ func generateDeleteSingle(entities map[string]util.Entity, entity util.Entity) (
 
 	for _, rel := range entity.Relationships {
 		if rel.Type == util.RelationshipTypeManyMany {
-			if rel.Full {
-				post = append(post, fmt.Sprintf("repo.Save%s(ctx, entity.ID, []*%s{}, tx, false)", util.RelFuncName(rel), rel.Entity))
-			} else {
-				pkType, err := util.GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
-				if err != nil {
-					return "", err
-				}
-
-				post = append(post, fmt.Sprintf("repo.Save%s(ctx, entity.ID, []%s{}, tx, false)", util.RelFuncName(rel), pkType))
+			pkType, err := util.GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
+			if err != nil {
+				return "", err
 			}
+
+			post = append(post, fmt.Sprintf("repo.Save%s(ctx, entity.ID, []%s{}, tx, false)", util.RelFuncName(rel), pkType))
 		}
 	}
 
@@ -298,13 +292,9 @@ func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, re
 		err      error
 	)
 
-	if rel.Full {
-		thatType = "*" + entities[rel.Entity].Name
-	} else {
-		thatType, err = util.GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
-		if err != nil {
-			return "", err
-		}
+	thatType, err = util.GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
+	if err != nil {
+		return "", err
 	}
 
 	return util.ExecuteTemplate("crud/partials/saverelated.go.tmpl", struct {
@@ -317,7 +307,6 @@ func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, re
 		ThisColumn   string
 		ThatColumn   string
 		ThatType     string
-		Full         bool
 	}{
 		PropertyName: rel.Name,
 		PrimaryKey:   entity.PrimaryKey,
@@ -328,6 +317,5 @@ func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, re
 		ThisColumn:   rel.ThisID,
 		ThatColumn:   rel.ThatID,
 		ThatType:     thatType,
-		Full:         rel.Full,
 	})
 }
