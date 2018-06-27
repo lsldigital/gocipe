@@ -10,10 +10,10 @@ import (
 // generateUpdate produces code for database update of entity (UPDATE)
 func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var (
-		before, after, post, sqlfields, structfields []string
+		before, after, post, sqlfields, structFields []string
 		count                                        = 2
 	)
-	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
+	structFields = append(structFields, fmt.Sprintf("&entity.%s", "ID"))
 
 	for _, field := range entity.Fields {
 		if field.Property.Name == "UpdatedAt" {
@@ -25,9 +25,9 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 		if field.Property.Type == "time" {
 			prop := strings.ToLower(field.Property.Name)
 			before = append(before, fmt.Sprintf("%s, _ := ptypes.Timestamp(entity.%s)", prop, field.Property.Name))
-			structfields = append(structfields, fmt.Sprintf("%s", prop))
+			structFields = append(structFields, fmt.Sprintf("%s", prop))
 		} else {
-			structfields = append(structfields, fmt.Sprintf("entity.%s", field.Property.Name))
+			structFields = append(structFields, fmt.Sprintf("entity.%s", field.Property.Name))
 		}
 		count++
 	}
@@ -35,6 +35,10 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 	for _, rel := range entity.Relationships {
 		if rel.Type == util.RelationshipTypeManyMany {
 			post = append(post, fmt.Sprintf("repo.Save%s(ctx, entity.ID, entity.%s, tx, false)", util.RelFuncName(rel), rel.Name))
+		} else if rel.Type == util.RelationshipTypeManyOne {
+			sqlfields = append(sqlfields, fmt.Sprintf("%s = $%d", rel.ThisID, count))
+			structFields = append(structFields, fmt.Sprintf("entity.%sID", rel.Name))
+			count++
 		}
 	}
 
@@ -56,7 +60,7 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 		Post:          post,
 		After:         after,
 		SQLFields:     strings.Join(sqlfields, ", "),
-		StructFields:  strings.Join(structfields, ", "),
+		StructFields:  strings.Join(structFields, ", "),
 		HasPreHook:    entity.Crud.Hooks.PreSave,
 		HasPostHook:   entity.Crud.Hooks.PostSave,
 		Relationships: nil,
