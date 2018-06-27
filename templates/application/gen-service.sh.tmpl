@@ -46,7 +46,7 @@ if [ ! -d {{.GeneratePath}}/${1} ]; then
 fi
 
 cd ${CURRENT_DIR}
-protoc -I "${CURRENT_DIR}/proto" "${CURRENT_DIR}/proto/service_${1}.proto" --go_out=plugins=grpc:{{.GeneratePath}}/${1}
+protoc -I "${CURRENT_DIR}/proto" "${CURRENT_DIR}/proto/service_${1}.proto" --go_out=plugins=grpc:{{.GeneratePath}}
 
 if [ -f "${CURRENT_DIR}/proto/models.proto" ]; then
     protoc -I "${CURRENT_DIR}/proto" \
