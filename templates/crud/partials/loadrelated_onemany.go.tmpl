@@ -1,6 +1,6 @@
 
 // Load{{.Funcname}} is a helper function to load related {{.PropertyName}} entities
-func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, entities ...{{.ThisEntity}}) error {
+func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, entities ...*{{.ThisEntity}}) error {
 	var (
 		err error
 		placeholder string
@@ -15,7 +15,7 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 	c := 1
 	for _, entity := range entities {
 		placeholder += "$" + strconv.Itoa(c) + ","
-		indices[entity.ID] = append(indices[entity.ID], &entity)
+		indices[entity.ID] = append(indices[entity.ID], entity)
 		values = append(values, entity.ID)
 		c++
 	}
