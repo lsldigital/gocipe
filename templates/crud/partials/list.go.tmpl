@@ -74,3 +74,24 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, filters []List
 	{{end}}
 	return list, nil
 }
+
+// ListWithRel returns a slice containing {{.EntityName}} records; will also load related entities.
+func (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, filters []ListFilter, offset, limit int) ([]*{{.EntityName}}, error) {
+	var (
+		err error
+		entities []*{{.EntityName}}
+	)
+
+	entities, err = repo.List(ctx, filters, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	{{range .Related}}{{.}}
+	if err != nil {
+		return nil, err
+	}
+	{{end}}
+
+	return entities, nil
+}
