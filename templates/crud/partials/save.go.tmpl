@@ -13,3 +13,18 @@ func (repo {{.EntityName}}Repositorium) Save(ctx context.Context, entity {{.Enti
 	return {{.EntityName}}Repo.Merge(ctx, entity, tx, autocommit)
 	{{end -}}
 }
+
+// SaveWithRel either inserts or updates a {{.EntityName}} record based on whether or not id is nil; will also save related entities
+func (repo {{.EntityName}}Repositorium) SaveWithRel(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+	{{if pkeyIsAuto .PrimaryKey -}}
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return {{.EntityName}}Repo.InsertWithRel(ctx, entity, tx, autocommit)
+	}
+	return {{.EntityName}}Repo.UpdateWithRel(ctx, entity, tx, autocommit)
+	{{- else -}}
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return entity, errors.New("primary key cannot be nil")
+	}
+	return {{.EntityName}}Repo.MergeWithRel(ctx, entity, tx, autocommit)
+	{{end -}}
+}

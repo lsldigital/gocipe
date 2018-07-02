@@ -48,7 +48,82 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity {{.En
 		return entity, err
 	}
 
-	{{range .Post}}{{.}}
+	{{if .HasPostHook}}
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+
+	if err = repo.postSave(ctx, "UPDATE", entity, tx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
+	}
+
+	return entity, err
+}
+
+// UpdateWithRel Will execute an SQLUpdate Statement for {{.EntityName}} in the database; including related entities. Prefer using Save instead of Update directly.
+func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+	var (
+		err error
+		stmt *sql.Stmt
+	)
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			return entity, err
+		}
+
+		tx, err = repo.db.Begin()
+		if err != nil {
+			return entity, err
+		}
+	}
+	
+	{{range .Before}}{{.}}
+	{{end}}
+
+	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1")
+	if err != nil {
+		return entity, err
+	}
+
+	{{range .After}}{{.}}
+	{{end}}
+
+	{{if .HasPreHook}}
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
+	}
+
+    if err = repo.preSave(ctx, tx, models.OperationUpdate, &entity); err != nil {
+		tx.Rollback()
+        return entity, err
+	}
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	_, err = stmt.Exec({{.StructFields}})
+	if err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+
+	{{range .Related}}{{.}}
 	{{end}}
 
 	{{if .HasPostHook}}

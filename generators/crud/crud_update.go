@@ -10,8 +10,8 @@ import (
 // generateUpdate produces code for database update of entity (UPDATE)
 func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var (
-		before, after, post, sqlfields, structFields []string
-		count                                        = 2
+		before, after, related, sqlfields, structFields []string
+		count                                           = 2
 	)
 	structFields = append(structFields, fmt.Sprintf("&entity.%s", "ID"))
 
@@ -34,7 +34,7 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 
 	for _, rel := range entity.Relationships {
 		if rel.Type == util.RelationshipTypeManyMany {
-			post = append(post, fmt.Sprintf("repo.Save%s(ctx, entity.ID, entity.%s, tx, false)", util.RelFuncName(rel), rel.Name))
+			related = append(related, fmt.Sprintf("repo.Save%s(ctx, entity.ID, entity.%s, tx, false)", util.RelFuncName(rel), rel.Name))
 		} else if rel.Type == util.RelationshipTypeManyOne {
 			sqlfields = append(sqlfields, fmt.Sprintf("%s = $%d", rel.ThisID, count))
 			structFields = append(structFields, fmt.Sprintf("entity.%sID", rel.Name))
@@ -45,7 +45,7 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 	return util.ExecuteTemplate("crud/partials/update.go.tmpl", struct {
 		Before        []string
 		After         []string
-		Post          []string
+		Related       []string
 		EntityName    string
 		HasPostHook   bool
 		HasPreHook    bool
@@ -57,7 +57,7 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 		EntityName:    entity.Name,
 		Table:         entity.Table,
 		Before:        before,
-		Post:          post,
+		Related:       related,
 		After:         after,
 		SQLFields:     strings.Join(sqlfields, ", "),
 		StructFields:  strings.Join(structFields, ", "),

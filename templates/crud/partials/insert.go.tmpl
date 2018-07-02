@@ -1,5 +1,5 @@
 
-// Insert performs an SQL insert for {{.EntityName}} record and update instance with inserted id.
+// Insert performs an SQL insert for {{.EntityName}} record and update instance with inserted id. Prefer using Save instead of Insert directly.
 func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
 	var (
 		{{- if pkeyIsAuto .PrimaryKey -}}
@@ -78,7 +78,112 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity {{.En
 	}
 	{{end}}
 
-	{{range .Post}}{{.}}
+	{{if .HasPostHook}}
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	if err := repo.postSave(ctx, "INSERT", entity, tx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	{{end}}
+
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
+	}
+
+	return entity, err
+}
+
+// InsertWithRel performs an SQL insert for {{.EntityName}} record and update instance with inserted id; including related entities. Prefer using Save instead of Insert directly.
+func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+	var (
+		{{- if pkeyIsAuto .PrimaryKey -}}
+		id  {{pkeyPropertyType .PrimaryKey}}
+		{{- end}}
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			return entity, err
+		}
+		
+		tx, err = repo.db.Begin()
+		if err != nil {
+			return entity, err
+		}
+	}
+	{{range .Before}}{{.}}
+	{{end}}
+
+	{{if eq .PrimaryKey "serial" -}}
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
+	if err != nil {
+		return entity, err
+	}
+	{{else}}
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})")
+	if err != nil {
+		return entity, err
+	}
+	{{- end}}
+
+	{{range .After}}{{.}}
+	{{end}}
+
+	{{if .HasPreHook}}
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
+	}
+	
+	if err = repo.preSave(ctx, tx, models.OperationInsert, &entity); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	{{if eq .PrimaryKey "serial" -}}
+	err = stmt.QueryRow({{.StructFields}}).Scan(&id)
+	if err == nil {
+		entity.ID = id
+	} else {
+		tx.Rollback()
+		return entity, err
+	}
+	{{else}}
+	{{if eq .PrimaryKey "uuid" -}}
+	idUUID := uuid.NewV4()
+	id = idUUID.String()
+	entity.ID = id
+	{{- end}}
+
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+
+	_, err = stmt.Exec({{.StructFields}})
+	if err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	{{end}}
+
+	{{range .Related}}{{.}}
 	{{end}}
 
 	{{if .HasPostHook}}

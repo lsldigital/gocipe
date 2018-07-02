@@ -49,7 +49,81 @@ func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity {{.Ent
 		return entity, err
 	}
 
-	{{range .After}}{{.}}
+	{{if .HasPostHook}}
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	if err = repo.postSave(ctx, "MERGE", entity, tx); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
+	}
+
+	return entity, err
+}
+
+// MergeWithRel performs an SQL merge for {{.EntityName}} record.
+func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+	var (
+		err error
+		stmt *sql.Stmt
+	)
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			return entity, err
+		}
+		
+		tx, err = repo.db.Begin()
+		if err != nil {
+			return entity, err
+		}
+	}
+
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return {{.EntityName}}Repo.Insert(ctx, entity, tx, autocommit)
+	}
+
+	{{range .Before}}{{.}}
+	{{end}}
+
+	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
+	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`)
+	if err != nil {
+		return entity, err
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
+	}
+	{{if .HasPreHook}}
+    if err = repo.preSave(ctx, tx, models.OperationMerge, &entity); err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+	{{end}}
+
+	if err = util.CheckContext(ctx); err != nil {
+		return entity, err
+	}
+	_, err = stmt.Exec({{.StructFields}})
+	if err != nil {
+		tx.Rollback()
+		return entity, err
+	}
+
+	{{range .Related}}{{.}}
 	{{end}}
 
 	{{if .HasPostHook}}

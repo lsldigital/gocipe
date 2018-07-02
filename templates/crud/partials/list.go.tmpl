@@ -2,7 +2,7 @@
 // List returns a slice containing {{.EntityName}} records
 func (repo {{.EntityName}}Repositorium) List(ctx context.Context, filters []ListFilter, offset, limit int) ([]*{{.EntityName}}, error) {
 	var (
-		list     []{{.EntityName}}
+		list     []*{{.EntityName}}
 		segments []string
 		values   []interface{}
 		err      error

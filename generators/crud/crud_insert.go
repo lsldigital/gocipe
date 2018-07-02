@@ -9,7 +9,7 @@ import (
 
 // generateInsert produces code for database insertion of entity (INSERT INTO)
 func generateInsert(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var before, after, post, sqlPlaceholders, sqlfields, structFields []string
+	var before, after, related, sqlPlaceholders, sqlfields, structFields []string
 	count := 1
 
 	if entity.PrimaryKey != util.PrimaryKeySerial {
@@ -43,7 +43,7 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 
 	for _, rel := range entity.Relationships {
 		if rel.Type == util.RelationshipTypeManyMany {
-			post = append(post, fmt.Sprintf("repo.Save%s(ctx, entity.ID, entity.%s, tx, false)", util.RelFuncName(rel), rel.Name))
+			related = append(related, fmt.Sprintf("repo.Save%s(ctx, entity.ID, entity.%s, tx, false)", util.RelFuncName(rel), rel.Name))
 		} else if rel.Type == util.RelationshipTypeManyOne {
 			sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
 			sqlfields = append(sqlfields, fmt.Sprintf("%s", rel.ThisID))
@@ -55,7 +55,7 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 	return util.ExecuteTemplate("crud/partials/insert.go.tmpl", struct {
 		Before          []string
 		After           []string
-		Post            []string
+		Related         []string
 		EntityName      string
 		PrimaryKey      string
 		SQLFields       string
@@ -68,7 +68,7 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 	}{
 		Before:          before,
 		After:           after,
-		Post:            post,
+		Related:         related,
 		EntityName:      entity.Name,
 		PrimaryKey:      entity.PrimaryKey,
 		SQLFields:       strings.Join(sqlfields, ", "),

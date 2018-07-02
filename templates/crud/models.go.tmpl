@@ -50,7 +50,7 @@ type {{.Name}}Repository interface {
 {{end -}}
 {{if (DerefCrudOpts .Crud).ReadList -}}
 	// List returns a slice containing {{.Name}} records
-	List(ctx context.Context, filters []ListFilter, offset, limit int) ([]{{.Name}}, error)
+	List(ctx context.Context, filters []ListFilter, offset, limit int) ([]*{{.Name}}, error)
 {{end -}}
 
 {{if (DerefCrudOpts .Crud).Update -}}
