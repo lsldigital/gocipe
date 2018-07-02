@@ -1,6 +1,6 @@
 
 // List returns a slice containing {{.EntityName}} records
-func (repo {{.EntityName}}Repositorium) List(ctx context.Context, filters []ListFilter, offset, limit int) ([]{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) List(ctx context.Context, filters []ListFilter, offset, limit int) ([]*{{.EntityName}}, error) {
 	var (
 		list     []{{.EntityName}}
 		segments []string
@@ -61,7 +61,7 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, filters []List
 		{{range .After}}{{.}}
 		{{end}}
 
-		list = append(list, entity)
+		list = append(list, &entity)
 	}
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
