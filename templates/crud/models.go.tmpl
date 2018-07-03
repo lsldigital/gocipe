@@ -51,6 +51,9 @@ type {{.Name}}Repository interface {
 {{if (DerefCrudOpts .Crud).Read -}}
 	// Get returns a single {{.Name}} from database by primary key
 	Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.Name}}, error)
+
+	// GetWithRel returns a single {{.Name}} from database by primary key; loads related entities
+	GetWithRel(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.Name}}, error)
 {{end -}}
 {{if (DerefCrudOpts .Crud).ReadList -}}
 	// List returns a slice containing {{.Name}} records
