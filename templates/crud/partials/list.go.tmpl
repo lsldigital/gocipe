@@ -91,6 +91,10 @@ func (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, filters
 	if err != nil {
 		return nil, err
 	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		return nil, err
+	}
 	{{end}}
 
 	return entities, nil

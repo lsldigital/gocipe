@@ -37,54 +37,71 @@ type ListFilter struct {
 	Value     interface{}
 }
 
+{{- $Entities := .Entities -}}
 {{range .Entities -}}
 // {{.Name}}Repository encapsulates operations that may be performed on the entity {{.Name}}
 type {{.Name}}Repository interface {
 {{if (DerefCrudOpts .Crud).Create -}}
 	// Insert performs an SQL insert for {{.Name}} record and update instance with inserted id.
-	Insert(ctx context.Context, entity {{.Name}}, tx *sql.Tx, autocommit bool) ({{.Name}}, error)
+	Insert(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
+
+	// InsertWithRel performs an SQL insert for {{.Name}} record and update instance with inserted id; including related entities. Prefer using Save instead of Insert directly.
+	InsertWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
 {{end -}}
 {{if (DerefCrudOpts .Crud).Read -}}
 	// Get returns a single {{.Name}} from database by primary key
-	Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) ({{.Name}}, error)
+	Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.Name}}, error)
 {{end -}}
 {{if (DerefCrudOpts .Crud).ReadList -}}
 	// List returns a slice containing {{.Name}} records
 	List(ctx context.Context, filters []ListFilter, offset, limit int) ([]*{{.Name}}, error)
+
+	// ListWithRel returns a slice containing {{.Name}} records; will also load related entities.
+	ListWithRel(ctx context.Context, filters []ListFilter, offset, limit int) ([]*{{.Name}}, error)
 {{end -}}
 
 {{if (DerefCrudOpts .Crud).Update -}}
 	// Update Will execute an SQLUpdate Statement for {{.Name}} in the database. Prefer using Save instead of Update directly.
-	Update(ctx context.Context, entity {{.Name}}, tx *sql.Tx, autocommit bool) ({{.Name}}, error)
+	Update(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
+
+	// UpdateWithRel Will execute an SQLUpdate Statement for {{.Name}} in the database; including related entities. Prefer using Save instead of Update directly.
+	UpdateWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
 {{end -}}
 
 {{if (DerefCrudOpts .Crud).Delete -}}
 	// DeleteMany deletes many {{.Name}} records from database using filter
 	DeleteMany(ctx context.Context, filters []ListFilter, tx *sql.Tx, autocommit bool) error
+
 	// Delete deletes a {{.Name}} record from database and sets id to nil
-	Delete(ctx context.Context, entity {{.Name}}, tx *sql.Tx, autocommit bool) ({{.Name}}, error)
+	Delete(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
 {{end -}}
 {{if (DerefCrudOpts .Crud).Merge -}}
 	// Merge performs an SQL merge for {{.Name}} record.
-	Merge(ctx context.Context, entity {{.Name}}, tx *sql.Tx, autocommit bool) ({{.Name}}, error)
+	Merge(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
 {{end -}}
 {{if (and (and (DerefCrudOpts .Crud).Create (DerefCrudOpts .Crud).Update) (DerefCrudOpts .Crud).Merge) -}}
 	// Save either inserts or updates a {{.Name}} record based on whether or not id is nil
-	Save(ctx context.Context, entity {{.Name}}, tx *sql.Tx, autocommit bool) ({{.Name}}, error)
+	Save(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
+
+	// SaveWithRel either inserts or updates a {{.Name}} record based on whether or not id is nil; will also save related entities
+	SaveWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
 {{end -}}
-{{- $ThisEntity := .Name -}}
+{{- $ThisEntity := . -}}
 {{range .Relationships -}}
 {{if eq .Type "many-many" -}}
 	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
-	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity}}) error
+	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
+
+	// Save{{RelFuncName .}} is a helper function to save related {{.Name}} IDs in a pivot table (many-many relationship)
+	Save{{RelFuncName .}}(ctx context.Context, idthis {{pkeyPropertyType $ThisEntity.PrimaryKey}}, relatives []*{{fkeyPropertyType $Entities .}}, tx *sql.Tx, autocommit bool) error
 {{end -}}
 {{if eq .Type "one-many" -}}
 	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
-	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity}}) error
+	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 {{end -}}
 {{if eq .Type "many-one" -}}
 	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
-	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity}}) error
+	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 {{end -}}
 {{end -}}
 }

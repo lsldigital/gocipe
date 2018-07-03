@@ -9,7 +9,7 @@ import (
 
 // generateGet produces code for database retrieval of single entity (SELECT WHERE id)
 func generateGet(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var sqlfields, structfields, before, after []string
+	var sqlfields, structfields, before, after, related []string
 
 	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
 	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
@@ -28,10 +28,14 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 	}
 
 	for _, rel := range entity.Relationships {
-		related := entities[rel.Entity]
-		if rel.Type == util.RelationshipTypeManyOne {
+		other := entities[rel.Entity]
+		switch rel.Type {
+		case util.RelationshipTypeManyOne:
 			structfields = append(structfields, fmt.Sprintf("&entity.%s", rel.Name+"ID"))
-			sqlfields = append(sqlfields, fmt.Sprintf("%s", strings.ToLower(related.Name)+"_id"))
+			sqlfields = append(sqlfields, fmt.Sprintf("%s", strings.ToLower(other.Name)+"_id"))
+			fallthrough
+		case util.RelationshipTypeManyMany, util.RelationshipTypeOneMany:
+			related = append(related, fmt.Sprintf("err = repo.Load%s(ctx, entity)", util.RelFuncName(rel)))
 		}
 	}
 
@@ -43,6 +47,7 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 		PrimaryKey   string
 		Before       []string
 		After        []string
+		Related      []string
 		HasPreHook   bool
 		HasPostHook  bool
 	}{
@@ -53,6 +58,7 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 		PrimaryKey:   entity.PrimaryKey,
 		Before:       before,
 		After:        after,
+		Related:      related,
 		HasPreHook:   entity.Crud.Hooks.PreRead,
 		HasPostHook:  entity.Crud.Hooks.PostRead,
 	})

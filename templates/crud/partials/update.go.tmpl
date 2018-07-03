@@ -1,6 +1,6 @@
 
 // Update Will execute an SQLUpdate Statement for {{.EntityName}} in the database. Prefer using Save instead of Update directly.
-func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity *{{.EntityName}}, tx *sql.Tx, autocommit bool) error {
 	var (
 		err error
 		stmt *sql.Stmt
@@ -8,12 +8,12 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity {{.En
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-			return entity, err
+			return err
 		}
 
 		tx, err = repo.db.Begin()
 		if err != nil {
-			return entity, err
+			return err
 		}
 	}
 	
@@ -22,7 +22,7 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity {{.En
 
 	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1")
 	if err != nil {
-		return entity, err
+		return err
 	}
 
 	{{range .After}}{{.}}
@@ -30,38 +30,38 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity {{.En
 
 	{{if .HasPreHook}}
 	if err = util.CheckContext(ctx); err != nil {
-		return entity, err
+		return err
 	}
 
-    if err = repo.preSave(ctx, tx, models.OperationUpdate, &entity); err != nil {
+    if err = repo.preSave(ctx, tx, models.OperationUpdate, entity); err != nil {
 		tx.Rollback()
-        return entity, err
+        return err
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 
 	if err = repo.postSave(ctx, "UPDATE", entity, tx); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 
 	if autocommit {
@@ -71,11 +71,11 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity {{.En
 		}
 	}
 
-	return entity, err
+	return err
 }
 
 // UpdateWithRel Will execute an SQLUpdate Statement for {{.EntityName}} in the database; including related entities. Prefer using Save instead of Update directly.
-func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entity *{{.EntityName}}, tx *sql.Tx, autocommit bool) error {
 	var (
 		err error
 		stmt *sql.Stmt
@@ -83,12 +83,12 @@ func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entit
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-			return entity, err
+			return err
 		}
 
 		tx, err = repo.db.Begin()
 		if err != nil {
-			return entity, err
+			return err
 		}
 	}
 	
@@ -97,7 +97,7 @@ func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entit
 
 	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1")
 	if err != nil {
-		return entity, err
+		return err
 	}
 
 	{{range .After}}{{.}}
@@ -105,41 +105,50 @@ func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entit
 
 	{{if .HasPreHook}}
 	if err = util.CheckContext(ctx); err != nil {
-		return entity, err
+		return err
 	}
 
-    if err = repo.preSave(ctx, tx, models.OperationUpdate, &entity); err != nil {
+    if err = repo.preSave(ctx, tx, models.OperationUpdate, entity); err != nil {
 		tx.Rollback()
-        return entity, err
+        return err
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 
 	{{range .Related}}{{.}}
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return err
+	}
 	{{end}}
 
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 
 	if err = repo.postSave(ctx, "UPDATE", entity, tx); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 
 	if autocommit {
@@ -149,5 +158,5 @@ func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entit
 		}
 	}
 
-	return entity, err
+	return err
 }

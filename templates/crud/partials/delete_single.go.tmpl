@@ -1,6 +1,6 @@
 
 // Delete deletes a {{.EntityName}} record from database and sets id to nil
-func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity {{.EntityName}}, tx *sql.Tx, autocommit bool) ({{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity *{{.EntityName}}, tx *sql.Tx, autocommit bool) error {
 	var (
 		err  error
 		stmt *sql.Stmt
@@ -9,36 +9,36 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity {{.En
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-			return entity, err
+			return err
 		}
 
 		tx, err = repo.db.Begin()
 		if err != nil {
-			return entity, err
+			return err
 		}
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		return entity, err
+		return err
 	}
 
 	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE id = $1")
 	if err != nil {
-		return entity, err
+		return err
 	}
 	{{if .HasPreHook}}
 	if err = util.CheckContext(ctx); err != nil {
-		return entity, err
+		return err
 	}
 
 	if err = repo.preDelete(ctx, tx, id); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 	
 	_, err = stmt.Exec(id)
@@ -46,7 +46,7 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity {{.En
 		entity.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
 	} else {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 	
 	{{range .Post}}{{.}}
@@ -55,17 +55,17 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity {{.En
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 	
 	if err = repo.postDelete(ctx, tx, id); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return entity, err
+		return err
 	}
 
 	if autocommit {
@@ -75,5 +75,5 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity {{.En
 		}
 	}
 
-	return entity, err
+	return err
 }

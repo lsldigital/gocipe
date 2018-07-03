@@ -71,6 +71,9 @@ func init() {
 		"pkeyIsAuto":           GetPrimaryKeyDataIsAuto,
 		"pkeyIsInt":            GetPrimaryKeyDataIsInt,
 		"pkeyFieldType":        GetPrimaryKeyFieldType,
+		"fkeyPropertyType": func(entities map[string]Entity, rel Relationship) string {
+			return entities[rel.Entity].Name
+		},
 	}
 }
 
