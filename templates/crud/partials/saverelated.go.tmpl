@@ -1,5 +1,5 @@
 // Save{{.Funcname}} is a helper function to save related {{.PropertyName}} IDs in a pivot table (many-many relationship)
-func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, idthis {{pkeyPropertyType .PrimaryKey}}, relatives []*{{.ThatType}}, tx *sql.Tx, autocommit bool) error {
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, idthis {{pkeyPropertyType .PrimaryKey}}, relatives []{{.ThatType}}, tx *sql.Tx, autocommit bool) error {
 	var (
 		stmt *sql.Stmt
 		err  error

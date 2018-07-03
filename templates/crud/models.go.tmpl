@@ -38,7 +38,7 @@ type ListFilter struct {
 }
 
 {{- $Entities := .Entities -}}
-{{range .Entities -}}
+{{range .Entities }}
 // {{.Name}}Repository encapsulates operations that may be performed on the entity {{.Name}}
 type {{.Name}}Repository interface {
 {{if (DerefCrudOpts .Crud).Create -}}
