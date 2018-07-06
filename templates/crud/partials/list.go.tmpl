@@ -20,8 +20,12 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, filters []List
 	}
 
 	for i, filter := range filters {
-		segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
-		values = append(values, filter.Value)
+		if filter.Operation == "IN" || filter.Operation == "NOT IN" {
+			QueryAddIN(segments, values, &i, filter.Field, filter.Value, "NOT IN" == filter.Operation) 
+		} else {
+			segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
+			values = append(values, filter.Value)
+		}
 	}
 
 	if len(segments) != 0 {

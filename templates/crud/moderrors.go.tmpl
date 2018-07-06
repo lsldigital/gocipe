@@ -3,4 +3,10 @@ package moderrors
 var (
 	// RecordNotFoundError indicates record not found when using Repository.Get()
 	RecordNotFoundError = errors.New("record not found")
+
+	// InFilterValueUnknownError indicates that value for IN condition is not known
+	InFilterValueUnknownError = errors.New("unknown filter value type for IN condition")
+
+	// InFilterValueEmptyError indicates that slice of values provided for IN condition is empty
+	InFilterValueEmptyError = errors.New("filter values for IN condition empty")
 )

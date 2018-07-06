@@ -95,8 +95,11 @@ type {{.Name}}Repository interface {
 	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
 	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 
-	// Save{{RelFuncName .}} is a helper function to save related {{.Name}} IDs in a pivot table (many-many relationship)
-	Save{{RelFuncName .}}(ctx context.Context, idthis {{pkeyPropertyType $ThisEntity.PrimaryKey}}, relatives []*{{fkeyPropertyType $Entities .}}, tx *sql.Tx, autocommit bool) error
+	// Save{{RelFuncName .}} is a helper function to save related {{.Name}} in a pivot table (many-many relationship)
+	Save{{RelFuncName .}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType $ThisEntity.PrimaryKey}}, relatives ...*{{fkeyPropertyTypeName $Entities .}}) error
+
+	// Save{{RelFuncName .}}IDs is a helper function to save related {{.Name}} IDs in a pivot table (many-many relationship)
+	Save{{RelFuncName .}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType $ThisEntity.PrimaryKey}}, relatives ...{{fkeyPropertyType $Entities .}}) error
 {{end -}}
 {{if eq .Type "one-many" -}}
 	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
@@ -114,3 +117,119 @@ type {{.Name}}Repositorium struct {
 	db *sql.DB
 }
 {{end}}
+
+// QueryAddIN adds IN condition to query
+func QueryAddIN(segments []string, values []interface{}, index *int, fieldname string, val interface{}, not bool) error {
+	var subsegments []string
+
+	if data, ok := val.([]bool); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]byte); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]complex64); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]complex128); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]float32); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]float64); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]int); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]int8); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]int16); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]int32); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]int64); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]rune); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]string); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]uint); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]uint8); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]uint16); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]uint32); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]uint64); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}
+	} else if data, ok := val.([]uintptr); ok {
+		for d := range data {
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			values = append(values, data[d])
+		}	} else {
+		return moderrors.InFilterValueUnknownError
+	}
+
+	if len(subsegments) == 0 {
+		return moderrors.InFilterValueEmptyError
+	}
+
+	condition := "IN"
+	if not {
+		condition = "NOT "+condition
+	}
+
+	*index = *index + len(subsegments)
+	segments = append(segments, fieldname+condition+" ("+strings.Join(subsegments, ",")+")")
+	return nil
+}

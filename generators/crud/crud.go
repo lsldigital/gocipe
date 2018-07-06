@@ -229,7 +229,7 @@ func generateDeleteSingle(entities map[string]util.Entity, entity util.Entity) (
 
 	for _, rel := range entity.Relationships {
 		if rel.Type == util.RelationshipTypeManyMany {
-			post = append(post, fmt.Sprintf("repo.Save%s(ctx, entity.ID, []*%s{}, tx, false)", util.RelFuncName(rel), rel.Entity))
+			post = append(post, fmt.Sprintf("repo.Save%s(ctx, tx, false, entity.ID)", util.RelFuncName(rel)))
 		}
 	}
 
@@ -283,24 +283,26 @@ func generateSave(entities map[string]util.Entity, entity util.Entity) (string, 
 // generateSaveRelated produces code for database saving of related entities
 func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
 	return util.ExecuteTemplate("crud/partials/saverelated.go.tmpl", struct {
-		PropertyName string
-		PrimaryKey   string
-		PropertyType string
-		EntityName   string
-		Table        string
-		Funcname     string
-		ThisColumn   string
-		ThatColumn   string
-		ThatType     string
+		PropertyName   string
+		PrimaryKey     string
+		PropertyType   string
+		EntityName     string
+		Table          string
+		Funcname       string
+		ThisColumn     string
+		ThatColumn     string
+		ThatType       string
+		ThatPrimaryKey string
 	}{
-		PropertyName: rel.Name,
-		PrimaryKey:   entity.PrimaryKey,
-		PropertyType: entities[rel.Entity].PrimaryKey,
-		EntityName:   entity.Name,
-		Table:        rel.JoinTable,
-		Funcname:     util.RelFuncName(rel),
-		ThisColumn:   rel.ThisID,
-		ThatColumn:   rel.ThatID,
-		ThatType:     "*" + entities[rel.Entity].Name,
+		PropertyName:   rel.Name,
+		PrimaryKey:     entity.PrimaryKey,
+		PropertyType:   entities[rel.Entity].PrimaryKey,
+		EntityName:     entity.Name,
+		Table:          rel.JoinTable,
+		Funcname:       util.RelFuncName(rel),
+		ThisColumn:     rel.ThisID,
+		ThatColumn:     rel.ThatID,
+		ThatType:       "*" + entities[rel.Entity].Name,
+		ThatPrimaryKey: entities[rel.Entity].PrimaryKey,
 	})
 }
