@@ -1,5 +1,5 @@
 // Save{{.Funcname}} is a helper function to save related {{.PropertyName}} IDs in a pivot table (many-many relationship)
-func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, idthis {{pkeyPropertyType .PrimaryKey}}, relatives []{{.ThatType}}, tx *sql.Tx, autocommit bool) error {
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{.ThatType}}) error {
 	var (
 		stmt *sql.Stmt
 		err  error
@@ -44,6 +44,68 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, i
 		}
 		
 		_, err = stmt.Exec(idthis, rel.ID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
+	}
+
+	return err
+}
+
+// Save{{.Funcname}}IDs is a helper function to save related {{.PropertyName}} IDs in a pivot table (many-many relationship)
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{.ThatType}}) error {
+	var (
+		stmt *sql.Stmt
+		err  error
+	)
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			return err
+		}
+		
+		tx, err = repo.db.Begin()
+		if err != nil {
+			return err
+		}
+	}
+	
+	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(idthis)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)")
+	if err != nil {
+		return err
+	}
+
+	for _, relid := range relatives {
+		if err = util.CheckContext(ctx); err != nil {
+			tx.Rollback()
+			return err
+		}
+		
+		_, err = stmt.Exec(idthis, relid)
 		if err != nil {
 			tx.Rollback()
 			return err
