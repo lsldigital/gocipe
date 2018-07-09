@@ -11,25 +11,64 @@ import (
 
 //go:generate rice embed-go
 
+{{if not .Bootstrap.NoVersion}}
+// Versioning info
+var (
+	appVersion = "n/a"
+	appCommit  = "n/a"
+	appBuilt   = "n/a"
+)
+{{end}}
+
 func main() {
+	{{- if not .Bootstrap.NoVersion}}
+	version := flag.Bool("v", false, "prints current app version")
+	flag.Parse()
+	if *version {
+		fmt.Printf("Version : %v \nCommit : %v\nBuilt: %v\n", appVersion, appCommit, appBuilt)
+		os.Exit(0)
+	}
+	{{end}}
+
 	config := app.Bootstrap()
 	models.Init(config.DB)
 
 	{{if .Bootstrap.Assets}}app.Assets = rice.MustFindBox("assets"){{end}}
-	{{if .Bootstrap.HTTPTemplates}}app.Templates = rice.MustFindBox("templates"){{end}}
-
-	g := grpc.NewServer()
-	ws := grpcweb.WrapServer(g)
+	{{if .Bootstrap.Templates}}app.Templates = rice.MustFindBox("templates"){{end}}
 
 	router := mux.NewRouter()
+	
+	{{if not .Bootstrap.NoGRPCWeb}}
+	g := grpc.NewServer()
+	ws := grpcweb.WrapServer(g)
 	router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
+	{{end}}
 
+	var assetsHandler http.Handler
 	if app.Env == app.EnvironmentDev {
-		router.PathPrefix("/").Handler(http.FileServer(http.Dir("web/dist")))
+		assetsHandler = http.FileServer(http.Dir("web/dist"))
 	} else {
-		assetsHandler := http.FileServer(rice.MustFindBox("web/dist").HTTPBox())
-		router.PathPrefix("/").Handler(assetsHandler)
+		assetsHandler = http.FileServer(rice.MustFindBox("web/dist").HTTPBox())
 	}
 
-	http.ListenAndServe(":"+config.HTTPPort, router)
+	router.PathPrefix("/").Handler(assetsHandler)
+
+	{{if not .Bootstrap.NoGRPCWire}}
+	go func() {
+		l, err := net.Listen("tcp", ":"+config.GRPCPort)
+		if err != nil {
+			log.Fatalf("error starting tcp listener: %v", err)
+		}
+		defer l.Close()
+
+		g := grpc.NewServer()
+		if err := g.Serve(l); err != nil {
+			log.Fatalf("error serving grpc: %v", err)
+		}
+	}()
+	{{end}}
+
+	if err := http.ListenAndServe(":"+config.HTTPPort, router); err != nil {
+		log.Fatalf("error starting http server: %v", err)
+	}
 }
