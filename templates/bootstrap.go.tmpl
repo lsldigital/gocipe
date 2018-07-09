@@ -30,8 +30,14 @@ var (
 	// {{.Name}} {{.Description}}
 	{{.Name}} string
 	{{end}}{{end}}
-	{{if .Bootstrap.Assets}}Assets *rice.Box{{end}}
-	{{if .Bootstrap.Templates}}Templates *rice.Box{{end}}
+	{{if .Bootstrap.Assets}}
+	// Assets is a rice box to assets directory
+	Assets *rice.Box
+	{{end}}
+	{{if .Bootstrap.Templates}}
+	// Templates is a rice box to templates directory
+	Templates *rice.Box
+	{{end}}
 )
 
 // Config represents application configuration loaded during bootstrap
@@ -129,7 +135,7 @@ func ExecuteTemplate(name string, data interface{}) (string, error) {
 		return "", err
 	}
 
-	tpl, err := template.New(name).Funcs(templatesFn).Parse(raw)
+	tpl, err := template.New(name).Funcs(template.FuncMap{}).Parse(raw)
 	if err != nil {
 		return "", err
 	}
