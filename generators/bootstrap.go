@@ -19,6 +19,10 @@ func GenerateBootstrap(work util.GenerationWork, opts util.BootstrapOpts) error 
 		opts.HTTPPort = "7000"
 	}
 
+	if opts.GRPCPort == "" {
+		opts.GRPCPort = "4000"
+	}
+
 	code, err := util.ExecuteTemplate("bootstrap.go.tmpl", struct {
 		Bootstrap util.BootstrapOpts
 	}{opts})
