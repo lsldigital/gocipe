@@ -16,6 +16,7 @@ func main() {
 	models.Init(config.DB)
 
 	{{if .Bootstrap.Assets}}app.Assets = rice.MustFindBox("assets"){{end}}
+	{{if .Bootstrap.HTTPTemplates}}app.Templates = rice.MustFindBox("templates"){{end}}
 
 	g := grpc.NewServer()
 	ws := grpcweb.WrapServer(g)

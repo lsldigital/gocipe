@@ -105,6 +105,9 @@ type BootstrapOpts struct {
 
 	// HTTPPort represents port to listen to by default
 	HTTPPort string `json:"http_port"`
+
+	// HTTPTemplates indicates whether or not to include http templates in app
+	HTTPTemplates bool `json:"http_templates"`
 }
 
 // BootstrapSetting represents a setting required by the application and loaded during bootstrap
