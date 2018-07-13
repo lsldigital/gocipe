@@ -31,6 +31,10 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 		case util.RelationshipTypeManyMany, util.RelationshipTypeOneMany, util.RelationshipTypeManyOne:
 			related = append(related, fmt.Sprintf("err = repo.Load%s(ctx, entities...)", util.RelFuncName(rel)))
 		}
+		if rel.Type == util.RelationshipTypeManyOne {
+			sqlfields = append(sqlfields, fmt.Sprintf("%s", rel.ThisID))
+			structfields = append(structfields, fmt.Sprintf("entity.%sID", rel.Name))
+		}
 	}
 
 	return util.ExecuteTemplate("crud/partials/list.go.tmpl", struct {
