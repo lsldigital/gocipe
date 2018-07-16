@@ -1,61 +1,156 @@
 #!/bin/bash
 
 CURRENT_DIR=`pwd`
+WEB_DIR="${CURRENT_DIR}/web"
+LOG_FILE="${CURRENT_DIR}/gen-service.log"
 
-if [ "$1" == "" ]; then
-    echo "Enter a valid filename"
-	exit 1
-fi
+# Function gets an array of services as arguments (e.g. "wire" in "service_wire.proto")
+generate_files() {
+    # For each sub-folder in "web"
+    for d in ${WEB_DIR}/*/; do
+        echo -e "# ${d}\n"
+        if [ ! -f "${d}package.json" ]; then
+            echo "- npm init: package.json file not found"
+            cd "${d}"
+            npm init --quiet --yes >> $LOG_FILE
+        fi
 
-if [ ! -d "${CURRENT_DIR}/vendor" ]; then
-    echo "vendor folder not found in ${CURRENT_DIR}"
-    echo "Running dep init"
-    dep init
-fi
+        if [ ! -d "${d}node_modules/" ]; then
+            echo "- npm init: node_modules dir not found"
+            cd "${d}"
+            npm init --quiet --yes >> $LOG_FILE
+        fi
 
-if [ ! -f "${CURRENT_DIR}/web/package.json" ]; then
-    echo "package.json file not found in ${CURRENT_DIR}/web"
-    echo "Running npm init"
-    cd "${CURRENT_DIR}/web"
-    npm init --yes
-fi
+        if [ ! -d "${d}node_modules/.bin" ]; then
+            echo "- npm init: .bin dir not found"
+            cd "${d}"
+            npm init --quiet --yes >> $LOG_FILE
+        fi
 
-if [ ! -d "${CURRENT_DIR}/web/node_modules/" ]; then
-    echo "node_modules dir not found in ${CURRENT_DIR}/web"
-    echo "Running npm init"
-    cd "${CURRENT_DIR}/web"
-    npm init --yes
-fi
+        if [ ! -f "${d}node_modules/.bin/protoc-gen-ts" ]; then
+            echo "- npm install --save-dev ts-protoc-gen: protoc-gen-ts executable not found"
+            cd "${d}"
+            npm install --quiet --save-dev ts-protoc-gen >> $LOG_FILE
+        fi
 
-if [ ! -d "${CURRENT_DIR}/web/node_modules/.bin" ]; then
-    echo ".bin not found dir in ${CURRENT_DIR}/web/node_modules"
-    echo "Running npm init"
-    cd "${CURRENT_DIR}/web"
-    npm init --yes
-fi
+        if [ ! -d "${d}dist" ]; then
+            echo "- creating ${d}dist: dist dir not found"
+            mkdir -p "${d}dist"
+            echo "" > "${d}dist/.gitkeep"
+        fi
 
-if [ ! -f "${CURRENT_DIR}/web/node_modules/.bin/protoc-gen-ts" ]; then
-    echo "protoc-gen-ts executable not found in ${CURRENT_DIR}/web/node_modules/.bin"
-    echo "Running npm install --save-dev ts-protoc-gen"
-    cd "${CURRENT_DIR}/web"
-    npm install --save-dev ts-protoc-gen
-fi
+        if [ ! -d "${d}src/services" ]; then
+            echo "- creating ${d}src/services: src/services dir not found"
+            mkdir -p "${d}src/services"
+        fi
 
-if [ ! -d {{.GeneratePath}}/${1} ]; then
-    mkdir -p {{.GeneratePath}}/${1}
-fi
+        if [ -f "${CURRENT_DIR}/proto/models.proto" ]; then
+            echo "- generating JS services for models"
+            protoc -I "${CURRENT_DIR}/proto" \
+            --plugin="protoc-gen-ts=${d}node_modules/.bin/protoc-gen-ts" \
+            --js_out="import_style=commonjs,binary:${d}src/services" \
+            --ts_out="${d}src/services" "${CURRENT_DIR}/proto/models.proto"
+        fi
+
+        # For each proto file (the argument)
+        for f in $@; do
+            if [ -f "${CURRENT_DIR}/proto/service_${f}.proto" ]; then
+                echo "- generating JS services for ${f}"
+                protoc -I "${CURRENT_DIR}/proto" \
+                    --plugin="protoc-gen-ts=${d}node_modules/.bin/protoc-gen-ts" \
+                    --js_out="import_style=commonjs,binary:${d}src/services" \
+                    --ts_out="service=true:${d}src/services" "${CURRENT_DIR}/proto/service_${f}.proto"
+            fi
+        done
+
+        echo -e ":: done\n"
+    done
+
+    # For each proto file (the argument)
+    for f in $@; do
+        if [ -f "${CURRENT_DIR}/proto/service_${f}.proto" ]; then
+            echo "# Generating GO services for ${f}"
+            if [ ! -d "${CURRENT_DIR}/services/${f}" ]; then
+                mkdir -p "${CURRENT_DIR}/services/${f}"
+            fi
+            protoc -I "${CURRENT_DIR}/proto" "${CURRENT_DIR}/proto/service_${f}.proto" --go_out=plugins=grpc:${CURRENT_DIR}/services/${1}
+        fi
+    done
+
+    echo -e "\n::Done and dusted :-)\n"
+}
+
+# -- MAIN SCRIPT STARTS HERE --
 
 cd ${CURRENT_DIR}
-protoc -I "${CURRENT_DIR}/proto" "${CURRENT_DIR}/proto/service_${1}.proto" --go_out=plugins=grpc:{{.GeneratePath}}/${1}
 
-if [ -f "${CURRENT_DIR}/proto/models.proto" ]; then
-    protoc -I "${CURRENT_DIR}/proto" \
-    --plugin="protoc-gen-ts=${CURRENT_DIR}/web/node_modules/.bin/protoc-gen-ts" \
-    --js_out="import_style=commonjs,binary:${CURRENT_DIR}/web/src/services" \
-    --ts_out="${CURRENT_DIR}/web/src/services" "${CURRENT_DIR}/proto/models.proto"
+dt=$(date '+%d/%m/%Y %H:%M:%S');
+echo -e "# Gen-service: ${dt}\n\n" > "${LOG_FILE}"
+
+if [ ! -d "${CURRENT_DIR}/vendor" ]; then
+    echo -e "# Dep init: Vendor folder not found.\n"
+    dep init >> $LOG_FILE
 fi
 
-protoc -I "${CURRENT_DIR}/proto" \
-    --plugin="protoc-gen-ts=${CURRENT_DIR}/web/node_modules/.bin/protoc-gen-ts" \
-    --js_out="import_style=commonjs,binary:${CURRENT_DIR}/web/src/services" \
-    --ts_out="service=true:${CURRENT_DIR}/web/src/services" "${CURRENT_DIR}/proto/service_${1}.proto"
+HELP=false
+ALL=false
+declare -a SERVICES=() # an array
+
+while true; do
+  case $1 in
+    -h | --help )
+        HELP=true;
+        shift;
+        ;;
+
+    -a | --all )
+        ALL=true;
+        shift;
+        ;;
+
+    -s | --services )
+        shift;
+        SERVICES="${@}"
+        ;;
+
+    -- )
+        shift;
+        break
+        ;;
+
+    *  )
+        break
+        ;;
+  esac
+done
+
+# Process all service_*.proto files in proto/ folder
+if [ "${ALL}" == true ]; then
+    index=0
+    for f in `find ${CURRENT_DIR}/proto/ -type f -iname "service_*.proto" | awk -F "service_" '{print $2}' | awk -F ".proto" '{print $1}'`; do
+        SERVICES[$index]="${f}"
+        index=$(($index+1))
+    done
+    generate_files ${SERVICES[@]}
+    exit 0
+fi
+
+# Process individual service_*.proto files in proto/ folder
+if [[ ${SERVICES[@]} ]]; then
+    generate_files ${SERVICES[@]}
+    exit 0
+fi
+
+# Display help
+echo "Generation of services. Usage:"
+echo ""
+echo " $ ./gen-service.sh -h|--help"
+echo "   Displays this help"
+echo ""
+echo " $ ./gen-service.sh -a|--all"
+echo "   Will process all service_*.proto files in 'proto' folder"
+echo ""
+echo " $ ./gen-service.sh -s|--services service1 service2 ... serviceN"
+echo "   Will process individual service_*.proto files in 'proto' folder (as provided in the arguments)"
+echo ""
+exit 0;
