@@ -12,6 +12,7 @@ import (
 	"github.com/fluxynet/gocipe/generators/crud"
 	utils "github.com/fluxynet/gocipe/generators/util"
 	"github.com/fluxynet/gocipe/util"
+	"github.com/fluxynet/gocipe/generators/bread"
 )
 
 //go:generate rice embed-go
@@ -41,7 +42,7 @@ func main() {
 
 	util.SetTemplates(rice.MustFindBox("templates"))
 
-	work.Waitgroup.Add(6)
+	work.Waitgroup.Add(7)
 
 	entities, err := preprocessRecipe(recipe)
 	if err != nil {
@@ -51,6 +52,7 @@ func main() {
 	go generators.GenerateBootstrap(work, recipe.Bootstrap)
 	// go generators.GenerateHTTP(work, recipe.HTTP)
 	go crud.Generate(work, recipe.Crud, entities)
+	go bread.Generate(work, entities)
 	// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 	go generators.GenerateSchema(work, recipe.Schema, entities)
 	go generators.GenerateVuetify(work, recipe.Rest, recipe.Vuetify, recipe.Entities)

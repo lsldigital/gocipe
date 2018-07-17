@@ -8,11 +8,11 @@ import (
 )
 
 // GenerateBREAD returns generated code for a BREAD service - Browse, Read, Edit, Add & Delete
-func GenerateBREAD(work util.GenerationWork, entities []util.Entity) error {
+func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	var ents []util.Entity
 
-	//3 jobs to be waited upon for: service_bread.proto, service_bread.go and service_bread_hooks.go
-	work.Waitgroup.Add(3)
+	//2 jobs to be waited upon for: service_bread.proto and service_bread.go
+	work.Waitgroup.Add(2)
 
 	for i := range entities {
 		if entities[i].Bread.Generate {
@@ -20,7 +20,7 @@ func GenerateBREAD(work util.GenerationWork, entities []util.Entity) error {
 		}
 	}
 
-	code, err := util.ExecuteTemplate("service_bread.go.tmpl", struct {
+	code, err := util.ExecuteTemplate("bread/service_bread.go.tmpl", struct {
 		Entities []util.Entity
 	}{ents})
 
@@ -43,9 +43,33 @@ func GenerateBREAD(work util.GenerationWork, entities []util.Entity) error {
 			entity.Bread.Hooks.PostUpdate,
 			entity.Bread.Hooks.PreDelete,
 			entity.Bread.Hooks.PostDelete:
-			hooks, err := util.ExecuteTemplate("service_bread_hooks.go.tmpl", struct {
-				Entity util.Entity
-			}{entity})
+			hooks, err := util.ExecuteTemplate("bread/service_bread_hooks.go.tmpl", struct {
+				Entity     util.Entity
+				PreRead    bool
+				PostRead   bool
+				PreList    bool
+				PostList   bool
+				PreCreate  bool
+				PostCreate bool
+				PreUpdate  bool
+				PostUpdate bool
+				PreDelete  bool
+				PostDelete bool
+			}{
+				Entity:     entity,
+				PreRead:    entity.Bread.Hooks.PreRead,
+				PostRead:   entity.Bread.Hooks.PostRead,
+				PreList:    entity.Bread.Hooks.PreList,
+				PostList:   entity.Bread.Hooks.PostList,
+				PreCreate:  entity.Bread.Hooks.PreCreate,
+				PostCreate: entity.Bread.Hooks.PostCreate,
+				PreUpdate:  entity.Bread.Hooks.PreUpdate,
+				PostUpdate: entity.Bread.Hooks.PostUpdate,
+				PreDelete:  entity.Bread.Hooks.PreDelete,
+				PostDelete: entity.Bread.Hooks.PostDelete,
+			})
+
+			work.Waitgroup.Add(1)
 
 			if err == nil {
 				work.Done <- util.GeneratedCode{
@@ -63,7 +87,7 @@ func GenerateBREAD(work util.GenerationWork, entities []util.Entity) error {
 		}
 	}
 
-	proto, err := util.ExecuteTemplate("service_bread.proto.tmpl", struct {
+	proto, err := util.ExecuteTemplate("bread/service_bread.proto.tmpl", struct {
 		Entities []util.Entity
 	}{ents})
 

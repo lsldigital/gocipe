@@ -60,9 +60,15 @@ func init() {
 		},
 		"DerefCrudOpts": func(c *CrudOpts) (CrudOpts, error) {
 			if c == nil {
-				return CrudOpts{}, errors.New("schema opts is nil")
+				return CrudOpts{}, errors.New("crud opts is nil")
 			}
 			return *c, nil
+		},
+		"DerefBreadOpts": func(b *BreadOpts) (BreadOpts, error) {
+			if b == nil {
+				return BreadOpts{}, errors.New("bread opts is nil")
+			}
+			return *b, nil
 		},
 		"RelFuncName":          RelFuncName,
 		"snake":                ToSnakeCase,

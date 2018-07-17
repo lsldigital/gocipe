@@ -146,7 +146,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	{{if .Bread.Hooks.PostUpdate}}
-	stop, err = {{lower .Name}}PostUpdate(ctx req, &res, err)
+	stop, err = {{lower .Name}}PostUpdate(ctx, req, &res, err)
 	if stop {
 		return &res, nil
 	}
