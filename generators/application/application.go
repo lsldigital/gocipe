@@ -22,11 +22,15 @@ func Generate(work util.GenerationWork, bootOpts util.BootstrapOpts) {
 	if bootOpts.Assets {
 		work.Waitgroup.Add(1)
 		work.Done <- util.GeneratedCode{Generator: "GenerateAssetsDir", Code: "Place assets in this folder.", Filename: "assets/.gitkeep", NoOverwrite: true}
-	}
 
-	if bootOpts.Templates {
 		work.Waitgroup.Add(1)
-		work.Done <- util.GeneratedCode{Generator: "GenerateTemplatesDir", Code: "Place templates in this folder.", Filename: "assets/templates/.gitkeep", NoOverwrite: true}
+		work.Done <- util.GeneratedCode{Generator: "GenerateTemplatesDir", Code: "Place templates in assets folder.", Filename: "assets/templates/.gitkeep", NoOverwrite: true}
+
+		work.Waitgroup.Add(1)
+		work.Done <- util.GeneratedCode{Generator: "GenerateWebDir", Code: "Place web in assets folder.", Filename: "assets/web/.gitkeep", NoOverwrite: true}
+
+		work.Waitgroup.Add(1)
+		work.Done <- util.GeneratedCode{Generator: "GenerateAppDir", Code: "Place app in web folder.", Filename: "assets/web/app/.gitkeep", NoOverwrite: true}
 	}
 
 	work.Waitgroup.Add(1)
@@ -41,6 +45,7 @@ func Generate(work util.GenerationWork, bootOpts util.BootstrapOpts) {
 		work.Done <- util.GeneratedCode{Generator: "GenerateGenService", Error: fmt.Errorf("failed to load execute template: %s", err)}
 	}
 
+	work.Waitgroup.Add(1)
 	models, err := util.ExecuteTemplate("application/main.go.tmpl", struct {
 		Bootstrap util.BootstrapOpts
 	}{bootOpts})
@@ -48,5 +53,14 @@ func Generate(work util.GenerationWork, bootOpts util.BootstrapOpts) {
 		work.Done <- util.GeneratedCode{Generator: "GenerateMain", Code: models, Filename: "main.go", NoOverwrite: true}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateMain", Error: fmt.Errorf("failed to load execute template: %s", err)}
+	}
+
+	makefile, err := util.ExecuteTemplate("application/makefile.tmpl", struct {
+		Bootstrap util.BootstrapOpts
+	}{bootOpts})
+	if err == nil {
+		work.Done <- util.GeneratedCode{Generator: "GenerateMakefile", Code: makefile, Filename: "Makefile", NoOverwrite: true}
+	} else {
+		work.Done <- util.GeneratedCode{Generator: "GenerateMakefile", Error: fmt.Errorf("failed to load execute template: %s", err)}
 	}
 }

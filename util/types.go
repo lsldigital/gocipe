@@ -117,9 +117,6 @@ type BootstrapOpts struct {
 
 	// GRPCPort represents port to grpc listen to by default
 	GRPCPort string `json:"grpc_port"`
-
-	// Templates indicates whether or not to include templates in app
-	Templates bool `json:"templates"`
 }
 
 // BootstrapSetting represents a setting required by the application and loaded during bootstrap

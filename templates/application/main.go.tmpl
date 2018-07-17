@@ -33,9 +33,6 @@ func main() {
 	config := app.Bootstrap()
 	models.Init(config.DB)
 
-	{{if .Bootstrap.Assets}}app.Assets = rice.MustFindBox("assets"){{end}}
-	{{if .Bootstrap.Templates}}app.Templates = rice.MustFindBox("templates"){{end}}
-
 	router := mux.NewRouter()
 	
 	{{if not .Bootstrap.NoGRPCWeb}}
@@ -44,14 +41,40 @@ func main() {
 	router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
 	{{end}}
 
-	var assetsHandler http.Handler
-	if app.Env == app.EnvironmentDev {
-		assetsHandler = http.FileServer(http.Dir("web/dist"))
-	} else {
-		assetsHandler = http.FileServer(rice.MustFindBox("web/dist").HTTPBox())
-	}
+	{{if .Bootstrap.Assets}}
+	app.Assets = rice.MustFindBox("assets")
 
-	router.PathPrefix("/").Handler(assetsHandler)
+	if app.Env == app.EnvironmentDev {
+		files, err := ioutil.ReadDir("web")
+		if err != nil {
+			log.Println(err)
+		}
+		for _, f := range files {
+			if f.IsDir() {
+				httpDir := "web/" + f.Name() + "/dist"
+				router.PathPrefix("/" + f.Name()).Handler(http.StripPrefix("/"+f.Name(), http.FileServer(http.Dir(httpDir))))
+			}
+		}
+	} else {
+		w, err := app.Assets.Open("web")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		dirs, err := w.Readdir(0)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		for _, dir := range dirs {
+			if dir.IsDir() {
+				router.PathPrefix(
+					"/" + dir.Name(),
+				).Handler(
+					util.NewWebBoxHandler(app.Assets, "web/"+dir.Name(), dir.Name()),
+				)
+			}
+		}
+	}
+	{{end}}
 
 	{{if not .Bootstrap.NoGRPCWire}}
 	go func() {

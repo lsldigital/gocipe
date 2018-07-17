@@ -34,10 +34,6 @@ var (
 	// Assets is a rice box to assets directory
 	Assets *rice.Box
 	{{end}}
-	{{if .Bootstrap.Templates}}
-	// Templates is a rice box to templates directory
-	Templates *rice.Box
-	{{end}}
 )
 
 // Config represents application configuration loaded during bootstrap
@@ -124,7 +120,7 @@ func Bootstrap() *Config {
 }
 
 
-{{if .Bootstrap.Templates}}
+{{if .Bootstrap.Assets}}
 // ExecuteTemplate applies templating a text/template template given data and returns the string output
 func ExecuteTemplate(name string, data interface{}) (string, error) {
 	var output bytes.Buffer
