@@ -9,10 +9,10 @@ import (
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/fluxynet/gocipe/generators"
 	"github.com/fluxynet/gocipe/generators/application"
+	"github.com/fluxynet/gocipe/generators/bread"
 	"github.com/fluxynet/gocipe/generators/crud"
 	utils "github.com/fluxynet/gocipe/generators/util"
 	"github.com/fluxynet/gocipe/util"
-	"github.com/fluxynet/gocipe/generators/bread"
 )
 
 //go:generate rice embed-go

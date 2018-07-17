@@ -100,6 +100,15 @@ type BootstrapOpts struct {
 	// NoDB indicates that database connection should not be generated (default false)
 	NoDB bool `json:"no_db"`
 
+	// NoGRPCWeb indicates that grpcweb server should not be generated (default false)
+	NoGRPCWeb bool `json:"no_grpc_web"`
+
+	// NoGRPCWire indicates that grpc server should not be generated (default false)
+	NoGRPCWire bool `json:"no_grpc_wire"`
+
+	// NoVersion indicates that version code should not be generated (default false)
+	NoVersion bool `json:"no_version"`
+
 	// Settings represent list of settings to load during bootstrap into main package
 	Settings []BootstrapSetting `json:"settings"`
 
@@ -109,8 +118,11 @@ type BootstrapOpts struct {
 	// HTTPPort represents port to listen to by default
 	HTTPPort string `json:"http_port"`
 
-	// HTTPTemplates indicates whether or not to include http templates in app
-	HTTPTemplates bool `json:"http_templates"`
+	// GRPCPort represents port to grpc listen to by default
+	GRPCPort string `json:"grpc_port"`
+
+	// Templates indicates whether or not to include templates in app
+	Templates bool `json:"templates"`
 }
 
 // BootstrapSetting represents a setting required by the application and loaded during bootstrap

@@ -24,6 +24,11 @@ func Generate(work util.GenerationWork, bootOpts util.BootstrapOpts) {
 		work.Done <- util.GeneratedCode{Generator: "GenerateAssetsDir", Code: "Place assets in this folder.", Filename: "assets/.gitkeep", NoOverwrite: true}
 	}
 
+	if bootOpts.Templates {
+		work.Waitgroup.Add(1)
+		work.Done <- util.GeneratedCode{Generator: "GenerateTemplatesDir", Code: "Place templates in this folder.", Filename: "assets/templates/.gitkeep", NoOverwrite: true}
+	}
+
 	work.Waitgroup.Add(1)
 	genservice, err := util.ExecuteTemplate("application/gen-service.sh.tmpl", struct {
 		GeneratePath string

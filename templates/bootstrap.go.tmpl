@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"database/sql"
 	"log"
 	"os"
@@ -29,14 +30,21 @@ var (
 	// {{.Name}} {{.Description}}
 	{{.Name}} string
 	{{end}}{{end}}
-	{{if .Bootstrap.Assets}}Assets *rice.Box{{end}}
-	{{if .Bootstrap.HTTPTemplates}}Templates *rice.Box{{end}}
+	{{if .Bootstrap.Assets}}
+	// Assets is a rice box to assets directory
+	Assets *rice.Box
+	{{end}}
+	{{if .Bootstrap.Templates}}
+	// Templates is a rice box to templates directory
+	Templates *rice.Box
+	{{end}}
 )
 
 // Config represents application configuration loaded during bootstrap
 type Config struct {
 	{{if not .Bootstrap.NoDB}}DB  *sql.DB{{end}}
 	HTTPPort string
+	{{if not .Bootstrap.NoGRPCWire}}GRPCPort string{{end}}
 	{{range .Bootstrap.Settings}}{{if not .Public}}
 	// {{.Name}} {{.Description}}
 	{{.Name}} string
@@ -89,6 +97,13 @@ func Bootstrap() *Config {
 		config.HTTPPort = "{{.Bootstrap.HTTPPort}}"
 	}
 
+	{{if not .Bootstrap.NoGRPCWire}}
+	config.GRPCPort = os.Getenv("GRPC_PORT")
+	if config.GRPCPort == "" {
+		config.GRPCPort = "{{.Bootstrap.GRPCPort}}"
+	}
+	{{end}}
+
 	{{range .Bootstrap.Settings}}{{if not .Public}}
 	config.{{.Name}} = os.Getenv("{{upper (snake .Name)}}")
 	if config.{{.Name}} == "" {
@@ -107,3 +122,29 @@ func Bootstrap() *Config {
 
 	return &config
 }
+
+
+{{if .Bootstrap.Templates}}
+// ExecuteTemplate applies templating a text/template template given data and returns the string output
+func ExecuteTemplate(name string, data interface{}) (string, error) {
+	var output bytes.Buffer
+
+	raw, err := Assets.String("templates/"+name)
+
+	if err != nil {
+		return "", err
+	}
+
+	tpl, err := template.New(name).Funcs(template.FuncMap{}).Parse(raw)
+	if err != nil {
+		return "", err
+	}
+
+	err = tpl.Execute(&output, data)
+	if err != nil {
+		return "", err
+	}
+
+	return output.String(), nil
+}
+{{end}}
