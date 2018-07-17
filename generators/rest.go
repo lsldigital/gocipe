@@ -57,7 +57,7 @@ func GenerateREST(work util.GenerationWork, opts util.RestOpts, entities []util.
 			code, err := util.ExecuteTemplate("rest.go.tmpl", data)
 			if entity.Rest.Hooks.PreCreate || entity.Rest.Hooks.PostCreate || entity.Rest.Hooks.PreRead || entity.Rest.Hooks.PostRead || entity.Rest.Hooks.PreList || entity.Rest.Hooks.PostList || entity.Rest.Hooks.PreUpdate || entity.Rest.Hooks.PostUpdate || entity.Rest.Hooks.PreDelete || entity.Rest.Hooks.PostDelete {
 				hooks, e := util.ExecuteTemplate("rest_hooks.go.tmpl", struct {
-					Hooks   util.RestHooks
+					Hooks   util.ResourceHooks
 					Entity  util.Entity
 					Package string
 				}{entity.Rest.Hooks, entity, data.Package})

@@ -1,0 +1,207 @@
+package bread
+
+import (
+	"golang.org/x/net/context"
+)
+
+// Service represents implementation of BREAD service to Browse, Read, Edit, Add and Delete entities
+type Service struct {}
+
+{{range .Entities}}
+// Create{{.Name}} allows creation of entity of type {{.Name}}
+func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {
+	var (
+		err      error
+		tx       *sql.Tx
+		stop     bool
+		response Create{{.Name}}Response
+	)
+
+	response.{{.Name}} = req.{{.Name}}
+	tx, err = db.Begin()
+	{{if .Bread.Hooks.PreCreate}}
+	stop, err = {{lower .Name}}PreCreate(ctx, tx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{end}}
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.{{.Name}}Repo.SaveWithRel(ctx, req.Event, tx, true)
+
+	{{if .Bread.Hooks.PostCreate}}
+	stop, err = {{lower .Name}}PostCreate(ctx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{end}}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, err
+}
+
+// Get{{.Name}} allows getting a single entity of type {{.Name}}
+func(s Service) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Get{{.Name}}Response, error) {
+	var (
+		resp *GetEventResponse
+		err  error
+	)
+
+	{{if .Bread.Hooks.PreRead}}
+	stop, err = {{lower .Name}}PreRead(ctx, req, &res)
+	{{end}}
+
+	resp.Event, err = models.{{.Name}}Repo.GetWithRel(ctx, req.ID)
+
+	{{if .Bread.Hooks.PostRead}}
+	stop, err = {{lower .Name}}PostRead(ctx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{end}}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// List{{.Name}} allows listing all entity of type {{.Name}}
+func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Name}}Request) (*List{{plural .Name}}Response, error) {
+	var (
+		resp *ListEventsResponse
+		err  error
+	)
+
+	{{if .Bread.Hooks.PreList}}
+	stop, err = {{lower .Name}}PreList(ctx, req, &res)
+	if stop {
+		return &res, nil
+	}
+	{{end}}
+
+	// todo: use filters
+	resp.Events, err = models.{{.Name}}Repo.ListWithRel(ctx, nil, -1, -1)
+
+	{{if .Bread.Hooks.PostList}}
+	stop, err = {{lower .Name}}PostList(ctx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{end}}
+	
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// Update{{.Name}} allows updating one entity of type {{.Name}}
+func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request) (*Update{{.Name}}Response, error) {
+	var (
+		err      error
+		tx       *sql.Tx
+		stop     bool
+		response Update{{.Name}}Response
+	)
+
+	// existing records in DB
+	event, err := models.{{.Name}}Repo.Get(ctx, req.Event.ID)
+	
+	if err != nil {
+		{{if .Bread.Hooks.PreUpdate}}
+		stop, err = {{lower .Name}}PreUpdate(ctx, tx, req, &res, err)
+		if stop {
+			return &res, nil
+		}
+		{{end}}
+		return nil, err
+	}
+
+	response.{{.Name}} = req.{{.Name}}
+	tx, err = db.Begin()
+	
+	{{if .Bread.Hooks.PreUpdate}}
+	stop, err = {{lower .Name}}PreUpdate(ctx, tx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{end}}
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.{{.Name}}Repo.SaveWithRel(ctx, req.Event, nil, true)
+	if err != nil {
+		return nil, err
+	}
+
+	{{if .Bread.Hooks.PostUpdate}}
+	stop, err = {{lower .Name}}PostUpdate(ctx req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{end}}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// Delete{{.Name}} allows deleting an entity of type {{.Name}}
+func(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request) (*Delete{{.Name}}Response, error) {
+	var (
+		err      error
+		tx       *sql.Tx
+		stop     bool
+		response Update{{.Name}}Response
+	)
+
+	// existing records in DB
+	event, err := models.{{.Name}}Repo.Get(ctx, req.Event.ID)
+	if err != nil {
+		{{if .Bread.Hooks.PreDelete}}
+		stop, err = {{lower .Name}}PreDelete(ctx, tx, req, &res, err)
+		if stop {
+			return &res, nil
+		}
+		{{end}}
+		return nil, err
+	}
+
+	tx, err = db.Begin()
+	{{if .Bread.Hooks.PreDelete}}
+	stop, err = {{lower .Name}}PreDelete(ctx, tx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{end}}
+	err = models.{{.Name}}Repo.Delete(ctx, entity, nil, true)
+	if err != nil {
+		return nil, err
+	}
+
+	{{if .Bread.Hooks.PostDelete}}
+	stop, err = {{lower .Name}}PostDelete(ctx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{end}}
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+{{end}}

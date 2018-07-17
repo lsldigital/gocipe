@@ -43,9 +43,9 @@ func main() {
 
 	work.Waitgroup.Add(6)
 
-	entities, err := preprocessEntities(recipe.Entities, recipe.Crud)
+	entities, err := preprocessRecipe(recipe)
 	if err != nil {
-		log.Fatalln("preprocessEntities", err)
+		log.Fatalln("preprocessRecipe", err)
 	}
 
 	go generators.GenerateBootstrap(work, recipe.Bootstrap)

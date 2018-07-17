@@ -8,13 +8,13 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
-func preprocessEntities(raw []util.Entity, crudOpts util.CrudOpts) (map[string]util.Entity, error) {
+func preprocessRecipe(recipe *util.Recipe) (map[string]util.Entity, error) {
 	var (
 		err error
 	)
 
 	entities := make(map[string]util.Entity)
-	for i, entity := range raw {
+	for i, entity := range recipe.Entities {
 		if entity.Name == "" {
 			return nil, fmt.Errorf("entity #%d name cannot be blank", i)
 		}
@@ -29,7 +29,11 @@ func preprocessEntities(raw []util.Entity, crudOpts util.CrudOpts) (map[string]u
 		}
 
 		if entity.Crud == nil {
-			entity.Crud = &crudOpts
+			entity.Crud = &recipe.Crud
+		}
+
+		if entity.Bread == nil {
+			entity.Bread = &recipe.Bread
 		}
 
 		if entity.PrimaryKey == "" {
