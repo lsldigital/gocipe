@@ -139,6 +139,35 @@ func saveGenerated(generated util.GeneratedCode, noSkip bool) (string, string, e
 	return filename, fmt.Sprintf("[Wrote] %s", filename), nil
 }
 
+// generateAndSave saves a generated file and returns error
+func generateAndSave(template string, filename string, data interface{}, noOverwrite bool) error {
+	filename, err := util.GetAbsPath(filename)
+	if err != nil {
+		return err
+	}
+
+	if noOverwrite && util.FileExists(filename) {
+		return util.ErrorSkip
+	}
+
+	var mode os.FileMode = 0755
+	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
+		return err
+	}
+
+	code, err := util.ExecuteTemplate(template, data)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(filename, []byte(code), mode)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // saveAggregate saves aggregated files and returns absolute filename, log entry and error
 func saveAggregate(aggregate []util.GeneratedCode, noSkip bool) (string, string, error) {
 	var generated util.GeneratedCode
