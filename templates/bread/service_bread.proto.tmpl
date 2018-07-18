@@ -66,7 +66,7 @@ message List{{plural .Name}}Request {
 }
 // List{{plural .Name}}Response represents result to a List{{plural .Name}}Request
 message List{{plural .Name}}Response {
-    repeated models.{{.Name}} {{.Name}} = 1;
+    repeated models.{{.Name}} {{plural .Name}} = 1;
 }
 
 // Update{{.Name}}Request represents a request to allow updating one entity of type {{.Name}}
