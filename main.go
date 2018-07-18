@@ -42,22 +42,24 @@ func main() {
 
 	util.SetTemplates(rice.MustFindBox("templates"))
 
-	work.Waitgroup.Add(7)
+	work.Waitgroup.Add(6)
 
 	entities, err := preprocessRecipe(recipe)
 	if err != nil {
 		log.Fatalln("preprocessRecipe", err)
 	}
 
+	//scaffold application layout - synchronously before launching generators
+	application.Generate(recipe.Bootstrap)
+
 	go generators.GenerateBootstrap(work, recipe.Bootstrap)
-	// go generators.GenerateHTTP(work, recipe.HTTP)
 	go crud.Generate(work, recipe.Crud, entities)
 	go bread.Generate(work, entities)
-	// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 	go generators.GenerateSchema(work, recipe.Schema, entities)
 	go generators.GenerateVuetify(work, recipe.Rest, recipe.Vuetify, recipe.Entities)
-	go application.Generate(work, recipe.Bootstrap)
 	go utils.Generate(work)
+	// go generators.GenerateHTTP(work, recipe.HTTP)
+	// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
