@@ -228,11 +228,50 @@ func postProcessGoFiles(toolset util.Toolset, gofiles []string) {
 }
 
 func postProcessProtofiles(toolset util.Toolset) {
-	p := os.Getenv("GOPATH") + "/src"
-	cmd := exec.Command(toolset.Protoc, "-I=proto", "--go_out="+p, "proto/models.proto")
+	var (
+		cmd  *exec.Cmd
+		err  error
+		mode os.FileMode = 0755
+	)
+
+	// models.proto
+	if !util.FileExists(util.WorkingDir + "/models") {
+		if err = os.MkdirAll(util.WorkingDir+"/models", mode); err != nil {
+			fmt.Printf("Error creating folder %s: %s\n", util.WorkingDir+"/models", err)
+			return
+		}
+	}
+	cmd = exec.Command(
+		toolset.Protoc,
+		`-I=`+util.WorkingDir+`/proto`,
+		util.WorkingDir+`/proto/models.proto`,
+		`--go_out=plugins=grpc:`+util.WorkingDir+`/models`,
+	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err = cmd.Run()
+
+	if err != nil {
+		fmt.Printf("Error running %s: %s\n", toolset.Protoc, err)
+		return
+	}
+
+	// service_bread.proto
+	if !util.FileExists(util.WorkingDir + "/services/bread") {
+		if err = os.MkdirAll(util.WorkingDir+"/services/bread", mode); err != nil {
+			fmt.Printf("Error creating folder %s: %s\n", util.WorkingDir+"/services/bread", err)
+			return
+		}
+	}
+	cmd = exec.Command(
+		toolset.Protoc,
+		`-I=`+util.WorkingDir+`/proto`,
+		util.WorkingDir+`/proto/service_bread.proto`,
+		`--go_out=plugins=grpc:`+util.WorkingDir+`/services/bread`,
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
 
 	if err != nil {
 		fmt.Printf("Error running %s: %s\n", toolset.Protoc, err)
