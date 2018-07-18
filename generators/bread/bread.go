@@ -7,7 +7,7 @@ import (
 	"github.com/fluxynet/gocipe/util"
 )
 
-// GenerateBREAD returns generated code for a BREAD service - Browse, Read, Edit, Add & Delete
+// Generate returns generated code for a BREAD service - Browse, Read, Edit, Add & Delete
 func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	var ents []util.Entity
 
