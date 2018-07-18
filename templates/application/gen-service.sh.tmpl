@@ -47,9 +47,9 @@ generate_files() {
         if [ -f "${CURRENT_DIR}/proto/models.proto" ]; then
             echo "- generating JS services for models"
             protoc -I "${CURRENT_DIR}/proto" \
-            --plugin="protoc-gen-ts=${d}node_modules/.bin/protoc-gen-ts" \
-            --js_out="import_style=commonjs,binary:${d}src/services" \
-            --ts_out="${d}src/services" "${CURRENT_DIR}/proto/models.proto"
+                --plugin="protoc-gen-ts=${d}node_modules/.bin/protoc-gen-ts" \
+                --js_out="import_style=commonjs,binary:${d}src/services" \
+                --ts_out="${d}src/services" "${CURRENT_DIR}/proto/models.proto"
         fi
 
         # For each proto file (the argument)
