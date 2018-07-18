@@ -12,20 +12,16 @@ import (
 	"github.com/fluxynet/gocipe/generators/bread"
 	"github.com/fluxynet/gocipe/generators/crud"
 	utils "github.com/fluxynet/gocipe/generators/util"
+	"github.com/fluxynet/gocipe/output"
 	"github.com/fluxynet/gocipe/util"
 )
 
 //go:generate rice embed-go
 
-var (
-	_recipeHash string
-	_recipePath string
-)
-
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	toolset := initToolset()
+	toolset := output.InitToolset()
 	noSkip := flag.Bool("noskip", false, "Do not skip overwriting existing files")
 	flag.Parse()
 
@@ -64,11 +60,11 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	go processOutput(&wg, work, toolset, *noSkip)
+	go output.Process(&wg, work, toolset, *noSkip)
 
 	work.Waitgroup.Wait()
 	close(work.Done)
 	wg.Wait()
 
-	postProcessProtofiles(toolset)
+	output.ProcessProto(toolset)
 }

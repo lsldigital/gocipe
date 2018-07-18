@@ -1,4 +1,4 @@
-package main
+package output
 
 import (
 	"fmt"
@@ -13,7 +13,19 @@ import (
 	"github.com/fluxynet/gocipe/util"
 )
 
-func processOutput(waitgroup *sync.WaitGroup, work util.GenerationWork, toolset util.Toolset, noSkip bool) {
+var (
+	_recipeHash string
+	_recipePath string
+)
+
+// Inject gets hash and path injected into this package
+func Inject(hash, path string) {
+	_recipeHash = hash
+	_recipePath = path
+}
+
+// Process listens to generators and processes generated files
+func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, toolset util.Toolset, noSkip bool) {
 
 	var (
 		outlog, output, gofiles  []string
@@ -139,6 +151,43 @@ func saveGenerated(generated util.GeneratedCode, noSkip bool) (string, string, e
 	return filename, fmt.Sprintf("[Wrote] %s", filename), nil
 }
 
+// GenerateAndSave saves a generated file and returns error
+func GenerateAndSave(template string, filename string, data interface{}, noOverwrite bool, noSkip bool) error {
+	var (
+		code     string
+		err      error
+		isString bool
+		mode     os.FileMode = 0755
+	)
+
+	filename, err = util.GetAbsPath(filename)
+	if err != nil {
+		return err
+	}
+
+	if !noSkip && noOverwrite && util.FileExists(filename) {
+		return util.ErrorSkip
+	}
+
+	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
+		return err
+	}
+
+	if code, isString = data.(string); !isString {
+		code, err = util.ExecuteTemplate(template, data)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = ioutil.WriteFile(filename, []byte(code), mode)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // saveAggregate saves aggregated files and returns absolute filename, log entry and error
 func saveAggregate(aggregate []util.GeneratedCode, noSkip bool) (string, string, error) {
 	var generated util.GeneratedCode
@@ -155,7 +204,8 @@ func saveAggregate(aggregate []util.GeneratedCode, noSkip bool) (string, string,
 	return saveGenerated(generated, noSkip)
 }
 
-func initToolset() util.Toolset {
+// InitToolset check if all required tools are present
+func InitToolset() util.Toolset {
 	var (
 		err error
 		ok  = true
@@ -227,7 +277,8 @@ func postProcessGoFiles(toolset util.Toolset, gofiles []string) {
 	wg.Wait()
 }
 
-func postProcessProtofiles(toolset util.Toolset) {
+// ProcessProto executes protoc to generate go files from protobuf files
+func ProcessProto(toolset util.Toolset) {
 	var (
 		cmd  *exec.Cmd
 		err  error
