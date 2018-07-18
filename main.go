@@ -50,7 +50,7 @@ func main() {
 	}
 
 	//scaffold application layout - synchronously before launching generators
-	application.Generate(recipe.Bootstrap)
+	application.Generate(recipe.Bootstrap, *noSkip)
 
 	go generators.GenerateBootstrap(work, recipe.Bootstrap)
 	go crud.Generate(work, recipe.Crud, entities)

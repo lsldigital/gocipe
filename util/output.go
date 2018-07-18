@@ -7,7 +7,7 @@ import (
 )
 
 // GenerateAndSave saves a generated file and returns error
-func GenerateAndSave(template string, filename string, data interface{}, noOverwrite bool) error {
+func GenerateAndSave(template string, filename string, data interface{}, noOverwrite bool, noSkip bool) error {
 	var (
 		code     string
 		err      error
@@ -20,7 +20,7 @@ func GenerateAndSave(template string, filename string, data interface{}, noOverw
 		return err
 	}
 
-	if noOverwrite && FileExists(filename) {
+	if !noSkip && noOverwrite && FileExists(filename) {
 		return ErrorSkip
 	}
 
