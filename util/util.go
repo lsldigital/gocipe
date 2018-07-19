@@ -116,13 +116,6 @@ type GeneratedCode struct {
 	GeneratedHeaderFormat string
 }
 
-// Toolset represents go tools used by the generators
-type Toolset struct {
-	GoImports string
-	GoFmt     string
-	Protoc    string
-}
-
 // SetTemplates injects template box
 func SetTemplates(box *rice.Box) {
 	templates = box

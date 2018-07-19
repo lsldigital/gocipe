@@ -13,42 +13,57 @@ import (
 	"github.com/fluxynet/gocipe/util"
 )
 
+// toolset represents go tools used by the generators
+type toolset struct {
+	GoImports string
+	GoFmt     string
+	Protoc    string
+}
+
 var (
-	_recipeHash string
 	_recipePath string
+	_log        []string
+	_tools      toolset
 )
 
-// Inject gets hash and path injected into this package
-func Inject(hash, path string) {
-	_recipeHash = hash
+func init() {
+	initToolset()
+}
+
+// Inject gets path injected into this package
+func Inject(path string) {
 	_recipePath = path
 }
 
+// Log outputs to log file
+func Log(message string, a ...interface{}) {
+	_log = append(_log, fmt.Sprintf(message, a...))
+}
+
 // Process listens to generators and processes generated files
-func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, toolset util.Toolset, noSkip bool) {
+func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 
 	var (
-		outlog, output, gofiles  []string
+		output, gofiles          []string
 		written, skipped, failed int
 		err                      error
 	)
 
 	aggregates := make(map[string][]util.GeneratedCode)
-	outlog = append(outlog, "[Recipe Hash] "+_recipeHash)
 
 	for generated := range work.Done {
 		if generated.Error == util.ErrorSkip {
-			outlog = append(outlog, fmt.Sprintf("[Skipped] Generation skipped [%s]", generated.Generator))
+			Log("[Skipped] Generation skipped [%s]", generated.Generator)
 			skipped++
 		} else if generated.Error != nil {
-			outlog = append(outlog, fmt.Sprintf("[Error] Generation failed [%s]: %s", generated.Generator, generated.Error))
+			Log("[Error] Generation failed [%s]: %s", generated.Generator, generated.Error)
 			failed++
 		} else if generated.Aggregate {
 			a := aggregates[generated.Filename]
 			aggregates[generated.Filename] = append(a, generated)
 		} else {
 			fname, l, err := saveGenerated(generated, noSkip)
-			outlog = append(outlog, l)
+			Log(l)
 
 			if err == nil {
 				if strings.HasSuffix(fname, ".go") {
@@ -69,7 +84,7 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, toolset util.T
 
 	for _, generated := range aggregates {
 		fname, l, err := saveAggregate(generated, noSkip)
-		outlog = append(outlog, l)
+		Log(l)
 
 		if err == nil {
 			if strings.HasSuffix(fname, ".go") {
@@ -84,7 +99,7 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, toolset util.T
 		}
 	}
 
-	err = ioutil.WriteFile(_recipePath+".log", []byte(strings.Join(outlog, "\n")), os.FileMode(0755))
+	err = ioutil.WriteFile(_recipePath+".log", []byte(strings.Join(_log, "\n")), os.FileMode(0755))
 	if err != nil {
 		fmt.Printf("failed to write file log file %s.log: %s", _recipePath, err)
 		return
@@ -103,7 +118,7 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, toolset util.T
 	}
 
 	if len(gofiles) > 0 {
-		postProcessGoFiles(toolset, gofiles)
+		postProcessGoFiles(gofiles)
 	}
 
 	output = append(output, fmt.Sprintf("See log file %s.log for details.", _recipePath))
@@ -152,7 +167,7 @@ func saveGenerated(generated util.GeneratedCode, noSkip bool) (string, string, e
 }
 
 // GenerateAndSave saves a generated file and returns error
-func GenerateAndSave(template string, filename string, data interface{}, noOverwrite bool, noSkip bool) error {
+func GenerateAndSave(component string, template string, filename string, data interface{}, noOverwrite bool, noSkip bool) error {
 	var (
 		code     string
 		err      error
@@ -185,6 +200,8 @@ func GenerateAndSave(template string, filename string, data interface{}, noOverw
 		return err
 	}
 
+	Log("[%s] Wrote %s.", component, filename)
+
 	return nil
 }
 
@@ -204,8 +221,8 @@ func saveAggregate(aggregate []util.GeneratedCode, noSkip bool) (string, string,
 	return saveGenerated(generated, noSkip)
 }
 
-// InitToolset check if all required tools are present
-func InitToolset() util.Toolset {
+// initToolset check if all required tools are present
+func initToolset() {
 	var (
 		err error
 		ok  = true
@@ -240,34 +257,34 @@ func InitToolset() util.Toolset {
 		log.Fatalln("Please install above tools before continuing.")
 	}
 
-	return util.Toolset{GoFmt: gofmt, GoImports: goimports, Protoc: protoc}
+	_tools = toolset{GoFmt: gofmt, GoImports: goimports, Protoc: protoc}
 }
 
 // postProcessGoFiles executes goimports and gofmt on go files that have been generated
-func postProcessGoFiles(toolset util.Toolset, gofiles []string) {
+func postProcessGoFiles(gofiles []string) {
 	var wg sync.WaitGroup
 	wg.Add(len(gofiles))
 
 	for _, file := range gofiles {
 		go func(file string) {
-			cmd := exec.Command(toolset.GoImports, "-w", file)
+			cmd := exec.Command(_tools.GoImports, "-w", file)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			err := cmd.Run()
 
 			if err != nil {
-				fmt.Printf("Error running %s on %s: %s\n", toolset.GoImports, file, err)
+				fmt.Printf("Error running %s on %s: %s\n", _tools.GoImports, file, err)
 				wg.Done()
 				return
 			}
 
-			cmd = exec.Command(toolset.GoFmt, "-w", file)
+			cmd = exec.Command(_tools.GoFmt, "-w", file)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			err = cmd.Run()
 
 			if err != nil {
-				fmt.Printf("Error running %s on %s: %s\n", toolset.GoFmt, file, err)
+				fmt.Printf("Error running %s on %s: %s\n", _tools.GoFmt, file, err)
 			}
 
 			wg.Done()
@@ -278,11 +295,12 @@ func postProcessGoFiles(toolset util.Toolset, gofiles []string) {
 }
 
 // ProcessProto executes protoc to generate go files from protobuf files
-func ProcessProto(toolset util.Toolset) {
+func ProcessProto() {
 	var (
-		cmd  *exec.Cmd
-		err  error
-		mode os.FileMode = 0755
+		cmd    *exec.Cmd
+		err    error
+		mode   os.FileMode = 0755
+		gopath             = os.Getenv("GOPATH") + "/src/"
 	)
 
 	// models.proto
@@ -293,17 +311,17 @@ func ProcessProto(toolset util.Toolset) {
 		}
 	}
 	cmd = exec.Command(
-		toolset.Protoc,
+		_tools.Protoc,
 		`-I=`+util.WorkingDir+`/proto`,
 		util.WorkingDir+`/proto/models.proto`,
-		`--go_out=plugins=grpc:`+util.WorkingDir+`/models`,
+		`--go_out=plugins=grpc:`+gopath,
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 
 	if err != nil {
-		fmt.Printf("Error running %s: %s\n", toolset.Protoc, err)
+		fmt.Printf("Error running %s: %s\n", _tools.Protoc, err)
 		return
 	}
 
@@ -315,17 +333,17 @@ func ProcessProto(toolset util.Toolset) {
 		}
 	}
 	cmd = exec.Command(
-		toolset.Protoc,
+		_tools.Protoc,
 		`-I=`+util.WorkingDir+`/proto`,
 		util.WorkingDir+`/proto/service_bread.proto`,
-		`--go_out=plugins=grpc:`+util.WorkingDir+`/services/bread`,
+		`--go_out=plugins=grpc:`+gopath,
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 
 	if err != nil {
-		fmt.Printf("Error running %s: %s\n", toolset.Protoc, err)
+		fmt.Printf("Error running %s: %s\n", _tools.Protoc, err)
 		return
 	}
 

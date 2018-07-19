@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package models;
-// option go_package = "{{.ProjectImportPath}}/models";
+option go_package = "{{.ProjectImportPath}}/models";
 
 {{range .Imports -}}
 {{.}}

@@ -30,8 +30,9 @@ func loadRecipe() (*util.Recipe, error) {
 		return nil, err
 	}
 
+	output.Log("%x", sha256.Sum256([]byte(recipeContent)))
+
 	output.Inject(
-		fmt.Sprintf("%x", sha256.Sum256([]byte(recipeContent))),
 		recipePath,
 	)
 

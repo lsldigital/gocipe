@@ -21,7 +21,6 @@ import (
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	toolset := output.InitToolset()
 	noSkip := flag.Bool("noskip", false, "Do not skip overwriting existing files")
 	flag.Parse()
 
@@ -60,11 +59,11 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	go output.Process(&wg, work, toolset, *noSkip)
+	go output.Process(&wg, work, *noSkip)
 
 	work.Waitgroup.Wait()
 	close(work.Done)
 	wg.Wait()
 
-	output.ProcessProto(toolset)
+	output.ProcessProto()
 }

@@ -3,6 +3,7 @@ syntax = "proto3";
 package bread;
 
 import "models.proto";
+option go_package = "{{.ProjectImportPath}}/services/bread";
 
 message ListFilters {
     string Field = 1;
