@@ -212,6 +212,12 @@ func GenerateAndSave(component string, template string, filename string, data in
 
 	Log("[%s] Wrote %s.", component, filename)
 
+	if strings.HasSuffix(filename, ".go") {
+		AddGoFile(filename)
+	} else if strings.HasSuffix(filename, ".sh") {
+		os.Chmod(filename, 0755)
+	}
+
 	return nil
 }
 

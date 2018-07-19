@@ -1,17 +1,14 @@
 package util
 
 import (
-	"fmt"
+	"github.com/fluxynet/gocipe/output"
 
 	"github.com/fluxynet/gocipe/util"
 )
 
 // Generate common utility functions
 func Generate(work util.GenerationWork) {
-	models, err := util.ExecuteTemplate("util/util.go.tmpl", struct{}{})
-	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateUtil", Code: models, Filename: "util/util.gocipe.go"}
-	} else {
-		work.Done <- util.GeneratedCode{Generator: "GenerateUtil", Error: fmt.Errorf("failed to load execute template: %s", err)}
-	}
+	output.GenerateAndSave("Util", "util/credentials.go.tmpl", "util/credentials/connection.gocipe.go", nil, false, false)
+	output.GenerateAndSave("Util", "util/util.go.tmpl", "util/util.gocipe.go", nil, false, false)
+	work.Waitgroup.Done()
 }
