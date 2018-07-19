@@ -66,4 +66,5 @@ func main() {
 	wg.Wait()
 
 	output.ProcessProto()
+	output.WriteLog()
 }
