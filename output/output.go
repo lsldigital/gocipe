@@ -18,12 +18,13 @@ type toolset struct {
 	GoImports string
 	GoFmt     string
 	Protoc    string
+	Dep       string
 }
 
 var (
-	_recipePath string
-	_log        []string
-	_tools      toolset
+	_recipePath    string
+	_log, _gofiles []string
+	_tools         toolset
 )
 
 func init() {
@@ -38,6 +39,12 @@ func Inject(path string) {
 // Log outputs to log file
 func Log(message string, a ...interface{}) {
 	_log = append(_log, fmt.Sprintf(message, a...))
+}
+
+// AddGoFile adds a file in the queue to be gofmt'ed and goimport'ed
+func AddGoFile(filename string) {
+	filename, _ = util.GetAbsPath(filename)
+	_gofiles = append(_gofiles, filename)
 }
 
 // WriteLog write logs in log-file
@@ -55,7 +62,7 @@ func WriteLog() {
 func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 
 	var (
-		output, gofiles          []string
+		output                   []string
 		written, skipped, failed int
 	)
 
@@ -77,7 +84,7 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 
 			if err == nil {
 				if strings.HasSuffix(fname, ".go") {
-					gofiles = append(gofiles, fname)
+					AddGoFile(fname)
 				} else if strings.HasSuffix(fname, ".sh") {
 					os.Chmod(fname, 0755)
 				}
@@ -89,6 +96,7 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 				failed++
 			}
 		}
+
 		work.Waitgroup.Done()
 	}
 
@@ -98,7 +106,7 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 
 		if err == nil {
 			if strings.HasSuffix(fname, ".go") {
-				gofiles = append(gofiles, fname)
+				AddGoFile(fname)
 			}
 
 			written++
@@ -121,10 +129,6 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 
 	if failed > 0 {
 		output = append(output, fmt.Sprintf("%d errors occurred during recipe generation.", failed))
-	}
-
-	if len(gofiles) > 0 {
-		postProcessGoFiles(gofiles...)
 	}
 
 	output = append(output, fmt.Sprintf("See log file %s.log for details.", _recipePath))
@@ -234,19 +238,19 @@ func initToolset() {
 		ok  = true
 	)
 
-	goimports, err := exec.LookPath("goimports")
+	_tools.GoImports, err = exec.LookPath("goimports")
 	if err != nil {
 		fmt.Println("Required tool goimports not found: ", err)
 		ok = false
 	}
 
-	gofmt, err := exec.LookPath("gofmt")
+	_tools.GoFmt, err = exec.LookPath("gofmt")
 	if err != nil {
 		fmt.Println("Required tool gofmt not found: ", err)
 		ok = false
 	}
 
-	protoc, err := exec.LookPath("protoc")
+	_tools.Protoc, err = exec.LookPath("protoc")
 	if err != nil {
 		fmt.Println("Required tool protoc not found: ", err)
 		ok = false
@@ -259,20 +263,27 @@ func initToolset() {
 		ok = false
 	}
 
+	_tools.Dep, err = exec.LookPath("dep")
+	if err != nil {
+		fmt.Println("Required tool dep not found: ", err)
+		fmt.Println("Install using go get -u github.com/golang/dep/cmd/dep")
+		ok = false
+	}
+
 	if !ok {
 		log.Fatalln("Please install above tools before continuing.")
 	}
-
-	_tools = toolset{GoFmt: gofmt, GoImports: goimports, Protoc: protoc}
 }
 
-// postProcessGoFiles executes goimports and gofmt on go files that have been generated
-func postProcessGoFiles(gofiles ...string) {
+// PostProcessGoFiles executes goimports and gofmt on go files that have been generated
+func PostProcessGoFiles() {
 	var wg sync.WaitGroup
-	wg.Add(len(gofiles))
+	wg.Add(len(_gofiles))
 
-	for _, file := range gofiles {
+	for _, file := range _gofiles {
 		go func(file string) {
+			defer wg.Done()
+
 			cmd := exec.Command(_tools.GoImports, "-w", file)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -280,7 +291,6 @@ func postProcessGoFiles(gofiles ...string) {
 
 			if err != nil {
 				fmt.Printf("Error running %s on %s: %s\n", _tools.GoImports, file, err)
-				wg.Done()
 				return
 			}
 
@@ -292,11 +302,33 @@ func postProcessGoFiles(gofiles ...string) {
 			if err != nil {
 				fmt.Printf("Error running %s on %s: %s\n", _tools.GoFmt, file, err)
 			}
-
-			wg.Done()
 		}(file)
 	}
 
+	wg.Wait()
+
+	var mode string
+	if util.FileExists(util.WorkingDir + "/Gopkg.toml") {
+		mode = "ensure"
+	} else {
+		mode = "init"
+	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		cmd := exec.Command(_tools.Dep, mode)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+
+		if err != nil {
+			fmt.Printf("Error running dep %s: %s\n", mode, err)
+		}
+	}()
+
+	fmt.Printf("dep %s in progress...", mode)
 	wg.Wait()
 }
 

@@ -18,4 +18,5 @@ func Generate(bootOpts util.BootstrapOpts, noSkip bool) {
 	output.GenerateAndSave("Scaffold", "", "assets/web/app/.gitkeep", "Place web assets in this folder.", true, noSkip)
 	output.GenerateAndSave("Scaffold", "application/gen-service.sh.tmpl", "gen-service.sh", struct{ GeneratePath string }{GeneratePath: "$GOPATH" + strings.TrimPrefix(util.WorkingDir, os.Getenv("GOPATH")) + "/services"}, true, noSkip)
 	output.GenerateAndSave("Scaffold", "application/main.go.tmpl", "main.go", struct{ Bootstrap util.BootstrapOpts }{bootOpts}, true, noSkip)
+	output.AddGoFile("main.go")
 }
