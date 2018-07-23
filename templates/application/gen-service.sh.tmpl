@@ -70,7 +70,7 @@ generate_files() {
     # proto/models.proto goes in "models" folder
     protoc -I="${CURRENT_DIR}/proto" \
         "${CURRENT_DIR}/proto/service_models.proto" \
-        --go_out=plugins=grpc:${CURRENT_DIR}/models
+        --go_out=plugins=grpc:${GOPATH}/src
 
     # For each service proto file (the argument)
     for f in $@; do
@@ -81,7 +81,7 @@ generate_files() {
             fi
             protoc -I="${CURRENT_DIR}/proto" \
                 "${CURRENT_DIR}/proto/service_${f}.proto" \
-                --go_out=plugins=grpc:${CURRENT_DIR}/services/${f}
+                --go_out=plugins=grpc:${GOPATH}/src
         fi
     done
 
