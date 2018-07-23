@@ -70,6 +70,9 @@ type Recipe struct {
 	// Crud describes options for Crud generation
 	Crud CrudOpts `json:"crud"`
 
+	// Bread describes options for Browse, Read, Edit, Add & Delete service generation
+	Bread BreadOpts `json:"bread"`
+
 	// Rest describes options for Rest generation
 	Rest RestOpts `json:"rest"`
 
@@ -226,11 +229,35 @@ type RestOpts struct {
 	Prefix string `json:"prefix"`
 
 	// Hooks describes hooks options for REST generation
-	Hooks RestHooks `json:"hooks"`
+	Hooks ResourceHooks `json:"hooks"`
 }
 
-// RestHooks represents which rest hooks should be generated
-type RestHooks struct {
+// BreadOpts represents which BREAD functions should be generated
+type BreadOpts struct {
+	// Generate indicates whether or not to generate the BREAD service
+	Generate bool `json:"generate"`
+
+	// Create indicates if code Add component of BREAD service, method Create, should be automatically generated
+	Create bool `json:"create"`
+
+	// Read indicates if code Read component of BREAD service, method Read, should be automatically generated
+	Read bool `json:"read"`
+
+	// List indicates if code Browse component of BREAD service, method List, should be automatically generated
+	List bool `json:"list"`
+
+	// Update indicates if code Edit component of BREAD service, method Update, should be automatically generated
+	Update bool `json:"update"`
+
+	// Delete indicates if code Delete component of BREAD service, method Delete, should be automatically generated
+	Delete bool `json:"delete"`
+
+	// Hooks describes hooks options for REST generation
+	Hooks ResourceHooks `json:"hooks"`
+}
+
+// ResourceHooks represents which rest hooks should be generated
+type ResourceHooks struct {
 
 	// PreCreate allows hook function to be executed before POST operations are done
 	PreCreate bool `json:"pre_create"`
@@ -300,6 +327,9 @@ type Entity struct {
 
 	// Crud describes options for Crud generation - overrides recipe level Crud config
 	Crud *CrudOpts `json:"crud"`
+
+	// Bread describes options for Bread generation - overrides recipe level Bread config
+	Bread *BreadOpts `json:"bread"`
 
 	// Rest describes options for Rest generation - overrides recipe level Rest config
 	Rest *RestOpts `json:"rest"`

@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/fluxynet/gocipe/output"
 	"github.com/fluxynet/gocipe/util"
 )
 
@@ -29,8 +30,11 @@ func loadRecipe() (*util.Recipe, error) {
 		return nil, err
 	}
 
-	_recipeHash = fmt.Sprintf("%x", sha256.Sum256([]byte(recipeContent)))
-	_recipePath = recipePath
+	output.Log("%x", sha256.Sum256([]byte(recipeContent)))
+
+	output.Inject(
+		recipePath,
+	)
 
 	err = json.Unmarshal(recipeContent, &recipe)
 	if err != nil {
