@@ -15,6 +15,12 @@ const (
 	OperationInsert byte = 'I'
 	// OperationUpdate indicates a Update save operation is under way
 	OperationUpdate byte = 'U'
+
+	// NoOffset indicates List/Select queries without offset clause
+	NoOffset = -1
+	// NoLimit indicates List/Select queries without limit clause
+	NoLimit  = -1
+//
 )
 
 // Init is responsible to initialize all repositories
@@ -61,6 +67,12 @@ type {{.Name}}Repository interface {
 
 	// ListWithRel returns a slice containing {{.Name}} records; will also load related entities.
 	ListWithRel(ctx context.Context, filters []ListFilter, offset, limit int) ([]*{{.Name}}, error)
+
+	// Select returns a slice containing {{.EntityName}} records according to a custom SQL condition
+	Select(ctx context.Context, offset int, limit int, condition string, values interface{}...) ([]*{{.EntityName}}, error)
+	
+	// SelectWithRel returns a slice containing {{.EntityName}} records according to a custom SQL condition; will also load related entities.
+	SelectWithRel(ctx context.Context, offset int, limit int, condition string, values interface{}...) ([]*{{.EntityName}}, error)
 {{end -}}
 
 {{if (DerefCrudOpts .Crud).Update -}}
