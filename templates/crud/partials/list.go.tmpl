@@ -1,6 +1,6 @@
 
 // List returns a slice containing {{.EntityName}} records
-func (repo {{.EntityName}}Repositorium) List(ctx context.Context, offset int, limit int, filters ListFilter...) ([]*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) List(ctx context.Context, offset int, limit int, filters ...ListFilter) ([]*{{.EntityName}}, error) {
 	var (
 		list     []*{{.EntityName}}
 		segments []string
@@ -80,13 +80,13 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, offset int, li
 }
 
 // ListWithRel returns a slice containing {{.EntityName}} records; will also load related entities.
-func (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, offset int, limit int, filters ListFilter...) ([]*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, offset int, limit int, filters ...ListFilter) ([]*{{.EntityName}}, error) {
 	var (
 		err error
 		entities []*{{.EntityName}}
 	)
 
-	entities, err = repo.List(ctx, filters, offset, limit)
+	entities, err = repo.List(ctx, offset, limit, filters...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, offset 
 }
 
 // Select returns a slice containing {{.EntityName}} records according to a custom SQL condition
-func (repo {{.EntityName}}Repositorium) Select(ctx context.Context, offset int, limit int, condition string, values interface{}...) ([]*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) Select(ctx context.Context, offset int, limit int, condition string, values ...interface{}) ([]*{{.EntityName}}, error) {
 	var (
 		list     []*{{.EntityName}}
 		err      error
@@ -157,7 +157,7 @@ func (repo {{.EntityName}}Repositorium) Select(ctx context.Context, offset int, 
 }
 
 // SelectWithRel returns a slice containing {{.EntityName}} records according to a custom SQL condition; will also load related entities.
-func (repo {{.EntityName}}Repositorium) SelectWithRel(ctx context.Context, offset int, limit int, condition string, values interface{}...) ([]*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) SelectWithRel(ctx context.Context, offset int, limit int, condition string, values ...interface{}) ([]*{{.EntityName}}, error) {
 	var (
 		err error
 		entities []*{{.EntityName}}

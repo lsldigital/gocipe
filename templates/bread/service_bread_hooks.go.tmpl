@@ -38,25 +38,25 @@ func {{lower .Entity.Name}}PostCreate(ctx context.Context, req *{{.Entity.Name}}
 {{end}}
 {{if .PreUpdate}}
 // {{lower .Entity.Name}}PreUpdate is a hook that occurs before the pdate operation in BREAD service. Returns stop (boolean) and error
-func {{lower .Entity.Name}}PreUpdate(ctx context.Context, tx *sql.Tx, req *{{.Entity.Name}}Request, res *{{.Entity.Name}}Response, err error) (bool, error) {
+func {{lower .Entity.Name}}PreUpdate(ctx context.Context, tx *sql.Tx, req *{{.Entity.Name}}Request, res *{{.Entity.Name}}Response, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PostUpdate}}
 // {{lower .Entity.Name}}PostUpdate is a hook that occurs after the Update operation in BREAD service. Returns stop (boolean) and error
-func {{lower .Entity.Name}}PostUpdate(ctx context.Context, req *{{.Entity.Name}}Request, res *{{.Entity.Name}}Response, err error) (bool, error) {
+func {{lower .Entity.Name}}PostUpdate(ctx context.Context, req *{{.Entity.Name}}Request, res *{{.Entity.Name}}Response, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PreDelete}}
 // {{lower .Entity.Name}}PreDelete is a hook that occurs before the elete operation in BREAD service. Returns stop (boolean) and error
-func {{lower .Entity.Name}}PreDelete(ctx context.Context, tx *sql.Tx, req *{{.Entity.Name}}Request, res *{{.Entity.Name}}Response, err error) (bool, error) {
+func {{lower .Entity.Name}}PreDelete(ctx context.Context, tx *sql.Tx, req *{{.Entity.Name}}Request, res *{{.Entity.Name}}Response, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PostDelete}}
 // {{lower .Entity.Name}}PostDelete is a hook that occurs after the Delete operation in BREAD service. Returns stop (boolean) and error
-func {{lower .Entity.Name}}PostDelete(ctx context.Context, req *{{.Entity.Name}}Request, res *{{.Entity.Name}}Response, err error) (bool, error) {
+func {{lower .Entity.Name}}PostDelete(ctx context.Context, req *{{.Entity.Name}}Request, res *{{.Entity.Name}}Response, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
