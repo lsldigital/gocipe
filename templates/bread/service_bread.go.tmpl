@@ -30,7 +30,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 		return nil, err
 	}
 
-	err = models.{{.Name}}Repo.SaveWithRel(ctx, req.{{.Name}}, tx, true)
+	err = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)
 
 	{{if .Bread.Hooks.PostCreate}}
 	stop, err = {{lower .Name}}PostCreate(ctx, req, &res, err)
