@@ -10,37 +10,37 @@ generate_files() {
     for d in ${WEB_DIR}/*/; do
         echo -e "# ${d}\n"
         if [ ! -f "${d}package.json" ]; then
-            echo "- npm init: package.json file not found"
+            echo "- npm init: package.json file was not found"
             cd "${d}"
             npm init --quiet --yes >> $LOG_FILE
         fi
 
         if [ ! -d "${d}node_modules/" ]; then
-            echo "- npm init: node_modules dir not found"
+            echo "- npm init: node_modules dir was not found"
             cd "${d}"
             npm init --quiet --yes >> $LOG_FILE
         fi
 
         if [ ! -d "${d}node_modules/.bin" ]; then
-            echo "- npm init: .bin dir not found"
+            echo "- npm init: .bin dir was not found"
             cd "${d}"
             npm init --quiet --yes >> $LOG_FILE
         fi
 
         if [ ! -f "${d}node_modules/.bin/protoc-gen-ts" ]; then
-            echo "- npm install --save-dev ts-protoc-gen: protoc-gen-ts executable not found"
+            echo "- npm install --save-dev ts-protoc-gen: protoc-gen-ts executable was not found"
             cd "${d}"
             npm install --quiet --save-dev ts-protoc-gen >> $LOG_FILE
         fi
 
         if [ ! -d "${d}dist" ]; then
-            echo "- creating ${d}dist: dist dir not found"
+            echo "- creating ${d}dist: dist dir was not found"
             mkdir -p "${d}dist"
             echo "" > "${d}dist/.gitkeep"
         fi
 
         if [ ! -d "${d}src/services" ]; then
-            echo "- creating ${d}src/services: src/services dir not found"
+            echo "- creating ${d}src/services: src/services dir was not found"
             mkdir -p "${d}src/services"
         fi
 
