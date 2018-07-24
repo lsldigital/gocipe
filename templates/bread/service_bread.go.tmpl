@@ -27,7 +27,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	{{end}}
 
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	err = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)
@@ -40,10 +40,10 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	{{end}}
 
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
-	return &res, err
+	return &res, errors.WithStack(err)
 }
 
 // Get{{.Name}} allows getting a single entity of type {{.Name}}
@@ -67,7 +67,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Ge
 	{{end}}
 
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return res, nil
@@ -98,7 +98,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 	{{end}}
 	
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return res, nil
@@ -122,7 +122,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 			return &res, nil
 		}
 		{{end}}
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	res.{{.Name}} = req.{{.Name}}
@@ -136,12 +136,12 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	{{end}}
 
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	err = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, nil, true)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	{{if .Bread.Hooks.PostUpdate}}
@@ -152,7 +152,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	{{end}}
 
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return &res, nil
@@ -176,7 +176,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request
 			return &res, nil
 		}
 		{{end}}
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	tx, err = db.Begin()
@@ -188,7 +188,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request
 	{{end}}
 	err = models.{{.Name}}Repo.Delete(ctx, existing, nil, true)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	{{if .Bread.Hooks.PostDelete}}
@@ -198,7 +198,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request
 	}
 	{{end}}
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return &res, nil
