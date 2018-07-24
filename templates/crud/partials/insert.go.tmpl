@@ -11,12 +11,12 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.E
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		
 		tx, err = repo.db.Begin()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 	{{range .Before}}{{.}}
@@ -25,12 +25,12 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.E
 	{{if eq .PrimaryKey "serial" -}}
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	{{else}}
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	{{- end}}
 
@@ -39,17 +39,17 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.E
 
 	{{if .HasPreHook}}
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	
 	if err = repo.preSave(ctx, tx, models.OperationInsert, entity); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{if eq .PrimaryKey "serial" -}}
 	err = stmt.QueryRow({{.StructFields}}).Scan(&id)
@@ -57,7 +57,7 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.E
 		entity.ID = id
 	} else {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{else}}
 	{{if eq .PrimaryKey "uuid" -}}
@@ -68,30 +68,30 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.E
 
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	if err := repo.postSave(ctx, "INSERT", entity, tx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	if autocommit {
@@ -101,7 +101,7 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.E
 		}
 	}
 
-	return err
+	return errors.WithStack(err)
 }
 
 // InsertWithRel performs an SQL insert for {{.EntityName}} record and update instance with inserted id; including related entities. Prefer using Save instead of Insert directly.
@@ -116,12 +116,12 @@ func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entit
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		
 		tx, err = repo.db.Begin()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 	{{range .Before}}{{.}}
@@ -130,12 +130,12 @@ func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entit
 	{{if eq .PrimaryKey "serial" -}}
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	{{else}}
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	{{- end}}
 
@@ -144,17 +144,17 @@ func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entit
 
 	{{if .HasPreHook}}
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	
 	if err = repo.preSave(ctx, tx, models.OperationInsert, entity); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{if eq .PrimaryKey "serial" -}}
 	err = stmt.QueryRow({{.StructFields}}).Scan(&id)
@@ -162,7 +162,7 @@ func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entit
 		entity.ID = id
 	} else {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{else}}
 	{{if eq .PrimaryKey "uuid" -}}
@@ -173,40 +173,40 @@ func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entit
 
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 
 	{{range .Related}}{{.}}
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	if err := repo.postSave(ctx, "INSERT", entity, tx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	if autocommit {
@@ -216,5 +216,5 @@ func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entit
 		}
 	}
 
-	return err
+	return errors.WithStack(err)
 }

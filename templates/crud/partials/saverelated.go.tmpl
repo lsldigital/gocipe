@@ -8,46 +8,46 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		
 		tx, err = repo.db.Begin()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 	
 	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	_, err = stmt.Exec(idthis)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	for _, rel := range relatives {
 		if err = util.CheckContext(ctx); err != nil {
 			tx.Rollback()
-			return err
+			return errors.WithStack(err)
 		}
 		
 		_, err = stmt.Exec(idthis, rel.ID)
 		if err != nil {
 			tx.Rollback()
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
@@ -58,7 +58,7 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 		}
 	}
 
-	return err
+	return errors.WithStack(err)
 }
 
 // Save{{.Funcname}}IDs is a helper function to save related {{.PropertyName}} IDs in a pivot table (many-many relationship)
@@ -70,46 +70,46 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		
 		tx, err = repo.db.Begin()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 	
 	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	_, err = stmt.Exec(idthis)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	for _, relid := range relatives {
 		if err = util.CheckContext(ctx); err != nil {
 			tx.Rollback()
-			return err
+			return errors.WithStack(err)
 		}
 		
 		_, err = stmt.Exec(idthis, relid)
 		if err != nil {
 			tx.Rollback()
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
@@ -120,5 +120,5 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context
 		}
 	}
 
-	return err
+	return errors.WithStack(err)
 }

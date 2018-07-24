@@ -8,12 +8,12 @@ func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity *{{.En
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		
 		tx, err = repo.db.Begin()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
@@ -27,40 +27,40 @@ func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity *{{.En
 	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
 	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	{{if .HasPreHook}}
     if err = repo.preSave(ctx, tx, models.OperationMerge, entity); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	if err = repo.postSave(ctx, "MERGE", entity, tx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	if autocommit {
@@ -70,7 +70,7 @@ func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity *{{.En
 		}
 	}
 
-	return err
+	return errors.WithStack(err)
 }
 
 // MergeWithRel performs an SQL merge for {{.EntityName}} record.
@@ -82,12 +82,12 @@ func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		
 		tx, err = repo.db.Begin()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
@@ -101,51 +101,51 @@ func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity
 	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
 	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	{{if .HasPreHook}}
     if err = repo.preSave(ctx, tx, models.OperationMerge, entity); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	_, err = stmt.Exec({{.StructFields}})
 	if err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	{{range .Related}}{{.}}
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	if err = repo.postSave(ctx, "MERGE", entity, tx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	if autocommit {
@@ -155,5 +155,5 @@ func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity
 		}
 	}
 
-	return err
+	return errors.WithStack(err)
 }

@@ -9,36 +9,36 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity *{{.E
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		tx, err = repo.db.Begin()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE id = $1")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	{{if .HasPreHook}}
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	if err = repo.preDelete(ctx, tx, id); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	
 	_, err = stmt.Exec(id)
@@ -46,7 +46,7 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity *{{.E
 		entity.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
 	} else {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	
 	{{range .Post}}{{.}}
@@ -55,17 +55,17 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity *{{.E
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	
 	if err = repo.postDelete(ctx, tx, id); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	if autocommit {
@@ -75,5 +75,5 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity *{{.E
 		}
 	}
 
-	return err
+	return errors.WithStack(err)
 }

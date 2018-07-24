@@ -9,7 +9,7 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 	)
 
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	c := 1
@@ -25,11 +25,11 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 		SELECT {{.ThisID}}, {{.SQLFields}} FROM {{.ThatTable}} WHERE {{.ThisID}} IN (`+placeholder+`)
 	`, values...)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	for rows.Next() {
@@ -42,7 +42,7 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 		{{end}}
 		err = rows.Scan(&thisID, {{.StructFields}})
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		{{range .After}}{{.}}
 		{{end}}
@@ -52,7 +52,7 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 		}
 		
 		if err = util.CheckContext(ctx); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
