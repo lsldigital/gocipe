@@ -73,7 +73,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Ge
 	return res, nil
 }
 
-// List{{.Name}} allows listing all entity of type {{.Name}}
+// List{{plural .Name}} allows listing all entity of type {{.Name}}
 func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Name}}Request) (*List{{plural .Name}}Response, error) {
 	var (
 		res *List{{plural .Name}}Response
