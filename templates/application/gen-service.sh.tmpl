@@ -69,7 +69,7 @@ generate_files() {
 
     # proto/models.proto goes in "models" folder
     protoc -I="${CURRENT_DIR}/proto" \
-        "${CURRENT_DIR}/proto/service_models.proto" \
+        "${CURRENT_DIR}/proto/models.proto" \
         --go_out=plugins=grpc:${GOPATH}/src
 
     # For each service proto file (the argument)
