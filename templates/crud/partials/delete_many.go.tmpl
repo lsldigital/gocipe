@@ -31,8 +31,8 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, filters 
 	}
 
 	for i, filter := range filters {
-		segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
-		values = append(values, filter.Value)
+		segments = append(segments, filter.GetField()+" "+filter.GetOperation()+" $"+strconv.Itoa(i+1))
+		values = append(values, filter.GetValue())
 	}
 
 	if len(segments) != 0 {

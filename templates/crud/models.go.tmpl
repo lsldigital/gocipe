@@ -35,11 +35,38 @@ func StartTransaction() (*sql.Tx, error) {
 	return db.Begin()
 }
 
-//ListFilter represents a filter to apply during listing (crud)
-type ListFilter struct {
+// ListFilterItem represents a filter to apply during listing (crud)
+type ListFilterItem struct {
 	Field     string
 	Operation string
 	Value     interface{}
+}
+
+// ListFilter interface
+type ListFilter interface {
+	GetField() string
+	GetOperation() string
+	GetValue() string
+}
+
+// GetField gets "Field" value from ListFilterItem struct
+func (s ListFilterItem) GetField() string {
+	return s.Field
+}
+
+// GetOperation gets "Operation" value from ListFilterItem struct
+func (s ListFilterItem) GetOperation() string {
+	return s.Operation
+}
+
+// GetValue gets "Value" value from ListFilterItem struct
+func (s ListFilterItem) GetValue() string {
+	t, ok := s.Value.(string)
+	if ok {
+		return t
+	}
+
+	return ""
 }
 
 {{- $Entities := .Entities -}}
