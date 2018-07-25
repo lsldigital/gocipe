@@ -154,7 +154,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 		return nil, errors.WithStack(err)
 	}
 
-	err = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, nil, true)
+	err = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -203,7 +203,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request
 		return &res, nil
 	}
 	{{end}}
-	err = models.{{.Name}}Repo.Delete(ctx, existing, nil, true)
+	err = models.{{.Name}}Repo.Delete(ctx, existing, tx, true)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
