@@ -14,13 +14,13 @@ func {{lower .Entity.Name}}PostRead(ctx context.Context, req *Get{{.Entity.Name}
 {{end}}
 {{if .PreList}}
 // {{lower .Entity.Name}}PreList is a hook that occurs before the ist operation in BREAD service. Returns stop (boolean) and error
-func {{lower .Entity.Name}}PreList(ctx context.Context, req *List{{.Entity.Name}}Request, res *List{{.Entity.Name}}Response) (bool, error) {
+func {{lower .Entity.Name}}PreList(ctx context.Context, req *List{{plural  .Entity.Name}}Request, res *List{{plural .Entity.Name}}Response) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PostList}}
 // {{lower .Entity.Name}}PostList is a hook that occurs after the List operation in BREAD service. Returns stop (boolean) and error
-func {{lower .Entity.Name}}PostList(ctx context.Context, req *List{{.Entity.Name}}Request, res *List{{.Entity.Name}}Response, err error) (bool, error) {
+func {{lower .Entity.Name}}PostList(ctx context.Context, req *List{{plural  .Entity.Name}}Request, res *List{{plural  .Entity.Name}}Response, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
