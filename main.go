@@ -2,9 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
-	"os"
 	"runtime"
 	"sync"
 
@@ -21,19 +19,19 @@ import (
 //go:generate rice embed-go
 
 // Versioning info
-var (
-	appVersion = "n/a"
-	appCommit  = "n/a"
-	appBuilt   = "n/a"
-)
+//var (
+//	appVersion = "n/a"
+//	appCommit  = "n/a"
+//	appBuilt   = "n/a"
+//)
 
 func main() {
-	version := flag.Bool("v", false, "prints current app version")
-	flag.Parse()
-	if *version {
-		fmt.Printf("Version : %v \nCommit : %v\nBuilt: %v\n", appVersion, appCommit, appBuilt)
-		os.Exit(0)
-	}
+	//version := flag.Bool("v", false, "prints current app version")
+	//flag.Parse()
+	//if *version {
+	//	fmt.Printf("Version : %v \nCommit : %v\nBuilt: %v\n", appVersion, appCommit, appBuilt)
+	//	os.Exit(0)
+	//}
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
