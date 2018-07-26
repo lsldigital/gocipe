@@ -11,7 +11,7 @@ import (
 func generateGet(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var sqlfields, structfields, before, after, related []string
 
-	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
+	sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, "id"))
 	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 
 	for _, field := range entity.Fields {
@@ -24,7 +24,7 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 			structfields = append(structfields, fmt.Sprintf("&entity.%s", field.Property.Name))
 		}
 
-		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
+		sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, field.Schema.Field))
 	}
 
 	for _, rel := range entity.Relationships {
@@ -32,7 +32,7 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 		switch rel.Type {
 		case util.RelationshipTypeManyOne:
 			structfields = append(structfields, fmt.Sprintf("&entity.%s", rel.Name+"ID"))
-			sqlfields = append(sqlfields, fmt.Sprintf("%s", strings.ToLower(other.Name)+"_id"))
+			sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, strings.ToLower(other.Name)+"_id"))
 			fallthrough
 		case util.RelationshipTypeManyMany, util.RelationshipTypeOneMany:
 			related = append(related, fmt.Sprintf("err = repo.Load%s(ctx, entity)", util.RelFuncName(rel)))

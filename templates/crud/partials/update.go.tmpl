@@ -20,7 +20,7 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity *{{.E
 	{{range .Before}}{{.}}
 	{{end}}
 
-	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1")
+	stmt, err = tx.Prepare(`UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1`)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -95,7 +95,7 @@ func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entit
 	{{range .Before}}{{.}}
 	{{end}}
 
-	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1")
+	stmt, err = tx.Prepare(`UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1`)
 	if err != nil {
 		return errors.WithStack(err)
 	}

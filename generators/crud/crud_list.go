@@ -11,7 +11,7 @@ import (
 func generateList(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var sqlfields, structfields, before, after, related []string
 
-	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
+	sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, "id"))
 	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 
 	for _, field := range entity.Fields {
@@ -23,7 +23,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 		} else {
 			structfields = append(structfields, fmt.Sprintf("&entity.%s", field.Property.Name))
 		}
-		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
+		sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, field.Schema.Field))
 	}
 
 	for _, rel := range entity.Relationships {
@@ -32,7 +32,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 			related = append(related, fmt.Sprintf("err = repo.Load%s(ctx, entities...)", util.RelFuncName(rel)))
 		}
 		if rel.Type == util.RelationshipTypeManyOne {
-			sqlfields = append(sqlfields, fmt.Sprintf("%s", rel.ThisID))
+			sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, rel.ThisID))
 			structfields = append(structfields, fmt.Sprintf("&entity.%sID", rel.Name))
 		}
 	}
