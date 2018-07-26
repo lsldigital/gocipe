@@ -18,7 +18,21 @@ import (
 
 //go:generate rice embed-go
 
+// Versioning info
+//var (
+//	appVersion = "n/a"
+//	appCommit  = "n/a"
+//	appBuilt   = "n/a"
+//)
+
 func main() {
+	//version := flag.Bool("v", false, "prints current app version")
+	//flag.Parse()
+	//if *version {
+	//	fmt.Printf("Version : %v \nCommit : %v\nBuilt: %v\n", appVersion, appCommit, appBuilt)
+	//	os.Exit(0)
+	//}
+
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	noSkip := flag.Bool("noskip", false, "Do not skip overwriting existing files")
