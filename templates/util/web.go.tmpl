@@ -33,7 +33,7 @@ func lookupContent(root http.FileSystem, upath string) (http.File, os.FileInfo, 
 		return lookupContent(root, upath+"/index.html")
 	}
 
-	return file, info, false
+	return file, info, true
 }
 
 type fileHandlerWithFallback struct {
