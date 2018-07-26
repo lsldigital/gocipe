@@ -14,7 +14,7 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 
 	if entity.PrimaryKey != util.PrimaryKeySerial {
 		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
-		sqlfields = append(sqlfields, "id")
+		sqlfields = append(sqlfields, `"id"`)
 		structFields = append(structFields, "entity.ID")
 
 		count++
@@ -28,7 +28,7 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 		}
 
 		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
-		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
+		sqlfields = append(sqlfields, fmt.Sprintf(`"%s"`, field.Schema.Field))
 
 		if field.Property.Type == "time" {
 			prop := strings.ToLower(field.Property.Name)
@@ -46,7 +46,7 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 			related = append(related, fmt.Sprintf("err = repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name))
 		} else if rel.Type == util.RelationshipTypeManyOne {
 			sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
-			sqlfields = append(sqlfields, fmt.Sprintf("%s", rel.ThisID))
+			sqlfields = append(sqlfields, fmt.Sprintf(`"%s"`, rel.ThisID))
 			structFields = append(structFields, fmt.Sprintf("entity.%sID", rel.Name))
 			count++
 		}

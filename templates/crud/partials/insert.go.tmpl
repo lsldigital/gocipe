@@ -23,12 +23,12 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.E
 	{{end}}
 
 	{{if eq .PrimaryKey "serial" -}}
-	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
+	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id`)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	{{else}}
-	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})")
+	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})`)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -128,12 +128,12 @@ func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entit
 	{{end}}
 
 	{{if eq .PrimaryKey "serial" -}}
-	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id")
+	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id`)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	{{else}}
-	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})")
+	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})`)
 	if err != nil {
 		return errors.WithStack(err)
 	}
