@@ -168,5 +168,15 @@ func (repo {{.EntityName}}Repositorium) SelectWithRel(ctx context.Context, offse
 		return nil, err
 	}
 
+	{{range .Related}}{{.}}
+	if err != nil {
+		return nil, err
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		return nil, err
+	}
+	{{end}}
+
 	return entities, nil
 }
