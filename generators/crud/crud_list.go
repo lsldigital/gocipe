@@ -33,7 +33,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 		}
 		if rel.Type == util.RelationshipTypeManyOne {
 			sqlfields = append(sqlfields, fmt.Sprintf("%s", rel.ThisID))
-			structfields = append(structfields, fmt.Sprintf("entity.%sID", rel.Name))
+			structfields = append(structfields, fmt.Sprintf("&entity.%sID", rel.Name))
 		}
 	}
 
