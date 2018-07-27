@@ -92,6 +92,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 		{{if or .Bread.Hooks.PreList .Bread.Hooks.PostList -}}
 		stop bool
 		{{- end}}
+		filters []models.Filter
 	)
 
 	{{if .Bread.Hooks.PreList -}}
@@ -101,7 +102,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 	}
 	{{- end}}
 
-	res.{{plural .Name}}, err = models.{{.Name}}Repo.ListWithRel(ctx, models.NoOffset, models.NoLimit, req.Filters...)
+	res.{{plural .Name}}, err = models.{{.Name}}Repo.ListWithRel(ctx, models.NoOffset, models.NoLimit, filters...)
 
 	{{if .Bread.Hooks.PostList -}}
 	stop, err = {{lower .Name}}PostList(ctx, req, &res, err)

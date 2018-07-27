@@ -11,6 +11,12 @@ message File {
     bytes Content = 3;
 }
 
+message Filter {
+    string Field     = 1;
+    string Operation = 2;
+    string Value     = 3;
+}
+
 service Bread {
     {{range .Entities}}
     // Create{{.Name}} allows creation of entity of type {{.Name}}
@@ -57,7 +63,7 @@ message List{{plural .Name}}Request {
     string Key = 1;
     int64 Limit = 2;
     int64 Offset = 3;
-    repeated models.ListFilter Filters = 4;
+    repeated Filter Filters = 4;
 }
 // List{{plural .Name}}Response represents result to a List{{plural .Name}}Request
 message List{{plural .Name}}Response {

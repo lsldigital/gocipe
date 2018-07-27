@@ -1,6 +1,6 @@
 
 // List returns a slice containing {{.EntityName}} records
-func (repo {{.EntityName}}Repositorium) List(ctx context.Context, offset int, limit int, filters ...*ListFilter) ([]*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) List(ctx context.Context, offset int, limit int, filters ...*Filter) ([]*{{.EntityName}}, error) {
 	var (
 		list     []*{{.EntityName}}
 		segments []string
@@ -80,7 +80,7 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, offset int, li
 }
 
 // ListWithRel returns a slice containing {{.EntityName}} records; will also load related entities.
-func (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, offset int, limit int, filters ...*ListFilter) ([]*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, offset int, limit int, filters ...*Filter) ([]*{{.EntityName}}, error) {
 	var (
 		err error
 		entities []*{{.EntityName}}

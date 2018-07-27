@@ -1,6 +1,6 @@
 
 // DeleteMany deletes many {{.EntityName}} records from database using filter
-func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, tx *sql.Tx, autocommit bool, filters ...*ListFilter) error {
+func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, tx *sql.Tx, autocommit bool, filters ...*Filter) error {
 	var (
 		err      error
 		stmt     *sql.Stmt
