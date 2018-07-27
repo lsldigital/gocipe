@@ -127,7 +127,7 @@ func generateLoadRelatedManyOne(entities map[string]util.Entity, entity util.Ent
 	var sqlfields, structfields, before, after []string
 
 	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
-	structfields = append(structfields, fmt.Sprintf("thatEntity.%s", "ID"))
+	structfields = append(structfields, fmt.Sprintf("&thatEntity.%s", "ID"))
 	related := entities[rel.Entity]
 
 	thisType, _ := util.GetPrimaryKeyDataType(entity.PrimaryKey)
