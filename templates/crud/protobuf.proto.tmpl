@@ -7,6 +7,12 @@ option go_package = "{{.ProjectImportPath}}/models";
 {{.}}
 {{- end}}
 
+message ListFilters {
+    string Field = 1;
+    string Operation = 2;
+    string Value = 3;
+}
+
 {{ range .Entities -}}
 // {{.Name}} {{.Description}}
 message {{.Name}} { {{ range .Fields }}

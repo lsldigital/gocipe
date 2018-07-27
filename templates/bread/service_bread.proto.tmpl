@@ -5,12 +5,6 @@ package bread;
 import "models.proto";
 option go_package = "{{.ProjectImportPath}}/services/bread";
 
-message ListFilters {
-    string Field = 1;
-    string Operation = 2;
-    string Value = 3;
-}
-
 message File {
     string Field = 1;
     string Filename = 2;
@@ -63,7 +57,7 @@ message List{{plural .Name}}Request {
     string Key = 1;
     int64 Limit = 2;
     int64 Offset = 3;
-    repeated ListFilters Filters = 4;
+    repeated ListFilter Filters = 4;
 }
 // List{{plural .Name}}Response represents result to a List{{plural .Name}}Request
 message List{{plural .Name}}Response {

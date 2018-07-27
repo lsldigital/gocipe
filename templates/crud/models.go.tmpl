@@ -35,40 +35,6 @@ func StartTransaction() (*sql.Tx, error) {
 	return db.Begin()
 }
 
-// ListFilterItem represents a filter to apply during listing (crud)
-type ListFilterItem struct {
-	Field     string
-	Operation string
-	Value     interface{}
-}
-
-// ListFilter interface
-type ListFilter interface {
-	GetField() string
-	GetOperation() string
-	GetValue() string
-}
-
-// GetField gets "Field" value from ListFilterItem struct
-func (s ListFilterItem) GetField() string {
-	return s.Field
-}
-
-// GetOperation gets "Operation" value from ListFilterItem struct
-func (s ListFilterItem) GetOperation() string {
-	return s.Operation
-}
-
-// GetValue gets "Value" value from ListFilterItem struct
-func (s ListFilterItem) GetValue() string {
-	t, ok := s.Value.(string)
-	if ok {
-		return t
-	}
-
-	return ""
-}
-
 {{- $Entities := .Entities -}}
 {{range .Entities }}
 // {{.Name}}Repository encapsulates operations that may be performed on the entity {{.Name}}
@@ -89,10 +55,10 @@ type {{.Name}}Repository interface {
 {{end -}}
 {{if (DerefCrudOpts .Crud).ReadList -}}
 	// List returns a slice containing {{.Name}} records
-	List(ctx context.Context, offset int, limit int, filters ...ListFilter) ([]*{{.Name}}, error)
+	List(ctx context.Context, offset int, limit int, filters ...*ListFilter) ([]*{{.Name}}, error)
 
 	// ListWithRel returns a slice containing {{.Name}} records; will also load related entities.
-	ListWithRel(ctx context.Context, offset int, limit int, filters ...ListFilter) ([]*{{.Name}}, error)
+	ListWithRel(ctx context.Context, offset int, limit int, filters ...*ListFilter) ([]*{{.Name}}, error)
 
 	// Select returns a slice containing {{.Name}} records according to a custom SQL condition
 	Select(ctx context.Context, offset int, limit int, condition string, values ...interface{}) ([]*{{.Name}}, error)
@@ -111,7 +77,7 @@ type {{.Name}}Repository interface {
 
 {{if (DerefCrudOpts .Crud).Delete -}}
 	// DeleteMany deletes many {{.Name}} records from database using filter
-	DeleteMany(ctx context.Context, filters []ListFilter, tx *sql.Tx, autocommit bool) error
+	DeleteMany(ctx context.Context, tx *sql.Tx, autocommit bool, filters ...*ListFilter) error
 
 	// Delete deletes a {{.Name}} record from database and sets id to nil
 	Delete(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
