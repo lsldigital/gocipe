@@ -1,4 +1,4 @@
-package main
+package recipe
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
-func preprocessRecipe(recipe *util.Recipe) (map[string]util.Entity, error) {
+func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 	var (
 		err error
 	)

@@ -1,4 +1,4 @@
-package main
+package recipe
 
 import (
 	"crypto/sha256"
@@ -12,7 +12,7 @@ import (
 	"github.com/fluxynet/gocipe/util"
 )
 
-func loadRecipe() (*util.Recipe, error) {
+func Load() (*util.Recipe, error) {
 	var recipe util.Recipe
 
 	recipePath, err := util.GetAbsPath("gocipe.json")
