@@ -20,7 +20,7 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 			before = append(before, "entity.UpdatedAt = ptypes.TimestampNow()")
 		}
 
-		sqlfields = append(sqlfields, fmt.Sprintf("%s = $%d", field.Schema.Field, count))
+		sqlfields = append(sqlfields, fmt.Sprintf(`"%s" = $%d`, field.Schema.Field, count))
 
 		if field.Property.Type == "time" {
 			prop := strings.ToLower(field.Property.Name)
@@ -36,7 +36,7 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 		if rel.Type == util.RelationshipTypeManyMany {
 			related = append(related, fmt.Sprintf("repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name))
 		} else if rel.Type == util.RelationshipTypeManyOne {
-			sqlfields = append(sqlfields, fmt.Sprintf("%s = $%d", rel.ThisID, count))
+			sqlfields = append(sqlfields, fmt.Sprintf(`"%s" = $%d`, rel.ThisID, count))
 			structFields = append(structFields, fmt.Sprintf("entity.%sID", rel.Name))
 			count++
 		}

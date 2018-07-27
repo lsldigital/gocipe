@@ -14,7 +14,7 @@ func generateMerge(entities map[string]util.Entity, entity util.Entity) (string,
 		count                                                                            = 1
 	)
 
-	sqlfieldsInsert = append(sqlfieldsInsert, "id")
+	sqlfieldsInsert = append(sqlfieldsInsert, `"id"`)
 	structFields = append(structFields, "entity.ID")
 	sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
 	count++
@@ -27,8 +27,8 @@ func generateMerge(entities map[string]util.Entity, entity util.Entity) (string,
 		}
 
 		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
-		sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf("%s = $%d", field.Schema.Field, count))
-		sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("%s", field.Schema.Field))
+		sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf(`"%s" = $%d`, field.Schema.Field, count))
+		sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf(`"%s"`, field.Schema.Field))
 
 		if field.Property.Type == "time" {
 			prop := strings.ToLower(field.Property.Name)
@@ -46,8 +46,8 @@ func generateMerge(entities map[string]util.Entity, entity util.Entity) (string,
 			related = append(related, fmt.Sprintf("repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name))
 		} else if rel.Type == util.RelationshipTypeManyOne {
 			sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
-			sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf("%s = $%d", rel.ThisID, count))
-			sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf("%s", rel.ThisID))
+			sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf(`"%s" = $%d`, rel.ThisID, count))
+			sqlfieldsInsert = append(sqlfieldsInsert, fmt.Sprintf(`"%s"`, rel.ThisID))
 			structFields = append(structFields, fmt.Sprintf("entity.%sID", rel.Name))
 			count++
 		}
