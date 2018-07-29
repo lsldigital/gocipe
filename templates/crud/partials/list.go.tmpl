@@ -43,7 +43,7 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, offset int, li
 	}
 
 	if offset > NoOffset {
-		query += " OFFSET "+strconv.Itoa(limit)
+		query += " OFFSET "+strconv.Itoa(offset)
 	}
 
 	rows, err = repo.db.Query(query, values...)
@@ -132,7 +132,7 @@ func (repo {{.EntityName}}Repositorium) Select(ctx context.Context, offset int, 
 	}
 
 	if offset > -1 {
-		query += " OFFSET "+strconv.Itoa(limit)
+		query += " OFFSET "+strconv.Itoa(offset)
 	}
 
 	rows, err = repo.db.Query(query, values...)
