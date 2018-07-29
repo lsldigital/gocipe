@@ -62,16 +62,16 @@ type {{.Name}}Repository interface {
 {{end -}}
 {{if (DerefCrudOpts .Crud).ReadList -}}
 	// List returns a slice containing {{.Name}} records
-	List(ctx context.Context, offset int, limit int, filters ...*Filter) ([]*{{.Name}}, error)
+	List(ctx context.Context, offset int, limit int, sort string, filters ...*Filter) ([]*{{.Name}}, error)
 
 	// ListWithRel returns a slice containing {{.Name}} records; will also load related entities.
-	ListWithRel(ctx context.Context, offset int, limit int, filters ...*Filter) ([]*{{.Name}}, error)
+	ListWithRel(ctx context.Context, offset int, limit int, sort string, filters ...*Filter) ([]*{{.Name}}, error)
 
 	// Select returns a slice containing {{.Name}} records according to a custom SQL condition
-	Select(ctx context.Context, offset int, limit int, condition string, values ...interface{}) ([]*{{.Name}}, error)
+	Select(ctx context.Context, offset int, limit int, sort string, condition string, values ...interface{}) ([]*{{.Name}}, error)
 	
 	// SelectWithRel returns a slice containing {{.Name}} records according to a custom SQL condition; will also load related entities.
-	SelectWithRel(ctx context.Context, offset int, limit int, condition string, values ...interface{}) ([]*{{.Name}}, error)
+	SelectWithRel(ctx context.Context, offset int, limit int, sort string, condition string, values ...interface{}) ([]*{{.Name}}, error)
 {{end -}}
 
 {{if (DerefCrudOpts .Crud).Update -}}

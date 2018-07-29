@@ -1,6 +1,6 @@
 
 // List returns a slice containing {{.EntityName}} records
-func (repo {{.EntityName}}Repositorium) List(ctx context.Context, offset int, limit int, filters ...*Filter) ([]*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) List(ctx context.Context, offset int, limit int, sort string, filters ...*Filter) ([]*{{.EntityName}}, error) {
 	var (
 		list     []*{{.EntityName}}
 		segments []string
@@ -32,7 +32,11 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, offset int, li
 		query += " WHERE " + strings.Join(segments, " AND ")
 	}
 
-	query += " ORDER BY t.id ASC"
+	if sort != "" {
+		query += " ORDER BY " + sort
+	} else {
+		query += " ORDER BY t.id ASC"
+	}
 
 	if limit > NoLimit {
 		query += " LIMIT "+strconv.Itoa(limit)
@@ -80,13 +84,13 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, offset int, li
 }
 
 // ListWithRel returns a slice containing {{.EntityName}} records; will also load related entities.
-func (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, offset int, limit int, filters ...*Filter) ([]*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, offset int, limit int, sort string, filters ...*Filter) ([]*{{.EntityName}}, error) {
 	var (
 		err error
 		entities []*{{.EntityName}}
 	)
 
-	entities, err = repo.List(ctx, offset, limit, filters...)
+	entities, err = repo.List(ctx, offset, limit, sort, filters...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +109,7 @@ func (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, offset 
 }
 
 // Select returns a slice containing {{.EntityName}} records according to a custom SQL condition
-func (repo {{.EntityName}}Repositorium) Select(ctx context.Context, offset int, limit int, condition string, values ...interface{}) ([]*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) Select(ctx context.Context, offset int, limit int, sort string, condition string, values ...interface{}) ([]*{{.EntityName}}, error) {
 	var (
 		list     []*{{.EntityName}}
 		err      error
@@ -117,7 +121,11 @@ func (repo {{.EntityName}}Repositorium) Select(ctx context.Context, offset int, 
 		return nil, err
 	}
 
-	query += " ORDER BY id ASC"
+	if sort != "" {
+		query += " ORDER BY " + sort
+	} else {
+		query += " ORDER BY t.id ASC"
+	}
 
 	if limit > -1 {
 		query += " LIMIT "+strconv.Itoa(limit)
@@ -157,13 +165,13 @@ func (repo {{.EntityName}}Repositorium) Select(ctx context.Context, offset int, 
 }
 
 // SelectWithRel returns a slice containing {{.EntityName}} records according to a custom SQL condition; will also load related entities.
-func (repo {{.EntityName}}Repositorium) SelectWithRel(ctx context.Context, offset int, limit int, condition string, values ...interface{}) ([]*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) SelectWithRel(ctx context.Context, offset int, limit int, sort string, condition string, values ...interface{}) ([]*{{.EntityName}}, error) {
 	var (
 		err error
 		entities []*{{.EntityName}}
 	)
 
-	entities, err = repo.Select(ctx, offset, limit, condition, values...)
+	entities, err = repo.Select(ctx, offset, limit, sort, condition, values...)
 	if err != nil {
 		return nil, err
 	}
