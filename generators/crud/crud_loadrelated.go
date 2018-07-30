@@ -10,7 +10,7 @@ import (
 func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
 	var sqlfields, structfields, before, after []string
 
-	sqlfields = append(sqlfields, fmt.Sprintf("t.%s", "id"))
+	sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, "id"))
 	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 	related := entities[rel.Entity]
 
@@ -26,7 +26,7 @@ func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.En
 		} else {
 			structfields = append(structfields, fmt.Sprintf("&entity.%s", field.Property.Name))
 		}
-		sqlfields = append(sqlfields, fmt.Sprintf("t.%s", field.Schema.Field))
+		sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, field.Schema.Field))
 	}
 
 	return util.ExecuteTemplate("crud/partials/loadrelated_manymany.go.tmpl", struct {
@@ -69,7 +69,7 @@ func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.En
 func generateLoadRelatedOneMany(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
 	var sqlfields, structfields, before, after []string
 
-	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
+	sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, "id"))
 	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 	related := entities[rel.Entity]
 
@@ -85,7 +85,7 @@ func generateLoadRelatedOneMany(entities map[string]util.Entity, entity util.Ent
 		} else {
 			structfields = append(structfields, fmt.Sprintf("&entity.%s", field.Property.Name))
 		}
-		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
+		sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, field.Schema.Field))
 	}
 
 	return util.ExecuteTemplate("crud/partials/loadrelated_onemany.go.tmpl", struct {
@@ -126,7 +126,7 @@ func generateLoadRelatedOneMany(entities map[string]util.Entity, entity util.Ent
 func generateLoadRelatedManyOne(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
 	var sqlfields, structfields, before, after []string
 
-	sqlfields = append(sqlfields, fmt.Sprintf("%s", "id"))
+	sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, "id"))
 	structfields = append(structfields, fmt.Sprintf("&thatEntity.%s", "ID"))
 	related := entities[rel.Entity]
 
@@ -142,7 +142,7 @@ func generateLoadRelatedManyOne(entities map[string]util.Entity, entity util.Ent
 		} else {
 			structfields = append(structfields, fmt.Sprintf("&thatEntity.%s", field.Property.Name))
 		}
-		sqlfields = append(sqlfields, fmt.Sprintf("%s", field.Schema.Field))
+		sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, field.Schema.Field))
 	}
 
 	return util.ExecuteTemplate("crud/partials/loadrelated_manyone.go.tmpl", struct {

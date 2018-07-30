@@ -40,7 +40,7 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, tx *sql.
 	}
 
 	{{range .Relationships}}{{if eq .Type "many-many"}}
-	stmt, err = repo.db.Prepare("DELETE FROM {{.JoinTable}} WHERE {{.ThatID}} id IN (SELECT id FROM {{$.Table}}"+query+")")
+	stmt, err = repo.db.Prepare("DELETE FROM {{.JoinTable}} WHERE {{.ThatID}} IN (SELECT id FROM {{$.Table}}"+query+")")
 	if err != nil {
 		return errors.WithStack(err)
 	}
