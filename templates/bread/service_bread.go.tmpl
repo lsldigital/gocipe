@@ -15,6 +15,7 @@ type BreadService struct {
 }
 
 {{range .Entities}}
+{{if .Bread.Create -}}
 // Create{{.Name}} allows creation of entity of type {{.Name}}
 func(s BreadService) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {
 	var (
@@ -54,7 +55,9 @@ func(s BreadService) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Re
 
 	return &res, errors.WithStack(err)
 }
+{{- end}}
 
+{{if .Bread.Read -}}
 // Get{{.Name}} allows getting a single entity of type {{.Name}}
 func(s BreadService) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Get{{.Name}}Response, error) {
 	var (
@@ -87,7 +90,9 @@ func(s BreadService) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request)
 
 	return &res, nil
 }
+{{- end}}
 
+{{if .Bread.List -}}
 // List{{plural .Name}} allows listing all entity of type {{.Name}}
 func(s BreadService) List{{plural .Name}}(ctx context.Context, req *List{{plural .Name}}Request) (*List{{plural .Name}}Response, error) {
 	var (
@@ -153,7 +158,9 @@ func(s BreadService) List{{plural .Name}}(ctx context.Context, req *List{{plural
 
 	return &res, nil
 }
+{{- end}}
 
+{{if .Bread.Update -}}
 // Update{{.Name}} allows updating one entity of type {{.Name}}
 func(s BreadService) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request) (*Update{{.Name}}Response, error) {
 	var (
@@ -209,7 +216,9 @@ func(s BreadService) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Re
 
 	return &res, nil
 }
+{{- end}}
 
+{{if .Bread.Delete -}}
 // Delete{{.Name}} allows deleting an entity of type {{.Name}}
 func(s BreadService) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request) (*Delete{{.Name}}Response, error) {
 	var (
@@ -257,6 +266,7 @@ func(s BreadService) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Re
 
 	return &res, nil
 }
+{{- end}}
 {{end}}
 
 func newBoolFilter(filter *Filter) (*models.Filter, error) {
