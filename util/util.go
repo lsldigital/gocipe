@@ -83,6 +83,41 @@ func init() {
 		"fkeyPropertyType": func(entities map[string]Entity, rel Relationship) (string, error) {
 			return GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
 		},
+		// getBreadFilters returns possible filters from fields in an entity
+		"getBreadFilters": func(fields []Field) BreadFilters {
+			var (
+				filters                                 BreadFilters
+				filtersBool, filtersString, filtersDate []string
+			)
+
+			for _, field := range fields {
+				switch field.Property.Type {
+				case "bool":
+					filtersBool = append(filtersBool, field.Property.Name)
+					filters.HasBool = true
+				case "string":
+					filtersString = append(filtersString, field.Property.Name)
+					filters.HasString = true
+				case "date":
+					filtersDate = append(filtersDate, field.Property.Name)
+					filters.HasDate = true
+				}
+			}
+
+			if len(filtersBool) != 0 {
+				filters.BoolFilters = `"` + strings.Join(filtersBool, `","`) + `"`
+			}
+
+			if len(filtersString) != 0 {
+				filters.StringFilters = `"` + strings.Join(filtersString, `","`) + `"`
+			}
+
+			if len(filtersDate) != 0 {
+				filters.DateFilters = `"` + strings.Join(filtersDate, `","`) + `"`
+			}
+
+			return filters
+		},
 	}
 }
 
@@ -114,6 +149,12 @@ type GeneratedCode struct {
 
 	// GeneratedHeaderFormat is used to prepend generated warning header on non-overwritable files. default: // %s
 	GeneratedHeaderFormat string
+}
+
+// BreadFilters used for List
+type BreadFilters struct {
+	HasBool, HasString, HasDate             bool
+	BoolFilters, StringFilters, DateFilters string
 }
 
 // SetTemplates injects template box
