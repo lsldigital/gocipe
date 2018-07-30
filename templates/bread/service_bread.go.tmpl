@@ -10,13 +10,13 @@ var (
 )
 
 // Service represents implementation of BREAD service to Browse, Read, Edit, Add and Delete entities
-type Service struct {
+type BreadService struct {
 	db *sql.DB
 }
 
 {{range .Entities}}
 // Create{{.Name}} allows creation of entity of type {{.Name}}
-func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {
+func(s BreadService) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {
 	var (
 		err  error
 		tx   *sql.Tx
@@ -56,7 +56,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 }
 
 // Get{{.Name}} allows getting a single entity of type {{.Name}}
-func(s Service) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Get{{.Name}}Response, error) {
+func(s BreadService) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Get{{.Name}}Response, error) {
 	var (
 		res  Get{{.Name}}Response
 		err  error
@@ -89,7 +89,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Ge
 }
 
 // List{{plural .Name}} allows listing all entity of type {{.Name}}
-func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Name}}Request) (*List{{plural .Name}}Response, error) {
+func(s BreadService) List{{plural .Name}}(ctx context.Context, req *List{{plural .Name}}Request) (*List{{plural .Name}}Response, error) {
 	var (
 		res  List{{plural .Name}}Response
 		err  error
@@ -155,7 +155,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 }
 
 // Update{{.Name}} allows updating one entity of type {{.Name}}
-func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request) (*Update{{.Name}}Response, error) {
+func(s BreadService) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request) (*Update{{.Name}}Response, error) {
 	var (
 		err  error
 		tx   *sql.Tx
@@ -211,7 +211,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 }
 
 // Delete{{.Name}} allows deleting an entity of type {{.Name}}
-func(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request) (*Delete{{.Name}}Response, error) {
+func(s BreadService) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request) (*Delete{{.Name}}Response, error) {
 	var (
 		err  error
 		tx   *sql.Tx
