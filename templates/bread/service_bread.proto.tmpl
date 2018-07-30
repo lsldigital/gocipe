@@ -18,7 +18,7 @@ message Filter {
 }
 
 service Bread {
-    {{range .Entities}}
+    {{range .Entities -}}
     // Create{{.Name}} allows creation of entity of type {{.Name}}
     rpc Create{{.Name}}(Create{{.Name}}Request) returns (Create{{.Name}}Response);
     
@@ -33,10 +33,10 @@ service Bread {
     
     // Delete{{.Name}} allows deleting an entity of type {{.Name}}
     rpc Delete{{.Name}}(Delete{{.Name}}Request) returns (Delete{{.Name}}Response);
-    {{end}}
+    {{- end}}
 }
 
-{{range .Entities}}
+{{range .Entities -}}
 // Create{{.Name}}Request represents a request to allow creation of entity of type {{.Name}}
 message Create{{.Name}}Request {
     string Key = 1;
@@ -61,9 +61,8 @@ message Get{{.Name}}Response {
 // List{{plural .Name}}Request represents a request to allow listing all entity of type {{.Name}}
 message List{{plural .Name}}Request {
     string Key = 1;
-    int64 Limit = 2;
-    int64 Offset = 3;
-    repeated Filter Filters = 4;
+    models.ListOpts ListOpts = 2;
+    repeated Filter Filters = 3;
 }
 // List{{plural .Name}}Response represents result to a List{{plural .Name}}Request
 message List{{plural .Name}}Response {
@@ -88,4 +87,4 @@ message Delete{{.Name}}Request {
 }
 // Delete{{.Name}}Response represents result to a Delete{{.Name}}Request
 message Delete{{.Name}}Response {}
-{{end}}
+{{- end}}

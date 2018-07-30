@@ -138,7 +138,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 	}
 	{{end}}
 
-	res.{{plural .Name}}, err = models.{{.Name}}Repo.ListWithRel(ctx, models.NoOffset, models.NoLimit, "", filters...)
+	res.{{plural .Name}}, err = models.{{.Name}}Repo.ListWithRel(ctx, req.ListOpts, filters...)
 
 	{{if .Bread.Hooks.PostList -}}
 	stop, err = {{lower .Name}}PostList(ctx, req, &res, err)
