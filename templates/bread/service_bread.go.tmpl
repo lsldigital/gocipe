@@ -7,17 +7,18 @@ import (
 
 var (
 	ErrorInvalidOperation = errors.New("invalid filter operation specified")
+	ErrorRequestEmpty = errors.New("request object is malformed")
 )
 
 // Service represents implementation of BREAD service to Browse, Read, Edit, Add and Delete entities
-type BreadService struct {
-	db *sql.DB
+type Service struct {
+	DB *sql.DB
 }
 
 {{range .Entities}}
 {{if .Bread.Create -}}
 // Create{{.Name}} allows creation of entity of type {{.Name}}
-func(s BreadService) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {
+func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {
 	var (
 		err  error
 		tx   *sql.Tx
@@ -27,8 +28,12 @@ func(s BreadService) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Re
 		{{- end}}
 	)
 
+	if req == nil || req.{{.Name}} == nil {
+		return nil, ErrorRequestEmpty
+	}
+
 	res.{{.Name}} = req.{{.Name}}
-	tx, err = s.db.Begin()
+	tx, err = s.DB.Begin()
 	{{if .Bread.Hooks.PreCreate}}
 	stop, err = {{lower .Name}}PreCreate(ctx, tx, req, &res, err)
 	if stop {
@@ -59,7 +64,7 @@ func(s BreadService) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Re
 
 {{if .Bread.Read -}}
 // Get{{.Name}} allows getting a single entity of type {{.Name}}
-func(s BreadService) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Get{{.Name}}Response, error) {
+func(s Service) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Get{{.Name}}Response, error) {
 	var (
 		res  Get{{.Name}}Response
 		err  error
@@ -67,6 +72,10 @@ func(s BreadService) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request)
 		stop bool
 		{{- end}}
 	)
+
+	if req == nil || req.ID == "" {
+		return nil, ErrorRequestEmpty
+	}
 
 	{{if .Bread.Hooks.PreRead}}
 	stop, err = {{lower .Name}}PreRead(ctx, req, &res)
@@ -94,7 +103,7 @@ func(s BreadService) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request)
 
 {{if .Bread.List -}}
 // List{{plural .Name}} allows listing all entity of type {{.Name}}
-func(s BreadService) List{{plural .Name}}(ctx context.Context, req *List{{plural .Name}}Request) (*List{{plural .Name}}Response, error) {
+func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Name}}Request) (*List{{plural .Name}}Response, error) {
 	var (
 		res  List{{plural .Name}}Response
 		err  error
@@ -103,6 +112,10 @@ func(s BreadService) List{{plural .Name}}(ctx context.Context, req *List{{plural
 		{{- end}}
 		filters []*models.Filter
 	)
+
+	if req == nil || req.Filters == nil || req.ListOpts == nil {
+		return nil, ErrorRequestEmpty
+	}
 
 	{{if .Bread.Hooks.PreList -}}
 	stop, err = {{lower .Name}}PreList(ctx, req, &res)
@@ -162,7 +175,7 @@ func(s BreadService) List{{plural .Name}}(ctx context.Context, req *List{{plural
 
 {{if .Bread.Update -}}
 // Update{{.Name}} allows updating one entity of type {{.Name}}
-func(s BreadService) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request) (*Update{{.Name}}Response, error) {
+func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request) (*Update{{.Name}}Response, error) {
 	var (
 		err  error
 		tx   *sql.Tx
@@ -171,6 +184,10 @@ func(s BreadService) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Re
 		stop bool
 		{{- end}}
 	)
+
+	if req == nil || req.{{.Name}} == nil {
+		return nil, ErrorRequestEmpty
+	}
 
 	// existing records in DB
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)
@@ -185,7 +202,7 @@ func(s BreadService) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Re
 	}
 
 	res.{{.Name}} = req.{{.Name}}
-	tx, err = s.db.Begin()
+	tx, err = s.DB.Begin()
 
 	{{if .Bread.Hooks.PreUpdate -}}
 	stop, err = {{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
@@ -220,7 +237,7 @@ func(s BreadService) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Re
 
 {{if .Bread.Delete -}}
 // Delete{{.Name}} allows deleting an entity of type {{.Name}}
-func(s BreadService) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request) (*Delete{{.Name}}Response, error) {
+func(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request) (*Delete{{.Name}}Response, error) {
 	var (
 		err  error
 		tx   *sql.Tx
@@ -229,6 +246,10 @@ func(s BreadService) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Re
 		stop bool
 		{{- end}}
 	)
+
+	if req == nil || req.ID == "" {
+		return nil, ErrorRequestEmpty
+	}
 
 	// existing records in DB
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.ID)
@@ -242,7 +263,7 @@ func(s BreadService) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Re
 		return nil, errors.WithStack(err)
 	}
 
-	tx, err = s.db.Begin()
+	tx, err = s.DB.Begin()
 	{{if .Bread.Hooks.PreDelete}}
 	stop, err = {{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
 	if stop {
