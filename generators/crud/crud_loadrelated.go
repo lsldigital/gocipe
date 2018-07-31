@@ -88,6 +88,13 @@ func generateLoadRelatedOneMany(entities map[string]util.Entity, entity util.Ent
 		sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, field.Schema.Field))
 	}
 
+	for _, rel := range related.Relationships {
+		if rel.Type == util.RelationshipTypeManyOne {
+			sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, rel.ThisID))
+			structfields = append(structfields, fmt.Sprintf("&entity.%sID", rel.Name))
+		}
+	}
+
 	return util.ExecuteTemplate("crud/partials/loadrelated_onemany.go.tmpl", struct {
 		ThisEntity   string
 		Funcname     string
