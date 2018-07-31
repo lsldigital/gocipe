@@ -18,25 +18,32 @@ message Filter {
 }
 
 service Bread {
-    {{range .Entities -}}
+    {{range .Entities}}
+    {{if .Bread.Create}}
     // Create{{.Name}} allows creation of entity of type {{.Name}}
     rpc Create{{.Name}}(Create{{.Name}}Request) returns (Create{{.Name}}Response);
-    
+    {{- end}}
+    {{if .Bread.Read}}
     // Get{{.Name}} allows getting a single entity of type {{.Name}}
     rpc Get{{.Name}}(Get{{.Name}}Request) returns (Get{{.Name}}Response);
-    
+    {{- end}}
+    {{if .Bread.List}}
     // List{{.Name}} allows listing all entity of type {{.Name}}
     rpc List{{plural .Name}}(List{{plural .Name}}Request) returns (List{{plural .Name}}Response);
-    
+    {{- end}}
+    {{if .Bread.Update}}
     // Update{{.Name}} allows updating one entity of type {{.Name}}
     rpc Update{{.Name}}(Update{{.Name}}Request) returns (Update{{.Name}}Response);
-    
+    {{- end}}
+    {{if .Bread.Delete}}
     // Delete{{.Name}} allows deleting an entity of type {{.Name}}
     rpc Delete{{.Name}}(Delete{{.Name}}Request) returns (Delete{{.Name}}Response);
     {{- end}}
+    {{- end}}
 }
 
-{{range .Entities -}}
+{{range .Entities}}
+{{if .Bread.Create}}
 // Create{{.Name}}Request represents a request to allow creation of entity of type {{.Name}}
 message Create{{.Name}}Request {
     string Key = 1;
@@ -47,7 +54,8 @@ message Create{{.Name}}Request {
 message Create{{.Name}}Response {
     models.{{.Name}} {{.Name}} = 1;
 }
-
+{{- end}}
+{{if .Bread.Read}}
 // Get{{.Name}}Request represents a request to allow getting a single entity of type {{.Name}}
 message Get{{.Name}}Request {
     string Key = 1;
@@ -57,7 +65,8 @@ message Get{{.Name}}Request {
 message Get{{.Name}}Response {
     models.{{.Name}} {{.Name}} = 1;
 }
-
+{{- end}}
+{{if .Bread.List}}
 // List{{plural .Name}}Request represents a request to allow listing all entity of type {{.Name}}
 message List{{plural .Name}}Request {
     string Key = 1;
@@ -68,7 +77,8 @@ message List{{plural .Name}}Request {
 message List{{plural .Name}}Response {
     repeated models.{{.Name}} {{plural .Name}} = 1;
 }
-
+{{- end}}
+{{if .Bread.Update}}
 // Update{{.Name}}Request represents a request to allow updating one entity of type {{.Name}}
 message Update{{.Name}}Request {
     string Key = 1;
@@ -79,7 +89,8 @@ message Update{{.Name}}Request {
 message Update{{.Name}}Response {
     models.{{.Name}} {{.Name}} = 1;
 }
-
+{{- end}}
+{{if .Bread.Delete}}
 // Delete{{.Name}}Request represents a request to allow deleting an entity of type {{.Name}}
 message Delete{{.Name}}Request {
     string Key = 1;
@@ -87,4 +98,5 @@ message Delete{{.Name}}Request {
 }
 // Delete{{.Name}}Response represents result to a Delete{{.Name}}Request
 message Delete{{.Name}}Response {}
+{{- end}}
 {{- end}}
