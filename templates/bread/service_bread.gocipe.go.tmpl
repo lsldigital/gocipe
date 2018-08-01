@@ -1,3 +1,22 @@
+// In case you need to inject some variables in this service:
+//
+// 1. Create a file: service_bread.go (in services/bread)
+// 2. Add the following codes (this is an example - modify to suit your needs)
+//     package bread
+//
+//     var (
+//         _myVar bool
+//     )
+//
+//     // Inject injects stuffs in bread
+//     func Inject(myInjectedValue bool)  {
+//         _myVar = myInjectedValue
+//     }
+//
+// 3. Inject in main.go
+//     bread.Inject(true)
+//     bread.RegisterBreadServer(g, bread.Service{DB: config.DB})
+
 package bread
 
 import (
@@ -11,7 +30,9 @@ var (
 )
 
 // Service represents implementation of BREAD service to Browse, Read, Edit, Add and Delete entities
-type Service struct {}
+type Service struct {
+	DB *sql.DB
+}
 
 {{range .Entities}}
 {{if .Bread.Create -}}
@@ -31,9 +52,9 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	}
 
 	res.{{.Name}} = new(models.{{.Name}})
-	tx, err = _db.Begin()
+	tx, err = s.DB.Begin()
 	{{if .Bread.Hooks.PreCreate}}
-	stop, err = {{lower .Name}}PreCreate(ctx, tx, req, &res, err)
+	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, err)
 	if stop {
 		return &res, nil
 	}
@@ -46,7 +67,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	err = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)
 
 	{{if .Bread.Hooks.PostCreate -}}
-	stop, err = {{lower .Name}}PostCreate(ctx, req, &res, err)
+	stop, err = s.{{lower .Name}}PostCreate(ctx, req, &res, err)
 	if stop {
 		return &res, nil
 	}
@@ -76,7 +97,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Ge
 	}
 
 	{{if .Bread.Hooks.PreRead}}
-	stop, err = {{lower .Name}}PreRead(ctx, req, &res)
+	stop, err = s.{{lower .Name}}PreRead(ctx, req, &res)
 	if stop {
 		return &res, nil
 	}
@@ -85,7 +106,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Ge
 	res.{{.Name}}, err = models.{{.Name}}Repo.GetWithRel(ctx, req.ID)
 
 	{{if .Bread.Hooks.PostRead -}}
-	stop, err = {{lower .Name}}PostRead(ctx, req, &res, err)
+	stop, err = s.{{lower .Name}}PostRead(ctx, req, &res, err)
 	if stop {
 		return &res, nil
 	}
@@ -116,7 +137,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 	}
 
 	{{if .Bread.Hooks.PreList -}}
-	stop, err = {{lower .Name}}PreList(ctx, req, &res)
+	stop, err = s.{{lower .Name}}PreList(ctx, req, &res)
 	if stop {
 		return &res, nil
 	}
@@ -157,7 +178,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 	res.{{plural .Name}}, err = models.{{.Name}}Repo.ListWithRel(ctx, req.ListOpts, filters...)
 
 	{{if .Bread.Hooks.PostList -}}
-	stop, err = {{lower .Name}}PostList(ctx, req, &res, err)
+	stop, err = s.{{lower .Name}}PostList(ctx, req, &res, err)
 	if stop {
 		return &res, nil
 	}
@@ -191,7 +212,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)
 	if err != nil {
 		{{if .Bread.Hooks.PreUpdate -}}
-		stop, err = {{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
+		stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
 		if stop {
 			return &res, nil
 		}
@@ -200,10 +221,10 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	res.{{.Name}} = req.{{.Name}}
-	tx, err = _db.Begin()
+	tx, err = s.DB.Begin()
 
 	{{if .Bread.Hooks.PreUpdate -}}
-	stop, err = {{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
+	stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
 	if stop {
 		return &res, nil
 	}
@@ -219,7 +240,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	{{if .Bread.Hooks.PostUpdate -}}
-	stop, err = {{lower .Name}}PostUpdate(ctx, req, &res, *existing, err)
+	stop, err = s.{{lower .Name}}PostUpdate(ctx, req, &res, *existing, err)
 	if stop {
 		return &res, nil
 	}
@@ -253,7 +274,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.ID)
 	if err != nil {
 		{{if .Bread.Hooks.PreDelete -}}
-		stop, err = {{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
+		stop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
 		if stop {
 			return &res, nil
 		}
@@ -261,9 +282,9 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request
 		return nil, errors.WithStack(err)
 	}
 
-	tx, err = _db.Begin()
+	tx, err = s.DB.Begin()
 	{{if .Bread.Hooks.PreDelete}}
-	stop, err = {{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
+	stop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
 	if stop {
 		return &res, nil
 	}
@@ -273,7 +294,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request
 		return nil, errors.WithStack(err)
 	}
 	{{if .Bread.Hooks.PostDelete}}
-	stop, err = {{lower .Name}}PostDelete(ctx, req, &res, *existing, err)
+	stop, err = s.{{lower .Name}}PostDelete(ctx, req, &res, *existing, err)
 	if stop {
 		return &res, nil
 	}
