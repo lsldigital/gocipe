@@ -5,11 +5,14 @@ import (
 	"strings"
 
 	"github.com/fluxynet/gocipe/util"
+	"github.com/fluxynet/gocipe/output"
 )
 
 // Generate returns generated code for a BREAD service - Browse, Read, Edit, Add & Delete
 func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	var ents []util.Entity
+
+	output.GenerateAndSave("Bread", "bread/service_bread.go.tmpl", "services/bread/service_bread.go", nil, true, false)
 
 	//2 jobs to be waited upon for: service_bread.proto and service_bread.go
 	work.Waitgroup.Add(2)
@@ -20,7 +23,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 		}
 	}
 
-	code, err := util.ExecuteTemplate("bread/service_bread.go.tmpl", struct {
+	code, err := util.ExecuteTemplate("bread/service_bread.gocipe.go.tmpl", struct {
 		Entities []util.Entity
 	}{ents})
 
