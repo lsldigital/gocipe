@@ -5,9 +5,11 @@ import (
 	"strings"
 
 	"github.com/fluxynet/gocipe/util"
+	"github.com/imdario/mergo"
 	"github.com/jinzhu/inflection"
 )
 
+// Preprocess does some preprocessing (checking, etc)
 func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 	var (
 		err error
@@ -28,12 +30,16 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			entity.Fields[i] = field
 		}
 
-		if entity.Crud == nil {
-			entity.Crud = &recipe.Crud
+		if entity.CrudHook == nil {
+			entity.CrudHook = &recipe.CrudHook
+		} else {
+			_ = mergo.Merge(entity.CrudHook, recipe.CrudHook)
 		}
 
 		if entity.Bread == nil {
 			entity.Bread = &recipe.Bread
+		} else {
+			_ = mergo.Merge(entity.Bread, recipe.Bread)
 		}
 
 		if entity.PrimaryKey == "" {

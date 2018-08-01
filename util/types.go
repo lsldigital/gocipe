@@ -67,8 +67,11 @@ type Recipe struct {
 	// Schema describes options for Schema generation
 	Schema SchemaOpts `json:"schema"`
 
-	// Crud describes options for Crud generation
-	Crud CrudOpts `json:"crud"`
+	// Crud indicates whether to generate Crud or not
+	Crud bool `json:"crud"`
+
+	// CrudHook describes hooks options for CRUD generation
+	CrudHook CrudHooks `json:"crud_hooks"`
 
 	// Bread describes options for Browse, Read, Edit, Add & Delete service generation
 	Bread BreadOpts `json:"bread"`
@@ -147,30 +150,6 @@ type SchemaOpts struct {
 
 	// Path indicates in which path to generate the schema sql file
 	Path string `json:"path"`
-}
-
-// CrudOpts represents which crud functions should be generated
-type CrudOpts struct {
-	// Create indicates whether or not function for INSERT should be generated
-	Create bool `json:"create"`
-
-	// Read indicates whether or not function for single select by id - SELECT WHERE id = id should be generated
-	Read bool `json:"read"`
-
-	// ReadList indicates whether or not function for list select should be generated
-	ReadList bool `json:"read_list"`
-
-	// Update indicates whether or not function for UPDATE should be generated
-	Update bool `json:"update"`
-
-	// Delete indicates whether or not function for DELETE should be generated
-	Delete bool `json:"delete"`
-
-	// Merge indicates whether or not function for SQL Merge should be generated
-	Merge bool `json:"merge"`
-
-	// Hooks describes hooks options for CRUD generation
-	Hooks CrudHooks `json:"hooks"`
 }
 
 // CrudHooks represents which crud hooks should be generated
@@ -325,8 +304,8 @@ type Entity struct {
 	// Schema describes options for Schema generation - overrides recipe level Schema config
 	Schema *SchemaOpts `json:"schema"`
 
-	// Crud describes options for Crud generation - overrides recipe level Crud config
-	Crud *CrudOpts `json:"crud"`
+	// CrudHook describes hooks options for CRUD generation - overrides recipe level Crud config
+	CrudHook *CrudHooks `json:"crud_hooks"`
 
 	// Bread describes options for Bread generation - overrides recipe level Bread config
 	Bread *BreadOpts `json:"bread"`

@@ -17,6 +17,18 @@
   revision = "a5fe2436ffcb3236e175e5149162b41cd28bd27d"
 
 [[projects]]
+  name = "github.com/imdario/mergo"
+  packages = ["."]
+  revision = "9f23e2d6bd2a77f959b2bf6acdbefd708a83a4a4"
+  version = "v0.3.6"
+
+[[projects]]
+  name = "github.com/inconshreveable/mousetrap"
+  packages = ["."]
+  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+  version = "v1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/jinzhu/inflection"
   packages = ["."]
@@ -28,9 +40,21 @@
   packages = ["."]
   revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
 
+[[projects]]
+  name = "github.com/spf13/cobra"
+  packages = ["."]
+  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
+  version = "v0.0.3"
+
+[[projects]]
+  name = "github.com/spf13/pflag"
+  packages = ["."]
+  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
+  version = "v1.0.1"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6193346c5e968ccb63cf4591e8786fc9827b638a7c1f50c67789e411d9f8539c"
+  inputs-digest = "fd5457f82db52754436c00a6ee81c7d72288ab5705662a6c0ce287f65542ec08"
   solver-name = "gps-cdcl"
   solver-version = 1
