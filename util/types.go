@@ -109,6 +109,9 @@ type BootstrapOpts struct {
 	// NoGRPCWire indicates that grpc server should not be generated (default false)
 	NoGRPCWire bool `json:"no_grpc_wire"`
 
+	// NoAuth indicates that auth id routing should not be generated (default false)
+	NoAuth bool `json:"no_auth"`
+
 	// NoVersion indicates that version code should not be generated (default false)
 	NoVersion bool `json:"no_version"`
 

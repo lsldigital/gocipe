@@ -35,47 +35,28 @@ func main() {
 
 	router := mux.NewRouter()
 	
+	{{if .Bootstrap.Assets}}
+	app.Assets = rice.MustFindBox("assets")
+	{{end}}
+
+	{{if not .Bootstrap.NoAuth}}
+	wireClient, err := auth.NewClient(config.AuthServerAddress, grpc.DialOption(grpc.WithInsecure()))
+	if err != nil {
+		log.Fatalf("Could create new grpc wire client: %v", err)
+	}
+	{{else}}
+	wireClient := nil
+	{{end}}
+
 	{{if not .Bootstrap.NoGRPCWeb}}
 	g := grpc.NewServer()
 	ws := grpcweb.WrapServer(g)
-	router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
+	{{else}}
+	ws := nil
 	{{end}}
 
-	{{if .Bootstrap.Assets}}
-	app.Assets = rice.MustFindBox("assets")
-
-	if app.Env == app.EnvironmentDev {
-		files, err := ioutil.ReadDir("web")
-		if err != nil {
-			log.Println(err)
-		}
-		for _, f := range files {
-			if f.IsDir() {
-				httpDir := "web/" + f.Name() + "/dist"
-				router.PathPrefix("/" + f.Name()).Handler(http.StripPrefix("/"+f.Name(), http.FileServer(http.Dir(httpDir))))
-			}
-		}
-	} else {
-		w, err := app.Assets.Open("web")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		dirs, err := w.Readdir(0)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		for _, dir := range dirs {
-			if dir.IsDir() {
-				router.PathPrefix(
-					"/" + dir.Name(),
-				).Handler(
-					util.NewWebBoxHandler(app.Assets, "web/"+dir.Name(), dir.Name()),
-				)
-			}
-		}
-	}
-	{{end}}
-
+	router := newMuxRouter(ws, &wireClient)
+	
 	{{if not .Bootstrap.NoGRPCWire}}
 	go func() {
 		l, err := net.Listen("tcp", ":"+config.GRPCPort)
@@ -91,7 +72,15 @@ func main() {
 	}()
 	{{end}}
 
-	if err := http.ListenAndServe(":"+config.HTTPPort, router); err != nil {
+	srv := &http.Server{
+		Handler:      router,
+		Addr:         ":" + config.HTTPPort,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  15 * time.Second,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
 		log.Fatalf("error starting http server: %v", err)
 	}
 }

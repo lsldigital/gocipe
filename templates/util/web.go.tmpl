@@ -90,3 +90,65 @@ func (f *fileHandlerWithNotFoundHandler) ServeHTTP(w http.ResponseWriter, r *htt
 		f.handler.ServeHTTP(w, r)
 	}
 }
+
+// NewSubrouter returns a new subrouter
+func NewSubrouter(router *mux.Router, prefix string, appName string, mwf ...mux.MiddlewareFunc) (*mux.Router, error) {
+	subRouter := router.PathPrefix(prefix).Methods("GET", "HEAD").Subrouter()
+	if mwf != nil {
+		subRouter.Use(mwf...)
+	}
+
+	var (
+		fileSystem   http.FileSystem
+		fallbackFile http.File
+		err          error
+	)
+	{{if .Bootstrap.Assets}}
+	if app.Env == app.EnvironmentDev {
+		distDir := "web/" + appName + "/dist"
+		fallbackFile, err = os.Open(distDir + "/index.html")
+
+		if err == nil {
+			fileSystem = http.Dir(distDir)
+		} else {
+			log.WithFields(log.Fields{
+				"prefix":   prefix,
+				"app name": appName,
+				"error":    err,
+			}).Warn("Could not create sub route")
+			return nil
+		}
+	} else {
+		fallbackFile, err = app.Assets.Open("web/" + appName + "/index.html")
+
+		if err != nil {
+			return err
+		}
+
+		fileSystem = util.WebBox{Box: app.Assets, App: "web/" + appName, Path: "/" + appName}
+	}
+	{{else}}
+	distDir := "web/" + appName + "/dist"
+	fallbackFile, err = os.Open(distDir + "/index.html")
+	
+	if err == nil {
+		fileSystem = http.Dir(distDir)
+	} else {
+		log.WithFields(log.Fields{
+			"prefix":   prefix,
+			"app name": appName,
+			"error":    err,
+		}).Warn("Could not create sub route")
+		return nil
+	}
+	{{end}}
+
+	subRoute.PathPrefix("/").Handler(
+		http.StripPrefix(
+			prefix,
+			wb.FileServerWithFallback(fileSystem, fallbackFile),
+		),
+	)
+
+	return subRouter
+}
