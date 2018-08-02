@@ -30,10 +30,15 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			entity.Fields[i] = field
 		}
 
-		if entity.CrudHook == nil {
-			entity.CrudHook = &recipe.CrudHook
+		if entity.Crud == nil {
+			entity.Crud = &recipe.Crud
+		} else if entity.Crud.Hooks == nil {
+			if recipe.Crud.Hooks == nil {
+				recipe.Crud.Hooks = new(util.CrudHooks)
+			}
+			entity.Crud.Hooks = recipe.Crud.Hooks
 		} else {
-			_ = mergo.Merge(entity.CrudHook, recipe.CrudHook)
+			_ = mergo.Merge(entity.Crud.Hooks, recipe.Crud.Hooks)
 		}
 
 		if entity.Bread == nil {

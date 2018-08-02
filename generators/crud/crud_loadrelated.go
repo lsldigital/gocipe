@@ -61,8 +61,8 @@ func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.En
 		StructFields: strings.Join(structfields, ", "),
 		Before:       before,
 		After:        after,
-		HasPreHook:   entity.CrudHook.PreList,
-		HasPostHook:  entity.CrudHook.PostList,
+		HasPreHook:   entity.Crud.Hooks.PreList,
+		HasPostHook:  entity.Crud.Hooks.PostList,
 	})
 }
 
@@ -125,8 +125,8 @@ func generateLoadRelatedOneMany(entities map[string]util.Entity, entity util.Ent
 		StructFields: strings.Join(structfields, ", "),
 		Before:       before,
 		After:        after,
-		HasPreHook:   entity.CrudHook.PreList,
-		HasPostHook:  entity.CrudHook.PostList,
+		HasPreHook:   entity.Crud.Hooks.PreList,
+		HasPostHook:  entity.Crud.Hooks.PostList,
 	})
 }
 
@@ -180,7 +180,7 @@ func generateLoadRelatedManyOne(entities map[string]util.Entity, entity util.Ent
 		StructFields: strings.Join(structfields, ", "),
 		Before:       before,
 		After:        after,
-		HasPreHook:   entity.CrudHook.PreList,
-		HasPostHook:  entity.CrudHook.PostList,
+		HasPreHook:   entity.Crud.Hooks.PreList,
+		HasPostHook:  entity.Crud.Hooks.PostList,
 	})
 }

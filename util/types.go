@@ -67,11 +67,8 @@ type Recipe struct {
 	// Schema describes options for Schema generation
 	Schema SchemaOpts `json:"schema"`
 
-	// Crud indicates whether to generate Crud or not
-	Crud bool `json:"crud"`
-
-	// CrudHook describes hooks options for CRUD generation
-	CrudHook CrudHooks `json:"crud_hooks"`
+	// Crud describes options for Crud generation
+	Crud CrudOpts `json:"crud"`
 
 	// Bread describes options for Browse, Read, Edit, Add & Delete service generation
 	Bread BreadOpts `json:"bread"`
@@ -155,6 +152,16 @@ type SchemaOpts struct {
 	Path string `json:"path"`
 }
 
+// CrudOpts indicateds if crud functions should be generated
+type CrudOpts struct {
+
+	// Enable indicates if crud should be generated
+	Enabled bool `json:"enable"`
+
+	// Hooks describes hooks options for REST generation
+	Hooks *CrudHooks `json:"hooks"`
+}
+
 // CrudHooks represents which crud hooks should be generated
 type CrudHooks struct {
 
@@ -234,7 +241,7 @@ type BreadOpts struct {
 	// Delete indicates if code Delete component of BREAD service, method Delete, should be automatically generated
 	Delete bool `json:"delete"`
 
-	// Hooks describes hooks options for REST generation
+	// Hooks describes hooks options for BREAD generation
 	Hooks ResourceHooks `json:"hooks"`
 }
 
@@ -307,8 +314,8 @@ type Entity struct {
 	// Schema describes options for Schema generation - overrides recipe level Schema config
 	Schema *SchemaOpts `json:"schema"`
 
-	// CrudHook describes hooks options for CRUD generation - overrides recipe level Crud config
-	CrudHook *CrudHooks `json:"crud_hooks"`
+	// Crud describes options for CRUD generation - overrides recipe level Crud config
+	Crud *CrudOpts `json:"crud"`
 
 	// Bread describes options for Bread generation - overrides recipe level Bread config
 	Bread *BreadOpts `json:"bread"`
