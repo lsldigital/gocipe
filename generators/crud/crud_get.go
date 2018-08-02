@@ -59,7 +59,7 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 		Before:       before,
 		After:        after,
 		Related:      related,
-		HasPreHook:   entity.Crud.Hooks.PreRead,
-		HasPostHook:  entity.Crud.Hooks.PostRead,
+		HasPreHook:   entity.CrudHooks.PreRead,
+		HasPostHook:  entity.CrudHooks.PostRead,
 	})
 }

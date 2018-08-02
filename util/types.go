@@ -156,10 +156,10 @@ type SchemaOpts struct {
 type CrudOpts struct {
 
 	// Enable indicates if crud should be generated
-	Enabled bool `json:"enable"`
+	Generate bool `json:"generate"`
 
-	// Hooks describes hooks options for REST generation
-	Hooks *CrudHooks `json:"hooks"`
+	// Hooks describes hooks options for CRUD generation
+	Hooks CrudHooks `json:"hooks"`
 }
 
 // CrudHooks represents which crud hooks should be generated
@@ -315,7 +315,7 @@ type Entity struct {
 	Schema *SchemaOpts `json:"schema"`
 
 	// Crud describes options for CRUD generation - overrides recipe level Crud config
-	Crud *CrudOpts `json:"crud"`
+	CrudHooks *CrudHooks `json:"crud"`
 
 	// Bread describes options for Bread generation - overrides recipe level Bread config
 	Bread *BreadOpts `json:"bread"`

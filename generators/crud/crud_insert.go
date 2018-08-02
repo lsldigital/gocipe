@@ -75,8 +75,8 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 		SQLPlaceholders: strings.Join(sqlPlaceholders, ", "),
 		StructFields:    strings.Join(structFields, ", "),
 		Table:           entity.Table,
-		HasPostHook:     entity.Crud.Hooks.PreSave,
-		HasPreHook:      entity.Crud.Hooks.PostSave,
+		HasPostHook:     entity.CrudHooks.PreSave,
+		HasPreHook:      entity.CrudHooks.PostSave,
 		Relationships:   entity.Relationships,
 	})
 }

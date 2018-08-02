@@ -47,9 +47,9 @@ func Generate(work util.GenerationWork, crud util.CrudOpts, entities map[string]
 	work.Waitgroup.Add(len(entities) * 2) //2 threads per entities. for models and models_hooks
 
 	for _, entity := range entities {
-		generateAny = generateAny || crud.Enabled
+		generateAny = generateAny || crud.Generate
 
-		if !crud.Enabled {
+		if !crud.Generate {
 			util.DeleteIfExists(fmt.Sprintf("models/%s_repo.gocipe.go", strings.ToLower(entity.Name)))
 			util.DeleteIfExists(fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(entity.Name)))
 			work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUD[%s]", entity.Name), Error: util.ErrorSkip}
@@ -64,7 +64,7 @@ func Generate(work util.GenerationWork, crud util.CrudOpts, entities map[string]
 				err         error
 			)
 
-			if crud.Enabled {
+			if crud.Generate {
 				code, err = generateCrud(entity, entities)
 				if err == nil {
 					crudContent, err = util.ExecuteTemplate("crud/crud.go.tmpl", code)
@@ -78,22 +78,22 @@ func Generate(work util.GenerationWork, crud util.CrudOpts, entities map[string]
 				work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUD[%s]", entity.Name), Error: fmt.Errorf("failed to execute template: %s", err)}
 			}
 
-			hasHooks := entity.Crud.Hooks.PreSave ||
-				entity.Crud.Hooks.PostSave ||
-				entity.Crud.Hooks.PreRead ||
-				entity.Crud.Hooks.PostRead ||
-				entity.Crud.Hooks.PreList ||
-				entity.Crud.Hooks.PostList ||
-				entity.Crud.Hooks.PreDeleteSingle ||
-				entity.Crud.Hooks.PostDeleteSingle ||
-				entity.Crud.Hooks.PreDeleteMany ||
-				entity.Crud.Hooks.PostDeleteMany
+			hasHooks := entity.CrudHooks.PreSave ||
+				entity.CrudHooks.PostSave ||
+				entity.CrudHooks.PreRead ||
+				entity.CrudHooks.PostRead ||
+				entity.CrudHooks.PreList ||
+				entity.CrudHooks.PostList ||
+				entity.CrudHooks.PreDeleteSingle ||
+				entity.CrudHooks.PostDeleteSingle ||
+				entity.CrudHooks.PreDeleteMany ||
+				entity.CrudHooks.PostDeleteMany
 
 			if hasHooks {
 				hooks, err := util.ExecuteTemplate("crud/hooks.go.tmpl", struct {
 					Hooks  util.CrudHooks
 					Entity util.Entity
-				}{*entity.Crud.Hooks, entity})
+				}{*entity.CrudHooks, entity})
 
 				if err == nil {
 					work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUDHooks[%s]", entity.Name), Code: hooks, Filename: fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(entity.Name)), NoOverwrite: true}
@@ -243,8 +243,8 @@ func generateDeleteSingle(entities map[string]util.Entity, entity util.Entity) (
 		EntityName:  entity.Name,
 		PrimaryKey:  entity.PrimaryKey,
 		Table:       entity.Table,
-		HasPreHook:  entity.Crud.Hooks.PreDeleteSingle,
-		HasPostHook: entity.Crud.Hooks.PostDeleteSingle,
+		HasPreHook:  entity.CrudHooks.PreDeleteSingle,
+		HasPostHook: entity.CrudHooks.PostDeleteSingle,
 		Post:        post,
 	})
 }
@@ -262,8 +262,8 @@ func generateDeleteMany(entities map[string]util.Entity, entity util.Entity) (st
 		EntityName:    entity.Name,
 		PrimaryKey:    entity.PrimaryKey,
 		Table:         entity.Table,
-		HasPreHook:    entity.Crud.Hooks.PreDeleteMany,
-		HasPostHook:   entity.Crud.Hooks.PostDeleteMany,
+		HasPreHook:    entity.CrudHooks.PreDeleteMany,
+		HasPostHook:   entity.CrudHooks.PostDeleteMany,
 		Relationships: entity.Relationships,
 	})
 }

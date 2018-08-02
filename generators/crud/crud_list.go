@@ -55,7 +55,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 		Before:       before,
 		After:        after,
 		Related:      related,
-		HasPreHook:   entity.Crud.Hooks.PreList,
-		HasPostHook:  entity.Crud.Hooks.PostList,
+		HasPreHook:   entity.CrudHooks.PreList,
+		HasPostHook:  entity.CrudHooks.PostList,
 	})
 }
