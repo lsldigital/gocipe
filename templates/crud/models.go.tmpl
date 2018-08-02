@@ -46,50 +46,38 @@ func StartTransaction() (*sql.Tx, error) {
 {{range .Entities }}
 // {{.Name}}Repository encapsulates operations that may be performed on the entity {{.Name}}
 type {{.Name}}Repository interface {
-{{if (DerefCrudOpts .Crud).Create -}}
+{{if .Crud -}}
 	// Insert performs an SQL insert for {{.Name}} record and update instance with inserted id.
-	Insert(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
+	Insert(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error	
 	// InsertWithRel performs an SQL insert for {{.Name}} record and update instance with inserted id; including related entities. Prefer using Save instead of Insert directly.
 	InsertWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
-{{end -}}
-
-{{if (DerefCrudOpts .Crud).Read -}}
+	
 	// Get returns a single {{.Name}} from database by primary key
 	Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.Name}}, error)
 	// GetWithRel returns a single {{.Name}} from database by primary key; loads related entities
 	GetWithRel(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.Name}}, error)
-{{end -}}
-
-{{if (DerefCrudOpts .Crud).ReadList -}}
+	
 	// List returns a slice containing {{.Name}} records
 	List(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.Name}}, error)
 	// ListWithRel returns a slice containing {{.Name}} records; will also load related entities.
 	ListWithRel(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.Name}}, error)
+	
 	// Select returns a slice containing {{.Name}} records according to a custom SQL condition
 	Select(ctx context.Context, opts *ListOpts, condition string, values ...interface{}) ([]*{{.Name}}, error)
 	// SelectWithRel returns a slice containing {{.Name}} records according to a custom SQL condition; will also load related entities.
 	SelectWithRel(ctx context.Context, opts *ListOpts, condition string, values ...interface{}) ([]*{{.Name}}, error)
-{{end -}}
-
-{{if (DerefCrudOpts .Crud).Update -}}
+	
 	// Update Will execute an SQLUpdate Statement for {{.Name}} in the database. Prefer using Save instead of Update directly.
 	Update(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
 	// UpdateWithRel Will execute an SQLUpdate Statement for {{.Name}} in the database; including related entities. Prefer using Save instead of Update directly.
 	UpdateWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
-{{end -}}
-
-{{if (DerefCrudOpts .Crud).Delete -}}
 	// DeleteMany deletes many {{.Name}} records from database using filter
 	DeleteMany(ctx context.Context, tx *sql.Tx, autocommit bool, filters ...*Filter) error
 	// Delete deletes a {{.Name}} record from database and sets id to nil
 	Delete(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
-{{end -}}
-
-{{if (DerefCrudOpts .Crud).Merge -}}
+	
 	// Merge performs an SQL merge for {{.Name}} record.
 	Merge(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
-{{end -}}
-{{if (and (and (DerefCrudOpts .Crud).Create (DerefCrudOpts .Crud).Update) (DerefCrudOpts .Crud).Merge) -}}
 	// Save either inserts or updates a {{.Name}} record based on whether or not id is nil
 	Save(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
 	// SaveWithRel either inserts or updates a {{.Name}} record based on whether or not id is nil; will also save related entities

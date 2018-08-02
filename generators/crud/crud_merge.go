@@ -75,7 +75,7 @@ func generateMerge(entities map[string]util.Entity, entity util.Entity) (string,
 		SQLPlaceholders: strings.Join(sqlPlaceholders, ", "),
 		SQLFieldsUpdate: strings.Join(sqlfieldsUpdate, ", "),
 		StructFields:    strings.Join(structFields, ", "),
-		HasPreHook:      entity.Crud.Hooks.PreSave,
-		HasPostHook:     entity.Crud.Hooks.PostSave,
+		HasPreHook:      entity.CrudHook.PreSave,
+		HasPostHook:     entity.CrudHook.PostSave,
 	})
 }

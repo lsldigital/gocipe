@@ -58,12 +58,6 @@ func init() {
 		"trimPrefix": func(str, prefix string) string {
 			return strings.TrimPrefix(str, prefix)
 		},
-		"DerefCrudOpts": func(c *CrudOpts) (CrudOpts, error) {
-			if c == nil {
-				return CrudOpts{}, errors.New("crud opts is nil")
-			}
-			return *c, nil
-		},
 		"DerefBreadOpts": func(b *BreadOpts) (BreadOpts, error) {
 			if b == nil {
 				return BreadOpts{}, errors.New("bread opts is nil")

@@ -12,6 +12,7 @@ import (
 	"github.com/fluxynet/gocipe/util"
 )
 
+// Load loads gocipe config file and returns it as util.Recipe
 func Load() (*util.Recipe, error) {
 	var recipe util.Recipe
 

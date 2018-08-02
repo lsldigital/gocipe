@@ -61,8 +61,8 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 		After:         after,
 		SQLFields:     strings.Join(sqlfields, ", "),
 		StructFields:  strings.Join(structFields, ", "),
-		HasPreHook:    entity.Crud.Hooks.PreSave,
-		HasPostHook:   entity.Crud.Hooks.PostSave,
+		HasPreHook:    entity.CrudHook.PreSave,
+		HasPostHook:   entity.CrudHook.PostSave,
 		Relationships: nil,
 	})
 }
