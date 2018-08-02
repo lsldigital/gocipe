@@ -46,7 +46,7 @@ func main() {
 		log.Fatalf("Could create new auth client: %v", err)
 	}
 	{{else}}
-	wireClient := nil
+	client := nil
 	{{end}}
 
 	{{if not .Bootstrap.NoGRPCWeb}}
