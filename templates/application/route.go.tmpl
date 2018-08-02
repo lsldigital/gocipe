@@ -2,37 +2,29 @@ package main
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	log "github.com/sirupsen/logrus"
-	"lsl.digital/auth-system/id-sdk-go/auth"
-	"lsl.digital/redac-systems/culture/app"
-	"lsl.digital/redac-systems/culture/constant"
-	"lsl.digital/redac-systems/culture/util"
-	wb "lsl.digital/redac-systems/culture/util/web"
 )
 
-func newMuxRouter(ws *grpcweb.WrappedGrpcServer, client *auth.Client) *mux.Router {
+func newMuxRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	router := mux.NewRouter()
 
     {{if not .Bootstrap.NoGRPCWeb}}
 	router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
     {{end}}
 
-	if _, err := wb.NewSubrouter(router, "/", "app", nil); err != nil {
-		log.WithFields(log.Fields{
+	if _, err := web.NewSubrouter(router, "/", "app", nil); err != nil {
+		logs := log.WithFields(log.Fields{
 			"error":  err,
-		}).Fatal("Could not create sub route")
+		})
+		if app.Env == app.EnvironmentDev {
+			logs.Warn("Could not create sub route")
+		} else {
+			logs.Fatal("Could not create sub route")
+		}
 	}
-
-    {{if not .Bootstrap.NoAuth}}
-    router.PathPrefix("/auth").Handler(client.NewHandler("/debug")).Methods("GET", "HEAD")
-	if app.Env == app.EnvironmentDev {
-		router.PathPrefix("/debug").Handler(client.NewDebugHandler()).Methods("GET", "HEAD")
-	}
-    {{end}}
 
 	return router
 }

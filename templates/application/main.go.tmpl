@@ -39,22 +39,14 @@ func main() {
 	app.Assets = rice.MustFindBox("assets")
 	{{end}}
 
-	client := nil
 	ws := nil
-	{{if not .Bootstrap.NoAuth}}
-	authCreds := utils.NewCredentials(config.AuthServerAddress)
-	client, err := auth.NewClient(authCreds, grpc.DialOption(grpc.WithInsecure()))
-	if err != nil {
-		log.Fatalf("Could create new auth client: %v", err)
-	}
-	{{end}}
 
 	{{if not .Bootstrap.NoGRPCWeb}}
 	g := grpc.NewServer()
 	ws := grpcweb.WrapServer(g)
 	{{end}}
 
-	router := newMuxRouter(ws, client)
+	router := newMuxRouter(ws, nil)
 	
 	{{if not .Bootstrap.NoGRPCWire}}
 	go func() {
