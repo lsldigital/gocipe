@@ -14,7 +14,7 @@ import (
 	wb "lsl.digital/redac-systems/culture/util/web"
 )
 
-func newMuxRouter(ws *grpcweb.WrappedGrpcServer, wireClient *auth.WireClient) *mux.Router {
+func newMuxRouter(ws *grpcweb.WrappedGrpcServer, client *auth.Client) *mux.Router {
 	router := mux.NewRouter()
 
     {{if not .Bootstrap.NoGRPCWeb}}
@@ -28,9 +28,9 @@ func newMuxRouter(ws *grpcweb.WrappedGrpcServer, wireClient *auth.WireClient) *m
 	}
 
     {{if not .Bootstrap.NoAuth}}
-    router.PathPrefix("/auth").Handler(auth.NewHandler(*wireClient, "/debug")).Methods("GET", "HEAD")
+    router.PathPrefix("/auth").Handler(client.NewHandler("/debug")).Methods("GET", "HEAD")
 	if app.Env == app.EnvironmentDev {
-		router.PathPrefix("/debug").Handler(auth.NewDebugHandler(*wireClient)).Methods("GET", "HEAD")
+		router.PathPrefix("/debug").Handler(client.NewDebugHandler()).Methods("GET", "HEAD")
 	}
     {{end}}
 

@@ -40,9 +40,10 @@ func main() {
 	{{end}}
 
 	{{if not .Bootstrap.NoAuth}}
-	wireClient, err := auth.NewClient(config.AuthServerAddress, grpc.DialOption(grpc.WithInsecure()))
+	authCreds := utils.NewCredentials(config.AuthServerAddress)
+	client, err := auth.NewClient(authCreds, grpc.DialOption(grpc.WithInsecure()))
 	if err != nil {
-		log.Fatalf("Could create new grpc wire client: %v", err)
+		log.Fatalf("Could create new auth client: %v", err)
 	}
 	{{else}}
 	wireClient := nil
@@ -55,7 +56,7 @@ func main() {
 	ws := nil
 	{{end}}
 
-	router := newMuxRouter(ws, &wireClient)
+	router := newMuxRouter(ws, client)
 	
 	{{if not .Bootstrap.NoGRPCWire}}
 	go func() {
