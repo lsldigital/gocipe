@@ -49,7 +49,7 @@ var generateCmd = &cobra.Command{
 		go bread.Generate(work, entities)
 		go generators.GenerateSchema(work, rcp.Schema, entities)
 		go generators.GenerateVuetify(work, rcp.Rest, rcp.Vuetify, rcp.Entities)
-		go utils.Generate(work)
+		go utils.Generate(work, rcp.Bootstrap)
 		// go generators.GenerateHTTP(work, recipe.HTTP)
 		// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 
