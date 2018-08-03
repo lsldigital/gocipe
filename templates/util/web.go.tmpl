@@ -5,6 +5,9 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 func lookupContent(root http.FileSystem, upath string) (http.File, os.FileInfo, bool) {
@@ -139,7 +142,7 @@ func NewSubrouter(router *mux.Router, prefix string, appName string, mwf ...mux.
 			"app name": appName,
 			"error":    err,
 		}).Warn("Could not create sub route")
-		return nil
+		return nil, nil
 	}
 	{{end}}
 
