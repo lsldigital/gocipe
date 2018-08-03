@@ -143,12 +143,12 @@ func NewSubrouter(router *mux.Router, prefix string, appName string, mwf ...mux.
 	}
 	{{end}}
 
-	subRoute.PathPrefix("/").Handler(
+	subRouter.PathPrefix("/").Handler(
 		http.StripPrefix(
 			prefix,
-			wb.FileServerWithFallback(fileSystem, fallbackFile),
+			FileServerWithFallback(fileSystem, fallbackFile),
 		),
 	)
 
-	return subRouter
+	return subRouter, nil
 }
