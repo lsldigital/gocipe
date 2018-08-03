@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/fluxynet/gocipe/util"
-	"github.com/imdario/mergo"
 	"github.com/jinzhu/inflection"
 )
 
@@ -32,14 +31,10 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 
 		if entity.CrudHooks == nil {
 			entity.CrudHooks = &recipe.Crud.Hooks
-		} else {
-			_ = mergo.Merge(entity.CrudHooks, recipe.Crud.Hooks)
 		}
 
 		if entity.Bread == nil {
 			entity.Bread = &recipe.Bread
-		} else {
-			_ = mergo.Merge(entity.Bread, recipe.Bread)
 		}
 
 		if entity.PrimaryKey == "" {
