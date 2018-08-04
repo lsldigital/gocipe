@@ -109,8 +109,12 @@ func Generate(work util.GenerationWork, crud util.CrudOpts, entities map[string]
 	work.Waitgroup.Add(1)
 	if generateAny {
 		models, err := util.ExecuteTemplate("crud/models.go.tmpl", struct {
+			Crud     bool
 			Entities map[string]util.Entity
-		}{entities})
+		}{
+			Crud:     crud.Generate,
+			Entities: entities,
+		})
 		if err == nil {
 			work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Code: models, Filename: "models/models.gocipe.go"}
 		} else {

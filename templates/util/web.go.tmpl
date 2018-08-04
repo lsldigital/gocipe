@@ -119,13 +119,13 @@ func NewSubrouter(router *mux.Router, prefix string, appName string, mwf ...mux.
 				"app name": appName,
 				"error":    err,
 			}).Warn("Could not create sub route")
-			return nil
+			return nil, nil
 		}
 	} else {
 		fallbackFile, err = app.Assets.Open("web/" + appName + "/index.html")
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		fileSystem = util.WebBox{Box: app.Assets, App: "web/" + appName, Path: "/" + appName}
