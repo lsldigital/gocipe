@@ -145,7 +145,7 @@ func generateLoadRelatedManyOne(entities map[string]util.Entity, entity util.Ent
 			prop := strings.ToLower(field.Property.Name)
 			before = append(before, fmt.Sprintf("var %s time.Time", prop))
 			structfields = append(structfields, fmt.Sprintf("&%s", prop))
-			after = append(after, fmt.Sprintf("entity.%s, _ = ptypes.TimestampProto(%s)", field.Property.Name, prop))
+			after = append(after, fmt.Sprintf("thatEntity.%s, _ = ptypes.TimestampProto(%s)", field.Property.Name, prop))
 		} else {
 			structfields = append(structfields, fmt.Sprintf("&thatEntity.%s", field.Property.Name))
 		}
