@@ -40,7 +40,7 @@ func main() {
 
 	{{if not .Bootstrap.NoGRPCWeb}}
 	g := grpc.NewServer()
-	ws = grpcweb.WrapServer(g)
+	ws := grpcweb.WrapServer(g)
 	router := newMuxRouter(ws)
 	{{else}}
 	router := newMuxRouter(nil)
