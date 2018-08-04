@@ -33,21 +33,18 @@ func main() {
 
 	config := app.Bootstrap()
 	models.Init(config.DB)
-
-	router := mux.NewRouter()
 	
 	{{if .Bootstrap.Assets}}
 	app.Assets = rice.MustFindBox("assets")
 	{{end}}
 
-	ws := nil
-
 	{{if not .Bootstrap.NoGRPCWeb}}
 	g := grpc.NewServer()
-	ws := grpcweb.WrapServer(g)
+	ws = grpcweb.WrapServer(g)
+	router := newMuxRouter(ws)
+	{{else}}
+	router := newMuxRouter(nil)
 	{{end}}
-
-	router := newMuxRouter(ws, nil)
 	
 	{{if not .Bootstrap.NoGRPCWire}}
 	go func() {
