@@ -9,10 +9,11 @@ import (
 
 // generateList produces code for database retrieval of list of entities with optional filters
 func generateList(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var sqlfields, structfields, before, after, related []string
+	var sqlfields, structfields, before, after, related, orderfields []string
 
 	sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, "id"))
 	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
+	orderfields = append(orderfields, "id")
 
 	for _, field := range entity.Fields {
 		if field.Property.Type == "time" {
@@ -23,6 +24,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 		} else {
 			structfields = append(structfields, fmt.Sprintf("&entity.%s", field.Property.Name))
 		}
+		orderfields = append(orderfields, field.Schema.Field)
 		sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, field.Schema.Field))
 	}
 
@@ -41,6 +43,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 		EntityName   string
 		SQLFields    string
 		StructFields string
+		OrderFields  string
 		Table        string
 		Before       []string
 		After        []string
@@ -52,6 +55,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 		Table:        entity.Table,
 		SQLFields:    strings.Join(sqlfields, ", "),
 		StructFields: strings.Join(structfields, ", "),
+		OrderFields:  `"` + strings.Join(orderfields, `","`) + `"`,
 		Before:       before,
 		After:        after,
 		Related:      related,

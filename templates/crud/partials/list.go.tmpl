@@ -119,8 +119,11 @@ func (repo {{.EntityName}}Repositorium) Select(ctx context.Context, opts *ListOp
 		return nil, err
 	}
 
-	if opts != nil && opts.Sort != "" {
-		query += " ORDER BY " + opts.Sort
+	if opts != nil {
+		switch opts.Sort {
+		case {{.OrderFields}}:
+			query += ` ORDER BY t."` + opts.Sort + `"`
+		}
 	}
 
 	if opts != nil && opts.Offset > 0 {
