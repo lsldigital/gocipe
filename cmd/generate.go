@@ -10,6 +10,7 @@ import (
 	"github.com/fluxynet/gocipe/generators/bread"
 	"github.com/fluxynet/gocipe/generators/crud"
 	utils "github.com/fluxynet/gocipe/generators/util"
+	"github.com/fluxynet/gocipe/generators/vuetify"
 	"github.com/fluxynet/gocipe/output"
 	"github.com/fluxynet/gocipe/recipe"
 	"github.com/fluxynet/gocipe/util"
@@ -48,8 +49,8 @@ var generateCmd = &cobra.Command{
 		go crud.Generate(work, rcp.Crud, entities)
 		go bread.Generate(work, entities)
 		go generators.GenerateSchema(work, rcp.Schema, entities)
-		go generators.GenerateVuetify(work, rcp.Rest, rcp.Vuetify, rcp.Entities)
 		go utils.Generate(work, rcp.Bootstrap)
+		go vuetify.Generate(work, rcp.Vuetify, rcp.Entities)
 		// go generators.GenerateHTTP(work, recipe.HTTP)
 		// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 

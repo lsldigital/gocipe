@@ -281,8 +281,8 @@ type VuetifyOpts struct {
 	// Generate represents whether or not to generate vuetify assets
 	Generate bool `json:"generate"`
 
-	//Module represents the location where the gocipe module will be generated
-	Module string `json:"module"`
+	// App represents the app for which the gocipe module will be generated
+	App string `json:"app"`
 }
 
 // Entity represents a single entity to be generated
