@@ -51,7 +51,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 		return nil, ErrorRequestEmpty
 	}
 
-	res.{{.Name}} = new(models.{{.Name}})
+	res.{{.Name}} = req.{{.Name}}
 	tx, err = s.DB.Begin()
 	{{if .Bread.Hooks.PreCreate}}
 	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, err)

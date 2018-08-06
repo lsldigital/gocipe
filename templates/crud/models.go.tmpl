@@ -46,7 +46,7 @@ func StartTransaction() (*sql.Tx, error) {
 {{range .Entities }}
 // {{.Name}}Repository encapsulates operations that may be performed on the entity {{.Name}}
 type {{.Name}}Repository interface {
-{{if .Crud -}}
+{{if $.Crud -}}
 	// Insert performs an SQL insert for {{.Name}} record and update instance with inserted id.
 	Insert(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error	
 	// InsertWithRel performs an SQL insert for {{.Name}} record and update instance with inserted id; including related entities. Prefer using Save instead of Insert directly.

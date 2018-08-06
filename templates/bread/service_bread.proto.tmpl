@@ -47,6 +47,8 @@ service Bread {
 // Create{{.Name}}Request represents a request to allow creation of entity of type {{.Name}}
 message Create{{.Name}}Request {
     string Key = 1;
+	models.{{.Name}} {{.Name}} = 2;
+    repeated File Files = 3;
 }
 // Create{{.Name}}Response represents result to a Create{{.Name}}Request
 message Create{{.Name}}Response {
