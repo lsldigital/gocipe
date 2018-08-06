@@ -1,0 +1,156 @@
+package files
+
+import (
+	"image"
+	"io/ioutil"
+	"log"
+	"os"
+
+	"gopkg.in/h2non/filetype.v1"
+)
+
+// Constants for files package
+const (
+	baseUploadPath = "public/"
+	NoLimit        = -1
+)
+
+// DefaultUploadOptions holds default upload options
+var DefaultUploadOptions = &UploadOptions{
+	Permissions: 0664,
+	FileExt:     "jpg",
+	MaxSize:     NoLimit,
+	MinSize:     NoLimit,
+	ImgDimensions: &ImageDimensions{
+		MinHeight: NoLimit,
+		MaxHeight: NoLimit,
+		MinWidth:  NoLimit,
+		MaxWidth:  NoLimit,
+	},
+}
+
+// ImageDimensions holds dimensions options
+type ImageDimensions struct {
+	MinHeight int
+	MaxHeight int
+	MinWidth  int
+	MaxWidth  int
+}
+
+// UploadOptions holds file upload options
+type UploadOptions struct {
+	Destination   string
+	Permissions   os.FileMode
+	FileExt       string
+	MaxSize       int64
+	MinSize       int64
+	ImgDimensions *ImageDimensions
+}
+
+// Upload validates and saves create file
+func Upload(fileField string, fileName string, fileContent []byte, options *UploadOptions) (string, error) {
+	var filePath string
+
+	if options.Permissions == 0 {
+		options.Permissions = DefaultUploadOptions.Permissions
+	}
+
+	tmpDirectoryPath := baseUploadPath + options.Destination
+
+	if err := os.MkdirAll(tmpDirectoryPath, os.ModePerm); err != nil {
+		log.Printf("error mk dir all: %v\n", err)
+		return filePath, nil
+	}
+
+	filePath = tmpDirectoryPath + fileName
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		err := ioutil.WriteFile(filePath, fileContent, options.Permissions)
+		if err != nil {
+			log.Printf("error writing file: %v\n", err)
+			return filePath, nil
+		}
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Printf("error opening %v\n", filePath)
+		return filePath, nil
+	}
+	defer file.Close()
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		log.Printf("error getting file info %v\n", filePath)
+		return filePath, nil
+	}
+	fileSize := fileInfo.Size()
+
+	buf := make([]byte, fileSize)
+	if _, err := file.Read(buf); err != nil {
+		log.Printf("error reading file: %v\n", err)
+		return filePath, nil
+	}
+
+	if options.FileExt == "" {
+		options.FileExt = DefaultUploadOptions.FileExt
+	}
+
+	if !filetype.IsExtension(buf, options.FileExt) {
+		log.Printf("file not a valid %v file\n", options.FileExt)
+		return filePath, nil
+	}
+
+	if options.MaxSize != NoLimit && fileSize > options.MaxSize {
+		log.Printf("file %v greater than max file size: %v\n", fileName, options.MaxSize)
+		return filePath, nil
+	}
+
+	if options.MinSize != NoLimit && fileSize < options.MinSize {
+		log.Printf("file %v lower than min file size: %v\n", fileName, options.MinSize)
+		return filePath, nil
+	}
+
+	if filetype.IsImage(buf) {
+		image, _, err := image.DecodeConfig(file) // Image Struct
+		if err != nil {
+			log.Printf("error decoding image: %v", err)
+			return filePath, nil
+		}
+
+		if options.ImgDimensions == nil {
+			options.ImgDimensions = DefaultUploadOptions.ImgDimensions
+		}
+
+		if options.ImgDimensions.MaxHeight != NoLimit && image.Height > options.ImgDimensions.MaxHeight {
+			log.Printf("image %v greater than max height: %v\n", fileName, options.ImgDimensions.MaxHeight)
+			return filePath, nil
+		}
+
+		if options.ImgDimensions.MinHeight != NoLimit && image.Height > options.ImgDimensions.MinHeight {
+			log.Printf("image %v lower than min height: %v\n", fileName, options.ImgDimensions.MinHeight)
+			return filePath, nil
+		}
+
+		if options.ImgDimensions.MaxWidth != NoLimit && image.Width > options.ImgDimensions.MaxWidth {
+			log.Printf("image %v greater than max width: %v\n", fileName, options.ImgDimensions.MaxWidth)
+			return filePath, nil
+		}
+
+		if options.ImgDimensions.MinWidth != NoLimit && image.Width > options.ImgDimensions.MinWidth {
+			log.Printf("image %v lower than min width: %v\n", fileName, options.ImgDimensions.MinWidth)
+			return filePath, nil
+		}
+	}
+
+	return filePath, nil
+}
+
+// DeleteMany deletes many files
+func DeleteMany(filespath []string) {
+	for _, filepath := range filespath {
+		if err := os.Remove(filepath); err != nil {
+			log.Printf("error deleting file %v\n", err)
+		}
+	}
+}
