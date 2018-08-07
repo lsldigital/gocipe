@@ -50,8 +50,8 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 		{{range .After}}{{.}}
 		{{end}}
 		
-		for _, ent := range indices[thisID] {
-			ent.{{.PropertyName}} = append(ent.{{.PropertyName}}, &entity)
+		for i := range indices[thisID] {
+			indices[thisID][i].{{.PropertyName}} = append(ent.{{.PropertyName}}, &entity)
 		}
 		
 		if err = util.CheckContext(ctx); err != nil {
