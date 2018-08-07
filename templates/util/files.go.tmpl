@@ -17,7 +17,7 @@ const (
 
 // DefaultUploadOptions holds default upload options
 var DefaultUploadOptions = &UploadOptions{
-	Permissions: 0664,
+	Permissions: 0644,
 	FileExt:     "jpg",
 	MaxSize:     NoLimit,
 	MinSize:     NoLimit,
@@ -127,7 +127,7 @@ func Upload(fileField string, fileName string, fileContent []byte, options *Uplo
 			return filePath, nil
 		}
 
-		if options.ImgDimensions.MinHeight != NoLimit && image.Height > options.ImgDimensions.MinHeight {
+		if options.ImgDimensions.MinHeight != NoLimit && image.Height < options.ImgDimensions.MinHeight {
 			log.Printf("image %v lower than min height: %v\n", fileName, options.ImgDimensions.MinHeight)
 			return filePath, nil
 		}
@@ -137,7 +137,7 @@ func Upload(fileField string, fileName string, fileContent []byte, options *Uplo
 			return filePath, nil
 		}
 
-		if options.ImgDimensions.MinWidth != NoLimit && image.Width > options.ImgDimensions.MinWidth {
+		if options.ImgDimensions.MinWidth != NoLimit && image.Width < options.ImgDimensions.MinWidth {
 			log.Printf("image %v lower than min width: %v\n", fileName, options.ImgDimensions.MinWidth)
 			return filePath, nil
 		}
