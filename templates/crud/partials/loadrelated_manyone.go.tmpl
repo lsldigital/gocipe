@@ -47,8 +47,8 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 		{{range .After}}{{.}}
 		{{end}}
 
-		for _, ent := range indices[thatID] {
-			ent.{{.PropertyName}} = &thatEntity
+		for i := range indices[thatID] {
+			indices[thatID][i].{{.PropertyName}} = &thatEntity
 		}
 		
 		if err = util.CheckContext(ctx); err != nil {
