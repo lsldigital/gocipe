@@ -20,9 +20,7 @@ func Generate(work util.GenerationWork, opts util.VuetifyOpts, entities []util.E
 		go func(entity util.Entity) {
 			var (
 				data struct {
-					Endpoint string
-					Entity   util.Entity
-					Prefix   string
+					Entity util.Entity
 				}
 			)
 
@@ -50,12 +48,22 @@ func Generate(work util.GenerationWork, opts util.VuetifyOpts, entities []util.E
 		}(entity)
 	}
 
-	output.GenerateAndSave("Vuetify", "vuetify/store/routes.js.tmpl", path+"/store/routes.js", nil, true, false)
-	output.GenerateAndSave("Vuetify", "vuetify/store/index.js.tmpl", path+"/store/index.js", nil, true, false)
-	output.GenerateAndSave("Vuetify", "vuetify/store/actions.js.tmpl", path+"/store/actions.js", nil, true, false)
-	output.GenerateAndSave("Vuetify", "vuetify/store/getters.js.tmpl", path+"/store/getters.js", nil, true, false)
-	output.GenerateAndSave("Vuetify", "vuetify/store/mutations.js.tmpl", path+"/store/mutations.js", nil, true, false)
-	output.GenerateAndSave("Vuetify", "vuetify/store/types.js.tmpl", path+"/store/types.js", nil, true, false)
+	output.GenerateAndSave(
+		"Vuetify",
+		"vuetify/js/routes.js.tmpl",
+		path+"/routes.js",
+		struct {
+			Entities []util.Entity
+		}{entities},
+		false,
+		false,
+	)
+
+	// output.GenerateAndSave("Vuetify", "vuetify/store/index.js.tmpl", path+"/store/index.js", nil, true, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/actions.js.tmpl", path+"/store/actions.js", nil, true, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/getters.js.tmpl", path+"/store/getters.js", nil, true, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/mutations.js.tmpl", path+"/store/mutations.js", nil, true, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/types.js.tmpl", path+"/store/types.js", nil, true, false)
 
 	work.Waitgroup.Done()
 }

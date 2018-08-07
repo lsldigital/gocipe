@@ -1,22 +1,3 @@
-// In case you need to inject some variables in this service:
-//
-// 1. Create a file: service_bread.go (in services/bread)
-// 2. Add the following codes (this is an example - modify to suit your needs)
-//     package bread
-//
-//     var (
-//         _myVar bool
-//     )
-//
-//     // Inject injects stuffs in bread
-//     func Inject(myInjectedValue bool)  {
-//         _myVar = myInjectedValue
-//     }
-//
-// 3. Inject in main.go
-//     bread.Inject(true)
-//     bread.RegisterBreadServer(g, bread.Service{DB: config.DB})
-
 package bread
 
 import (
@@ -132,7 +113,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 		filters []*models.Filter
 	)
 
-	if req == nil || req.Filters == nil || req.ListOpts == nil {
+	if req == nil {
 		return nil, ErrorRequestEmpty
 	}
 
@@ -143,34 +124,40 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 	}
 	{{- end}}
 
+	if req.ListOpts == nil {
+		req.ListOpts = &models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit}
+	}
+
 	{{$filters := getBreadFilters .Fields }}
 	{{if (or $filters.HasBool $filters.HasString $filters.HasDate)}}
-	for i := range req.Filters {
-		switch req.Filters[i].Field {
-		{{if $filters.HasBool}}
-		case {{$filters.BoolFilters}}:
-			if f, err := newBoolFilter(req.Filters[i]); err == nil {
-				return nil, err
-			} else {
-				filters = append(filters, f)
+	if req.Filters != nil {
+		for i := range req.Filters {
+			switch req.Filters[i].Field {
+			{{if $filters.HasBool}}
+			case {{$filters.BoolFilters}}:
+				if f, err := newBoolFilter(req.Filters[i]); err == nil {
+					return nil, err
+				} else {
+					filters = append(filters, f)
+				}
+			{{end}}
+			{{if $filters.HasString}}
+			case {{$filters.StringFilters}}:
+				if f, err := newStringFilter(req.Filters[i]); err == nil {
+					return nil, err
+				} else {
+					filters = append(filters, f)
+				}
+			{{end}}
+			{{if $filters.HasDate}}
+			case {{$filters.DateFilters}}:
+				if f, err := newDateFilter(req.Filters[i]); err == nil {
+					return nil, err
+				} else {
+					filters = append(filters, f)
+				}
+			{{end}}
 			}
-		{{end}}
-		{{if $filters.HasString}}
-		case {{$filters.StringFilters}}:
-			if f, err := newStringFilter(req.Filters[i]); err == nil {
-				return nil, err
-			} else {
-				filters = append(filters, f)
-			}
-		{{end}}
-		{{if $filters.HasDate}}
-		case {{$filters.DateFilters}}:
-			if f, err := newDateFilter(req.Filters[i]); err == nil {
-				return nil, err
-			} else {
-				filters = append(filters, f)
-			}
-		{{end}}
 		}
 	}
 	{{end}}

@@ -1,22 +1,13 @@
 {{range .Entities}}
 // {{.Name}} {{.Description}}
-import {{.Name}}Edit from "../views/{{plural .Name}}Edit.vue";
-import {{.Name}}List from "../views/{{plural .Name}}List.vue";
+import {{.Name}}List from "./views/{{plural .Name}}List.vue";
 {{end}}
 
 let routes = [
   {{range $i, $v := .Entities}}
   {
-    path: "/{{lower (plural .Name)}}/:id",
-    name: "{{lower (plural .Name)}}Edit",
-    props: true,
-    icon: "dashboard",
-    component: {{.Name}}Edit,
-    entity: "{{plural .Name}}"
-  },
-  {
-    path: "/{{lower (plural .Name)}}list/",
-    name: "{{lower (plural .Name)}}List",
+    path: "/{{lower (plural .Name)}}-list/",
+    name: "{{lower (plural .Name)}}_List",
     icon: "dashboard",
     component: {{.Name}}List,
     entity: "{{plural .Name}}"
