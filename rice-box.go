@@ -40,8 +40,8 @@ func init() {
 	}
 	filea := &embedded.EmbeddedFile{
 		Filename:    "bread/service_bread.gocipe.go.tmpl",
-		FileModTime: time.Unix(1533589224, 0),
-		Content:     string("// In case you need to inject some variables in this service:\n//\n// 1. Create a file: service_bread.go (in services/bread)\n// 2. Add the following codes (this is an example - modify to suit your needs)\n//     package bread\n//\n//     var (\n//         _myVar bool\n//     )\n//\n//     // Inject injects stuffs in bread\n//     func Inject(myInjectedValue bool)  {\n//         _myVar = myInjectedValue\n//     }\n//\n// 3. Inject in main.go\n//     bread.Inject(true)\n//     bread.RegisterBreadServer(g, bread.Service{DB: config.DB})\n\npackage bread\n\nimport (\n\t\"github.com/pkg/errors\"\n\t\"golang.org/x/net/context\"\n)\n\nvar (\n\tErrorInvalidOperation = errors.New(\"invalid filter operation specified\")\n\tErrorRequestEmpty = errors.New(\"request object is malformed\")\n)\n\n// Service represents implementation of BREAD service to Browse, Read, Edit, Add and Delete entities\ntype Service struct {\n\tDB *sql.DB\n}\n\n{{range .Entities}}\n{{if .Bread.Create -}}\n// Create{{.Name}} allows creation of entity of type {{.Name}}\nfunc(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {\n\tvar (\n\t\terr  error\n\t\ttx   *sql.Tx\n\t\tres  Create{{.Name}}Response\n\t\t{{if or .Bread.Hooks.PreCreate .Bread.Hooks.PostCreate -}}\n\t\tstop bool\n\t\t{{- end}}\n\t)\n\n\tif req == nil {\n\t\treturn nil, ErrorRequestEmpty\n\t}\n\n\tres.{{.Name}} = req.{{.Name}}\n\ttx, err = s.DB.Begin()\n\t{{if .Bread.Hooks.PreCreate}}\n\tstop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\terr = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)\n\n\t{{if .Bread.Hooks.PostCreate -}}\n\tstop, err = s.{{lower .Name}}PostCreate(ctx, req, &res, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\treturn &res, errors.WithStack(err)\n}\n{{- end}}\n\n{{if .Bread.Read -}}\n// Get{{.Name}} allows getting a single entity of type {{.Name}}\nfunc(s Service) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Get{{.Name}}Response, error) {\n\tvar (\n\t\tres  Get{{.Name}}Response\n\t\terr  error\n\t\t{{if or .Bread.Hooks.PreRead .Bread.Hooks.PostRead -}}\n\t\tstop bool\n\t\t{{- end}}\n\t)\n\n\tif req == nil || req.ID == \"\" {\n\t\treturn nil, ErrorRequestEmpty\n\t}\n\n\t{{if .Bread.Hooks.PreRead}}\n\tstop, err = s.{{lower .Name}}PreRead(ctx, req, &res)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tres.{{.Name}}, err = models.{{.Name}}Repo.GetWithRel(ctx, req.ID)\n\n\t{{if .Bread.Hooks.PostRead -}}\n\tstop, err = s.{{lower .Name}}PostRead(ctx, req, &res, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\treturn &res, nil\n}\n{{- end}}\n\n{{if .Bread.List -}}\n// List{{plural .Name}} allows listing all entity of type {{.Name}}\nfunc(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Name}}Request) (*List{{plural .Name}}Response, error) {\n\tvar (\n\t\tres  List{{plural .Name}}Response\n\t\terr  error\n\t\t{{if or .Bread.Hooks.PreList .Bread.Hooks.PostList -}}\n\t\tstop bool\n\t\t{{- end}}\n\t\tfilters []*models.Filter\n\t)\n\n\tif req == nil {\n\t\treturn nil, ErrorRequestEmpty\n\t}\n\n\t{{if .Bread.Hooks.PreList -}}\n\tstop, err = s.{{lower .Name}}PreList(ctx, req, &res)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif req.ListOpts == nil {\n\t\treq.ListOpts = &models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit}\n\t}\n\n\t{{$filters := getBreadFilters .Fields }}\n\t{{if (or $filters.HasBool $filters.HasString $filters.HasDate)}}\n\tif req.Filters != nil {\n\t\tfor i := range req.Filters {\n\t\t\tswitch req.Filters[i].Field {\n\t\t\t{{if $filters.HasBool}}\n\t\t\tcase {{$filters.BoolFilters}}:\n\t\t\t\tif f, err := newBoolFilter(req.Filters[i]); err == nil {\n\t\t\t\t\treturn nil, err\n\t\t\t\t} else {\n\t\t\t\t\tfilters = append(filters, f)\n\t\t\t\t}\n\t\t\t{{end}}\n\t\t\t{{if $filters.HasString}}\n\t\t\tcase {{$filters.StringFilters}}:\n\t\t\t\tif f, err := newStringFilter(req.Filters[i]); err == nil {\n\t\t\t\t\treturn nil, err\n\t\t\t\t} else {\n\t\t\t\t\tfilters = append(filters, f)\n\t\t\t\t}\n\t\t\t{{end}}\n\t\t\t{{if $filters.HasDate}}\n\t\t\tcase {{$filters.DateFilters}}:\n\t\t\t\tif f, err := newDateFilter(req.Filters[i]); err == nil {\n\t\t\t\t\treturn nil, err\n\t\t\t\t} else {\n\t\t\t\t\tfilters = append(filters, f)\n\t\t\t\t}\n\t\t\t{{end}}\n\t\t\t}\n\t\t}\n\t}\n\t{{end}}\n\n\tres.{{plural .Name}}, err = models.{{.Name}}Repo.ListWithRel(ctx, req.ListOpts, filters...)\n\n\t{{if .Bread.Hooks.PostList -}}\n\tstop, err = s.{{lower .Name}}PostList(ctx, req, &res, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\t\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\treturn &res, nil\n}\n{{- end}}\n\n{{if .Bread.Update -}}\n// Update{{.Name}} allows updating one entity of type {{.Name}}\nfunc(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request) (*Update{{.Name}}Response, error) {\n\tvar (\n\t\terr  error\n\t\ttx   *sql.Tx\n\t\tres  Update{{.Name}}Response\n\t\t{{if or .Bread.Hooks.PreUpdate .Bread.Hooks.PostUpdate -}}\n\t\tstop bool\n\t\t{{- end}}\n\t)\n\n\tif req == nil || req.{{.Name}} == nil {\n\t\treturn nil, ErrorRequestEmpty\n\t}\n\n\t// existing records in DB\n\texisting, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)\n\tif err != nil {\n\t\t{{if .Bread.Hooks.PreUpdate -}}\n\t\tstop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)\n\t\tif stop {\n\t\t\treturn &res, nil\n\t\t}\n\t\t{{end}}\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\tres.{{.Name}} = req.{{.Name}}\n\ttx, err = s.DB.Begin()\n\n\t{{if .Bread.Hooks.PreUpdate -}}\n\tstop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\terr = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\t{{if .Bread.Hooks.PostUpdate -}}\n\tstop, err = s.{{lower .Name}}PostUpdate(ctx, req, &res, *existing, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\treturn &res, nil\n}\n{{- end}}\n\n{{if .Bread.Delete -}}\n// Delete{{.Name}} allows deleting an entity of type {{.Name}}\nfunc(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request) (*Delete{{.Name}}Response, error) {\n\tvar (\n\t\terr  error\n\t\ttx   *sql.Tx\n\t\tres  Delete{{.Name}}Response\n\t\t{{if or .Bread.Hooks.PreDelete .Bread.Hooks.PostDelete -}}\n\t\tstop bool\n\t\t{{- end}}\n\t)\n\n\tif req == nil || req.ID == \"\" {\n\t\treturn nil, ErrorRequestEmpty\n\t}\n\n\t// existing records in DB\n\texisting, err := models.{{.Name}}Repo.Get(ctx, req.ID)\n\tif err != nil {\n\t\t{{if .Bread.Hooks.PreDelete -}}\n\t\tstop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)\n\t\tif stop {\n\t\t\treturn &res, nil\n\t\t}\n\t\t{{end}}\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\ttx, err = s.DB.Begin()\n\t{{if .Bread.Hooks.PreDelete}}\n\tstop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{end}}\n\terr = models.{{.Name}}Repo.Delete(ctx, existing, tx, true)\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\t{{if .Bread.Hooks.PostDelete}}\n\tstop, err = s.{{lower .Name}}PostDelete(ctx, req, &res, *existing, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\t\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\treturn &res, nil\n}\n{{- end}}\n{{end}}\n\nfunc newBoolFilter(filter *Filter) (*models.Filter, error) {\n\tvalue, err := strconv.ParseBool(filter.Value); \n\t\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\treturn &models.Filter{Field: filter.Field, Operation: \"=\", Value: value}, nil\n}\n\nfunc newStringFilter(filter *Filter) (*models.Filter, error) {\n\tswitch filter.Operation {\n\tcase \"=\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \"=\", Value: filter.Value}, nil\n\tcase \"~\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \"LIKE\", Value: filter.Value}, nil\n\t}\n\n\treturn nil, ErrorInvalidOperation\n}\n\nfunc newDateFilter(filter *Filter) (*models.Filter, error) {\n\tvar (\n\t\tvalue time.Time\n\t\terr   error\n\t)\n\n\tif value, err = time.Parse(time.RFC3339, filter.Value); err != nil {\n\t\treturn nil, err\n\t}\n\n\tswitch filter.Operation {\n\tcase \"=\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \"=\", Value: value}, nil\n\tcase \">\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \">\", Value: value}, nil\n\tcase \">=\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \">=\", Value: value}, nil\n\tcase \"<\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \"<\", Value: value}, nil\n\tcase \"<=\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \"<=\", Value: value}, nil\n\t}\n\n\treturn &models.Filter{Field: filter.Field, Operation: \"LIKE\", Value: value}, nil\n}\n"),
+		FileModTime: time.Unix(1533672034, 0),
+		Content:     string("package bread\n\nimport (\n\t\"github.com/pkg/errors\"\n\t\"golang.org/x/net/context\"\n)\n\nvar (\n\tErrorInvalidOperation = errors.New(\"invalid filter operation specified\")\n\tErrorRequestEmpty = errors.New(\"request object is malformed\")\n)\n\n// Service represents implementation of BREAD service to Browse, Read, Edit, Add and Delete entities\ntype Service struct {\n\tDB *sql.DB\n}\n\n{{range .Entities}}\n{{if .Bread.Create -}}\n// Create{{.Name}} allows creation of entity of type {{.Name}}\nfunc(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {\n\tvar (\n\t\terr  error\n\t\ttx   *sql.Tx\n\t\tres  Create{{.Name}}Response\n\t\t{{if or .Bread.Hooks.PreCreate .Bread.Hooks.PostCreate -}}\n\t\tstop bool\n\t\t{{- end}}\n\t)\n\n\tif req == nil {\n\t\treturn nil, ErrorRequestEmpty\n\t}\n\n\tres.{{.Name}} = req.{{.Name}}\n\ttx, err = s.DB.Begin()\n\t{{if .Bread.Hooks.PreCreate}}\n\tstop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\terr = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)\n\n\t{{if .Bread.Hooks.PostCreate -}}\n\tstop, err = s.{{lower .Name}}PostCreate(ctx, req, &res, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\treturn &res, errors.WithStack(err)\n}\n{{- end}}\n\n{{if .Bread.Read -}}\n// Get{{.Name}} allows getting a single entity of type {{.Name}}\nfunc(s Service) Get{{.Name}}(ctx context.Context, req *Get{{.Name}}Request) (*Get{{.Name}}Response, error) {\n\tvar (\n\t\tres  Get{{.Name}}Response\n\t\terr  error\n\t\t{{if or .Bread.Hooks.PreRead .Bread.Hooks.PostRead -}}\n\t\tstop bool\n\t\t{{- end}}\n\t)\n\n\tif req == nil || req.ID == \"\" {\n\t\treturn nil, ErrorRequestEmpty\n\t}\n\n\t{{if .Bread.Hooks.PreRead}}\n\tstop, err = s.{{lower .Name}}PreRead(ctx, req, &res)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tres.{{.Name}}, err = models.{{.Name}}Repo.GetWithRel(ctx, req.ID)\n\n\t{{if .Bread.Hooks.PostRead -}}\n\tstop, err = s.{{lower .Name}}PostRead(ctx, req, &res, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\treturn &res, nil\n}\n{{- end}}\n\n{{if .Bread.List -}}\n// List{{plural .Name}} allows listing all entity of type {{.Name}}\nfunc(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Name}}Request) (*List{{plural .Name}}Response, error) {\n\tvar (\n\t\tres  List{{plural .Name}}Response\n\t\terr  error\n\t\t{{if or .Bread.Hooks.PreList .Bread.Hooks.PostList -}}\n\t\tstop bool\n\t\t{{- end}}\n\t\tfilters []*models.Filter\n\t)\n\n\tif req == nil {\n\t\treturn nil, ErrorRequestEmpty\n\t}\n\n\t{{if .Bread.Hooks.PreList -}}\n\tstop, err = s.{{lower .Name}}PreList(ctx, req, &res)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif req.ListOpts == nil {\n\t\treq.ListOpts = &models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit}\n\t}\n\n\t{{$filters := getBreadFilters .Fields }}\n\t{{if (or $filters.HasBool $filters.HasString $filters.HasDate)}}\n\tif req.Filters != nil {\n\t\tfor i := range req.Filters {\n\t\t\tswitch req.Filters[i].Field {\n\t\t\t{{if $filters.HasBool}}\n\t\t\tcase {{$filters.BoolFilters}}:\n\t\t\t\tif f, err := newBoolFilter(req.Filters[i]); err == nil {\n\t\t\t\t\treturn nil, err\n\t\t\t\t} else {\n\t\t\t\t\tfilters = append(filters, f)\n\t\t\t\t}\n\t\t\t{{end}}\n\t\t\t{{if $filters.HasString}}\n\t\t\tcase {{$filters.StringFilters}}:\n\t\t\t\tif f, err := newStringFilter(req.Filters[i]); err == nil {\n\t\t\t\t\treturn nil, err\n\t\t\t\t} else {\n\t\t\t\t\tfilters = append(filters, f)\n\t\t\t\t}\n\t\t\t{{end}}\n\t\t\t{{if $filters.HasDate}}\n\t\t\tcase {{$filters.DateFilters}}:\n\t\t\t\tif f, err := newDateFilter(req.Filters[i]); err == nil {\n\t\t\t\t\treturn nil, err\n\t\t\t\t} else {\n\t\t\t\t\tfilters = append(filters, f)\n\t\t\t\t}\n\t\t\t{{end}}\n\t\t\t}\n\t\t}\n\t}\n\t{{end}}\n\n\tres.{{plural .Name}}, err = models.{{.Name}}Repo.ListWithRel(ctx, req.ListOpts, filters...)\n\n\t{{if .Bread.Hooks.PostList -}}\n\tstop, err = s.{{lower .Name}}PostList(ctx, req, &res, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\t\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\treturn &res, nil\n}\n{{- end}}\n\n{{if .Bread.Update -}}\n// Update{{.Name}} allows updating one entity of type {{.Name}}\nfunc(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request) (*Update{{.Name}}Response, error) {\n\tvar (\n\t\terr  error\n\t\ttx   *sql.Tx\n\t\tres  Update{{.Name}}Response\n\t\t{{if or .Bread.Hooks.PreUpdate .Bread.Hooks.PostUpdate -}}\n\t\tstop bool\n\t\t{{- end}}\n\t)\n\n\tif req == nil || req.{{.Name}} == nil {\n\t\treturn nil, ErrorRequestEmpty\n\t}\n\n\t// existing records in DB\n\texisting, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)\n\tif err != nil {\n\t\t{{if .Bread.Hooks.PreUpdate -}}\n\t\tstop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)\n\t\tif stop {\n\t\t\treturn &res, nil\n\t\t}\n\t\t{{end}}\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\tres.{{.Name}} = req.{{.Name}}\n\ttx, err = s.DB.Begin()\n\n\t{{if .Bread.Hooks.PreUpdate -}}\n\tstop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\terr = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\t{{if .Bread.Hooks.PostUpdate -}}\n\tstop, err = s.{{lower .Name}}PostUpdate(ctx, req, &res, *existing, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\treturn &res, nil\n}\n{{- end}}\n\n{{if .Bread.Delete -}}\n// Delete{{.Name}} allows deleting an entity of type {{.Name}}\nfunc(s Service) Delete{{.Name}}(ctx context.Context, req *Delete{{.Name}}Request) (*Delete{{.Name}}Response, error) {\n\tvar (\n\t\terr  error\n\t\ttx   *sql.Tx\n\t\tres  Delete{{.Name}}Response\n\t\t{{if or .Bread.Hooks.PreDelete .Bread.Hooks.PostDelete -}}\n\t\tstop bool\n\t\t{{- end}}\n\t)\n\n\tif req == nil || req.ID == \"\" {\n\t\treturn nil, ErrorRequestEmpty\n\t}\n\n\t// existing records in DB\n\texisting, err := models.{{.Name}}Repo.Get(ctx, req.ID)\n\tif err != nil {\n\t\t{{if .Bread.Hooks.PreDelete -}}\n\t\tstop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)\n\t\tif stop {\n\t\t\treturn &res, nil\n\t\t}\n\t\t{{end}}\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\ttx, err = s.DB.Begin()\n\t{{if .Bread.Hooks.PreDelete}}\n\tstop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{end}}\n\terr = models.{{.Name}}Repo.Delete(ctx, existing, tx, true)\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\t{{if .Bread.Hooks.PostDelete}}\n\tstop, err = s.{{lower .Name}}PostDelete(ctx, req, &res, *existing, err)\n\tif stop {\n\t\treturn &res, nil\n\t}\n\t{{- end}}\n\t\n\tif err != nil {\n\t\treturn nil, errors.WithStack(err)\n\t}\n\n\treturn &res, nil\n}\n{{- end}}\n{{end}}\n\nfunc newBoolFilter(filter *Filter) (*models.Filter, error) {\n\tvalue, err := strconv.ParseBool(filter.Value); \n\t\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\treturn &models.Filter{Field: filter.Field, Operation: \"=\", Value: value}, nil\n}\n\nfunc newStringFilter(filter *Filter) (*models.Filter, error) {\n\tswitch filter.Operation {\n\tcase \"=\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \"=\", Value: filter.Value}, nil\n\tcase \"~\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \"LIKE\", Value: filter.Value}, nil\n\t}\n\n\treturn nil, ErrorInvalidOperation\n}\n\nfunc newDateFilter(filter *Filter) (*models.Filter, error) {\n\tvar (\n\t\tvalue time.Time\n\t\terr   error\n\t)\n\n\tif value, err = time.Parse(time.RFC3339, filter.Value); err != nil {\n\t\treturn nil, err\n\t}\n\n\tswitch filter.Operation {\n\tcase \"=\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \"=\", Value: value}, nil\n\tcase \">\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \">\", Value: value}, nil\n\tcase \">=\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \">=\", Value: value}, nil\n\tcase \"<\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \"<\", Value: value}, nil\n\tcase \"<=\":\n\t\treturn &models.Filter{Field: filter.Field, Operation: \"<=\", Value: value}, nil\n\t}\n\n\treturn &models.Filter{Field: filter.Field, Operation: \"LIKE\", Value: value}, nil\n}\n"),
 	}
 	fileb := &embedded.EmbeddedFile{
 		Filename:    "bread/service_bread.proto.tmpl",
@@ -95,23 +95,23 @@ func init() {
 	}
 	filen := &embedded.EmbeddedFile{
 		Filename:    "crud/partials/list.go.tmpl",
-		FileModTime: time.Unix(1533586134, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("\n// List returns a slice containing {{.EntityName}} records\nfunc (repo {{.EntityName}}Repositorium) List(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.EntityName}}, error) {\n\tvar (\n\t\tlist     []*{{.EntityName}}\n\t\tsegments []string\n\t\tvalues   []interface{}\n\t\terr      error\n\t\trows     *sql.Rows\n\t)\n\n\tquery := `SELECT {{.SQLFields}} FROM {{.Table}} t`\n\t{{if .HasPreHook}}\n    if filters, err = repo.preList(ctx, filters); err != nil {\n\t\treturn nil, err\n\t}\n\t{{end}}\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn nil, err\n\t}\n\n\tfor i, filter := range filters {\n\t\tif filter.Operation == \"IN\" || filter.Operation == \"NOT IN\" {\n\t\t\tQueryAddIN(segments, values, &i, filter.Field, filter.Value, \"NOT IN\" == filter.Operation)\n\t\t} else {\n\t\t\tsegments = append(segments, filter.Field+\" \"+filter.Operation+\" $\"+strconv.Itoa(i+1))\n\t\t\tvalues = append(values, filter.Value)\n\t\t}\n\t}\n\n\tif len(segments) != 0 {\n\t\tquery += \" WHERE \" + strings.Join(segments, \" AND \")\n\t}\n\n\tif opts != nil && opts.Sort != \"\" {\n\t\tquery += \" ORDER BY \" + opts.Sort\n\t}\n\n\tif opts != nil && opts.Offset > 0 {\n\t\tquery += \" OFFSET \" + strconv.FormatInt(opts.Offset, 10)\n\t}\n\n\tif opts != nil && opts.Limit > 0 {\n\t\tquery += \" LIMIT \" + strconv.FormatInt(opts.Limit, 10)\n\t}\n\n\trows, err = repo.db.Query(query, values...)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tdefer rows.Close()\n\tfor rows.Next() {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn nil, err\n\t\t}\n\n\t\tvar entity {{.EntityName}}\n\t\t{{range .Before}}{{.}}\n\t\t{{end}}\n\n\t\terr = rows.Scan({{.StructFields}})\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\t\n\t\t{{range .After}}{{.}}\n\t\t{{end}}\n\n\t\tlist = append(list, &entity)\n\t}\n\t{{if .HasPostHook}}\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn nil, err\n\t}\n\n\tif list, err = repo.postList(ctx, list); err != nil {\n\t\treturn nil, err\n\t}\n\t{{end}}\n\treturn list, nil\n}\n\n// ListWithRel returns a slice containing {{.EntityName}} records; will also load related entities.\nfunc (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.EntityName}}, error) {\n\tvar (\n\t\terr error\n\t\tentities []*{{.EntityName}}\n\t)\n\n\tentities, err = repo.List(ctx, opts, filters...)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\t{{range .Related}}{{.}}\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn nil, err\n\t}\n\t{{end}}\n\n\treturn entities, nil\n}\n\n// Select returns a slice containing {{.EntityName}} records according to a custom SQL condition\nfunc (repo {{.EntityName}}Repositorium) Select(ctx context.Context, opts *ListOpts, condition string, values ...interface{}) ([]*{{.EntityName}}, error) {\n\tvar (\n\t\tlist     []*{{.EntityName}}\n\t\terr      error\n\t\trows     *sql.Rows\n\t)\n\n\tquery := `SELECT {{.SQLFields}} FROM {{.Table}} t ` + condition\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn nil, err\n\t}\n\n\tif opts != nil {\n\t\tswitch opts.Sort {\n\t\tcase {{.OrderFields}}:\n\t\t\tquery += ` ORDER BY t.\"` + opts.Sort + `\"`\n\t\t}\n\t}\n\n\tif opts != nil && opts.Offset > 0 {\n\t\tquery += \" OFFSET \" + strconv.FormatInt(opts.Offset, 10)\n\t}\n\n\tif opts != nil && opts.Limit > 0 {\n\t\tquery += \" LIMIT \" + strconv.FormatInt(opts.Limit, 10)\n\t}\n\n\trows, err = repo.db.Query(query, values...)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tdefer rows.Close()\n\tfor rows.Next() {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn nil, err\n\t\t}\n\n\t\tvar entity {{.EntityName}}\n\t\t{{range .Before}}{{.}}\n\t\t{{end}}\n\n\t\terr = rows.Scan({{.StructFields}})\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\t\n\t\t{{range .After}}{{.}}\n\t\t{{end}}\n\n\t\tlist = append(list, &entity)\n\t}\n\n\treturn list, nil\n}\n\n// SelectWithRel returns a slice containing {{.EntityName}} records according to a custom SQL condition; will also load related entities.\nfunc (repo {{.EntityName}}Repositorium) SelectWithRel(ctx context.Context, opts *ListOpts, condition string, values ...interface{}) ([]*{{.EntityName}}, error) {\n\tvar (\n\t\terr error\n\t\tentities []*{{.EntityName}}\n\t)\n\n\tentities, err = repo.Select(ctx, opts, condition, values...)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\t{{range .Related}}{{.}}\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn nil, err\n\t}\n\t{{end}}\n\n\treturn entities, nil\n}\n"),
 	}
 	fileo := &embedded.EmbeddedFile{
 		Filename:    "crud/partials/loadrelated_manymany.go.tmpl",
-		FileModTime: time.Unix(1533202717, 0),
-		Content:     string("\n// Load{{.Funcname}} is a helper function to load related {{.PropertyName}} entities\nfunc (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, entities ...*{{.ThisEntity}}) error {\n\tvar (\n\t\terr error\n\t\tplaceholder string\n\t\tvalues  []interface{}\n\t\tindices = make(map[{{.ThisType}}][]*{{.ThisEntity}})\n\t)\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t} else if len(entities) == 0 {\n\t\treturn nil\n\t}\n\n\tc := 1\n\tfor _, entity := range entities {\n\t\tplaceholder += \"$\" + strconv.Itoa(c) + \",\"\n\t\tindices[entity.ID] = append(indices[entity.ID], entity)\n\t\tvalues = append(values, entity.ID)\n\t\tc++\n\t}\n\tplaceholder = strings.TrimRight(placeholder, \",\")\n\n\trows, err := repo.db.Query(`\n\t\tSELECT j.{{.ThisID}}, {{.SQLFields}} FROM {{.ThatTable}} t \n\t\tINNER JOIN {{.JoinTable}} j ON t.id = j.{{.ThatID}}\n\t\tWHERE j.{{.ThisID}} IN (`+placeholder+`)\n\t`, values...)\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tfor rows.Next() {\n\t\tvar (\n\t\t\tthisID {{.ThisType}}\n\t\t\tentity {{.ThatEntity}}\n\t\t)\n\t\t{{range .Before}}{{.}}\n\t\t{{end}}\n\t\terr = rows.Scan(&thisID, {{.StructFields}})\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t\t{{range .After}}{{.}}\n\t\t{{end}}\n\t\t\n\t\tfor _, ent := range indices[thisID] {\n\t\t\tent.{{.PropertyName}} = append(ent.{{.PropertyName}}, &entity)\n\t\t}\n\t\t\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\treturn nil\n}"),
+		FileModTime: time.Unix(1533672034, 0),
+		Content:     string("\n// Load{{.Funcname}} is a helper function to load related {{.PropertyName}} entities\nfunc (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, entities ...*{{.ThisEntity}}) error {\n\tvar (\n\t\terr error\n\t\tplaceholder string\n\t\tvalues  []interface{}\n\t\tindices = make(map[{{.ThisType}}][]*{{.ThisEntity}})\n\t)\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t} else if len(entities) == 0 {\n\t\treturn nil\n\t}\n\n\tc := 1\n\tfor _, entity := range entities {\n\t\tplaceholder += \"$\" + strconv.Itoa(c) + \",\"\n\t\tindices[entity.ID] = append(indices[entity.ID], entity)\n\t\tvalues = append(values, entity.ID)\n\t\tc++\n\t}\n\tplaceholder = strings.TrimRight(placeholder, \",\")\n\n\trows, err := repo.db.Query(`\n\t\tSELECT j.{{.ThisID}}, {{.SQLFields}} FROM {{.ThatTable}} t \n\t\tINNER JOIN {{.JoinTable}} j ON t.id = j.{{.ThatID}}\n\t\tWHERE j.{{.ThisID}} IN (`+placeholder+`)\n\t`, values...)\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tfor rows.Next() {\n\t\tvar (\n\t\t\tthisID {{.ThisType}}\n\t\t\tentity {{.ThatEntity}}\n\t\t)\n\t\t{{range .Before}}{{.}}\n\t\t{{end}}\n\t\terr = rows.Scan(&thisID, {{.StructFields}})\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t\t{{range .After}}{{.}}\n\t\t{{end}}\n\t\t\n\t\tfor i := range indices[thisID] {\n\t\t\tindices[thisID][i].{{.PropertyName}} = append(ent.{{.PropertyName}}, &entity)\n\t\t}\n\t\t\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\treturn nil\n}"),
 	}
 	filep := &embedded.EmbeddedFile{
 		Filename:    "crud/partials/loadrelated_manyone.go.tmpl",
-		FileModTime: time.Unix(1533202717, 0),
-		Content:     string("\n// Load{{.Funcname}} is a helper function to load related {{.PropertyName}} entities\nfunc (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, entities ...*{{.ThisEntity}}) error {\n\tvar (\n\t\terr error\n\t\tplaceholder string\n\t\tvalues  []interface{}\n\t\tindices = make(map[{{.ThatType}}][]*{{.ThisEntity}})\n\t)\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t} else if len(entities) == 0 {\n\t\treturn nil\n\t}\n\n\tc := 1\n\tfor _, entity := range entities {\n\t\tplaceholder += \"$\" + strconv.Itoa(c) + \",\"\n\t\tindices[entity.{{.ThisID}}] = append(indices[entity.{{.ThisID}}], entity)\n\t\tvalues = append(values, entity.{{.ThisID}})\n\t\tc++\n\t}\n\tplaceholder = strings.TrimRight(placeholder, \",\")\n\trows, err := repo.db.Query(`\n\t\tSELECT t.\"id\", {{.SQLFields}} FROM {{.ThatTable}} t WHERE t.\"id\" IN (`+placeholder+`)\n\t`, values...)\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tfor rows.Next() {\n\t\tvar (\n\t\t\tthatID {{.ThatType}}\n\t\t\tthatEntity {{.ThatEntity}}\n\t\t)\n\t\t{{range .Before}}{{.}}\n\t\t{{end}}\n\t\terr = rows.Scan(&thatID, {{.StructFields}})\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t\t{{range .After}}{{.}}\n\t\t{{end}}\n\n\t\tfor _, ent := range indices[thatID] {\n\t\t\tent.{{.PropertyName}} = &thatEntity\n\t\t}\n\t\t\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\treturn nil\n}\n"),
+		FileModTime: time.Unix(1533672034, 0),
+		Content:     string("\n// Load{{.Funcname}} is a helper function to load related {{.PropertyName}} entities\nfunc (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, entities ...*{{.ThisEntity}}) error {\n\tvar (\n\t\terr error\n\t\tplaceholder string\n\t\tvalues  []interface{}\n\t\tindices = make(map[{{.ThatType}}][]*{{.ThisEntity}})\n\t)\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t} else if len(entities) == 0 {\n\t\treturn nil\n\t}\n\n\tc := 1\n\tfor _, entity := range entities {\n\t\tplaceholder += \"$\" + strconv.Itoa(c) + \",\"\n\t\tindices[entity.{{.ThisID}}] = append(indices[entity.{{.ThisID}}], entity)\n\t\tvalues = append(values, entity.{{.ThisID}})\n\t\tc++\n\t}\n\tplaceholder = strings.TrimRight(placeholder, \",\")\n\trows, err := repo.db.Query(`\n\t\tSELECT t.\"id\", {{.SQLFields}} FROM {{.ThatTable}} t WHERE t.\"id\" IN (`+placeholder+`)\n\t`, values...)\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tfor rows.Next() {\n\t\tvar (\n\t\t\tthatID {{.ThatType}}\n\t\t\tthatEntity {{.ThatEntity}}\n\t\t)\n\t\t{{range .Before}}{{.}}\n\t\t{{end}}\n\t\terr = rows.Scan(&thatID, {{.StructFields}})\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t\t{{range .After}}{{.}}\n\t\t{{end}}\n\n\t\tfor i := range indices[thatID] {\n\t\t\tindices[thatID][i].{{.PropertyName}} = &thatEntity\n\t\t}\n\t\t\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\treturn nil\n}\n"),
 	}
 	fileq := &embedded.EmbeddedFile{
 		Filename:    "crud/partials/loadrelated_onemany.go.tmpl",
-		FileModTime: time.Unix(1533202717, 0),
-		Content:     string("\n// Load{{.Funcname}} is a helper function to load related {{.PropertyName}} entities\nfunc (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, entities ...*{{.ThisEntity}}) error {\n\tvar (\n\t\terr error\n\t\tplaceholder string\n\t\tvalues  []interface{}\n\t\tindices = make(map[{{.ThisType}}][]*{{.ThisEntity}})\n\t)\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t} else if len(entities) == 0 {\n\t\treturn nil\n\t}\n\n\tc := 1\n\tfor _, entity := range entities {\n\t\tplaceholder += \"$\" + strconv.Itoa(c) + \",\"\n\t\tindices[entity.ID] = append(indices[entity.ID], entity)\n\t\tvalues = append(values, entity.ID)\n\t\tc++\n\t}\n\tplaceholder = strings.TrimRight(placeholder, \",\")\n\n\trows, err := repo.db.Query(`\n\t\tSELECT t.\"{{.ThisID}}\", {{.SQLFields}} FROM {{.ThatTable}} t WHERE t.\"{{.ThisID}}\" IN (`+placeholder+`)\n\t`, values...)\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tfor rows.Next() {\n\t\tvar (\n\t\t\tthisID {{.ThisType}}\n\t\t\tentity {{.ThatEntity}}\n\t\t)\n\t\t\n\t\t{{range .Before}}{{.}}\n\t\t{{end}}\n\t\terr = rows.Scan(&thisID, {{.StructFields}})\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t\t{{range .After}}{{.}}\n\t\t{{end}}\n\t\t\n\t\tfor _, ent := range indices[thisID] {\n\t\t\tent.{{.PropertyName}} = append(ent.{{.PropertyName}}, &entity)\n\t\t}\n\t\t\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\treturn nil\n}\n"),
+		FileModTime: time.Unix(1533672034, 0),
+		Content:     string("\n// Load{{.Funcname}} is a helper function to load related {{.PropertyName}} entities\nfunc (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, entities ...*{{.ThisEntity}}) error {\n\tvar (\n\t\terr error\n\t\tplaceholder string\n\t\tvalues  []interface{}\n\t\tindices = make(map[{{.ThisType}}][]*{{.ThisEntity}})\n\t)\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t} else if len(entities) == 0 {\n\t\treturn nil\n\t}\n\n\tc := 1\n\tfor _, entity := range entities {\n\t\tplaceholder += \"$\" + strconv.Itoa(c) + \",\"\n\t\tindices[entity.ID] = append(indices[entity.ID], entity)\n\t\tvalues = append(values, entity.ID)\n\t\tc++\n\t}\n\tplaceholder = strings.TrimRight(placeholder, \",\")\n\n\trows, err := repo.db.Query(`\n\t\tSELECT t.\"{{.ThisID}}\", {{.SQLFields}} FROM {{.ThatTable}} t WHERE t.\"{{.ThisID}}\" IN (`+placeholder+`)\n\t`, values...)\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tfor rows.Next() {\n\t\tvar (\n\t\t\tthisID {{.ThisType}}\n\t\t\tentity {{.ThatEntity}}\n\t\t)\n\t\t\n\t\t{{range .Before}}{{.}}\n\t\t{{end}}\n\t\terr = rows.Scan(&thisID, {{.StructFields}})\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t\t{{range .After}}{{.}}\n\t\t{{end}}\n\t\t\n\t\tfor i := range indices[thisID] {\n\t\t\tindices[thisID][i].{{.PropertyName}} = append(ent.{{.PropertyName}}, &entity)\n\t\t}\n\t\t\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\treturn nil\n}\n"),
 	}
 	filer := &embedded.EmbeddedFile{
 		Filename:    "crud/partials/merge.go.tmpl",
@@ -164,115 +164,120 @@ func init() {
 		Content:     string("package credentials\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\n// Credentials represents connection to a service having a protocol, identifier, password, host and port\ntype Credentials struct {\n\tProtocol   string\n\tIdentifier string\n\tPassword   string\n\tHost       string\n\tPort       string\n}\n\n// String returns a human friendly representation of the credentials\nfunc (c *Credentials) String() string {\n\treturn fmt.Sprintf(\"Protocol: %s Identifier: %s Password: %s Host: %s Port: %s\", c.Protocol, c.Identifier, c.Password, c.Host, c.Port)\n}\n\n// getProtocol returns Protocol portion of the credentials\nfunc (c *Credentials) GetProtocol() string {\n\treturn c.Protocol\n}\n\n// getIdentifier returns Identifier portion of the credentials\nfunc (c *Credentials) GetIdentifier() string {\n\treturn c.Identifier\n}\n\n// getPassword returns Password portion of the credentials\nfunc (c *Credentials) GetPassword() string {\n\treturn c.Password\n}\n\n// getHost returns Host portion of the credentials\nfunc (c *Credentials) GetHost() string {\n\treturn c.Host\n}\n\n// getPort returns Port portion of the credentials\nfunc (c *Credentials) GetPort() string {\n\treturn c.Port\n}\n\n\n// NewCredentials returns a connection from string in the format protocol://username:password@host:port\nfunc NewCredentials(conn string, defaults ...*Credentials) *Credentials {\n\tvar (\n\t\tcredentials   *Credentials\n\t\tcreds, server string\n\t)\n\n\tif len(defaults) == 1 {\n\t\tcredentials = defaults[0]\n\t} else {\n\t\tcredentials = new(Credentials)\n\t}\n\n\tif i := strings.Index(conn, \"://\"); i != -1 {\n\t\tcredentials.Protocol = conn[:i]\n\t\tconn = conn[i+3:]\n\t}\n\n\tif i := strings.Index(conn, \"@\"); i == -1 { //no username password\n\t\tserver = conn\n\t} else {\n\t\tcreds = conn[:i]\n\t\tserver = conn[i+1:]\n\t}\n\n\tif creds == \"\" {\n\t\t//do nothing\n\t} else if i := strings.Index(creds, \":\"); i != -1 { //both id and password\n\t\tcredentials.Identifier = creds[:i]\n\t\tcredentials.Password = creds[i+1:]\n\t} else { //only id\n\t\tcredentials.Identifier = creds\n\t}\n\n\tif server == \"\" {\n\t\t//do nothing\n\t} else if i := strings.Index(server, \":\"); i != -1 { //both host and port\n\t\tcredentials.Host = server[:i]\n\t\tcredentials.Port = server[i+1:]\n\t} else { //only host\n\t\tcredentials.Host = conn\n\t}\n\n\treturn credentials\n}\n"),
 	}
 	file12 := &embedded.EmbeddedFile{
+		Filename:    "util/files.go.tmpl",
+		FileModTime: time.Unix(1533672025, 0),
+		Content:     string("package files\n\nimport (\n\t\"image\"\n\t\"io/ioutil\"\n\t\"log\"\n\t\"os\"\n\n\t\"gopkg.in/h2non/filetype.v1\"\n)\n\n// Constants for files package\nconst (\n\tbaseUploadPath = \"public/\"\n\tNoLimit        = -1\n)\n\n// DefaultUploadOptions holds default upload options\nvar DefaultUploadOptions = &UploadOptions{\n\tPermissions: 0644,\n\tFileExt:     \"jpg\",\n\tMaxSize:     NoLimit,\n\tMinSize:     NoLimit,\n\tImgDimensions: &ImageDimensions{\n\t\tMinHeight: NoLimit,\n\t\tMaxHeight: NoLimit,\n\t\tMinWidth:  NoLimit,\n\t\tMaxWidth:  NoLimit,\n\t},\n}\n\n// ImageDimensions holds dimensions options\ntype ImageDimensions struct {\n\tMinHeight int\n\tMaxHeight int\n\tMinWidth  int\n\tMaxWidth  int\n}\n\n// UploadOptions holds file upload options\ntype UploadOptions struct {\n\tDestination   string\n\tPermissions   os.FileMode\n\tFileExt       string\n\tMaxSize       int64\n\tMinSize       int64\n\tImgDimensions *ImageDimensions\n}\n\n// Upload validates and saves create file\nfunc Upload(fileField string, fileName string, fileContent []byte, options *UploadOptions) (string, error) {\n\tvar filePath string\n\n\tif options.Permissions == 0 {\n\t\toptions.Permissions = DefaultUploadOptions.Permissions\n\t}\n\n\ttmpDirectoryPath := baseUploadPath + options.Destination\n\n\tif err := os.MkdirAll(tmpDirectoryPath, os.ModePerm); err != nil {\n\t\tlog.Printf(\"error mk dir all: %v\\n\", err)\n\t\treturn filePath, nil\n\t}\n\n\tfilePath = tmpDirectoryPath + fileName\n\n\tif _, err := os.Stat(filePath); os.IsNotExist(err) {\n\t\terr := ioutil.WriteFile(filePath, fileContent, options.Permissions)\n\t\tif err != nil {\n\t\t\tlog.Printf(\"error writing file: %v\\n\", err)\n\t\t\treturn filePath, nil\n\t\t}\n\t}\n\n\tfile, err := os.Open(filePath)\n\tif err != nil {\n\t\tlog.Printf(\"error opening %v\\n\", filePath)\n\t\treturn filePath, nil\n\t}\n\tdefer file.Close()\n\n\tfileInfo, err := file.Stat()\n\tif err != nil {\n\t\tlog.Printf(\"error getting file info %v\\n\", filePath)\n\t\treturn filePath, nil\n\t}\n\tfileSize := fileInfo.Size()\n\n\tbuf := make([]byte, fileSize)\n\tif _, err := file.Read(buf); err != nil {\n\t\tlog.Printf(\"error reading file: %v\\n\", err)\n\t\treturn filePath, nil\n\t}\n\n\tif options.FileExt == \"\" {\n\t\toptions.FileExt = DefaultUploadOptions.FileExt\n\t}\n\n\tif !filetype.IsExtension(buf, options.FileExt) {\n\t\tlog.Printf(\"file not a valid %v file\\n\", options.FileExt)\n\t\treturn filePath, nil\n\t}\n\n\tif options.MaxSize != NoLimit && fileSize > options.MaxSize {\n\t\tlog.Printf(\"file %v greater than max file size: %v\\n\", fileName, options.MaxSize)\n\t\treturn filePath, nil\n\t}\n\n\tif options.MinSize != NoLimit && fileSize < options.MinSize {\n\t\tlog.Printf(\"file %v lower than min file size: %v\\n\", fileName, options.MinSize)\n\t\treturn filePath, nil\n\t}\n\n\tif filetype.IsImage(buf) {\n\t\timage, _, err := image.DecodeConfig(file) // Image Struct\n\t\tif err != nil {\n\t\t\tlog.Printf(\"error decoding image: %v\", err)\n\t\t\treturn filePath, nil\n\t\t}\n\n\t\tif options.ImgDimensions == nil {\n\t\t\toptions.ImgDimensions = DefaultUploadOptions.ImgDimensions\n\t\t}\n\n\t\tif options.ImgDimensions.MaxHeight != NoLimit && image.Height > options.ImgDimensions.MaxHeight {\n\t\t\tlog.Printf(\"image %v greater than max height: %v\\n\", fileName, options.ImgDimensions.MaxHeight)\n\t\t\treturn filePath, nil\n\t\t}\n\n\t\tif options.ImgDimensions.MinHeight != NoLimit && image.Height < options.ImgDimensions.MinHeight {\n\t\t\tlog.Printf(\"image %v lower than min height: %v\\n\", fileName, options.ImgDimensions.MinHeight)\n\t\t\treturn filePath, nil\n\t\t}\n\n\t\tif options.ImgDimensions.MaxWidth != NoLimit && image.Width > options.ImgDimensions.MaxWidth {\n\t\t\tlog.Printf(\"image %v greater than max width: %v\\n\", fileName, options.ImgDimensions.MaxWidth)\n\t\t\treturn filePath, nil\n\t\t}\n\n\t\tif options.ImgDimensions.MinWidth != NoLimit && image.Width < options.ImgDimensions.MinWidth {\n\t\t\tlog.Printf(\"image %v lower than min width: %v\\n\", fileName, options.ImgDimensions.MinWidth)\n\t\t\treturn filePath, nil\n\t\t}\n\t}\n\n\treturn filePath, nil\n}\n\n// DeleteMany deletes many files\nfunc DeleteMany(filespath []string) {\n\tfor _, filepath := range filespath {\n\t\tif err := os.Remove(filepath); err != nil {\n\t\t\tlog.Printf(\"error deleting file %v\\n\", err)\n\t\t}\n\t}\n}\n"),
+	}
+	file13 := &embedded.EmbeddedFile{
 		Filename:    "util/rice.go.tmpl",
 		FileModTime: time.Unix(1533202717, 0),
 		Content:     string("package util\n\nimport (\n\t\"net/http\"\n\t\"strings\"\n\n\trice \"github.com/GeertJohan/go.rice\"\n)\n\n// WebBox implements http.FileSystem which allows the use of Box with a http.FileServer.\n//   e.g.: http.Handle(\"/\", http.FileServer(rice.MustFindBox(\"http-files\").HTTPBox()))\ntype WebBox struct {\n\tBox  *rice.Box\n\tApp  string\n\tPath string\n}\n\n// NewWebBoxHandler returns a new WebBox File Server Handler\nfunc NewWebBoxHandler(box *rice.Box, app, path string) http.Handler {\n\treturn http.FileServer(WebBox{Box: box, App: app, Path: \"/\" + path})\n}\n\n// Open returns a File using the http.File interface\nfunc (b WebBox) Open(name string) (http.File, error) {\n\tname = strings.TrimPrefix(name, b.Path)\n\treturn b.Box.Open(b.App + name)\n}\n"),
 	}
-	file13 := &embedded.EmbeddedFile{
+	file14 := &embedded.EmbeddedFile{
 		Filename:    "util/util.go.tmpl",
 		FileModTime: time.Unix(1533202717, 0),
 		Content:     string("package util\n\nimport (\n\t\"context\"\n)\n\n// CheckContext returns an error if context is done\nfunc CheckContext(ctx context.Context) error {\n\tselect {\n\tcase <-ctx.Done():\n\t\treturn ctx.Err()\n\tdefault:\n\t\treturn nil\n\t}\n}"),
 	}
-	file14 := &embedded.EmbeddedFile{
+	file15 := &embedded.EmbeddedFile{
 		Filename:    "util/web.go.tmpl",
 		FileModTime: time.Unix(1533565757, 0),
 		Content:     string("package web\n\nimport (\n\t\"net/http\"\n\t\"os\"\n\t\"path\"\n\t\"strings\"\n\n\t\"github.com/gorilla/mux\"\n\tlog \"github.com/sirupsen/logrus\"\n)\n\nfunc lookupContent(root http.FileSystem, upath string) (http.File, os.FileInfo, bool) {\n\tvar (\n\t\terr  error\n\t\tfile http.File\n\t\tinfo os.FileInfo\n\t)\n\n\tif !strings.HasPrefix(upath, \"/\") {\n\t\tupath = \"/\" + upath\n\t}\n\n\tupath = path.Clean(upath)\n\n\tif file, err = root.Open(upath); err != nil {\n\t\treturn nil, nil, false\n\t}\n\n\tif info, err = file.Stat(); err != nil {\n\t\treturn nil, nil, false\n\t}\n\n\tif info.IsDir() {\n\t\tupath += \"/index.html\"\n\t\treturn lookupContent(root, upath+\"/index.html\")\n\t}\n\n\treturn file, info, true\n}\n\ntype fileHandlerWithFallback struct {\n\troot     http.FileSystem\n\tfallback http.File\n}\n\n// FileServerWithFallback returns an HTTP static fileserver with a default file fallback if requested url was not found\nfunc FileServerWithFallback(root http.FileSystem, fallback http.File) http.Handler {\n\treturn &fileHandlerWithFallback{root: root, fallback: fallback}\n}\n\nfunc (f *fileHandlerWithFallback) ServeHTTP(w http.ResponseWriter, r *http.Request) {\n\tvar (\n\t\tfile http.File\n\t\tinfo os.FileInfo\n\t\tok   bool\n\t\terr  error\n\t)\n\n\tfile, info, ok = lookupContent(f.root, r.URL.Path)\n\n\tif !ok {\n\t\tfile = f.fallback\n\t\tif info, err = file.Stat(); err == nil {\n\t\t\tok = true\n\t\t}\n\t}\n\n\tif ok {\n\t\thttp.ServeContent(w, r, info.Name(), info.ModTime(), file)\n\t} else {\n\t\tw.Header().Set(\"Content-Type\", \"text/plain; charset=utf-8\")\n\t\tw.Header().Set(\"X-Content-Type-Options\", \"nosniff\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tw.Write([]byte(\"File not found and default could not be served.\"))\n\t}\n}\n\ntype fileHandlerWithNotFoundHandler struct {\n\troot    http.FileSystem\n\thandler http.Handler\n}\n\n// FileServerWithNotFoundHandler returns an HTTP static fileserver with a custom http.Handler if requested url was not found\nfunc FileServerWithNotFoundHandler(root http.FileSystem, handler http.Handler) http.Handler {\n\treturn &fileHandlerWithNotFoundHandler{root: root, handler: handler}\n}\n\nfunc (f *fileHandlerWithNotFoundHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {\n\tif file, info, ok := lookupContent(f.root, r.URL.Path); ok {\n\t\thttp.ServeContent(w, r, info.Name(), info.ModTime(), file)\n\t} else {\n\t\tf.handler.ServeHTTP(w, r)\n\t}\n}\n\n// NewSubrouter returns a new subrouter\nfunc NewSubrouter(router *mux.Router, prefix string, appName string, mwf ...mux.MiddlewareFunc) (*mux.Router, error) {\n\tsubRouter := router.PathPrefix(prefix).Methods(\"GET\", \"HEAD\").Subrouter()\n\tif mwf != nil {\n\t\tsubRouter.Use(mwf...)\n\t}\n\n\tvar (\n\t\tfileSystem   http.FileSystem\n\t\tfallbackFile http.File\n\t\terr          error\n\t)\n\t{{if .Bootstrap.Assets}}\n\tif app.Env == app.EnvironmentDev {\n\t\tdistDir := \"web/\" + appName + \"/dist\"\n\t\tfallbackFile, err = os.Open(distDir + \"/index.html\")\n\n\t\tif err == nil {\n\t\t\tfileSystem = http.Dir(distDir)\n\t\t} else {\n\t\t\tlog.WithFields(log.Fields{\n\t\t\t\t\"prefix\":   prefix,\n\t\t\t\t\"app name\": appName,\n\t\t\t\t\"error\":    err,\n\t\t\t}).Warn(\"Could not create sub route\")\n\t\t\treturn nil, nil\n\t\t}\n\t} else {\n\t\tfallbackFile, err = app.Assets.Open(\"web/\" + appName + \"/index.html\")\n\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\n\t\tfileSystem = util.WebBox{Box: app.Assets, App: \"web/\" + appName, Path: \"/\" + appName}\n\t}\n\t{{else}}\n\tdistDir := \"web/\" + appName + \"/dist\"\n\tfallbackFile, err = os.Open(distDir + \"/index.html\")\n\t\n\tif err == nil {\n\t\tfileSystem = http.Dir(distDir)\n\t} else {\n\t\tlog.WithFields(log.Fields{\n\t\t\t\"prefix\":   prefix,\n\t\t\t\"app name\": appName,\n\t\t\t\"error\":    err,\n\t\t}).Warn(\"Could not create sub route\")\n\t\treturn nil, nil\n\t}\n\t{{end}}\n\n\tsubRouter.PathPrefix(\"/\").Handler(\n\t\thttp.StripPrefix(\n\t\t\tprefix,\n\t\t\tFileServerWithFallback(fileSystem, fallbackFile),\n\t\t),\n\t)\n\n\treturn subRouter, nil\n}\n"),
 	}
-	file17 := &embedded.EmbeddedFile{
+	file18 := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/actions.js.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("import types from \"./types\";\n\nexport default {}"),
 	}
-	file18 := &embedded.EmbeddedFile{
-		Filename:    "vuetify/js/getters.js.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
-		Content:     string("export default {}\n"),
-	}
 	file19 := &embedded.EmbeddedFile{
-		Filename:    "vuetify/js/index.js.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
-		Content:     string("import actions from \"./actions\";\nimport getters from \"./getters\";\nimport mutations from \"./mutations\";\nimport routes from \"./routes\";\n\nconst namespaced = true;\n\nconst state = {\n  entities: routes.routes\n};\n\nexport default {\n  namespaced,\n  state,\n  actions,\n  getters,\n  mutations\n};"),
+		Filename:    "vuetify/js/getters.js.tmpl",
+		FileModTime: time.Unix(1533672034, 0),
+		Content:     string("export default {}\n"),
 	}
 	file1a := &embedded.EmbeddedFile{
-		Filename:    "vuetify/js/mutations.js.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
-		Content:     string("import types from \"./types\";\n\nexport default {}\n"),
+		Filename:    "vuetify/js/index.js.tmpl",
+		FileModTime: time.Unix(1533672034, 0),
+		Content:     string("import actions from \"./actions\";\nimport getters from \"./getters\";\nimport mutations from \"./mutations\";\nimport routes from \"./routes\";\n\nconst namespaced = true;\n\nconst state = {\n  entities: routes.routes\n};\n\nexport default {\n  namespaced,\n  state,\n  actions,\n  getters,\n  mutations\n};"),
 	}
 	file1b := &embedded.EmbeddedFile{
-		Filename:    "vuetify/js/routes.js.tmpl",
-		FileModTime: time.Unix(1533624470, 0),
-		Content:     string("{{range .Entities}}\n// {{.Name}} {{.Description}}\nimport {{.Name}}List from \"./views/{{plural .Name}}List.vue\";\n{{end}}\n\nlet routes = [\n  {{range $i, $v := .Entities}}\n  {\n    path: \"/{{lower (plural .Name)}}-list/\",\n    name: \"{{lower (plural .Name)}}_List\",\n    icon: \"dashboard\",\n    component: {{.Name}}List,\n    entity: \"{{plural .Name}}\"\n  }{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nlet entities = [\n  {{range $i, $v := .Entities}}\n  \"{{plural .Name}}\"{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nfunction registerRoutes(router) {\n  router.addRoutes(routes);\n}\n\nexport default {\n  routes,\n  entities,\n  registerRoutes\n}\n"),
+		Filename:    "vuetify/js/mutations.js.tmpl",
+		FileModTime: time.Unix(1533672034, 0),
+		Content:     string("import types from \"./types\";\n\nexport default {}\n"),
 	}
 	file1c := &embedded.EmbeddedFile{
+		Filename:    "vuetify/js/routes.js.tmpl",
+		FileModTime: time.Unix(1533672034, 0),
+		Content:     string("{{range .Entities}}\n// {{.Name}} {{.Description}}\nimport {{.Name}}List from \"./views/{{plural .Name}}List.vue\";\n{{end}}\n\nlet routes = [\n  {{range $i, $v := .Entities}}\n  {\n    path: \"/{{lower (plural .Name)}}-list/\",\n    name: \"{{lower (plural .Name)}}_List\",\n    icon: \"dashboard\",\n    component: {{.Name}}List,\n    entity: \"{{plural .Name}}\"\n  }{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nlet entities = [\n  {{range $i, $v := .Entities}}\n  \"{{plural .Name}}\"{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nfunction registerRoutes(router) {\n  router.addRoutes(routes);\n}\n\nexport default {\n  routes,\n  entities,\n  registerRoutes\n}\n"),
+	}
+	file1d := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/types.js.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("export default {}\n"),
 	}
-	file1e := &embedded.EmbeddedFile{
+	file1f := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_edit.vue.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<template>\n    <div class=\"container\">\n\t\t<v-toolbar color=\"transparent\" flat>\n            <v-toolbar-title class=\"grey--text text--darken-4 ml-0\"><h2>{{.Entity.Name}}</h2></v-toolbar-title>\n            <v-spacer></v-spacer>\n            <v-btn ml-0 small color=\"grey\" flat :to=\"{name: '{{.Endpoint}}List'}\">\n                <v-icon dark>arrow_back</v-icon> Back\n            </v-btn>\n        </v-toolbar>\n\t\t<v-alert :type=\"message.type\" :value=\"true\" v-for=\"(message, index) in messages\" :key=\"index\">\n\t\t{{ \"{{ message.text }}\" }}\n\t\t</v-alert>\n  \n        {{range .Entity.Fields -}}\n        {{widget_field \"vuetify\" .Widget.Type .}}\n        {{- end}}\n\n        <v-btn color=\"primary\" @click=\"save()\">Save</v-btn>\n        <v-btn color=\"gray\" :to=\"{name: '{{.Endpoint}}List'}\">Cancel</v-btn>\n\t</div>\n</template>\n  \n<script>\nimport axios from \"axios\"\n\nexport default {\n    props: [\"id\"],\n    created() {\n        if (!this.id) {\n            return\n        }\n\n        axios.get(\"/api/{{.Endpoint}}/\" + this.id).then(response => {\n            this.id = response.data.entity.id\n            {{range .Entity.Fields}}{{if ne .Serialized \"id\"}}\n            this.entity.{{.Serialized}} = response.data.entity.{{.Serialized}}\n            {{if eq .Widget.Type \"date\"}}this.dates.{{.Serialized}}.value = response.data.entity.{{.Serialized}}.substr(0,10){{end}}\n            {{end}}{{end}}\n        })\n    },\n    data() {\n        return {\n            select: {\n                {{range $i, $v := .Entity.Fields}}{{if eq .Widget.Type \"date\"}}\n                {{.Serialized}}: {\n                    items:[\n                        {{range $j, $u := .Widget.Options}}\n                        {text: \"{{.Label}}\", value: \"{{.Value}}\"}{{if eq (plus1 $j) (len $u)}},{{end}}\n                        {{end}}\n                    ]\n                }{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n                {{end}}{{end}}\n\t\t\t},\n\t\t\tdates: {\n                {{range $i, $v := .Entity.Fields}}{{if eq .Widget.Type \"date\"}}\n\t\t\t\t{{.Serialized}}: {value: null, menuAppear: false}{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n                {{end}}{{end}}\n\t\t\t},\n            messages: [],\n            entity: {\n                {{range $i, $e := .Entity.Fields}}{{if ne .Serialized \"id\"}}\n                {{.Serialized}} : null{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n                {{end}}{{end}}\n            }\n        }\n    },\n    watch: {\n        {{range $i, $e := .Entity.Fields}}\n        \"select.{{.Serialized}}.search\": function(val) {\n            val && this.querySelections(\"{{.Serialized}}\", \"{{$.Endpoint}}\", \"{{$.Prefix}}{{.Relationship.Target.Endpoint}}\", val)\n        }{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n        {{end}}\n    },\n    methods: {\n        querySelections(fieldname, endpoint, filter, val) {\n            this.select[fieldname].loading = true\n            axios.get(\"/api/\" + endpoint + \"?\" + filter + \"-lk=\" + encodeURIComponent(val)).then(response => {\n                this.select[fieldname].loading = false\n                this.select[fieldname].items = response.data.entities.map(function(e) {\n                    return { text: e[filter], value: e.id }\n                })\n            })\n        },\n        save() {\n            if (this.id) {\n                axios.put(\"/api/{{.Endpoint}}/\" + this.id, this.entity).then(this.saved)\n            } else {\n                axios.post(\"/api/{{.Endpoint}}\", this.entity).then(this.saved)\n            }\n\t\t},\n\t\tsaved(response) {\n\t\t\tthis.id = response.data.entity.id\n\t\t\t{{range .Entity.Fields}}{{if ne .Serialized \"id\"}}\n            this.entity.{{.Serialized}} = response.data.entity.{{.Serialized}}\n            {{end}}{{end}}\n\n\t\t\tthis.messages.push({\n\t\t\t\ttype: \"success\",\n\t\t\t\ttext: \"{{.Entity.Name}} saved successfully\"\n\t\t\t})\n\t\t}\n    }\n}\n</script>"),
 	}
-	file1f := &embedded.EmbeddedFile{
+	file1g := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-checkbox.vue.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<v-checkbox label=\"{{.Label}}\" v-model=\"entity.{{.Serialized}}\"></v-checkbox>"),
 	}
-	file1g := &embedded.EmbeddedFile{
+	file1h := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-date.vue.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<v-menu\n\tref=\"menu_{{.Serialized}}\"\n\tlazy\n\t:close-on-content-click=\"false\"\n\tv-model=\"dates.{{.Serialized}}.menuAppear\"\n\ttransition=\"scale-transition\"\n\toffset-y\n\tfull-width\n\t:nudge-right=\"40\"\n\tmin-width=\"290px\"\n\t:return-value.sync=\"dates.{{.Serialized}}.value\"\n\t>\n\t<v-text-field\n\t\tslot=\"activator\"\n\t\tlabel=\"{{.Label}}\"\n\t\tv-model=\"dates.{{.Serialized}}.value\"\n\t\tprepend-icon=\"event\"\n\t\treadonly\n\t\t></v-text-field>\n\t\t<v-date-picker v-model=\"dates.{{.Serialized}}.value\" @change=\"entity.{{.Serialized}} = dates.{{.Serialized}}.value + 'T00:00:00Z'\" no-title scrollable>\n\t\t<v-spacer></v-spacer>\n\t\t<v-btn flat color=\"primary\" @click=\"menu_{{.Serialized}} = false\">Cancel</v-btn>\n\t\t<v-btn flat color=\"primary\" @click=\"$refs.menu_{{.Serialized}}.save(dates.{{.Serialized}}.value)\">OK</v-btn>\n\t\t</v-date-picker>\n</v-menu>"),
 	}
-	file1h := &embedded.EmbeddedFile{
+	file1i := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-number.vue.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<v-text-field v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" type=\"number\" />"),
 	}
-	file1i := &embedded.EmbeddedFile{
+	file1j := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-password.vue.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<v-text-field\n\tv-model=\"entity.{{.Serialized}}\"\n\t:append-icon=\"e1 ? 'visibility' : 'visibility_off'\"\n\t:append-icon-cb=\"() => (e1 = !e1)\"\n\t:type=\"e1 ? 'password' : 'text'\"\n\tcounter\n  ></v-text-field>"),
 	}
-	file1j := &embedded.EmbeddedFile{
+	file1k := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-select-rel.vue.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<v-select\n    autocomplete\n    cache-items\n    required\n    label=\"{{.Label}}\"\n    :loading=\"select.{{.Serialized}}.isloading\"\n    :items=\"select.{{.Serialized}}.items\"\n\t:search-input.sync=\"select.{{.Serialized}}.search\"\n\tv-model=\"entity.{{.Serialized}}\"\n\t{{if .Widget.Multiple}}multiple chips{{end}}\n></v-select>"),
 	}
-	file1k := &embedded.EmbeddedFile{
+	file1l := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-select.vue.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<v-select\n\tautocomplete\n\tcache-items\n\trequired\n\tlabel=\"{{.Label}}\"\n\t:items=\"select.{{.Serialized}}.items\"\n\tv-model=\"entity.{{.Serialized}}\"\n\t{{if .Widget.Multiple}}multiple chips{{end}}\n></v-select>"),
 	}
-	file1l := &embedded.EmbeddedFile{
+	file1m := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-textarea.vue.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<v-text-field v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" multiline />"),
 	}
-	file1m := &embedded.EmbeddedFile{
+	file1n := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-textfield.vue.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<v-text-field v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" />"),
 	}
-	file1n := &embedded.EmbeddedFile{
+	file1o := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-time.vue.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<div>\n\t<v-time-picker v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" :landscape=\"landscape\"></v-time-picker>\n</div>"),
 	}
-	file1o := &embedded.EmbeddedFile{
+	file1p := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-toggle.vue.tmpl",
-		FileModTime: time.Unix(1533565754, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<v-switch\n\tlabel=\"{{.Label}}\"\n\tv-model=\"entity.{{.Serialized}}\"\n></v-switch>"),
 	}
-	file1q := &embedded.EmbeddedFile{
+	file1r := &embedded.EmbeddedFile{
 		Filename:    "vuetify/views/list.vue.tmpl",
-		FileModTime: time.Unix(1533590268, 0),
+		FileModTime: time.Unix(1533672034, 0),
 		Content:     string("<template>\n    <v-container>\n        <v-toolbar color=\"transparent\" flat>\n            <v-toolbar-title class=\"grey--text text--darken-4 ml-0\"><h2>{{.Entity.Name}}</h2></v-toolbar-title>\n            <v-spacer></v-spacer>\n            <v-btn mr-0 color=\"primary\">\n                <v-icon dark>add</v-icon> Add\n            </v-btn>\n        </v-toolbar>\n        \n        <v-alert :type=\"message.type === 'E' ? 'error' : message.type\" :value=\"true\" v-for=\"(message, index) in messages\" :key=\"index\">\n            {{ \"{{ message.text }}\" }}\n        </v-alert>\n\n        <v-alert type=\"info\" value=\"true\"  color=\"primary\" outline icon=\"info\" v-if=\"entities.length === 0\">\n            No {{.Entity.Name}} exist. Would you like to create one now?\n            <v-btn color=\"primary\">create new</v-btn>\n        </v-alert>\n        <template v-else>\n            <v-text-field mb-4 append-icon=\"search\" label=\"Search\" single-line hide-details v-model=\"search\"></v-text-field>            \n            <v-data-table :headers=\"headers\" :items=\"entities\" class=\"elevation-1\" :search=\"search\">\n                <template slot=\"items\" slot-scope=\"props\">\n\t\t\t\t\t{{ range .Entity.Fields }}\n\t\t\t\t\t<td>{{ printf \"{{ props.item.get%s()}}\" .Property.Name }}</td>\n\t\t\t\t\t{{end}}\n                    <td class=\"justify-center layout px-0\">\n                        <v-btn icon class=\"mx-0\">\n                            <v-icon color=\"teal\">edit</v-icon>\n                        </v-btn>\n                    </td>\n                </template>\n\n                <template slot=\"no-data\">\n                    <v-flex ma-4>\n                        <v-alert slot=\"no-results\" :value=\"true\" color=\"primary\" outline icon=\"info\" v-if=\"search.length > 0\">\n                        Your search for \"{{ \"{{ search }}\" }}\" found no results.\n                        </v-alert>\n                        <v-alert slot=\"no-results\" :value=\"true\" color=\"primary\" outline icon=\"info\" v-else>\n                            No {{.Entity.Name}} found.\n                        </v-alert>\n                    </v-flex>\n                </template>\n            </v-data-table>\n        </template>\n    </v-container>\n</template>\n\n<script>\nimport { BreadClient } from \"@/services/service_bread_pb_service\";\nimport { List{{plural .Entity.Name}}Request } from \"@/services/service_bread_pb\";\n\nexport default {\n  data() {\n    return {\n      messages: [],\n      search: \"\",\n      headers: [\n\t\t{{range .Entity.Fields }}\n\t\t{text: \"{{.Label}}\", value: \"{{.Property.Name}}\"},\n\t\t{{end}}\n        {'text': 'Action', 'value': null}\n      ],\n      entities: []\n    };\n  },\n  created() {\n    let cli = new BreadClient(\"/api\");\n    let req = new List{{plural .Entity.Name}}Request();\n\n    cli.list{{plural .Entity.Name}}(req, (err, resp) => {\n        if (err) {\n            console.log(err);\n            return;\n        }\n\n        this.entities = resp.get{{plural .Entity.Name}}();\n    });\n  }\n};\n</script>"),
 	}
 
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1533565754, 0),
+		DirModTime: time.Unix(1533672034, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file7, // "bootstrap.go.tmpl"
 			file8, // "bootstrap_env.tmpl"
@@ -296,7 +301,7 @@ func init() {
 	}
 	dir9 := &embedded.EmbeddedDir{
 		Filename:   "bread",
-		DirModTime: time.Unix(1533565757, 0),
+		DirModTime: time.Unix(1533672034, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			filea, // "bread/service_bread.gocipe.go.tmpl"
 			fileb, // "bread/service_bread.proto.tmpl"
@@ -318,7 +323,7 @@ func init() {
 	}
 	diri := &embedded.EmbeddedDir{
 		Filename:   "crud/partials",
-		DirModTime: time.Unix(1533202717, 0),
+		DirModTime: time.Unix(1533672034, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			filej, // "crud/partials/delete_many.go.tmpl"
 			filek, // "crud/partials/delete_single.go.tmpl"
@@ -337,56 +342,57 @@ func init() {
 	}
 	dir10 := &embedded.EmbeddedDir{
 		Filename:   "util",
-		DirModTime: time.Unix(1533565757, 0),
+		DirModTime: time.Unix(1533672025, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file11, // "util/credentials.go.tmpl"
-			file12, // "util/rice.go.tmpl"
-			file13, // "util/util.go.tmpl"
-			file14, // "util/web.go.tmpl"
+			file12, // "util/files.go.tmpl"
+			file13, // "util/rice.go.tmpl"
+			file14, // "util/util.go.tmpl"
+			file15, // "util/web.go.tmpl"
 
 		},
-	}
-	dir15 := &embedded.EmbeddedDir{
-		Filename:   "vuetify",
-		DirModTime: time.Unix(1533588385, 0),
-		ChildFiles: []*embedded.EmbeddedFile{},
 	}
 	dir16 := &embedded.EmbeddedDir{
+		Filename:   "vuetify",
+		DirModTime: time.Unix(1533672034, 0),
+		ChildFiles: []*embedded.EmbeddedFile{},
+	}
+	dir17 := &embedded.EmbeddedDir{
 		Filename:   "vuetify/js",
-		DirModTime: time.Unix(1533565754, 0),
+		DirModTime: time.Unix(1533672034, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
-			file17, // "vuetify/js/actions.js.tmpl"
-			file18, // "vuetify/js/getters.js.tmpl"
-			file19, // "vuetify/js/index.js.tmpl"
-			file1a, // "vuetify/js/mutations.js.tmpl"
-			file1b, // "vuetify/js/routes.js.tmpl"
-			file1c, // "vuetify/js/types.js.tmpl"
+			file18, // "vuetify/js/actions.js.tmpl"
+			file19, // "vuetify/js/getters.js.tmpl"
+			file1a, // "vuetify/js/index.js.tmpl"
+			file1b, // "vuetify/js/mutations.js.tmpl"
+			file1c, // "vuetify/js/routes.js.tmpl"
+			file1d, // "vuetify/js/types.js.tmpl"
 
 		},
 	}
-	dir1d := &embedded.EmbeddedDir{
+	dir1e := &embedded.EmbeddedDir{
 		Filename:   "vuetify/old",
-		DirModTime: time.Unix(1533565754, 0),
+		DirModTime: time.Unix(1533672034, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
-			file1e, // "vuetify/old/vuetify_edit.vue.tmpl"
-			file1f, // "vuetify/old/vuetify_editor-field-checkbox.vue.tmpl"
-			file1g, // "vuetify/old/vuetify_editor-field-date.vue.tmpl"
-			file1h, // "vuetify/old/vuetify_editor-field-number.vue.tmpl"
-			file1i, // "vuetify/old/vuetify_editor-field-password.vue.tmpl"
-			file1j, // "vuetify/old/vuetify_editor-field-select-rel.vue.tmpl"
-			file1k, // "vuetify/old/vuetify_editor-field-select.vue.tmpl"
-			file1l, // "vuetify/old/vuetify_editor-field-textarea.vue.tmpl"
-			file1m, // "vuetify/old/vuetify_editor-field-textfield.vue.tmpl"
-			file1n, // "vuetify/old/vuetify_editor-field-time.vue.tmpl"
-			file1o, // "vuetify/old/vuetify_editor-field-toggle.vue.tmpl"
+			file1f, // "vuetify/old/vuetify_edit.vue.tmpl"
+			file1g, // "vuetify/old/vuetify_editor-field-checkbox.vue.tmpl"
+			file1h, // "vuetify/old/vuetify_editor-field-date.vue.tmpl"
+			file1i, // "vuetify/old/vuetify_editor-field-number.vue.tmpl"
+			file1j, // "vuetify/old/vuetify_editor-field-password.vue.tmpl"
+			file1k, // "vuetify/old/vuetify_editor-field-select-rel.vue.tmpl"
+			file1l, // "vuetify/old/vuetify_editor-field-select.vue.tmpl"
+			file1m, // "vuetify/old/vuetify_editor-field-textarea.vue.tmpl"
+			file1n, // "vuetify/old/vuetify_editor-field-textfield.vue.tmpl"
+			file1o, // "vuetify/old/vuetify_editor-field-time.vue.tmpl"
+			file1p, // "vuetify/old/vuetify_editor-field-toggle.vue.tmpl"
 
 		},
 	}
-	dir1p := &embedded.EmbeddedDir{
+	dir1q := &embedded.EmbeddedDir{
 		Filename:   "vuetify/views",
-		DirModTime: time.Unix(1533565754, 0),
+		DirModTime: time.Unix(1533672034, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
-			file1q, // "vuetify/views/list.vue.tmpl"
+			file1r, // "vuetify/views/list.vue.tmpl"
 
 		},
 	}
@@ -397,7 +403,7 @@ func init() {
 		dir9,  // "bread"
 		dird,  // "crud"
 		dir10, // "util"
-		dir15, // "vuetify"
+		dir16, // "vuetify"
 
 	}
 	dir2.ChildDirs = []*embedded.EmbeddedDir{}
@@ -408,20 +414,20 @@ func init() {
 	}
 	diri.ChildDirs = []*embedded.EmbeddedDir{}
 	dir10.ChildDirs = []*embedded.EmbeddedDir{}
-	dir15.ChildDirs = []*embedded.EmbeddedDir{
-		dir16, // "vuetify/js"
-		dir1d, // "vuetify/old"
-		dir1p, // "vuetify/views"
+	dir16.ChildDirs = []*embedded.EmbeddedDir{
+		dir17, // "vuetify/js"
+		dir1e, // "vuetify/old"
+		dir1q, // "vuetify/views"
 
 	}
-	dir16.ChildDirs = []*embedded.EmbeddedDir{}
-	dir1d.ChildDirs = []*embedded.EmbeddedDir{}
-	dir1p.ChildDirs = []*embedded.EmbeddedDir{}
+	dir17.ChildDirs = []*embedded.EmbeddedDir{}
+	dir1e.ChildDirs = []*embedded.EmbeddedDir{}
+	dir1q.ChildDirs = []*embedded.EmbeddedDir{}
 
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`templates`, &embedded.EmbeddedBox{
 		Name: `templates`,
-		Time: time.Unix(1533565754, 0),
+		Time: time.Unix(1533672034, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"":              dir1,
 			"application":   dir2,
@@ -429,10 +435,10 @@ func init() {
 			"crud":          dird,
 			"crud/partials": diri,
 			"util":          dir10,
-			"vuetify":       dir15,
-			"vuetify/js":    dir16,
-			"vuetify/old":   dir1d,
-			"vuetify/views": dir1p,
+			"vuetify":       dir16,
+			"vuetify/js":    dir17,
+			"vuetify/old":   dir1e,
+			"vuetify/views": dir1q,
 		},
 		Files: map[string]*embedded.EmbeddedFile{
 			"application/gen-service.sh.tmpl":                      file3,
@@ -466,27 +472,28 @@ func init() {
 			"rest_hooks.go.tmpl":                                   filey,
 			"schema.sql.tmpl":                                      filez,
 			"util/credentials.go.tmpl":                             file11,
-			"util/rice.go.tmpl":                                    file12,
-			"util/util.go.tmpl":                                    file13,
-			"util/web.go.tmpl":                                     file14,
-			"vuetify/js/actions.js.tmpl":                           file17,
-			"vuetify/js/getters.js.tmpl":                           file18,
-			"vuetify/js/index.js.tmpl":                             file19,
-			"vuetify/js/mutations.js.tmpl":                         file1a,
-			"vuetify/js/routes.js.tmpl":                            file1b,
-			"vuetify/js/types.js.tmpl":                             file1c,
-			"vuetify/old/vuetify_edit.vue.tmpl":                    file1e,
-			"vuetify/old/vuetify_editor-field-checkbox.vue.tmpl":   file1f,
-			"vuetify/old/vuetify_editor-field-date.vue.tmpl":       file1g,
-			"vuetify/old/vuetify_editor-field-number.vue.tmpl":     file1h,
-			"vuetify/old/vuetify_editor-field-password.vue.tmpl":   file1i,
-			"vuetify/old/vuetify_editor-field-select-rel.vue.tmpl": file1j,
-			"vuetify/old/vuetify_editor-field-select.vue.tmpl":     file1k,
-			"vuetify/old/vuetify_editor-field-textarea.vue.tmpl":   file1l,
-			"vuetify/old/vuetify_editor-field-textfield.vue.tmpl":  file1m,
-			"vuetify/old/vuetify_editor-field-time.vue.tmpl":       file1n,
-			"vuetify/old/vuetify_editor-field-toggle.vue.tmpl":     file1o,
-			"vuetify/views/list.vue.tmpl":                          file1q,
+			"util/files.go.tmpl":                                   file12,
+			"util/rice.go.tmpl":                                    file13,
+			"util/util.go.tmpl":                                    file14,
+			"util/web.go.tmpl":                                     file15,
+			"vuetify/js/actions.js.tmpl":                           file18,
+			"vuetify/js/getters.js.tmpl":                           file19,
+			"vuetify/js/index.js.tmpl":                             file1a,
+			"vuetify/js/mutations.js.tmpl":                         file1b,
+			"vuetify/js/routes.js.tmpl":                            file1c,
+			"vuetify/js/types.js.tmpl":                             file1d,
+			"vuetify/old/vuetify_edit.vue.tmpl":                    file1f,
+			"vuetify/old/vuetify_editor-field-checkbox.vue.tmpl":   file1g,
+			"vuetify/old/vuetify_editor-field-date.vue.tmpl":       file1h,
+			"vuetify/old/vuetify_editor-field-number.vue.tmpl":     file1i,
+			"vuetify/old/vuetify_editor-field-password.vue.tmpl":   file1j,
+			"vuetify/old/vuetify_editor-field-select-rel.vue.tmpl": file1k,
+			"vuetify/old/vuetify_editor-field-select.vue.tmpl":     file1l,
+			"vuetify/old/vuetify_editor-field-textarea.vue.tmpl":   file1m,
+			"vuetify/old/vuetify_editor-field-textfield.vue.tmpl":  file1n,
+			"vuetify/old/vuetify_editor-field-time.vue.tmpl":       file1o,
+			"vuetify/old/vuetify_editor-field-toggle.vue.tmpl":     file1p,
+			"vuetify/views/list.vue.tmpl":                          file1r,
 		},
 	})
 }
