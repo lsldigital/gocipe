@@ -32,10 +32,14 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 		return nil, ErrorRequestEmpty
 	}
 
+	{{if or .Bread.Hooks.PreCreate .Bread.Hooks.PostCreate -}}
+	filespath := make(map[string]string)
+	{{- end}}
+
 	res.{{.Name}} = req.{{.Name}}
 	tx, err = s.DB.Begin()
 	{{if .Bread.Hooks.PreCreate}}
-	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, err)
+	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, filespath, err)
 	if stop {
 		return &res, nil
 	}
@@ -48,7 +52,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	err = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)
 
 	{{if .Bread.Hooks.PostCreate -}}
-	stop, err = s.{{lower .Name}}PostCreate(ctx, req, &res, err)
+	stop, err = s.{{lower .Name}}PostCreate(ctx, req, &res, filespath, err)
 	if stop {
 		return &res, nil
 	}
@@ -195,11 +199,15 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 		return nil, ErrorRequestEmpty
 	}
 
+	{{if or .Bread.Hooks.PreUpdate .Bread.Hooks.PostUpdate -}}
+	filespath := make(map[string]string)
+	{{- end}}
+
 	// existing records in DB
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)
 	if err != nil {
 		{{if .Bread.Hooks.PreUpdate -}}
-		stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
+		stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, filespath, err)
 		if stop {
 			return &res, nil
 		}
@@ -211,7 +219,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	tx, err = s.DB.Begin()
 
 	{{if .Bread.Hooks.PreUpdate -}}
-	stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
+	stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, filespath, err)
 	if stop {
 		return &res, nil
 	}
@@ -227,7 +235,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	{{if .Bread.Hooks.PostUpdate -}}
-	stop, err = s.{{lower .Name}}PostUpdate(ctx, req, &res, *existing, err)
+	stop, err = s.{{lower .Name}}PostUpdate(ctx, req, &res, *existing, filespath, err)
 	if stop {
 		return &res, nil
 	}
