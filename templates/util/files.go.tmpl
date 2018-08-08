@@ -1,10 +1,18 @@
 package files
 
 import (
+	"fmt"
 	"image"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"gopkg.in/h2non/filetype.v1"
 )
@@ -41,56 +49,57 @@ type ImageDimensions struct {
 type UploadOptions struct {
 	Destination   string
 	Permissions   os.FileMode
+	Field         string
 	FileExt       string
-	MaxSize       int64
-	MinSize       int64
+	MaxSize       int
+	MinSize       int
 	ImgDimensions *ImageDimensions
 }
 
+func init() {
+	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
+	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
+	image.RegisterFormat("gif", "gif", gif.Decode, gif.DecodeConfig)
+}
+
 // Upload validates and saves create file
-func Upload(fileField string, fileName string, fileContent []byte, options *UploadOptions) (string, error) {
+func Upload(fileName string, fileContent []byte, options *UploadOptions) (string, error) {
 	var filePath string
 
 	if options.Permissions == 0 {
 		options.Permissions = DefaultUploadOptions.Permissions
 	}
 
-	tmpDirectoryPath := baseUploadPath + options.Destination
+	directoryPath := path.Join(baseUploadPath, options.Destination)
 
-	if err := os.MkdirAll(tmpDirectoryPath, os.ModePerm); err != nil {
-		log.Printf("error mk dir all: %v\n", err)
-		return filePath, nil
+	if err := os.MkdirAll(directoryPath, os.ModePerm); err != nil {
+		log.Printf("error creating directories: %v\n", err)
+		return filePath, err
 	}
 
-	filePath = tmpDirectoryPath + fileName
+	filePath = filepath.Join(directoryPath, buildFileName(fileName, options.FileExt))
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		err := ioutil.WriteFile(filePath, fileContent, options.Permissions)
-		if err != nil {
-			log.Printf("error writing file: %v\n", err)
-			return filePath, nil
+		if err := ioutil.WriteFile(filePath, fileContent, options.Permissions); err != nil {
+			log.Printf("error writing %v: %v\n", filePath, err)
+			return filePath, err
 		}
 	}
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Printf("error opening %v\n", filePath)
-		return filePath, nil
+		log.Printf("error opening %v: %v\n", filePath, err)
+		return filePath, err
 	}
 	defer file.Close()
 
-	fileInfo, err := file.Stat()
+	buf, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Printf("error getting file info %v\n", filePath)
-		return filePath, nil
+		log.Printf("error reading %v: %v\n", filePath, err)
+		return filePath, err
 	}
-	fileSize := fileInfo.Size()
 
-	buf := make([]byte, fileSize)
-	if _, err := file.Read(buf); err != nil {
-		log.Printf("error reading file: %v\n", err)
-		return filePath, nil
-	}
+	fileSize := len(buf)
 
 	if options.FileExt == "" {
 		options.FileExt = DefaultUploadOptions.FileExt
@@ -98,24 +107,24 @@ func Upload(fileField string, fileName string, fileContent []byte, options *Uplo
 
 	if !filetype.IsExtension(buf, options.FileExt) {
 		log.Printf("file not a valid %v file\n", options.FileExt)
-		return filePath, nil
+		return filePath, fmt.Errorf("file type invalid")
 	}
 
 	if options.MaxSize != NoLimit && fileSize > options.MaxSize {
 		log.Printf("file %v greater than max file size: %v\n", fileName, options.MaxSize)
-		return filePath, nil
+		return filePath, fmt.Errorf("file max size error")
 	}
 
 	if options.MinSize != NoLimit && fileSize < options.MinSize {
 		log.Printf("file %v lower than min file size: %v\n", fileName, options.MinSize)
-		return filePath, nil
+		return filePath, fmt.Errorf("file min size error")
 	}
 
 	if filetype.IsImage(buf) {
-		image, _, err := image.DecodeConfig(file) // Image Struct
+		image, _, err := image.DecodeConfig(file)
 		if err != nil {
 			log.Printf("error decoding image: %v", err)
-			return filePath, nil
+			return filePath, err
 		}
 
 		if options.ImgDimensions == nil {
@@ -124,33 +133,73 @@ func Upload(fileField string, fileName string, fileContent []byte, options *Uplo
 
 		if options.ImgDimensions.MaxHeight != NoLimit && image.Height > options.ImgDimensions.MaxHeight {
 			log.Printf("image %v greater than max height: %v\n", fileName, options.ImgDimensions.MaxHeight)
-			return filePath, nil
+			return filePath, fmt.Errorf("image max height error")
 		}
 
 		if options.ImgDimensions.MinHeight != NoLimit && image.Height < options.ImgDimensions.MinHeight {
 			log.Printf("image %v lower than min height: %v\n", fileName, options.ImgDimensions.MinHeight)
-			return filePath, nil
+			return filePath, fmt.Errorf("image min height error")
 		}
 
 		if options.ImgDimensions.MaxWidth != NoLimit && image.Width > options.ImgDimensions.MaxWidth {
 			log.Printf("image %v greater than max width: %v\n", fileName, options.ImgDimensions.MaxWidth)
-			return filePath, nil
+			return filePath, fmt.Errorf("image max width error")
 		}
 
 		if options.ImgDimensions.MinWidth != NoLimit && image.Width < options.ImgDimensions.MinWidth {
 			log.Printf("image %v lower than min width: %v\n", fileName, options.ImgDimensions.MinWidth)
-			return filePath, nil
+			return filePath, fmt.Errorf("image min width error")
 		}
 	}
 
 	return filePath, nil
 }
 
+// Delete deletes one file
+func Delete(filepath string) error {
+	if err := os.Remove(filepath); err != nil {
+		return err
+	}
+	return nil
+}
+
 // DeleteMany deletes many files
-func DeleteMany(filespath []string) {
+func DeleteMany(filespath ...string) {
 	for _, filepath := range filespath {
-		if err := os.Remove(filepath); err != nil {
+		if err := Delete(filepath); err != nil {
 			log.Printf("error deleting file %v\n", err)
 		}
 	}
+}
+
+// RemoveContents deletes all contents of a directory
+func RemoveContents(dir, exception string) error {
+	dir = path.Join(baseUploadPath, dir)
+	dirRead, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+
+	dirFiles, err := dirRead.Readdir(0)
+	if err != nil {
+		return err
+	}
+
+	for _, fileInfo := range dirFiles {
+		fullPath := path.Join(dir, fileInfo.Name())
+
+		if fullPath == exception {
+			continue
+		}
+
+		os.Remove(fullPath)
+	}
+	return nil
+}
+
+func buildFileName(oldFilename, newExt string) string {
+	oldExt := filepath.Ext(oldFilename)
+	newFilename := strings.TrimSuffix(oldFilename, oldExt)
+	newFilename = newFilename + "_" + time.Now().Format("20060102150405")
+	return newFilename + "." + newExt
 }

@@ -8,6 +8,8 @@ import (
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
+	"lsl.digital/redac-systems/culture/app"
+	"lsl.digital/redac-systems/culture/util"
 )
 
 func lookupContent(root http.FileSystem, upath string) (http.File, os.FileInfo, bool) {
@@ -97,16 +99,16 @@ func (f *fileHandlerWithNotFoundHandler) ServeHTTP(w http.ResponseWriter, r *htt
 // NewSubrouter returns a new subrouter
 func NewSubrouter(router *mux.Router, prefix string, appName string, mwf ...mux.MiddlewareFunc) (*mux.Router, error) {
 	subRouter := router.PathPrefix(prefix).Methods("GET", "HEAD").Subrouter()
-	if mwf != nil {
-		subRouter.Use(mwf...)
-	}
+	// if len(mwf) != 0 {
+	// 	subRouter.Use(mwf...)
+	// }
 
 	var (
 		fileSystem   http.FileSystem
 		fallbackFile http.File
 		err          error
 	)
-	{{if .Bootstrap.Assets}}
+
 	if app.Env == app.EnvironmentDev {
 		distDir := "web/" + appName + "/dist"
 		fallbackFile, err = os.Open(distDir + "/index.html")
@@ -130,21 +132,6 @@ func NewSubrouter(router *mux.Router, prefix string, appName string, mwf ...mux.
 
 		fileSystem = util.WebBox{Box: app.Assets, App: "web/" + appName, Path: "/" + appName}
 	}
-	{{else}}
-	distDir := "web/" + appName + "/dist"
-	fallbackFile, err = os.Open(distDir + "/index.html")
-	
-	if err == nil {
-		fileSystem = http.Dir(distDir)
-	} else {
-		log.WithFields(log.Fields{
-			"prefix":   prefix,
-			"app name": appName,
-			"error":    err,
-		}).Warn("Could not create sub route")
-		return nil, nil
-	}
-	{{end}}
 
 	subRouter.PathPrefix("/").Handler(
 		http.StripPrefix(
