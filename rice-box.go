@@ -205,8 +205,8 @@ func init() {
 	}
 	file1e := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/routes.js.tmpl",
-		FileModTime: time.Unix(1533809282, 0),
-		Content:     string("{{range .Entities}}\n// {{.Name}} {{.Description}}\nimport {{.Name}}List from \"./views/{{plural .Name}}List.vue\";\n{{end}}\n\nlet routes = [\n  {{range $i, $v := .Entities}}\n  {\n    path: \"/{{lower (plural .Name)}}\",\n    name: \"{{lower (plural .Name)}}\",\n    component: {{.Name}}List,\n    meta: {\n      icon: \"{{.Vuetify.Icon}}\",\n      entity: \"{{plural .Name}}\"\n    }\n  }{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nexport default routes;"),
+		FileModTime: time.Unix(1533815225, 0),
+		Content:     string("{{range .Entities}}\n// {{.Name}} {{.Description}}\nimport {{.Name}}List from \"./views/{{plural .Name}}List.vue\";\n{{end}}\n\nlet routes = [\n  {{range $i, $v := .Entities}}\n  {\n    path: \"/{{lower (plural .Name)}}\",\n    name: \"{{lower (plural .Name)}}\",\n    component: {{.Name}}List,\n    meta: {\n      icon: \"{{.Vuetify.Icon}}\",\n      entity: \"{{plural .Name}}\",\n      showInMenu: {{if .Vuetify.NotInMenu}}false{{else}}true{{end}}\n    }\n  }{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nexport default routes;"),
 	}
 	file1f := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/types.js.tmpl",

@@ -97,7 +97,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateVuetify {
-			go vuetify.Generate(work, rcp)
+			go vuetify.Generate(work, rcp, entities)
 		}
 		// go generators.GenerateHTTP(work, recipe.HTTP)
 		// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)

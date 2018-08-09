@@ -11,7 +11,8 @@ let routes = [
     component: {{.Name}}List,
     meta: {
       icon: "{{.Vuetify.Icon}}",
-      entity: "{{plural .Name}}"
+      entity: "{{plural .Name}}",
+      showInMenu: {{if .Vuetify.NotInMenu}}false{{else}}true{{end}}
     }
   }{{if ne (plus1 $i) (len $.Entities)}},{{end}}
   {{end}}

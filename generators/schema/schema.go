@@ -71,7 +71,7 @@ func Generate(work util.GenerationWork, opts util.SchemaOpts, entities map[strin
 				}
 			}
 
-			code, err := util.ExecuteTemplate("schema.sql.tmpl", data)
+			code, err := util.ExecuteTemplate("schema/schema.sql.tmpl", data)
 
 			if err != nil {
 				work.Done <- util.GeneratedCode{Generator: "GenerateSchema", Error: err}
