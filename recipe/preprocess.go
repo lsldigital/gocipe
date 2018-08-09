@@ -41,6 +41,10 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			entity.PrimaryKey = util.PrimaryKeySerial
 		}
 
+		if entity.Vuetify.Icon == "" {
+			entity.Vuetify.Icon = "dashboard"
+		}
+
 		entities[entity.Name] = entity
 	}
 

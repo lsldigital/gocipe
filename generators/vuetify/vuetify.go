@@ -7,26 +7,26 @@ import (
 )
 
 // Generate returns generated vuetify components
-func Generate(work util.GenerationWork, opts util.VuetifyOpts, entities []util.Entity) {
-	if !opts.Generate {
+func Generate(work util.GenerationWork, recipe *util.Recipe) {
+	if !recipe.Vuetify.Generate {
 		work.Waitgroup.Done()
 		return
 	}
 
-	path := util.WorkingDir + "/web/" + opts.App + "/src/bread"
+	path := util.WorkingDir + "/web/" + recipe.Vuetify.App + "/src/bread"
 
-	work.Waitgroup.Add(len(entities) * 1) //2 jobs to be waited upon for each thread - Editor and List
-	for _, entity := range entities {
+	work.Waitgroup.Add(len(recipe.Entities) * 1) //2 jobs to be waited upon for each thread - Editor and List
+	for _, entity := range recipe.Entities {
+		if entity.Vuetify.NoGenerate {
+			continue
+		}
+
 		go func(entity util.Entity) {
 			var (
 				data struct {
 					Entity util.Entity
 				}
 			)
-
-			if entity.Vuetify == nil {
-				entity.Vuetify = &opts
-			}
 
 			data.Entity = entity
 
@@ -48,13 +48,25 @@ func Generate(work util.GenerationWork, opts util.VuetifyOpts, entities []util.E
 		}(entity)
 	}
 
+	menuEntities := func() []util.Entity {
+		var items []util.Entity
+
+		for i := range recipe.Entities {
+			if !recipe.Entities[i].Vuetify.NotInMenu {
+				items = append(items, recipe.Entities[i])
+			}
+		}
+
+		return items
+	}()
+
 	output.GenerateAndSave(
 		"Vuetify",
 		"vuetify/js/routes.js.tmpl",
 		path+"/routes.js",
 		struct {
 			Entities []util.Entity
-		}{entities},
+		}{menuEntities},
 		false,
 		false,
 	)

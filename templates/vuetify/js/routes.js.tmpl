@@ -10,7 +10,7 @@ let routes = [
     name: "{{lower (plural .Name)}}",
     component: {{.Name}}List,
     meta: {
-      icon: "dashboard",
+      icon: "{{.Vuetify.Icon}}",
       entity: "{{plural .Name}}"
     }
   }{{if ne (plus1 $i) (len $.Entities)}},{{end}}

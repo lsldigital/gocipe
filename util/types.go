@@ -285,6 +285,18 @@ type VuetifyOpts struct {
 	App string `json:"app"`
 }
 
+// VuetifyEntityOpts represents per entity options for the vuetify generator
+type VuetifyEntityOpts struct {
+	// NoGenerate represents whether or not to generate vuetify assets
+	NoGenerate bool `json:"no_generate"`
+
+	// NotInMenu indicates whether or not to show entity in menu
+	NotInMenu bool `json:"not_in_menu"`
+
+	// Icon
+	Icon string `json:"icon"`
+}
+
 // Entity represents a single entity to be generated
 type Entity struct {
 	// Name is the name of the entity
@@ -321,7 +333,7 @@ type Entity struct {
 	Rest *RestOpts `json:"rest"`
 
 	// Vuetify describes options for Vuetify generation - overrides recipe level Vuetify config
-	Vuetify *VuetifyOpts `json:"vuetify"`
+	Vuetify *VuetifyEntityOpts `json:"vuetify"`
 }
 
 // Field describes a field contained in an entity
@@ -389,6 +401,9 @@ type Relationship struct {
 
 // WidgetOpts represents a UI widget
 type WidgetOpts struct {
+	// ShowInList indicates whether or not to show field in listing
+	ShowInList bool
+
 	// Type indicates which widget type is represented
 	Type string `json:"type"`
 
