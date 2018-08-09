@@ -333,7 +333,7 @@ type Entity struct {
 	Rest *RestOpts `json:"rest"`
 
 	// Vuetify describes options for Vuetify generation - overrides recipe level Vuetify config
-	Vuetify *VuetifyEntityOpts `json:"vuetify"`
+	Vuetify VuetifyEntityOpts `json:"vuetify"`
 }
 
 // Field describes a field contained in an entity
