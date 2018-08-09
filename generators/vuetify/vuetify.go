@@ -17,9 +17,9 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 
 	// work.Waitgroup.Add(len(recipe.Entities) * 1) //2 jobs to be waited upon for each thread - Editor and List
 	for _, entity := range entities {
-		// if entity.Vuetify.NoGenerate {
-		// 	continue
-		// }
+		if entity.Vuetify.NoGenerate {
+			continue
+		}
 
 		// go func(entity util.Entity) {
 		var (
@@ -54,7 +54,7 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 		var items []util.Entity
 
 		for i := range entities {
-			if !entities[i].Vuetify.NotInMenu {
+			if !entities[i].Vuetify.NoGenerate {
 				items = append(items, entities[i])
 			}
 		}
