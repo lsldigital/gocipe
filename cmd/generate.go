@@ -5,10 +5,11 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/fluxynet/gocipe/generators"
 	"github.com/fluxynet/gocipe/generators/application"
+	"github.com/fluxynet/gocipe/generators/bootstrap"
 	"github.com/fluxynet/gocipe/generators/bread"
 	"github.com/fluxynet/gocipe/generators/crud"
+	"github.com/fluxynet/gocipe/generators/schema"
 	utils "github.com/fluxynet/gocipe/generators/util"
 	"github.com/fluxynet/gocipe/generators/vuetify"
 	"github.com/fluxynet/gocipe/output"
@@ -17,7 +18,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var noSkip bool
+var (
+	noSkip            bool
+	generateBootstrap bool
+	generateSchema    bool
+	generateCrud      bool
+	generateBread     bool
+	generateUtils     bool
+	generateVuetify   bool
+)
 
 var generateCmd = &cobra.Command{
 	Use:     "generate",
@@ -35,7 +44,29 @@ var generateCmd = &cobra.Command{
 			log.Fatalln("[loadRecipe]", err)
 		}
 
-		work.Waitgroup.Add(6)
+		if generateBootstrap {
+			work.Waitgroup.Add(1)
+		}
+
+		if generateSchema {
+			work.Waitgroup.Add(1)
+		}
+
+		if generateCrud {
+			work.Waitgroup.Add(1)
+		}
+
+		if generateBread {
+			work.Waitgroup.Add(1)
+		}
+
+		if generateUtils {
+			work.Waitgroup.Add(1)
+		}
+
+		if generateVuetify {
+			work.Waitgroup.Add(1)
+		}
 
 		entities, err := recipe.Preprocess(rcp)
 		if err != nil {
@@ -45,12 +76,29 @@ var generateCmd = &cobra.Command{
 		//scaffold application layout - synchronously before launching generators
 		application.Generate(rcp.Bootstrap, noSkip)
 
-		go generators.GenerateBootstrap(work, rcp.Bootstrap)
-		go crud.Generate(work, rcp.Crud, entities)
-		go bread.Generate(work, entities)
-		go generators.GenerateSchema(work, rcp.Schema, entities)
-		go utils.Generate(work, rcp.Bootstrap)
-		go vuetify.Generate(work, rcp)
+		if generateBootstrap {
+			go bootstrap.Generate(work, rcp.Bootstrap)
+		}
+
+		if generateSchema {
+			go crud.Generate(work, rcp.Crud, entities)
+		}
+
+		if generateCrud {
+			go bread.Generate(work, entities)
+		}
+
+		if generateBread {
+			go schema.Generate(work, rcp.Schema, entities)
+		}
+
+		if generateUtils {
+			go utils.Generate(work, rcp.Bootstrap)
+		}
+
+		if generateVuetify {
+			go vuetify.Generate(work, rcp)
+		}
 		// go generators.GenerateHTTP(work, recipe.HTTP)
 		// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 

@@ -15,6 +15,12 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	generateCmd.Flags().BoolVarP(&noSkip, "overwrite", "o", false, "Overwrite.")
+	generateCmd.Flags().BoolVarP(&generateBootstrap, "Bootstrap", "", true, "")
+	generateCmd.Flags().BoolVarP(&generateSchema, "Schema", "", true, "")
+	generateCmd.Flags().BoolVarP(&generateCrud, "Crud", "", true, "")
+	generateCmd.Flags().BoolVarP(&generateBread, "Bread", "", true, "")
+	generateCmd.Flags().BoolVarP(&generateUtils, "Utils", "", true, "")
+	generateCmd.Flags().BoolVarP(&generateVuetify, "Vuetify", "", true, "")
 
 	rootCmd.AddCommand(generateCmd, versionCmd)
 }

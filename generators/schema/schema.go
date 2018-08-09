@@ -1,4 +1,4 @@
-package generators
+package schema
 
 import (
 	"fmt"
@@ -22,8 +22,8 @@ type RelatedField struct {
 	Type string
 }
 
-// GenerateSchema returns generated database schema creation code
-func GenerateSchema(work util.GenerationWork, opts util.SchemaOpts, entities map[string]util.Entity) error {
+// Generate returns generated database schema creation code
+func Generate(work util.GenerationWork, opts util.SchemaOpts, entities map[string]util.Entity) error {
 
 	work.Waitgroup.Add(len(entities))
 	for _, entity := range entities {

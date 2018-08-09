@@ -1,4 +1,4 @@
-package generators
+package bootstrap
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	"github.com/fluxynet/gocipe/util"
 )
 
-// GenerateBootstrap returns bootstrap generated code
-func GenerateBootstrap(work util.GenerationWork, opts util.BootstrapOpts) error {
+// Generate returns bootstrap generated code
+func Generate(work util.GenerationWork, opts util.BootstrapOpts) error {
 	if !opts.Generate {
 		util.DeleteIfExists("app/bootstrap.gocipe.go")
 		work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Error: util.ErrorSkip}
@@ -23,7 +23,7 @@ func GenerateBootstrap(work util.GenerationWork, opts util.BootstrapOpts) error 
 		opts.GRPCPort = "4000"
 	}
 
-	code, err := util.ExecuteTemplate("bootstrap.go.tmpl", struct {
+	code, err := util.ExecuteTemplate("bootstrap/bootstrap.go.tmpl", struct {
 		Bootstrap util.BootstrapOpts
 	}{opts})
 
@@ -32,7 +32,7 @@ func GenerateBootstrap(work util.GenerationWork, opts util.BootstrapOpts) error 
 		return err
 	}
 
-	env, err := util.ExecuteTemplate("bootstrap_env.tmpl", struct {
+	env, err := util.ExecuteTemplate("bootstrap/env.tmpl", struct {
 		Bootstrap util.BootstrapOpts
 	}{opts})
 
