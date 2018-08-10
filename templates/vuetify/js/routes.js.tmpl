@@ -7,7 +7,7 @@ let routes = [
   {{range $i, $v := .Entities}}
   {
     path: "/{{lower (plural .Name)}}",
-    name: "{{lower (plural .Name)}}",
+    name: "{{lower (plural .Name)}}_list",
     component: {{.Name}}List,
     meta: {
       icon: "{{.Vuetify.Icon}}",

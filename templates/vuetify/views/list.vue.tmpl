@@ -74,8 +74,26 @@ export default {
             return;
         }
 
-        this.entities = resp.get{{plural .Entity.Name}}();
+        this.entities = resp.get{{plural .Entity.Name}}List();
     });
+  },
+  methods: {
+      create: function() {
+          let cli = new BreadClient("/api");
+          let req = new Create{{.Entity.Name}}Request();
+
+           cli.create{{.Entity.Name}}(req, (err, resp) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+
+            this.$router.go({
+                name: "{{plural .Entity.Name}}_edit",
+                params: { id: resp.get{{.Entity.Name}}().getId() } 
+            });
+        });
+      }
   }
 };
 </script>
