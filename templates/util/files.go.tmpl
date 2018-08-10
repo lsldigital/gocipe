@@ -19,23 +19,26 @@ import (
 
 // Constants for files package
 const (
-	baseUploadPath = "public/"
-	NoLimit        = -1
+	NoLimit = -1
 )
 
-// DefaultUploadOptions holds default upload options
-var DefaultUploadOptions = &UploadOptions{
-	Permissions: 0644,
-	FileExt:     "jpg",
-	MaxSize:     NoLimit,
-	MinSize:     NoLimit,
-	ImgDimensions: &ImageDimensions{
-		MinHeight: NoLimit,
-		MaxHeight: NoLimit,
-		MinWidth:  NoLimit,
-		MaxWidth:  NoLimit,
-	},
-}
+var (
+	baseUploadPath = "public/"
+
+	// DefaultUploadOptions holds default upload options
+	DefaultUploadOptions = &UploadOptions{
+		Permissions: 0644,
+		FileExt:     "jpg",
+		MaxSize:     NoLimit,
+		MinSize:     NoLimit,
+		ImgDimensions: &ImageDimensions{
+			MinHeight: NoLimit,
+			MaxHeight: NoLimit,
+			MinWidth:  NoLimit,
+			MaxWidth:  NoLimit,
+		},
+	}
+)
 
 // ImageDimensions holds dimensions options
 type ImageDimensions struct {
@@ -60,6 +63,14 @@ func init() {
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 	image.RegisterFormat("gif", "gif", gif.Decode, gif.DecodeConfig)
+}
+
+// SetBaseUploadPath sets the base upload path for files upload
+func SetBaseUploadPath(bUploadPath string) {
+	if bUploadPath == "" {
+		return
+	}
+	baseUploadPath = bUploadPath
 }
 
 // Upload validates and saves create file
