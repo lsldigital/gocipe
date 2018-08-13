@@ -40,7 +40,7 @@
                     <td>{{ printf "{{ props.item.get%s()}}" .Property.Name }}</td>
                     {{end}}
                     <td class="justify-center layout px-0">
-                        <v-btn icon class="mx-0">
+                        <v-btn icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.getId() }}">
                             <v-icon color="teal">edit</v-icon>
                         </v-btn>
                     </td>
