@@ -1,7 +1,10 @@
 <template>
     <div>
-        <v-toolbar color="transparent" flat>
-            <v-toolbar-title class="grey--text text--darken-4 ml-0">
+        <v-toolbar color="transparent" class="listing-toolbar" flat ml-0>
+            <v-btn icon>
+                <v-icon large>{{.Entity.Vuetify.Icon}}</v-icon>
+            </v-btn>
+            <v-toolbar-title class="ma-0 pa-0">
                 <h2>{{.Entity.Name}}</h2>
             </v-toolbar-title>
             <v-spacer></v-spacer>
@@ -112,6 +115,12 @@ export default {
   }
 };
 </script>
+
+<style>
+.listing-toolbar .v-toolbar__content {
+  padding: 0;
+}
+</style>
 
 
 <style lang="scss" scoped>
