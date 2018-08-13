@@ -96,49 +96,46 @@ func (f *fileHandlerWithNotFoundHandler) ServeHTTP(w http.ResponseWriter, r *htt
 	}
 }
 
-// NewSubrouter returns a new subrouter
-func NewSubrouter(router *mux.Router, prefix string, appName string, mwf ...mux.MiddlewareFunc) (*mux.Router, error) {
-	subRouter := router.PathPrefix(prefix).Methods("GET", "HEAD").Subrouter()
-	// if len(mwf) != 0 {
-	// 	subRouter.Use(mwf...)
-	// }
-
+// WebAppRouting returns a new subrouter
+func WebAppRouting(router *mux.Router, prefix string, appName string, mwf ...mux.MiddlewareFunc) error {
 	var (
 		fileSystem   http.FileSystem
 		fallbackFile http.File
 		err          error
 	)
 
-	if app.Env == app.EnvironmentDev {
-		distDir := "web/" + appName + "/dist"
-		fallbackFile, err = os.Open(distDir + "/index.html")
-
-		if err == nil {
-			fileSystem = http.Dir(distDir)
-		} else {
-			log.WithFields(log.Fields{
-				"prefix":   prefix,
-				"app name": appName,
-				"error":    err,
-			}).Warn("Could not create sub route")
-			return nil, nil
-		}
-	} else {
-		fallbackFile, err = app.Assets.Open("web/" + appName + "/index.html")
-
-		if err != nil {
-			return nil, err
-		}
-
-		fileSystem = util.WebBox{Box: app.Assets, App: "web/" + appName, Path: "/" + appName}
+	fallbackFile, err = app.Assets.Open("web/" + appName + "/index.html")
+	if err != nil {
+		return err
 	}
+	
+	fileSystem = util.WebBox{Box: app.Assets, App: "web/" + appName, Path: "/" + appName}
 
-	subRouter.PathPrefix("/").Handler(
+	router.PathPrefix(prefix).Handler(
 		http.StripPrefix(
 			prefix,
 			FileServerWithFallback(fileSystem, fallbackFile),
 		),
 	)
 
-	return subRouter, nil
+	return nil
+}
+
+// WebDevRouting returns a new subrouter
+func WebDevRouting(router *mux.Router, prefix string, app string, port string, mwf ...mux.MiddlewareFunc) error {
+	var (
+		url       = &url.URL{Host: "localhost:" + port}
+		wsprox    = NewWSReverseProxy(url)
+		htprox    = httputil.NewSingleHostReverseProxy(url)
+	)
+
+	router.PathPrefix(prefix).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if IsWebsocket(r) {
+			htprox.ServeHTTP(w, r)
+		} else {
+			wsprox.ServeHTTP(w, r)
+		}
+	})
+
+	return nil
 }
