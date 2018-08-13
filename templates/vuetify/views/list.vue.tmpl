@@ -10,11 +10,11 @@
             </v-btn>
         </v-toolbar>
 
-        <v-alert :type=" message.type==='E' ? 'error' : message.type " :value="true " v-for="(message, index) in messages " :key="index ">
+        <v-alert :type="message.type==='E' ? 'error' : message.type" :value="true " v-for="(message, index) in messages " :key="index ">
             {{ "{{ message.text }} " }}
         </v-alert>
 
-        <v-alert type="info " value="true " color="primary " outline icon="info " v-if="entities.length===0 ">
+        <v-alert type="info" value="true " color="primary " outline icon="info " v-if="entities.length===0 ">
             No {{.Entity.Name}} exist. Would you like to create one now?
             <v-btn color="primary " :to="{path: '{{plural (lower .Entity.Name) }}/edit'} ">create new</v-btn>
         </v-alert>
