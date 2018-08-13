@@ -93,7 +93,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateUtils {
-			go utils.Generate(work, rcp.Bootstrap)
+			go utils.Generate(work)
 		}
 
 		if generateVuetify {

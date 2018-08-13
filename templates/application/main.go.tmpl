@@ -41,9 +41,9 @@ func main() {
 	{{if not .Bootstrap.NoGRPCWeb}}
 	g := grpc.NewServer()
 	ws := grpcweb.WrapServer(g)
-	router := newMuxRouter(ws)
+	router := newProdRouter(ws)
 	{{else}}
-	router := newMuxRouter(nil)
+	router := newDevRouter(nil)
 	{{end}}
 	
 	{{if not .Bootstrap.NoGRPCWire}}
@@ -69,6 +69,7 @@ func main() {
 		IdleTimeout:  15 * time.Second,
 	}
 
+	log.Println("Listening on http://127.0.0.1:" + config.HTTPPort)
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatalf("error starting http server: %v", err)
 	}
