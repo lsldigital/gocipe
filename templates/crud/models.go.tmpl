@@ -112,7 +112,7 @@ type {{.Name}}Repositorium struct {
 {{end}}
 
 // QueryAddIN adds IN condition to query
-func QueryAddIN(segments []string, values []interface{}, index *int, fieldname string, val interface{}, not bool) error {
+func QueryAddIN(segments []string, values []interface{}, index *int, fieldname string, val interface{}, not bool) ([]string, []interface{}, error) {
 	var subsegments []string
 
 	if data, ok := val.([]bool); ok {
@@ -210,11 +210,11 @@ func QueryAddIN(segments []string, values []interface{}, index *int, fieldname s
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
 			values = append(values, data[d])
 		}	} else {
-		return moderrors.InFilterValueUnknownError
+		return nil, nil, moderrors.InFilterValueUnknownError
 	}
 
 	if len(subsegments) == 0 {
-		return moderrors.InFilterValueEmptyError
+		return nil, nil, moderrors.InFilterValueEmptyError
 	}
 
 	condition := "IN"
@@ -224,5 +224,5 @@ func QueryAddIN(segments []string, values []interface{}, index *int, fieldname s
 
 	*index = *index + len(subsegments)
 	segments = append(segments, fieldname+condition+" ("+strings.Join(subsegments, ",")+")")
-	return nil
+	return segments, values, nil
 }
