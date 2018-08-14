@@ -37,7 +37,7 @@
             <v-data-table :headers="headers" :items="entities" class="elevation-1" :search="search">
                 <template slot="items" slot-scope="props">
                     {{ range .Entity.Fields }}{{if not .Widget.NoShowInList}}
-                    <td>{{ printf "{{ props.item.get%s()}}" .Property.Name }}</td>
+                    <td>{{ printf "{{ props.item.get%s()}}" (ucfirst .Property.Name) }}</td>
                     {{end}}{{end}}
 
                     <td class="justify-center layout px-0">
