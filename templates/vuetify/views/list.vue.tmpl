@@ -49,7 +49,11 @@
                     </td>
 
                     {{ range .Entity.Fields }}{{if not .Widget.NoShowInList}}
+                    {{if eq .Property.Type "time"}}
+                    <td>{{ printf "{{ props.item.get%s().toDate()}}" (ucfirst .Property.Name) }}</td>
+                    {{else}}
                     <td>{{ printf "{{ props.item.get%s()}}" (ucfirst .Property.Name) }}</td>
+                    {{end}}
                     {{end}}{{end}}
 
                 </template>
