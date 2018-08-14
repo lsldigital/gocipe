@@ -37,7 +37,7 @@
             <v-data-table :headers="headers" :items="entities" class="elevation-1" :search="search">
                 <template slot="items" slot-scope="props">
                     {{ range .Entity.Fields }}
-                    <td>{{ printf "{{ props.item.get%s()}}" .Property.Name }}</td>
+                    <td>{{ printf "{{ props.item.get%s()}}" (ucfirst .Property.Name) }}</td>
                     {{end}}
                     <td class="justify-center layout px-0">
                         <v-btn icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.getId() }}">

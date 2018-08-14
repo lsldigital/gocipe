@@ -55,6 +55,16 @@ func init() {
 		"upper": func(str string) string {
 			return strings.ToUpper(str)
 		},
+		"ucfirst": func(str string) string {
+			switch len(str) {
+			case 0:
+				return ""
+			case 1:
+				return strings.ToUpper(str)
+			default:
+				return strings.ToUpper(string(str[0])) + strings.ToLower(str[1:])
+			}
+		},
 		"trimPrefix": func(str, prefix string) string {
 			return strings.TrimPrefix(str, prefix)
 		},
