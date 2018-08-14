@@ -90,7 +90,7 @@ export default {
             return;
         }
         this.loading = false;
-        this.entities = resp.get{{plural .Entity.Name}}List();
+        this.entities = resp.get{{ucfirst (plural .Entity.Name)}}List();
     });
   },
   methods: {
