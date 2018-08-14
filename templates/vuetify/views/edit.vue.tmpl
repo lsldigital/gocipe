@@ -1,0 +1,104 @@
+<template>
+    <div>
+        <v-card>
+            <v-card-title primary-title>
+                <div>
+                    <h3 class="headline mb-0">Edit {{ .Entity.Name }}</h3>
+                </div>
+            </v-card-title>
+            <v-card-text>
+                <v-form>
+                    <div class="gocipe-form-grid">
+                        {{ range .Entity.Fields }}
+                        <template v-if="entity">
+                            <div class="gocipe-field-container" xs6>
+                                {{ .Label }}
+                                <!-- <input type="text" :value="entity.get{{ ucfirst .Property.Name }}()" @input="e => entity.set{{ ucfirst .Property.Name }}(e.target.value)" /> -->
+                                <v-text-field :value="entity.get{{ ucfirst .Property.Name }}()" @change="value => entity.set{{ ucfirst .Property.Name }}(value)"></v-text-field>
+                            </div>
+                        </template>
+                        {{end}}
+                    </div>
+                </v-form>
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer></v-spacer>
+
+                <v-btn color="primary" @click="update">
+                    Save
+                    <v-icon right>save</v-icon>
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </div>
+</template>
+
+
+<script>
+import { BreadClient } from "@/services/service_bread_pb_service";
+import { Get{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
+import { Update{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
+
+export default {
+  data() {
+    return {
+      messages: [],
+      entity: null,
+      loading: false,
+      id: null
+    };
+  },
+  mounted() {
+    this.id = this.$route.params.id;
+    let cli = new BreadClient("/api");
+    let req = new Get{{ .Entity.Name}}Request();
+    req.setId(this.id);
+
+    this.loading = true;
+
+    cli.get{{ .Entity.Name}}(req, (err, resp) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        this.loading = false;
+        this.entity = resp.get{{ucfirst .Entity.Name}}();
+    });
+  },
+  methods: {
+      log: function(e) {
+          console.log(e)
+      },
+      update: function() {
+          let cli = new BreadClient("/api");
+          let req = new Update{{.Entity.Name}}Request();
+          req.set{{ ucfirst .Entity.Name}}(this.entity);
+          this.loading = true;
+          this.debug();
+
+           cli.update{{.Entity.Name}}(req, (err, resp) => {
+            if (err) {
+                console.log(err);
+                this.loading = false;
+                return;
+            }
+        });
+      },
+      debug: function() {
+          {{ range .Entity.Fields }}
+          console.log("{{.Property.Name}}", this.entity.get{{ ucfirst .Property.Name }}());
+          {{end}}
+      }
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.gocipe-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-column-gap: var(--gutter, 40px);
+  .gocipe-field-container {
+  }
+}
+</style>
