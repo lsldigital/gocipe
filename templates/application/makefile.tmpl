@@ -3,19 +3,20 @@ COMMIT      := `git rev-parse HEAD`
 DATE        := `date +%FT%T%z`
 BUILD_FLAGS := "-X=main.appVersion=$(VERSION) -X=main.appCommit=$(COMMIT) -X=main.appBuilt=$(DATE)"
 BUILD_DIR	:= "build"
-PROJECT		:= "{{.AppName}}"
+APPNAME		:= "{{.AppName}}"
 
 .PHONY: build
 
 build:
 	@echo "Compiling for DEV..."
-	@go clean && go build -ldflags ${BUILD_FLAGS} -o ${BUILD_DIR}/${PROJECT}
-	@echo "Done!"
+	@go clean && go build -ldflags ${BUILD_FLAGS} -o ${BUILD_DIR}/${APPNAME}
+	@echo "Build done!"
+	@cd ${BUILD_DIR} && ./${BUILD_DIR}/${APPNAME}
 
 prod:
 	@echo "Compiling for PROD ..."
-	@go clean && go generate && env GOOS=linux GOARCH=amd64 go build -ldflags ${BUILD_FLAGS} -o ${BUILD_DIR}/${PROJECT}
+	@go clean && go generate && env GOOS=linux GOARCH=amd64 go build -ldflags ${BUILD_FLAGS} -o ${BUILD_DIR}/${APPNAME}
 	@echo "Compressing into tar.gz ..."
-	@tar -czf ${BUILD_DIR}/${PROJECT}-`date +%FT%T`.tar.gz ${BUILD_DIR}/${PROJECT}
-	@rm ${BUILD_DIR}/${PROJECT}
-	@echo "Done!"
+	@tar -czf ${BUILD_DIR}/${APPNAME}-`date +%FT%T`.tar.gz ${BUILD_DIR}/${APPNAME}
+	@rm ${BUILD_DIR}/${APPNAME}
+	@echo "Build done!"

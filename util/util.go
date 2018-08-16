@@ -28,8 +28,11 @@ var (
 
 	templatesFn template.FuncMap
 
-	// ProjectImportPath represents GO import path for the project at hand
-	ProjectImportPath string
+	// AppName represents the application name
+	AppName string
+
+	// AppImportPath represents GO import path for the project at hand
+	AppImportPath string
 
 	// WorkingDir represents current working directory
 	WorkingDir string

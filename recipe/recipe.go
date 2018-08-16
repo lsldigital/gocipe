@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/fluxynet/gocipe/output"
@@ -48,7 +49,11 @@ func Load() (*util.Recipe, error) {
 	}
 
 	util.WorkingDir = wd
-	util.ProjectImportPath = strings.TrimPrefix(wd, os.Getenv("GOPATH")+"/src/")
+	util.AppImportPath = strings.TrimPrefix(wd, os.Getenv("GOPATH")+"/src/")
+	util.AppName = path.Base(util.AppImportPath)
+	if util.AppName == "." {
+		util.AppName = "app"
+	}
 	os.Getenv("GOPATH")
 
 	return &recipe, nil
