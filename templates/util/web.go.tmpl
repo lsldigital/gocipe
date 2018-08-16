@@ -8,8 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
-	"lsl.digital/redac-systems/culture/app"
-	"lsl.digital/redac-systems/culture/util"
 )
 
 func lookupContent(root http.FileSystem, upath string) (http.File, os.FileInfo, bool) {
