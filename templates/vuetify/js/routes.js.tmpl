@@ -1,6 +1,7 @@
 {{range .Entities}}
 // {{.Name}} {{.Description}}
 import {{.Name}}List from "./views/{{plural .Name}}List.vue";
+import {{.Name}}Edit from "./views/{{plural .Name}}Edit.vue";
 {{end}}
 
 let routes = [
@@ -13,6 +14,16 @@ let routes = [
       icon: "{{.Vuetify.Icon}}",
       entity: "{{plural .Name}}",
       showInMenu: {{if .Vuetify.NotInMenu}}false{{else}}true{{end}}
+    }
+  },
+  {
+    path: "/g_{{lower (plural .Name)}}/edit/:id",
+    name: "g_{{lower (plural .Name)}}_edit",
+    component: {{.Name}}Edit,
+    meta: {
+      icon: "{{.Vuetify.Icon}}",
+      entity: "{{plural .Name}}",
+      showInMenu: false
     }
   }{{if ne (plus1 $i) (len $.Entities)}},{{end}}
   {{end}}

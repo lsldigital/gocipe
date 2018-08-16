@@ -41,6 +41,15 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 			false,
 		)
 
+		output.GenerateAndSave(
+			"VuetifyEdit",
+			"vuetify/views/edit.vue.tmpl",
+			filename+"Edit.vue",
+			data,
+			false,
+			false,
+		)
+
 		// edit, err := util.ExecuteTemplate("vuetify_edit.vue.tmpl", data)
 		// if err == nil {
 		// 	work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyEdit", Code: edit, Filename: filename + "Edit.vue"}

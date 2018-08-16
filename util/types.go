@@ -401,8 +401,8 @@ type Relationship struct {
 
 // WidgetOpts represents a UI widget
 type WidgetOpts struct {
-	// ShowInList indicates whether or not to show field in listing
-	ShowInList bool
+	// NoShowInList indicates whether or not to show field in listing
+	NoShowInList bool `json:"no_show_in_list"`
 
 	// Type indicates which widget type is represented
 	Type string `json:"type"`
