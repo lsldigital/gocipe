@@ -180,7 +180,7 @@ func Delete(fp string) error {
 
 // DeleteFromRel deletes one file using relative path
 func DeleteFromRel(prefix, filePathRel string) error {
-	filePathTrimmed := strings.TrimLeft(filePathRel, prefix)
+	filePathTrimmed := strings.TrimPrefix(filePathRel, prefix)
 	filePathDisk := filepath.Join(BaseUploadPath, filePathTrimmed)
 	return Delete(filePathDisk)
 }
