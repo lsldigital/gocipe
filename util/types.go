@@ -347,8 +347,11 @@ type Field struct {
 	// Schema represents schema information for the field
 	Schema FieldSchema `json:"schema"`
 
-	// Widget represents widget information for the field
-	Widget WidgetOpts `json:"widget"`
+	// EditWidget represents widget information for the field
+	EditWidget EditWidgetOpts `json:"edit_widget"`
+
+	// ListWidget represents widget information for the field
+	ListWidget ListWidgetOpts `json:"list_widget"`
 
 	// Filterable indicates if queries can be made using this field
 	Filterable bool `json:"filterable"`
@@ -399,37 +402,43 @@ type Relationship struct {
 	Eager bool `json:"eager"`
 }
 
-// WidgetOpts represents a UI widget
-type WidgetOpts struct {
-	// NoShowInList indicates whether or not to show field in listing
-	NoShowInList bool `json:"no_show_in_list"`
-
+// EditWidgetOpts represents a UI widget for edit forms
+type EditWidgetOpts struct {
 	// Type indicates which widget type is represented
 	Type string `json:"type"`
 
 	// Options represents options listed by this widget
-	Options []WidgetOption `json:"options"`
+	Options []EditWidgetOption `json:"options"`
 
 	// Target represents a target endpoint to pull data for this widget
-	Target WidgetTarget `json:"target"`
+	Target EditWidgetTarget `json:"target"`
 
 	// Multiple indicates that the field accepts multiple values
-	Multiple bool
+	Multiple bool `json:"multiple"`
 }
 
-// WidgetOption represents an option for SelectRel widget type
-type WidgetOption struct {
+// EditWidgetOption represents an option for SelectRel widget type
+type EditWidgetOption struct {
 	// Value represents the stored value of the option
 	Value string `json:"value"`
 	// Label represents the displayed of the option
 	Label string `json:"label"`
 }
 
-// WidgetTarget represents a target endpoint to pull data for this widget
-type WidgetTarget struct {
+// EditWidgetTarget represents a target endpoint to pull data for this widget
+type EditWidgetTarget struct {
 	// Endpoint represents an endpoint to pull data from
 	Endpoint string
 
 	// Label which field to use for label on data endpoint
 	Label string
+}
+
+// ListWidgetOpts represents a UI widget for listing tables
+type ListWidgetOpts struct {
+	// NoShowInList indicates whether or not to show field in listing
+	Hide bool `json:"hide"`
+
+	// Type indicates which widget type is represented
+	Type string `json:"type"`
 }
