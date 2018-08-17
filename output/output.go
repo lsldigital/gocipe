@@ -283,6 +283,10 @@ func initToolset() {
 
 // PostProcessGoFiles executes goimports and gofmt on go files that have been generated
 func PostProcessGoFiles() {
+	if len(_gofiles) == 0 {
+		return
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(len(_gofiles))
 

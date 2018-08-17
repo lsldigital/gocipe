@@ -88,9 +88,9 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	}
 
 	proto, err := util.ExecuteTemplate("bread/service_bread.proto.tmpl", struct {
-		Entities          []util.Entity
-		ProjectImportPath string
-	}{ents, util.ProjectImportPath})
+		Entities      []util.Entity
+		AppImportPath string
+	}{ents, util.AppImportPath})
 
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateBreadProto", Code: proto, Filename: "proto/service_bread.proto"}

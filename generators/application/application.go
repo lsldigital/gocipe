@@ -19,4 +19,5 @@ func Generate(bootOpts util.BootstrapOpts, noSkip bool) {
 	output.GenerateAndSave("Scaffold", "application/gen-service.sh.tmpl", "gen-service.sh", struct{ GeneratePath string }{GeneratePath: "$GOPATH" + strings.TrimPrefix(util.WorkingDir, os.Getenv("GOPATH")) + "/services"}, true, noSkip)
 	output.GenerateAndSave("Scaffold", "application/main.go.tmpl", "main.go", struct{ Bootstrap util.BootstrapOpts }{bootOpts}, true, noSkip)
 	output.GenerateAndSave("Scaffold", "application/route.go.tmpl", "route.go", struct{ Bootstrap util.BootstrapOpts }{bootOpts}, true, noSkip)
+	output.GenerateAndSave("Scaffold", "application/makefile.tmpl", "Makefile", struct{ AppName string }{util.AppName}, true, noSkip)
 }

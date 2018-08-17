@@ -8,8 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
-	"lsl.digital/redac-systems/culture/app"
-	"lsl.digital/redac-systems/culture/util"
 )
 
 func lookupContent(root http.FileSystem, upath string) (http.File, os.FileInfo, bool) {
@@ -124,16 +122,16 @@ func WebAppRouting(router *mux.Router, prefix string, appName string, mwf ...mux
 // WebDevRouting returns a new subrouter
 func WebDevRouting(router *mux.Router, prefix string, app string, port string, mwf ...mux.MiddlewareFunc) error {
 	var (
-		url       = &url.URL{Host: "localhost:" + port}
+		url		  = &url.URL{Scheme: "http", Host: "localhost:" + port}
 		wsprox    = NewWSReverseProxy(url)
 		htprox    = httputil.NewSingleHostReverseProxy(url)
 	)
 
 	router.PathPrefix(prefix).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if IsWebsocket(r) {
-			htprox.ServeHTTP(w, r)
-		} else {
 			wsprox.ServeHTTP(w, r)
+		} else {
+			htprox.ServeHTTP(w, r)
 		}
 	})
 
