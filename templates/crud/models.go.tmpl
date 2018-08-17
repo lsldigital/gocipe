@@ -117,97 +117,116 @@ func QueryAddIN(segments []string, values []interface{}, index *int, fieldname s
 
 	if data, ok := val.([]bool); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]byte); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]complex64); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]complex128); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]float32); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]float64); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]int); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]int8); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]int16); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]int32); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]int64); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]rune); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]string); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uint); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uint8); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uint16); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uint32); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uint64); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uintptr); ok {
 		for d := range data {
-			subsegments = append(subsegments, "$"+strconv.Itoa(*index+1))
+			*index += 1
+			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}	} else {
 		return nil, nil, moderrors.InFilterValueUnknownError
@@ -217,12 +236,11 @@ func QueryAddIN(segments []string, values []interface{}, index *int, fieldname s
 		return nil, nil, moderrors.InFilterValueEmptyError
 	}
 
-	condition := "IN"
+	condition := " IN"
 	if not {
-		condition = "NOT "+condition
+		condition = " NOT" + condition
 	}
 
-	*index = *index + len(subsegments)
 	segments = append(segments, fieldname+condition+" ("+strings.Join(subsegments, ",")+")")
 	return segments, values, nil
 }

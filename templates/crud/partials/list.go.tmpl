@@ -2,11 +2,12 @@
 // List returns a slice containing {{.EntityName}} records
 func (repo {{.EntityName}}Repositorium) List(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.EntityName}}, error) {
 	var (
-		list     []*{{.EntityName}}
+		list	 []*{{.EntityName}}
 		segments []string
-		values   []interface{}
-		err      error
-		rows     *sql.Rows
+		values	 []interface{}
+		err		 error
+		rows	 *sql.Rows
+		index	 int = 0
 	)
 
 	query := `SELECT {{.SQLFields}} FROM {{.Table}} t`
@@ -19,16 +20,17 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, opts *ListOpts
 		return nil, err
 	}
 
-	for i, filter := range filters {
+	for _, filter := range filters {
 		if filter.Operation == "IN" || filter.Operation == "NOT IN" {
-			seg, val, err := QueryAddIN(segments, values, &i, filter.Field, filter.Value, "NOT IN" == filter.Operation)
+			seg, val, err := QueryAddIN(segments, values, &index, filter.Field, filter.Value, "NOT IN" == filter.Operation)
 			if err != nil {
 				continue
 			}
 			segments = seg
 			values = val
 		} else {
-			segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
+			index += 1
+			segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(index))
 			values = append(values, filter.Value)
 		}
 	}
