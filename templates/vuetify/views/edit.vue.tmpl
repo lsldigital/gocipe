@@ -18,13 +18,20 @@
             <v-card-text>
                 <v-form>
                     <div class="gocipe-form-grid" v-if="entity">
-                        {{ range .Entity.Fields }} {{if not .EditWidget.Hide }}
+                        {{ range .Entity.Fields }} {{if not .EditWidget.Hide }} {{if eq .EditWidget.Type "time"}}
+                        <!-- Date Template -->
+                        <template>
+                            <div class="gocipe-field-container">
+                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}().toDate()"></component>
+                            </div>
+                        </template>
+                        {{ else }}
                         <template>
                             <div class="gocipe-field-container">
                                 <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
                             </div>
                         </template>
-                        {{end}} {{end}}
+                        {{end}} {{end}} {{ end }}
                     </div>
                 </v-form>
             </v-card-text>
@@ -52,8 +59,10 @@ import { Get{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { Update{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import gTextfield from "@/widgets/gTextfield.vue";
 import gImagefield from "@/widgets/gImagefield.vue";
-import gCheckbox from "@/widgets/gCheckbox.vue";
+import gToggle from "@/widgets/gToggle.vue";
 import gIcon from "@/widgets/gIcon.vue";
+import gTime from "@/widgets/gTime.vue";
+import gTextarea from "@/widgets/gTextarea.vue";
 
 export default {
   data() {
@@ -85,8 +94,10 @@ export default {
   components: {
       gTextfield,
       gImagefield,
-      gCheckbox,
-      gIcon
+      gToggle,
+      gIcon,
+      gTime,
+      gTextarea
   },
   mounted() {
     this.id = this.$route.params.id;
