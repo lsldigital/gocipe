@@ -45,15 +45,15 @@
                         </v-tooltip>
                     </td>
                     <!-- Check if it should appear in the list -->
-                    {{ range .Entity.Fields }} {{if not .Widget.NoShowInList}}
+                    {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
                     <!-- Use different rendering for dates -->
-                    {{if eq .Property.Type "time"}}
+                    {{ if eq .Property.Type "time" }}
                     <td>
-                        <timeago :datetime="{{ printf " props.item.get%s().toDate() " (ucfirst .Property.Name) }}"></timeago>
+                        <timeago :datetime="{{printf " props.item.get%s().toDate() " (ucfirst .Property.Name) }}"></timeago>
                     </td>
-                    {{else}}
+                    {{- else -}}
                     <!-- Use different rendering for dates -->
-                    {{if eq .Property.Type "image"}}
+                    {{if eq .ListWidget.Type "image"}}
                     <td>
                         <img :src="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }} " />
                     </td>
@@ -94,7 +94,7 @@ export default {
       search: "",
       headers: [
         {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
-		{{range .Entity.Fields }}{{if not .Widget.NoShowInList}}
+		{{range .Entity.Fields }}{{if not .ListWidget.Hide}}
 		{text: "{{.Label}}", value: "{{.Property.Name}}"},
 		{{end}}{{end}}
       ],

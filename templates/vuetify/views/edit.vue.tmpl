@@ -1,34 +1,39 @@
 <template>
     <div>
+        <div class="listing--container">
+            <v-toolbar color="transparent" class="listing-toolbar" flat ml-0>
+                <v-btn icon>
+                    <v-icon large>{{.Entity.Vuetify.Icon}}</v-icon>
+                </v-btn>
+                <v-toolbar-title class="ma-0 pa-0">
+                    <h2>Edit {{.Entity.Name}}</h2>
+                </v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn mr-0 color="primary" :to="''">
+                    <v-icon dark>save</v-icon> Save
+                </v-btn>
+            </v-toolbar>
+        </div>
         <v-card>
-            <v-card-title primary-title>
-                <div>
-                    <h3 class="headline mb-0">Edit {{ .Entity.Name }}</h3>
-                </div>
-            </v-card-title>
             <v-card-text>
                 <v-form>
                     <div class="gocipe-form-grid">
                         {{ range .Entity.Fields }}
                         <template v-if="entity">
-                            <div class="gocipe-field-container" xs6>
-                                {{ .Label }}
-                                <!-- <input type="text" :value="entity.get{{ ucfirst .Property.Name }}()" @input="e => entity.set{{ ucfirst .Property.Name }}(e.target.value)" /> -->
-                                <v-text-field :value="entity.get{{ ucfirst .Property.Name }}()" @change="value => entity.set{{ ucfirst .Property.Name }}(value)"></v-text-field>
+                            <div class="gocipe-field-container">
+                                <v-text-field label="{{ .Label }}" hint="{{ .EditWidget.Type }}" :value="entity.get{{ ucfirst .Property.Name }}() " @change="value=> entity.set{{ ucfirst .Property.Name }}(value)"></v-text-field>
                             </div>
                         </template>
                         {{end}}
                     </div>
                 </v-form>
             </v-card-text>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-
+            <v-card-action>
                 <v-btn color="primary" @click="update">
                     Save
                     <v-icon right>save</v-icon>
                 </v-btn>
-            </v-card-actions>
+            </v-card-action>
         </v-card>
     </div>
 </template>
@@ -95,10 +100,14 @@ export default {
 
 <style lang="scss" scoped>
 .gocipe-form-grid {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   grid-column-gap: var(--gutter, 40px);
   .gocipe-field-container {
+    // grid-column: 1/2;
   }
 }
 </style>
