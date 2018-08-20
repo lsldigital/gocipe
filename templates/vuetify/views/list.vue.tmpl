@@ -63,7 +63,7 @@
                             <span slot="activator">
                                 {{ printf "{{ props.item.get%s()}}" (ucfirst .Property.Name) }}
                             </span>
-                            <span>Property Type : {{ ucfirst .Property.Type}}</span>
+                            <span>Widget Type : {{ ucfirst .Property.Type}}</span>
                         </v-tooltip>
                     </td>
                     {{end}} {{end}} {{end}} {{end}}
@@ -80,6 +80,13 @@
                 </template>
             </v-data-table>
         </template>
+
+        <v-snackbar v-model="snackbar.show" :right="true" :bottom="true" color="primary" :timeout="2000">
+            {{ printf `{{ snackbar.text }}` }}
+            <v-btn dark flat @click="snackbarHide">
+                Close
+            </v-btn>
+        </v-snackbar>
     </div>
 </template>
 
@@ -92,6 +99,11 @@ export default {
     return {
       messages: [],
       search: "",
+      snackbar: {
+          show: false, 
+          text: ''
+      },
+      text: "hola",
       headers: [
         {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
 		{{range .Entity.Fields }}{{if not .ListWidget.Hide}}
@@ -102,7 +114,7 @@ export default {
       loading: false
     };
   },
-  created() {
+  mounted() {
     let cli = new BreadClient("/api");
     let req = new List{{plural .Entity.Name}}Request();
     this.loading = true;
@@ -113,6 +125,7 @@ export default {
             return;
         }
         this.loading = false;
+        this.snackbarShow('{{ucfirst (plural .Entity.Name)}} Loaded');
         this.entities = resp.get{{ucfirst (plural .Entity.Name)}}List();
     });
   },
@@ -120,6 +133,7 @@ export default {
       create: function() {
           let cli = new BreadClient("/api");
           let req = new Create{{.Entity.Name}}Request();
+          this.snackbarShow('Loading {{ucfirst (plural .Entity.Name)}}');
           this.loading = true;
 
            cli.create{{.Entity.Name}}(req, (err, resp) => {
@@ -134,6 +148,14 @@ export default {
                 params: { id: resp.get{{.Entity.Name}}().getId() } 
             });
         });
+      },
+      snackbarShow: function(text, color) {
+          this.snackbar.show = true;
+          this.snackbar.color = color || 'info';
+          this.snackbar.text = text || 'something happened';
+      },
+      snackbarHide: function() {
+          this.snackbar.show = false
       }
   }
 };

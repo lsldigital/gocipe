@@ -415,6 +415,9 @@ type EditWidgetOpts struct {
 
 	// Multiple indicates that the field accepts multiple values
 	Multiple bool `json:"multiple"`
+
+	// hide indicates whether or not to show field in listing
+	Hide bool `json:"hide"`
 }
 
 // EditWidgetOption represents an option for SelectRel widget type
