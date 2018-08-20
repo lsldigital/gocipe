@@ -198,7 +198,7 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 				}
 				code.LoadRelated = append(code.LoadRelated, c)
 
-				c, err = generateSaveRelated(entities, entity, rel)
+				c, err = generateSaveRelatedManyMany(entities, entity, rel)
 				if err != nil {
 					return code, err
 				}
@@ -209,6 +209,12 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 					return code, err
 				}
 				code.LoadRelated = append(code.LoadRelated, c)
+
+				c, err = generateSaveRelatedOneMany(entities, entity, rel)
+				if err != nil {
+					return code, err
+				}
+				code.SaveRelated = append(code.SaveRelated, c)
 			case util.RelationshipTypeManyOne:
 				c, err := generateLoadRelatedManyOne(entities, entity, rel)
 				if err != nil {
@@ -283,9 +289,9 @@ func generateSave(entities map[string]util.Entity, entity util.Entity) (string, 
 	})
 }
 
-// generateSaveRelated produces code for database saving of related entities
-func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
-	return util.ExecuteTemplate("crud/partials/saverelated.go.tmpl", struct {
+// generateSaveRelatedManyMany produces code for database saving of related entities
+func generateSaveRelatedManyMany(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
+	return util.ExecuteTemplate("crud/partials/saverelated_manymany.go.tmpl", struct {
 		PropertyName   string
 		PrimaryKey     string
 		PropertyType   string
@@ -307,5 +313,28 @@ func generateSaveRelated(entities map[string]util.Entity, entity util.Entity, re
 		ThatColumn:     rel.ThatID,
 		ThatType:       "*" + entities[rel.Entity].Name,
 		ThatPrimaryKey: entities[rel.Entity].PrimaryKey,
+	})
+}
+
+// generateSaveRelatedManyMany produces code for database saving of related entities
+func generateSaveRelatedOneMany(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
+	return util.ExecuteTemplate("crud/partials/saverelated_onemany.go.tmpl", struct {
+		PropertyName string
+		PrimaryKey   string
+		EntityName   string
+		Table        string
+		Funcname     string
+		ThisColumn   string
+		ThatColumn   string
+		ThatType     string
+	}{
+		PropertyName: rel.Name,
+		PrimaryKey:   entity.PrimaryKey,
+		EntityName:   entity.Name,
+		Table:        rel.JoinTable,
+		Funcname:     util.RelFuncName(rel),
+		ThisColumn:   rel.ThisID,
+		ThatColumn:   rel.ThatID,
+		ThatType:     "*" + entities[rel.Entity].Name,
 	})
 }

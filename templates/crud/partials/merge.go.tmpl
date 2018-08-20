@@ -123,15 +123,17 @@ func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity
 		return errors.WithStack(err)
 	}
 
-	{{range .Related}}{{.}}
+	{{range $i, $r := .Related}}{{$r}}
 	if err != nil {
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
-
+	{{if ne (plus1 $i) (len $.Related)}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
+	{{end}}
 	{{end}}
 
 	{{if .HasPostHook}}

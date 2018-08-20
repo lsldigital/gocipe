@@ -1,0 +1,46 @@
+
+// Save{{.Funcname}} is a helper function to save related {{.PropertyName}} (one-many relationship)
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{.ThatType}}) error {
+	var (
+		stmt *sql.Stmt
+		err  error
+	)
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			return errors.WithStack(err)
+		}
+
+		tx, err = repo.db.Begin()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.ThatColumn}} = $1 WHERE {{.ThisColumn}} = $2")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	for _, rel := range relatives {
+		if err = util.CheckContext(ctx); err != nil {
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+
+		_, err = stmt.Exec(idthis, rel.ID)
+		if err != nil {
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}

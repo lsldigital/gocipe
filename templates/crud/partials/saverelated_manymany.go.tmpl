@@ -10,13 +10,13 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 		if err = util.CheckContext(ctx); err != nil {
 			return errors.WithStack(err)
 		}
-		
+
 		tx, err = repo.db.Begin()
 		if err != nil {
 			return errors.WithStack(err)
 		}
 	}
-	
+
 	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1")
 	if err != nil {
 		return errors.WithStack(err)
@@ -43,7 +43,7 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 			tx.Rollback()
 			return errors.WithStack(err)
 		}
-		
+
 		_, err = stmt.Exec(idthis, rel.ID)
 		if err != nil {
 			tx.Rollback()
@@ -72,7 +72,7 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context
 		if err = util.CheckContext(ctx); err != nil {
 			return errors.WithStack(err)
 		}
-		
+
 		tx, err = repo.db.Begin()
 		if err != nil {
 			return errors.WithStack(err)
@@ -105,7 +105,7 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context
 			tx.Rollback()
 			return errors.WithStack(err)
 		}
-		
+
 		_, err = stmt.Exec(idthis, relid)
 		if err != nil {
 			tx.Rollback()
