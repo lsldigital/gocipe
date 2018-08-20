@@ -58,6 +58,12 @@
                         <img :src="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }} " />
                     </td>
                     {{- else -}}
+                    <!-- Use different rendering for published status -->
+                    {{if eq .ListWidget.Type "published_status"}}
+                    <td>
+                        <gPublishedstatus :status="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }} " />
+                    </td>
+                    {{- else -}}
                     <!-- Use different rendering for dates -->
                     {{if eq .ListWidget.Type "icon"}}
                     <td>
@@ -72,7 +78,7 @@
                             <span>Widget Type : {{ ucfirst .Property.Type}}</span>
                         </v-tooltip>
                     </td>
-                    {{end}} {{end}} {{end}} {{end}}{{end}}
+                    {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
                 </template>
 
                 <template slot="no-data">
@@ -100,6 +106,7 @@
 import { BreadClient } from "@/services/service_bread_pb_service";
 import { List{{plural .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
+import gPublishedstatus from "@/widgets/list/gPublishedstatus.vue";
 
 export default {
   data() {
@@ -120,6 +127,9 @@ export default {
       entities: [],
       loading: false
     };
+  },
+  components: {
+      gPublishedstatus
   },
   mounted() {
     let cli = new BreadClient("/api");

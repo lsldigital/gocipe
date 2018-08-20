@@ -9,8 +9,11 @@
                     <h2>Edit {{.Entity.Name}}</h2>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-btn mr-0 color="primary" :to="''">
-                    <v-icon dark>save</v-icon> Save
+                <v-btn mr-0 color="" :to="''">
+                    <v-icon dark>arrow_back</v-icon> Prev
+                </v-btn>
+                <v-btn mr-0 color="" :to="''">
+                    <v-icon dark>arrow_forward</v-icon> Next
                 </v-btn>
             </v-toolbar>
         </div>
@@ -57,12 +60,12 @@
 import { BreadClient } from "@/services/service_bread_pb_service";
 import { Get{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { Update{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
-import gTextfield from "@/widgets/gTextfield.vue";
-import gImagefield from "@/widgets/gImagefield.vue";
-import gToggle from "@/widgets/gToggle.vue";
-import gIcon from "@/widgets/gIcon.vue";
-import gTime from "@/widgets/gTime.vue";
-import gTextarea from "@/widgets/gTextarea.vue";
+import gTextfield from "@/widgets/edit/gTextfield.vue";
+import gImagefield from "@/widgets/edit/gImagefield.vue";
+import gToggle from "@/widgets/edit/gToggle.vue";
+import gIcon from "@/widgets/edit/gIcon.vue";
+import gTime from "@/widgets/edit/gTime.vue";
+import gTextarea from "@/widgets/edit/gTextarea.vue";
 
 export default {
   data() {
