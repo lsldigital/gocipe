@@ -41,7 +41,10 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, opts *ListOpts
 
 	if opts != nil && opts.Sort != "" {
 		query += " ORDER BY " + opts.Sort
+	}{{if .DefaultSort}} else {
+		query += ` ORDER BY {{.DefaultSort}}`
 	}
+	{{- end}}
 
 	if opts != nil && opts.Offset > 0 {
 		query += " OFFSET " + strconv.FormatInt(opts.Offset, 10)
