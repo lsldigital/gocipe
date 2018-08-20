@@ -334,6 +334,9 @@ type Entity struct {
 
 	// Vuetify describes options for Vuetify generation - overrides recipe level Vuetify config
 	Vuetify VuetifyEntityOpts `json:"vuetify"`
+
+	// DefaultSort is a sort string used while generating List() method in CRUD
+	DefaultSort string `json:"default_sort"`
 }
 
 // Field describes a field contained in an entity

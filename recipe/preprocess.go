@@ -29,6 +29,10 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			entity.Fields[i] = field
 		}
 
+		if entity.DefaultSort == "" {
+			entity.DefaultSort = `t."id" DESC`
+		}
+
 		if entity.CrudHooks == nil {
 			entity.CrudHooks = &recipe.Crud.Hooks
 		}
