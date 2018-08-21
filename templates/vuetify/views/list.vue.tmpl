@@ -107,8 +107,6 @@ import { BreadClient } from "@/services/service_bread_pb_service";
 import { List{{plural .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import gSelect from "@/widgets/list/gSelect.vue";
-import gBannertype from "@/widgets/list/gBannertype.vue";
-import gEntitytype from "@/widgets/list/gEntitytype.vue";
 
 export default {
   data() {
@@ -132,8 +130,6 @@ export default {
   },
   components: {
       gSelect,
-      gBannertype,
-      gEntitytype
   },
   mounted() {
     let cli = new BreadClient("/api");
