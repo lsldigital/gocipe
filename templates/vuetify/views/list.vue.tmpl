@@ -58,10 +58,10 @@
                         <img :src="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }} " />
                     </td>
                     {{- else -}}
-                    <!-- Use different rendering for published status -->
-                    {{if eq .ListWidget.Type "published_status"}}
+                    <!-- Use different rendering for select types -->
+                    {{if eq .ListWidget.Type "select"}}
                     <td>
-                        <gPublishedstatus :status="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }} " />
+                        <component :is="'g{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }} " />
                     </td>
                     {{- else -}}
                     <!-- Use different rendering for dates -->
@@ -106,7 +106,9 @@
 import { BreadClient } from "@/services/service_bread_pb_service";
 import { List{{plural .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
-import gPublishedstatus from "@/widgets/list/gPublishedstatus.vue";
+import gSelect from "@/widgets/list/gSelect.vue";
+import gBannertype from "@/widgets/list/gBannertype.vue";
+import gEntitytype from "@/widgets/list/gEntitytype.vue";
 
 export default {
   data() {
@@ -129,7 +131,9 @@ export default {
     };
   },
   components: {
-      gPublishedstatus
+      gSelect,
+      gBannertype,
+      gEntitytype
   },
   mounted() {
     let cli = new BreadClient("/api");
