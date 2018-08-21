@@ -9,8 +9,11 @@
                     <h2>Edit {{.Entity.Name}}</h2>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-btn mr-0 color="primary" :to="''">
-                    <v-icon dark>save</v-icon> Save
+                <v-btn mr-0 color="" :to="''">
+                    <v-icon dark>arrow_back</v-icon> Prev
+                </v-btn>
+                <v-btn mr-0 color="" :to="''">
+                    <v-icon dark>arrow_forward</v-icon> Next
                 </v-btn>
             </v-toolbar>
         </div>
@@ -18,13 +21,20 @@
             <v-card-text>
                 <v-form>
                     <div class="gocipe-form-grid" v-if="entity">
-                        {{ range .Entity.Fields }} {{if not .EditWidget.Hide }}
+                        {{ range .Entity.Fields }} {{if not .EditWidget.Hide }} {{if eq .EditWidget.Type "time"}}
+                        <!-- Date Template -->
+                        <template>
+                            <div class="gocipe-field-container">
+                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}().toDate()"></component>
+                            </div>
+                        </template>
+                        {{ else }}
                         <template>
                             <div class="gocipe-field-container">
                                 <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
                             </div>
                         </template>
-                        {{end}} {{end}}
+                        {{end}} {{end}} {{ end }}
                     </div>
                 </v-form>
             </v-card-text>
@@ -50,10 +60,12 @@
 import { BreadClient } from "@/services/service_bread_pb_service";
 import { Get{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { Update{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
-import gTextfield from "@/widgets/gTextfield.vue";
-import gImagefield from "@/widgets/gImagefield.vue";
-import gCheckbox from "@/widgets/gCheckbox.vue";
-import gIcon from "@/widgets/gIcon.vue";
+import gTextfield from "@/widgets/edit/gTextfield.vue";
+import gImagefield from "@/widgets/edit/gImagefield.vue";
+import gToggle from "@/widgets/edit/gToggle.vue";
+import gIcon from "@/widgets/edit/gIcon.vue";
+import gTime from "@/widgets/edit/gTime.vue";
+import gTextarea from "@/widgets/edit/gTextarea.vue";
 
 export default {
   data() {
@@ -85,8 +97,10 @@ export default {
   components: {
       gTextfield,
       gImagefield,
-      gCheckbox,
-      gIcon
+      gToggle,
+      gIcon,
+      gTime,
+      gTextarea
   },
   mounted() {
     this.id = this.$route.params.id;
