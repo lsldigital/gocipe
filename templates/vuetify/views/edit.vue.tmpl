@@ -68,6 +68,7 @@ import gIcon from "@/widgets/edit/gIcon.vue";
 import gTime from "@/widgets/edit/gTime.vue";
 import gTextarea from "@/widgets/edit/gTextarea.vue";
 import gPublished from "@/widgets/edit/gPublished.vue";
+import gMap from "@/widgets/edit/gMap.vue";
 
 export default {
   data() {
@@ -103,7 +104,8 @@ export default {
       gIcon,
       gTime,
       gTextarea,
-      gPublished
+      gPublished,
+      gMap
   },
   mounted() {
     this.id = this.$route.params.id;

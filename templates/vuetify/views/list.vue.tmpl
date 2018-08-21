@@ -61,7 +61,7 @@
                     <!-- Use different rendering for select types -->
                     {{if eq .ListWidget.Type "select"}}
                     <td>
-                        <component :is="'g{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }} " />
+                        <component :is="'g{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }}" />
                     </td>
                     {{- else -}}
                     <!-- Use different rendering for dates -->
