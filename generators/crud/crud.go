@@ -318,6 +318,16 @@ func generateSaveRelatedManyMany(entities map[string]util.Entity, entity util.En
 
 // generateSaveRelatedManyMany produces code for database saving of related entities
 func generateSaveRelatedOneMany(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
+
+	var danglingVal string
+
+	switch entity.PrimaryKey {
+	case util.PrimaryKeyInt, util.PrimaryKeySerial:
+		danglingVal = "0"
+	case util.PrimaryKeyString, util.PrimaryKeyUUID:
+		danglingVal = `""`
+	}
+
 	return util.ExecuteTemplate("crud/partials/saverelated_onemany.go.tmpl", struct {
 		PropertyName string
 		PrimaryKey   string
@@ -327,6 +337,7 @@ func generateSaveRelatedOneMany(entities map[string]util.Entity, entity util.Ent
 		ThisColumn   string
 		ThatColumn   string
 		ThatType     string
+		DanglingVal  string
 	}{
 		PropertyName: rel.Name,
 		PrimaryKey:   entity.PrimaryKey,
@@ -336,5 +347,6 @@ func generateSaveRelatedOneMany(entities map[string]util.Entity, entity util.Ent
 		ThisColumn:   rel.ThisID,
 		ThatColumn:   rel.ThatID,
 		ThatType:     "*" + entities[rel.Entity].Name,
+		DanglingVal:  danglingVal,
 	})
 }

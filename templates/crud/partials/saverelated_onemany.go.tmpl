@@ -17,6 +17,22 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 		}
 	}
 
+	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.ThatColumn}} = $1 WHERE {{.ThatColumn}} = $2")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	_, err = stmt.Exec({{.DanglingVal}}, idthis)
+	if err != nil {
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
 	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.ThatColumn}} = $1 WHERE {{.ThisColumn}} = $2")
 	if err != nil {
 		return errors.WithStack(err)
