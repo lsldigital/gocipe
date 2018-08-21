@@ -81,15 +81,15 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateSchema {
-			go crud.Generate(work, rcp.Crud, entities)
+			go schema.Generate(work, rcp.Schema, entities)
 		}
 
 		if generateCrud {
-			go bread.Generate(work, entities)
+			go crud.Generate(work, rcp.Crud, entities)
 		}
 
 		if generateBread {
-			go schema.Generate(work, rcp.Schema, entities)
+			go bread.Generate(work, entities)
 		}
 
 		if generateUtils {
