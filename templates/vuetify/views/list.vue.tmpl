@@ -8,7 +8,7 @@
                 <h2>{{.Entity.Name}}</h2>
             </v-toolbar-title>
             <v-spacer></v-spacer>
-            <v-btn mr-0 color="primary" :to="{path: '{{plural (lower .Entity.Name) }}/edit'}">
+            <v-btn mr-0 color="primary" @click="create">
                 <v-icon dark>add</v-icon> Add
             </v-btn>
         </v-toolbar>
@@ -57,6 +57,18 @@
                     <td>
                         <img :src="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }} " />
                     </td>
+                    {{- else -}}
+                    <!-- Use different rendering for select types -->
+                    {{if eq .ListWidget.Type "select"}}
+                    <td>
+                        <component :is="'g{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }} " />
+                    </td>
+                    {{- else -}}
+                    <!-- Use different rendering for dates -->
+                    {{if eq .ListWidget.Type "icon"}}
+                    <td>
+                        <v-icon>{{ printf "{{ props.item.get%s() }}" (ucfirst .Property.Name) }}</v-icon>
+                    </td>
                     {{else}}
                     <td>
                         <v-tooltip top>
@@ -66,7 +78,7 @@
                             <span>Widget Type : {{ ucfirst .Property.Type}}</span>
                         </v-tooltip>
                     </td>
-                    {{end}} {{end}} {{end}} {{end}}
+                    {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
                 </template>
 
                 <template slot="no-data">
@@ -93,6 +105,10 @@
 <script>
 import { BreadClient } from "@/services/service_bread_pb_service";
 import { List{{plural .Entity.Name}}Request } from "@/services/service_bread_pb";
+import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
+import gSelect from "@/widgets/list/gSelect.vue";
+import gBannertype from "@/widgets/list/gBannertype.vue";
+import gEntitytype from "@/widgets/list/gEntitytype.vue";
 
 export default {
   data() {
@@ -113,6 +129,11 @@ export default {
       entities: [],
       loading: false
     };
+  },
+  components: {
+      gSelect,
+      gBannertype,
+      gEntitytype
   },
   mounted() {
     let cli = new BreadClient("/api");
