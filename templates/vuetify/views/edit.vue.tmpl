@@ -25,7 +25,7 @@
                         <!-- Date Template -->
                         <template>
                             <div class="gocipe-field-container">
-                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}().toDate()"></component>
+                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
                             </div>
                         </template>
                         {{ else }}
@@ -47,10 +47,13 @@
             </v-card-actions>
         </v-card>
 
-        <v-snackbar v-model="snackbar.show" :right="true" :vertical="true" :bottom="true" color="primary" :timeout="6000">
+        <v-snackbar v-model="snackbar.show" :right="true" :vertical="false" :bottom="true" color="primary" :timeout="6000">
             {{ printf `{{ snackbar.text }}` }}
+            <v-btn dark flat :to="{name: '{{- plural (lower .Entity.Name) -}}_list'}">
+                <v-icon>arrow_back</v-icon>
+            </v-btn>
             <v-btn dark flat @click="snackbarHide">
-                Close
+                <v-icon>close</v-icon>
             </v-btn>
         </v-snackbar>
     </div>
