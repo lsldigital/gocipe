@@ -2,6 +2,7 @@ package util
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"os"
 	"path"
@@ -124,6 +125,13 @@ func init() {
 			}
 
 			return filters
+		},
+		"json": func(item interface{}) (string, error) {
+			jsob, err := json.Marshal(item)
+			if err == nil {
+				return string(jsob), err
+			}
+			return "", err
 		},
 	}
 }

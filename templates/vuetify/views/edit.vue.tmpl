@@ -31,7 +31,7 @@
                         {{ else }}
                         <template>
                             <div class="gocipe-field-container">
-                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" {{if eq .EditWidget.Type "select" }} :options="'{{ .EditWidget.Options }}'" {{ end }} :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
+                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" {{if eq .EditWidget.Type "select" }} :options='{{json .EditWidget.Options }}' {{ end }} :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
                             </div>
                         </template>
                         {{end}} {{end}} {{ end }}

@@ -428,7 +428,7 @@ type EditWidgetOption struct {
 	// Value represents the stored value of the option
 	Value string `json:"value"`
 	// Label represents the displayed of the option
-	Label string `json:"label"`
+	Text string `json:"text"`
 }
 
 // EditWidgetTarget represents a target endpoint to pull data for this widget
