@@ -31,7 +31,7 @@
                         {{ else }}
                         <template>
                             <div class="gocipe-field-container">
-                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
+                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" {{if eq .EditWidget.Type "select" }} :options="'{{ .EditWidget.Options }}'" {{ end }} :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
                             </div>
                         </template>
                         {{end}} {{end}} {{ end }}
@@ -72,6 +72,7 @@ import gTime from "@/widgets/edit/gTime.vue";
 import gTextarea from "@/widgets/edit/gTextarea.vue";
 import gPublished from "@/widgets/edit/gPublished.vue";
 import gMap from "@/widgets/edit/gMap.vue";
+import gSelect from "@/widgets/edit/gSelect.vue";
 
 export default {
   data() {
@@ -108,7 +109,8 @@ export default {
       gTime,
       gTextarea,
       gPublished,
-      gMap
+      gMap,
+      gSelect
   },
   mounted() {
     this.id = this.$route.params.id;
