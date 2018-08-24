@@ -32,11 +32,16 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 		return nil, ErrorRequestEmpty
 	}
 
+	if req.{{.Name}} == nil {
+		res.{{.Name}} = new(models.{{.Name}})
+	} else {
+		res.{{.Name}} = req.{{.Name}}
+	}
+
 	{{if or .Bread.Hooks.PreCreate .Bread.Hooks.PostCreate -}}
 	filespath := make(map[string]string)
 	{{- end}}
 
-	res.{{.Name}} = req.{{.Name}}
 	tx, err = s.DB.Begin()
 	{{if .Bread.Hooks.PreCreate}}
 	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, filespath, err)

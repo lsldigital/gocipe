@@ -6,6 +6,10 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity *{{.E
 		stmt *sql.Stmt
 	)
 
+	if entity == nil {
+		return moderrors.SaveEmptyEntityError
+	}
+
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
 			return errors.WithStack(err)
@@ -80,6 +84,10 @@ func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entit
 		err error
 		stmt *sql.Stmt
 	)
+
+	if entity == nil {
+		return moderrors.SaveEmptyEntityError
+	}
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {

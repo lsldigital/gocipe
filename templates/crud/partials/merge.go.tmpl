@@ -6,6 +6,10 @@ func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity *{{.En
 		stmt *sql.Stmt
 	)
 
+	if entity == nil {
+		return moderrors.SaveEmptyEntityError
+	}
+
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
 			return errors.WithStack(err)
@@ -79,6 +83,10 @@ func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity
 		err error
 		stmt *sql.Stmt
 	)
+
+	if entity == nil {
+		return moderrors.SaveEmptyEntityError
+	}
 
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {

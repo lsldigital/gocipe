@@ -9,4 +9,7 @@ var (
 
 	// InFilterValueEmptyError indicates that slice of values provided for IN condition is empty
 	InFilterValueEmptyError = errors.New("filter values for IN condition empty")
+
+	// SaveEmptyEntityError indicates trying to save an empty entity
+	SaveEmptyEntityError = errors.New("attempt to save an empty entity")
 )

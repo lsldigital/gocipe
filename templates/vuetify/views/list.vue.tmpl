@@ -160,9 +160,9 @@ export default {
                 return;
             }
 
-            this.$router.go({
-                name: "{{plural .Entity.Name}}_edit",
-                params: { id: resp.get{{.Entity.Name}}().getId() } 
+            this.$router.push({
+                name: "g_{{lower (plural .Entity.Name)}}_edit",
+                params: { id: resp.get{{ucfirst .Entity.Name}}().getId() }
             });
         });
       },

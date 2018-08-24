@@ -1,6 +1,10 @@
 
 // Save either inserts or updates a {{.EntityName}} record based on whether or not id is nil
 func (repo {{.EntityName}}Repositorium) Save(ctx context.Context, entity *{{.EntityName}}, tx *sql.Tx, autocommit bool) error {
+	if entity == nil {
+		return moderrors.SaveEmptyEntityError
+	}
+
 	{{if pkeyIsAuto .PrimaryKey -}}
 	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
 		return repo.Insert(ctx, entity, tx, autocommit)
@@ -16,6 +20,10 @@ func (repo {{.EntityName}}Repositorium) Save(ctx context.Context, entity *{{.Ent
 
 // SaveWithRel either inserts or updates a {{.EntityName}} record based on whether or not id is nil; will also save related entities
 func (repo {{.EntityName}}Repositorium) SaveWithRel(ctx context.Context, entity *{{.EntityName}}, tx *sql.Tx, autocommit bool) error {
+	if entity == nil {
+		return moderrors.SaveEmptyEntityError
+	}
+
 	{{if pkeyIsAuto .PrimaryKey -}}
 	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
 		return repo.InsertWithRel(ctx, entity, tx, autocommit)
