@@ -47,9 +47,9 @@
                     <!-- Check if it should appear in the list -->
                     {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
                     <!-- Use different rendering for dates -->
-                    {{ if eq .Property.Type "time" }}
+                    {{ if eq .ListWidget.Type "time" }}
                     <td>
-                        <timeago :datetime="{{printf " props.item.get%s().toDate() " (ucfirst .Property.Name) }}"></timeago>
+                        <component :is="'g{{ucfirst .ListWidget.Type}}'" gg="gg" :time="{{ printf " props.item.get%s().toDate() " (ucfirst .Property.Name) }}" />
                     </td>
                     {{- else -}}
                     <!-- Use different rendering for dates -->
@@ -114,6 +114,7 @@ import { List{{plural .Entity.Name}}Request } from "@/services/service_bread_pb"
 import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import gSelect from "@/widgets/list/gSelect.vue";
 import gToggle from "@/widgets/list/gToggle.vue";
+import gTime from "@/widgets/list/gTime.vue";
 
 export default {
   data() {
@@ -137,7 +138,8 @@ export default {
   },
   components: {
       gSelect,
-      gToggle
+      gToggle,
+      gTime
   },
   mounted() {
     let cli = new BreadClient("/api");
