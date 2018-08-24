@@ -25,13 +25,13 @@
                         <!-- Date Template -->
                         <template>
                             <div class="gocipe-field-container">
-                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}().toDate()"></component>
+                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
                             </div>
                         </template>
                         {{ else }}
                         <template>
                             <div class="gocipe-field-container">
-                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
+                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" {{if eq .EditWidget.Type "select" }} :options='{{json .EditWidget.Options }}' {{ end }} :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
                             </div>
                         </template>
                         {{end}} {{end}} {{ end }}
@@ -47,10 +47,13 @@
             </v-card-actions>
         </v-card>
 
-        <v-snackbar v-model="snackbar.show" :right="true" :vertical="true" :bottom="true" color="primary" :timeout="6000">
+        <v-snackbar v-model="snackbar.show" :right="true" :vertical="false" :bottom="true" color="primary" :timeout="6000">
             {{ printf `{{ snackbar.text }}` }}
+            <v-btn dark flat :to="{name: '{{- plural (lower .Entity.Name) -}}_list'}">
+                <v-icon>arrow_back</v-icon>
+            </v-btn>
             <v-btn dark flat @click="snackbarHide">
-                Close
+                <v-icon>close</v-icon>
             </v-btn>
         </v-snackbar>
     </div>
@@ -68,6 +71,8 @@ import gIcon from "@/widgets/edit/gIcon.vue";
 import gTime from "@/widgets/edit/gTime.vue";
 import gTextarea from "@/widgets/edit/gTextarea.vue";
 import gPublished from "@/widgets/edit/gPublished.vue";
+import gMap from "@/widgets/edit/gMap.vue";
+import gSelect from "@/widgets/edit/gSelect.vue";
 
 export default {
   data() {
@@ -103,7 +108,9 @@ export default {
       gIcon,
       gTime,
       gTextarea,
-      gPublished
+      gPublished,
+      gMap,
+      gSelect
   },
   mounted() {
     this.id = this.$route.params.id;

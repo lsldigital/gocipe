@@ -47,9 +47,9 @@
                     <!-- Check if it should appear in the list -->
                     {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
                     <!-- Use different rendering for dates -->
-                    {{ if eq .Property.Type "time" }}
+                    {{ if eq .ListWidget.Type "time" }}
                     <td>
-                        <timeago :datetime="{{printf " props.item.get%s().toDate() " (ucfirst .Property.Name) }}"></timeago>
+                        <component :is="'g{{ucfirst .ListWidget.Type}}'" gg="gg" :time="{{ printf " props.item.get%s().toDate() " (ucfirst .Property.Name) }}" />
                     </td>
                     {{- else -}}
                     <!-- Use different rendering for dates -->
@@ -61,13 +61,19 @@
                     <!-- Use different rendering for select types -->
                     {{if eq .ListWidget.Type "select"}}
                     <td>
-                        <component :is="'g{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }} " />
+                        <component :is="'g{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }}" />
                     </td>
                     {{- else -}}
                     <!-- Use different rendering for dates -->
                     {{if eq .ListWidget.Type "icon"}}
                     <td>
                         <v-icon>{{ printf "{{ props.item.get%s() }}" (ucfirst .Property.Name) }}</v-icon>
+                    </td>
+                    {{else}}
+                    <!-- Use different rendering for toggles -->
+                    {{if eq .ListWidget.Type "toggle"}}
+                    <td>
+                        <component :is="'g{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.get%s() " (ucfirst .Property.Name) }}" />
                     </td>
                     {{else}}
                     <td>
@@ -78,7 +84,7 @@
                             <span>Widget Type : {{ ucfirst .Property.Type}}</span>
                         </v-tooltip>
                     </td>
-                    {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
+                    {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
                 </template>
 
                 <template slot="no-data">
@@ -96,7 +102,7 @@
         <v-snackbar v-model="snackbar.show" :right="true" :bottom="true" color="primary" :timeout="2000">
             {{ printf `{{ snackbar.text }}` }}
             <v-btn dark flat @click="snackbarHide">
-                Close
+                <v-icon>close</v-icon>
             </v-btn>
         </v-snackbar>
     </div>
@@ -107,6 +113,8 @@ import { BreadClient } from "@/services/service_bread_pb_service";
 import { List{{plural .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import gSelect from "@/widgets/list/gSelect.vue";
+import gToggle from "@/widgets/list/gToggle.vue";
+import gTime from "@/widgets/list/gTime.vue";
 
 export default {
   data() {
@@ -130,6 +138,8 @@ export default {
   },
   components: {
       gSelect,
+      gToggle,
+      gTime
   },
   mounted() {
     let cli = new BreadClient("/api");
