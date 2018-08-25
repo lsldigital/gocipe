@@ -49,7 +49,7 @@
 
         <v-snackbar v-model="snackbar.show" :right="true" :vertical="false" :bottom="true" color="primary" :timeout="6000">
             {{ printf `{{ snackbar.text }}` }}
-            <v-btn dark flat :to="{name: '{{- plural (lower .Entity.Name) -}}_list'}">
+            <v-btn dark flat :to="{name: '{{- plural (lower .Entity.Name) -}}_list', params : { track : id}}">
                 <v-icon>arrow_back</v-icon>
             </v-btn>
             <v-btn dark flat @click="snackbarHide">
