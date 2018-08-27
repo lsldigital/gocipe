@@ -84,7 +84,9 @@ export default {
       },
       entity: null,
       loading: false,
-      id: null
+      id: null,
+      cli : new BreadClient("/api")
+
     };
   },
   {{/*
@@ -114,15 +116,15 @@ export default {
   },
   mounted() {
     this.id = this.$route.params.id;
-    let cli = new BreadClient("/api");
     let req = new Get{{ .Entity.Name}}Request();
     req.setId(this.id);
 
     this.loading = true;
 
-    cli.get{{ .Entity.Name}}(req, (err, resp) => {
+    this.cli.get{{ .Entity.Name}}(req, (err, resp) => {
         if (err) {
             console.log(err);
+            this.snackbarShow(err.message, "error");
             return;
         }
         this.loading = false;
@@ -134,7 +136,7 @@ export default {
             console.log(e)
         },
         update: function() {
-            let cli = new BreadClient("/api");
+    
             let req = new Update{{.Entity.Name}}Request();
             req.set{{ ucfirst .Entity.Name}}(this.entity);
             this.loading = true;
@@ -142,7 +144,7 @@ export default {
             this.snackbarShow('{{ucfirst .Entity.Name}} Saved');
             this.debug();
 
-            cli.update{{.Entity.Name}}(req, (err, resp) => {
+            this.cli.update{{.Entity.Name}}(req, (err, resp) => {
                 if (err) {
                     console.log(err);
 

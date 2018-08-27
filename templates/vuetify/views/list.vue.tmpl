@@ -191,6 +191,9 @@ export default {
         this.cli.list{{plural .Entity.Name}}(req, (err, resp) => {
           if (err) {
             console.log(err);
+
+            this.snackbarShow(err.message, "error");
+
             return;
           }
           this.loading = false;
@@ -219,6 +222,9 @@ export default {
            this.cli.create{{.Entity.Name}}(req, (err, resp) => {
             if (err) {
                 console.log(err);
+
+                this.snackbarShow("Create Error " + err.message, "error");
+
                 this.loading = false;
                 return;
             }
@@ -241,6 +247,8 @@ export default {
           this.cli.delete{{.Entity.Name}}(req, (err, resp) => {
             if (err) {
                 console.log(err);
+                this.snackbarShow("Delete error: " + err.message, "error");
+
                 this.loading = false;
                 return;
             } else {
