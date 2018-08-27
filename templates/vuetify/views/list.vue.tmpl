@@ -1,120 +1,139 @@
 <template>
-    <div class="listing--container">
-        <v-toolbar color="transparent" class="listing-toolbar" flat ml-0>
-            <v-btn icon>
-                <v-icon large>{{.Entity.Vuetify.Icon}}</v-icon>
-            </v-btn>
-            <v-toolbar-title class="ma-0 pa-0">
-                <h2>{{.Entity.Name}}</h2>
-            </v-toolbar-title>
-            <v-spacer></v-spacer>
-            <v-btn mr-0 color="primary" @click="create">
-                <v-icon dark>add</v-icon> Add
-            </v-btn>
-        </v-toolbar>
+  <div class="listing--container">
+    <v-toolbar color="transparent" class="listing-toolbar" flat ml-0>
+      <v-btn icon>
+        <v-icon large>{{.Entity.Vuetify.Icon}}</v-icon>
+      </v-btn>
+      <v-toolbar-title class="ma-0 pa-0">
+        <h2>{{.Entity.Name}}</h2>
+      </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn mr-0 color="primary" @click="create">
+        <v-icon dark>add</v-icon> Add
+      </v-btn>
+    </v-toolbar>
 
-        <!-- Error Messages -->
-        <v-alert :type="message.type==='E' ? 'error' : message.type" :value="true" v-for="(message, index) in messages" :key="index">
-            {{ "{{ message.text }}" }}
-        </v-alert>
+    <!-- Error Messages -->
+    <v-alert :type="message.type==='E' ? 'error' : message.type" :value="true" v-for="(message, index) in messages" :key="index">
+      {{ "{{ message.text }}" }}
+    </v-alert>
 
-        <!-- Empty Check -->
-        <div v-if="loading" centered>
-            <v-progress-linear :indeterminate="true"></v-progress-linear>
-            <p class="text-xs-center">contacting server...</p>
-        </div>
-        <v-alert type="info" value="true" color="primary" outline icon="info" v-else-if="entities.length===0 && !loading">
-            No {{.Entity.Name}} exist. Would you like to create one now?
-            <v-btn color="primary" :to="{path: '{{plural (lower .Entity.Name) }}/edit'}">create new</v-btn>
-        </v-alert>
+    <!-- Empty Check -->
+    <div v-if="loading" centered>
+      <v-progress-linear :indeterminate="true"></v-progress-linear>
+      <p class="text-xs-center">contacting server...</p>
+    </div>
+    <v-alert type="info" value="true" color="primary" outline icon="info" v-else-if="entities.length===0 && !loading">
+      No {{.Entity.Name}} exist. Would you like to create one now?
+      <v-btn color="primary" @click="create">create new</v-btn>
+    </v-alert>
 
-        <!-- Table form listing -->
-        <template v-else>
-            <v-text-field mb-4 append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>
-            <v-data-table :headers="headers" :items="entities" class="elevation-1" :search="search">
-                <template slot="items" slot-scope="props">
-                    <tr :class="{'highlight': recentlySaved(props.item.id)}">
-                        <td class="justify-center layout px-0">
-                            <v-btn icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
-                                <v-icon>edit</v-icon>
-                            </v-btn>
-                            <v-tooltip top>
-                                <v-btn slot="activator" icon class="mx-0" :to="{name: 'g_{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
-                                    <v-icon>accessible_forward</v-icon>
-                                </v-btn>
-                                <span>Automatically generated Edit Form</span>
-                            </v-tooltip>
-                        </td>
-                        <!-- Check if it should appear in the list -->
-                        {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
-                        <!-- Use different rendering for dates -->
-                        {{ if eq .ListWidget.Type "time" }}
-                        <td>
-                            <component :is="'g{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
-                        </td>
-                        {{- else -}}
-                        <!-- Use different rendering for dates -->
-                        {{if eq .ListWidget.Type "image"}}
-                        <td>
-                            <img :src="{{ printf " props.item.%s " (ucfirst .Property.Name) }} " />
-                        </td>
-                        {{- else -}}
-                        <!-- Use different rendering for select types -->
-                        {{if eq .ListWidget.Type "select"}}
-                        <td>
-                            <component :is="'g{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
-                        </td>
-                        {{- else -}}
-                        <!-- Use different rendering for dates -->
-                        {{if eq .ListWidget.Type "icon"}}
-                        <td>
-                            <v-icon>{{ printf "{{ props.item.%s }}" (ucfirst .Property.Name) }}</v-icon>
-                        </td>
-                        {{else}}
-                        <!-- Use different rendering for toggles -->
-                        {{if eq .ListWidget.Type "toggle"}}
-                        <td>
-                            <component :is="'g{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
-                        </td>
-                        {{else}}
-                        <td>
-                            <v-tooltip top>
-                                <span slot="activator">
-                                    {{ printf "{{ props.item.%s}}" (ucfirst .Property.Name) }}
+    <!-- Table form listing -->
+    <template v-else>
+      <v-text-field mb-4 append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>
+      <v-data-table :headers="headers" :items="entities" class="elevation-1" :search="search">
+        <template slot="items" slot-scope="props">
+          <tr :class="{'highlight': recentlySaved(props.item.id)}">
+            <td class="justify-center layout px-0">
+              <v-btn icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
+                <v-icon>edit</v-icon>
+              </v-btn>
+              <v-btn icon class="mx-0" @click="deleteTry(props.item.id, props.item.Name )">
+                <v-icon>delete</v-icon>
+              </v-btn>
+              <v-tooltip top>
+                <v-btn slot="activator" icon class="mx-0" :to="{name: 'g_{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
+                  <v-icon>accessible_forward</v-icon>
+                </v-btn>
+                <span>Automatically generated Edit Form</span>
+              </v-tooltip>
+            </td>
+            <!-- Check if it should appear in the list -->
+            {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
+            <!-- Use different rendering for dates -->
+            {{ if eq .ListWidget.Type "time" }}
+            <td>
+              <component :is="'g{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+            </td>
+            {{- else -}}
+            <!-- Use different rendering for dates -->
+            {{if eq .ListWidget.Type "image"}}
+            <td>
+              <img :src="{{ printf " props.item.%s " (ucfirst .Property.Name) }} " />
+            </td>
+            {{- else -}}
+            <!-- Use different rendering for select types -->
+            {{if eq .ListWidget.Type "select"}}
+            <td>
+              <component :is="'g{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+            </td>
+            {{- else -}}
+            <!-- Use different rendering for dates -->
+            {{if eq .ListWidget.Type "icon"}}
+            <td>
+              <v-icon>{{ printf "{{ props.item.%s }}" (ucfirst .Property.Name) }}</v-icon>
+            </td>
+            {{else}}
+            <!-- Use different rendering for toggles -->
+            {{if eq .ListWidget.Type "toggle"}}
+            <td>
+              <component :is="'g{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+            </td>
+            {{else}}
+            <td>
+              <v-tooltip top>
+                <span slot="activator">
+                  {{ printf "{{ props.item.%s}}" (ucfirst .Property.Name) }}
 
-                                </span>
-                                <span>Widget Type : {{ ucfirst .Property.Type}}</span>
-                            </v-tooltip>
-                        </td>
-                        {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
-                    </tr>
-                </template>
-
-                <template slot="no-data">
-                    <v-flex ma-4>
-                        <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-if="search.length> 0"> Your search for "{{ "{{ search }}" }}" found no results.
-                        </v-alert>
-                        <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-else>
-                            No {{.Entity.Name}} found.
-                        </v-alert>
-                    </v-flex>
-                </template>
-            </v-data-table>
+                </span>
+                <span>Widget Type : {{ ucfirst .Property.Type}}</span>
+              </v-tooltip>
+            </td>
+            {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
+          </tr>
         </template>
 
-        <v-snackbar v-model="snackbar.show" :right="true" :bottom="true" color="primary" :timeout="2000">
-            {{ printf `{{ snackbar.text }}` }}
-            <v-btn dark flat @click="snackbarHide">
-                <v-icon>close</v-icon>
-            </v-btn>
-        </v-snackbar>
-    </div>
+        <template slot="no-data">
+          <v-flex ma-4>
+            <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-if="search.length> 0"> Your search for "{{ "{{ search }}" }}" found no results.
+            </v-alert>
+            <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-else>
+              No {{.Entity.Name}} found.
+            </v-alert>
+          </v-flex>
+        </template>
+      </v-data-table>
+    </template>
+
+    <v-dialog v-model="dialog" persistent max-width="300">
+      <v-card dark>
+        <v-card-title class="headline">Confirm Delete</v-card-title>
+        <v-card-text>
+          You are about to delete
+          <strong>"{{ printf "{{deleteItemId.label}}" }}"</strong>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn flat @click.native="dialog = false;">Cancel</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="error" dark @click.native="deleteConfirm">Yes, Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-snackbar v-model="snackbar.show" :right="true" :bottom="true" color="primary" :timeout="2000">
+      {{ printf `{{ snackbar.text }}` }}
+      <v-btn dark flat @click="snackbarHide">
+        <v-icon>close</v-icon>
+      </v-btn>
+    </v-snackbar>
+  </div>
 </template>
 
 <script>
 import { BreadClient } from "@/services/service_bread_pb_service";
 import { List{{plural .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
+import { Delete{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import gSelect from "@/widgets/list/gSelect.vue";
 import gToggle from "@/widgets/list/gToggle.vue";
 import gTime from "@/widgets/list/gTime.vue";
@@ -129,6 +148,11 @@ export default {
           show: false, 
           text: ''
       },
+      dialog: null,
+      deleteItemId: {
+        id: null,
+        label: null
+      },
       text: "hola",
       headers: [
         {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
@@ -137,7 +161,8 @@ export default {
 		{{end}}{{end}}
       ],
       entities: [],
-      loading: false
+      loading: false,
+      cli : new BreadClient("/api")
     };
   },
   components: {
@@ -146,48 +171,53 @@ export default {
       gTime
   },
   mounted() {
-    let cli = new BreadClient("/api");
-    let req = new List{{plural .Entity.Name}}Request();
-    this.loading = true;
 
+    this.loading = true;
+    this.getList();
     this.track = this.$route.params.track;
 
-    cli.list{{plural .Entity.Name}}(req, (err, resp) => {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        this.loading = false;
-        this.snackbarShow('{{ucfirst (plural .Entity.Name)}} Loaded');
-        this.entities = resp.get{{ucfirst (plural .Entity.Name)}}List().map(entity => {
-            return {
-                {{ range .Entity.Fields -}}
-                    {{- if eq .ListWidget.Type "time" -}}
-                        {{ucfirst .Property.Name}}: {{- printf " entity.get%s().toDate() " (ucfirst .Property.Name)}},
-                    {{- else -}}
-                        {{ucfirst .Property.Name}}: {{- printf " entity.get%s() " (ucfirst .Property.Name)}},
-                    {{- end }}
-                {{ end }}
-                id: entity.getId()
-            }
-        })
-
-    });
   },
   methods: {    
-        recentlySaved(id) {
-            if (this.track === id) {
-                return true;
+      recentlySaved(id) {
+          if (this.track === id) {
+              return true;
+          }
+          return false;
+      },
+
+      getList: function(){
+        let req = new List{{plural .Entity.Name}}Request();
+
+        this.cli.list{{plural .Entity.Name}}(req, (err, resp) => {
+          if (err) {
+            console.log(err);
+            return;
+          }
+          this.loading = false;
+          this.snackbarShow('{{ucfirst (plural .Entity.Name)}} Loaded');
+
+          this.entities = resp.get{{ucfirst (plural .Entity.Name)}}List().map(entity => {
+            return {
+              {{ range .Entity.Fields -}}
+                {{- if eq .ListWidget.Type "time" -}}
+                  {{ucfirst .Property.Name}}: {{- printf " entity.get%s().toDate() " (ucfirst .Property.Name)}},
+                {{- else -}}
+                  {{ucfirst .Property.Name}}: {{- printf " entity.get%s() " (ucfirst .Property.Name)}},
+                {{- end }}
+              {{ end }}
+              id: entity.getId()
             }
-            return false;
-        },
+          })
+          
+          console.log(this.entities)
+        });
+       },
       create: function() {
-          let cli = new BreadClient("/api");
           let req = new Create{{.Entity.Name}}Request();
           this.snackbarShow('Loading {{ucfirst (plural .Entity.Name)}}');
           this.loading = true;
 
-           cli.create{{.Entity.Name}}(req, (err, resp) => {
+           this.cli.create{{.Entity.Name}}(req, (err, resp) => {
             if (err) {
                 console.log(err);
                 this.loading = false;
@@ -199,6 +229,30 @@ export default {
                 params: { id: resp.get{{ucfirst .Entity.Name}}().getId() }
             });
         });
+      },
+      deleteTry: function(id, label) {
+          console.log("trying id", id);
+          this.deleteItemId = { id: id, label, label };
+          this.dialog = true;
+      },
+      deleteConfirm: function() {
+
+          let req = new Delete{{.Entity.Name}}Request();
+          req.setId(this.deleteItemId.id)
+
+          this.cli.delete{{.Entity.Name}}(req, (err, resp) => {
+            if (err) {
+                console.log(err);
+                this.loading = false;
+                return;
+            } else {
+              this.snackbarShow('Deleted', this.deleteItemId.label);
+              this.getList();
+            }
+          })
+
+          this.dialog = false;
+
       },
       snackbarShow: function(text, color) {
           this.snackbar.show = true;
