@@ -209,7 +209,6 @@ export default {
             }
           })
           
-          console.log(this.entities)
         });
        },
       create: function() {
@@ -231,7 +230,6 @@ export default {
         });
       },
       deleteTry: function(id, label) {
-          console.log("trying id", id);
           this.deleteItemId = { id: id, label, label };
           this.dialog = true;
       },

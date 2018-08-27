@@ -47,9 +47,9 @@
             </v-card-actions>
         </v-card>
 
-        <v-snackbar v-model="snackbar.show" :right="true" :vertical="false" :bottom="true" color="primary" :timeout="6000">
+        <v-snackbar v-model="snackbar.show" :right="true" :vertical="false" :bottom="true" :color="snackbar.color" :timeout="6000">
             {{ printf `{{ snackbar.text }}` }}
-            <v-btn dark flat :to="{name: '{{- plural (lower .Entity.Name) -}}_list', params : { track : id}}">
+            <v-btn dark flat v-if="snackbar.color !== 'error'" :to="{name: '{{- plural (lower .Entity.Name) -}}_list', params : { track : id}}">
                 <v-icon>arrow_back</v-icon>
             </v-btn>
             <v-btn dark flat @click="snackbarHide">
@@ -145,6 +145,9 @@ export default {
             cli.update{{.Entity.Name}}(req, (err, resp) => {
                 if (err) {
                     console.log(err);
+
+                    this.snackbarShow(err.message, "error");
+
                     this.loading = false;
                     return;
                 }
