@@ -187,26 +187,31 @@ func GenerateAndSave(component string, template string, filename string, data in
 
 	filename, err = util.GetAbsPath(filename)
 	if err != nil {
+		Log("[error] Generate (%s) %s failed: %s", component, filename, err)
 		return err
 	}
 
 	if !noSkip && noOverwrite && util.FileExists(filename) {
+		Log("[skipped] %s (%s)", filename, component)
 		return util.ErrorSkip
 	}
 
 	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
+		Log("[error] Generate (%s) %s failed: %s", component, filename, err)
 		return err
 	}
 
 	if code, isString = data.(string); !isString {
 		code, err = util.ExecuteTemplate(template, data)
 		if err != nil {
+			Log("[error] Generate (%s) %s failed: %s", component, filename, err)
 			return err
 		}
 	}
 
 	err = ioutil.WriteFile(filename, []byte(code), mode)
 	if err != nil {
+		Log("[error] Generate (%s) %s failed: %s", component, filename, err)
 		return err
 	}
 
