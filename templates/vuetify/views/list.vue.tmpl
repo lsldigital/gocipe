@@ -134,6 +134,7 @@ import { BreadClient } from "@/services/service_bread_pb_service";
 import { List{{plural .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { Delete{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
+import { mapGetters } from 'vuex';
 import gSelect from "@/widgets/list/gSelect.vue";
 import gToggle from "@/widgets/list/gToggle.vue";
 import gTime from "@/widgets/list/gTime.vue";
@@ -170,12 +171,15 @@ export default {
       gToggle,
       gTime
   },
+  computed: {
+    ...mapGetters({
+      'token': 'auth/getToken'
+    })
+  },
   mounted() {
-
     this.loading = true;
     this.getList();
     this.track = this.$route.params.track;
-
   },
   methods: {    
       recentlySaved(id) {
@@ -187,6 +191,7 @@ export default {
 
       getList: function(){
         let req = new List{{plural .Entity.Name}}Request();
+        req.setKey(this.token);
 
         this.cli.list{{plural .Entity.Name}}(req, (err, resp) => {
           if (err) {
@@ -216,6 +221,8 @@ export default {
        },
       create: function() {
           let req = new Create{{.Entity.Name}}Request();
+          req.setKey(this.token);
+
           this.snackbarShow('Loading {{ucfirst (plural .Entity.Name)}}');
           this.loading = true;
 
@@ -242,6 +249,7 @@ export default {
       deleteConfirm: function() {
 
           let req = new Delete{{.Entity.Name}}Request();
+          req.setKey(this.token);
           req.setId(this.deleteItemId.id)
 
           this.cli.delete{{.Entity.Name}}(req, (err, resp) => {
