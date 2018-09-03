@@ -59,7 +59,7 @@
             <!-- Use different rendering for dates -->
             {{if eq .ListWidget.Type "image"}}
             <td>
-              <img :src="{{ printf " props.item.%s " (ucfirst .Property.Name) }} " />
+              <v-img :src="{{ printf " props.item.%s " (ucfirst .Property.Name) }} " width="50" max-width="50" contain height="40" max-height="40"></v-img>
             </td>
             {{- else -}}
             <!-- Use different rendering for select types -->
