@@ -7,7 +7,7 @@ import {{.Name}}Edit from "./views/{{plural .Name}}Edit.vue";
 let routes = [
   {{range $i, $v := .Entities}}
   {
-    path: "/{{lower (plural .Name)}}",
+    path: "{{lower (plural .Name)}}",
     name: "{{lower (plural .Name)}}_list",
     component: {{.Name}}List,
     meta: {
@@ -17,7 +17,7 @@ let routes = [
     }
   },
   {
-    path: "/g_{{lower (plural .Name)}}/edit/:id",
+    path: "g_{{lower (plural .Name)}}/edit/:id",
     name: "g_{{lower (plural .Name)}}_edit",
     component: {{.Name}}Edit,
     meta: {

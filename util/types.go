@@ -340,6 +340,9 @@ type Entity struct {
 
 	// Vuetify describes options for Vuetify generation - overrides recipe level Vuetify config
 	Vuetify VuetifyEntityOpts `json:"vuetify"`
+
+	// DefaultSort is a sort string used while generating List() method in CRUD
+	DefaultSort string `json:"default_sort"`
 }
 
 // Field describes a field contained in an entity
@@ -421,6 +424,9 @@ type EditWidgetOpts struct {
 
 	// Multiple indicates that the field accepts multiple values
 	Multiple bool `json:"multiple"`
+
+	// hide indicates whether or not to show field in listing
+	Hide bool `json:"hide"`
 }
 
 // EditWidgetOption represents an option for SelectRel widget type
@@ -428,7 +434,7 @@ type EditWidgetOption struct {
 	// Value represents the stored value of the option
 	Value string `json:"value"`
 	// Label represents the displayed of the option
-	Label string `json:"label"`
+	Text string `json:"text"`
 }
 
 // EditWidgetTarget represents a target endpoint to pull data for this widget

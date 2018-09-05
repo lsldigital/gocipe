@@ -50,6 +50,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 		Related      []string
 		HasPreHook   bool
 		HasPostHook  bool
+		DefaultSort  string
 	}{
 		EntityName:   entity.Name,
 		Table:        entity.Table,
@@ -61,5 +62,6 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 		Related:      related,
 		HasPreHook:   entity.CrudHooks.PreList,
 		HasPostHook:  entity.CrudHooks.PostList,
+		DefaultSort:  entity.DefaultSort,
 	})
 }
