@@ -74,7 +74,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		//scaffold application layout - synchronously before launching generators
-		application.Generate(rcp.Bootstrap, noSkip)
+		application.Generate(rcp, noSkip)
 
 		if generateBootstrap {
 			go bootstrap.Generate(work, rcp.Bootstrap)

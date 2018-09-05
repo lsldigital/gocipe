@@ -295,7 +295,7 @@ func(s Service) Delete{{.Entity.Name}}(ctx context.Context, req *bread.Delete{{.
 
 	return &res, nil
 }
-{{- end}
+{{- end}}
 {{if .HasFileFields}}
 // Upload{{.Entity.Name}} Upload allows uploading of files for entity of type {{.Entity.Name}}
 func(s Service) Upload{{.Entity.Name}}(ctx context.Context, req *bread.UploadRequest) (*bread.UploadResponse, error) {
@@ -332,7 +332,7 @@ destination := path.Join(options.Entity, id, options.Field)
 		return &res, err
 	}
 	
-	stmt, err = tx.Prepare(`UPDATE {{.Table TODO}} SET {{.SQLFields TODO}} = $1 WHERE id = $2`)
+	stmt, err = tx.Prepare(`UPDATE {{.Table}} SET {{.SQLFields}} = $1 WHERE id = $2`) //TODO
 	if err != nil {
 		files.Delete(filePath)
 		return &res, errors.WithStack(err)
@@ -348,4 +348,4 @@ destination := path.Join(options.Entity, id, options.Field)
 	res.URI = options.MediaPrefixURL + "/" + fileName
 	return &res, nil
 }
-{{-end}}
+{{- end}}

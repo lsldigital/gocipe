@@ -187,7 +187,7 @@ func GenerateAndSave(component string, template string, filename string, data in
 
 	filename, err = util.GetAbsPath(filename)
 	if err != nil {
-		Log("[error] Generate (%s) %s failed: %s", component, filename, err)
+		Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
 		return err
 	}
 
@@ -197,21 +197,21 @@ func GenerateAndSave(component string, template string, filename string, data in
 	}
 
 	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
-		Log("[error] Generate (%s) %s failed: %s", component, filename, err)
+		Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
 		return err
 	}
 
 	if code, isString = data.(string); !isString {
 		code, err = util.ExecuteTemplate(template, data)
 		if err != nil {
-			Log("[error] Generate (%s) %s failed: %s", component, filename, err)
+			Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
 			return err
 		}
 	}
 
 	err = ioutil.WriteFile(filename, []byte(code), mode)
 	if err != nil {
-		Log("[error] Generate (%s) %s failed: %s", component, filename, err)
+		Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
 		return err
 	}
 
@@ -226,7 +226,7 @@ func GenerateAndSave(component string, template string, filename string, data in
 	return nil
 }
 
-// saveAggregate saves aggregated files and returns absolute filename, log entry and error
+// saveAggregate saves aggregated files and returns absolute filename, log entry and Error
 func saveAggregate(aggregate []util.GeneratedCode, noSkip bool) (string, string, error) {
 	var generated util.GeneratedCode
 

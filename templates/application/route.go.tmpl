@@ -43,8 +43,8 @@ func newProdRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	}
 
 	{{if .Bread.Generate}}
-	if err := web.WebAppRouting(router, "/admin", "backoffice", nil); err != nil {
-		log.Fatalf("Failed to create subroute backoffice: %s\n", err)
+	if err := web.WebAppRouting(router, "/admin", "admin", nil); err != nil {
+		log.Fatalf("Failed to create subroute admin: %s\n", err)
 		return nil
 	}
 	{{end}}
@@ -60,7 +60,7 @@ func newDevRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	}
 	{{end}}
 
-	if err := web.WebDevRouting(router, "/admin", "backoffice", "8081"); err != nil {
+	if err := web.WebDevRouting(router, "/admin", "admin", "8081"); err != nil {
 		log.Warnf("Failed to create subrouter backofice: %s\n", err)
 	}
 
