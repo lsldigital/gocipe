@@ -5,98 +5,44 @@ package bread;
 import "models.proto";
 option go_package = "{{.AppImportPath}}/services/bread";
 
-message File {
-    string Field = 1;
-    string Filename = 2;
-    bytes Content = 3;
-}
-
+// Filter represents a filter that can be applied for listing requests
 message Filter {
     string Field     = 1;
     string Operation = 2;
     string Value     = 3;
 }
 
-service Bread {
-    {{range .Entities}}
-    {{if .Bread.Create}}
-    // Create{{.Name}} allows creation of entity of type {{.Name}}
-    rpc Create{{.Name}}(Create{{.Name}}Request) returns (Create{{.Name}}Response);
-    {{- end}}
-    {{if .Bread.Read}}
-    // Get{{.Name}} allows getting a single entity of type {{.Name}}
-    rpc Get{{.Name}}(Get{{.Name}}Request) returns (Get{{.Name}}Response);
-    {{- end}}
-    {{if .Bread.List}}
-    // List{{.Name}} allows listing all entity of type {{.Name}}
-    rpc List{{plural .Name}}(List{{plural .Name}}Request) returns (List{{plural .Name}}Response);
-    {{- end}}
-    {{if .Bread.Update}}
-    // Update{{.Name}} allows updating one entity of type {{.Name}}
-    rpc Update{{.Name}}(Update{{.Name}}Request) returns (Update{{.Name}}Response);
-    {{- end}}
-    {{if .Bread.Delete}}
-    // Delete{{.Name}} allows deleting an entity of type {{.Name}}
-    rpc Delete{{.Name}}(Delete{{.Name}}Request) returns (Delete{{.Name}}Response);
-    {{- end}}
-    {{- end}}
+// GetRequest represents a request to allow getting a single entity
+message GetRequest {
+    string Key = 1;
+    string ID = 2;
 }
 
-{{range .Entities}}
-{{if .Bread.Create}}
-// Create{{.Name}}Request represents a request to allow creation of entity of type {{.Name}}
-message Create{{.Name}}Request {
-    string Key = 1;
-	models.{{.Name}} {{.Name}} = 2;
-    repeated File Files = 3;
-}
-// Create{{.Name}}Response represents result to a Create{{.Name}}Request
-message Create{{.Name}}Response {
-    models.{{.Name}} {{.Name}} = 1;
-}
-{{- end}}
-{{if .Bread.Read}}
-// Get{{.Name}}Request represents a request to allow getting a single entity of type {{.Name}}
-message Get{{.Name}}Request {
-    string Key = 1;
-    string ID = 2;
-}
-// Get{{.Name}}Response represents result to a Get{{.Name}}Request
-message Get{{.Name}}Response {
-    models.{{.Name}} {{.Name}} = 1;
-}
-{{- end}}
-{{if .Bread.List}}
-// List{{plural .Name}}Request represents a request to allow listing all entity of type {{.Name}}
-message List{{plural .Name}}Request {
+// ListRequest represents a request to allow listing of entities
+message ListRequest {
     string Key = 1;
     models.ListOpts ListOpts = 2;
-    repeated Filter Filters = 3;
+    repeated bread.Filter Filters = 3;
 }
-// List{{plural .Name}}Response represents result to a List{{plural .Name}}Request
-message List{{plural .Name}}Response {
-    repeated models.{{.Name}} {{plural .Name}} = 1;
-}
-{{- end}}
-{{if .Bread.Update}}
-// Update{{.Name}}Request represents a request to allow updating one entity of type {{.Name}}
-message Update{{.Name}}Request {
-    string Key = 1;
-    models.{{.Name}} {{.Name}} = 2;
-    repeated File Files = 3;
-}
-// Update{{.Name}}Response represents result to a Update{{.Name}}Request
-message Update{{.Name}}Response {
-    models.{{.Name}} {{.Name}} = 1;
-}
-{{- end}}
-{{if .Bread.Delete}}
-// Delete{{.Name}}Request represents a request to allow deleting an entity of type {{.Name}}
-message Delete{{.Name}}Request {
+
+// DeleteRequest represents a request to allow deleting an entity
+message DeleteRequest {
     string Key = 1;
     string ID = 2;
 }
-// Delete{{.Name}}Response represents result to a Delete{{.Name}}Request
-message Delete{{.Name}}Response {}
-{{- end}}
-{{- end}}
+// DeleteResponse represents result to a DeleteRequest
+message DeleteResponse {}
+
+// UploadRequest represents message to allow uploading of files
+message UploadRequest {
+    string Key      = 1;
+    string ID       = 2;
+    string Field    = 3;
+    string Filename = 4;
+    bytes  Content  = 5;
+}
+
+// UploadResponse represents result to an UploadRequest
+message UploadResponse {
+    string URI = 1;
+}

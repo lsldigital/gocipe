@@ -19,27 +19,11 @@ import (
 
 // Constants for files package
 const (
-	NoLimit = -1
-)
+  // NoLimit is used to indicate no restriction (on dimensions or size)
+	NoLimit   = -1
 
-var (
-	// BaseUploadPath holds the path on disk
-	// for the uploaded files
-	BaseUploadPath = "public/"
-
-	// DefaultUploadOptions holds default upload options
-	DefaultUploadOptions = &UploadOptions{
-		Permissions: 0644,
-		FileExt:     "jpg",
-		MaxSize:     NoLimit,
-		MinSize:     NoLimit,
-		ImgDimensions: &ImageDimensions{
-			MinHeight: NoLimit,
-			MaxHeight: NoLimit,
-			MinWidth:  NoLimit,
-			MaxWidth:  NoLimit,
-		},
-	}
+	_fileMode       = os.FileMode(0644)
+	_baseUploadPath = "media/"
 )
 
 // ImageDimensions holds dimensions options
@@ -52,15 +36,28 @@ type ImageDimensions struct {
 
 // UploadOptions holds file upload options
 type UploadOptions struct {
-	Destination   string
-	Permissions   os.FileMode
-	Entity        string
-	Field         string
-	FileExt       string
-	MaxSize       int
-	MinSize       int
-	ImgDimensions *ImageDimensions
+	Destination    string
+	MediaPrefixURL string
+	FileExt        string
+	MaxSize        int
+	MinSize        int
+	ImgDimensions  *ImageDimensions
 }
+
+var (
+	// DefaultUploadOptions holds default upload options
+	DefaultUploadOptions = &UploadOptions{
+		FileExt:     "jpg",
+		MaxSize:     NoLimit,
+		MinSize:     NoLimit,
+		ImgDimensions: &ImageDimensions{
+			MinHeight: NoLimit,
+			MaxHeight: NoLimit,
+			MinWidth:  NoLimit,
+			MaxWidth:  NoLimit,
+		},
+	}
+)
 
 func init() {
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
@@ -68,34 +65,20 @@ func init() {
 	image.RegisterFormat("gif", "gif", gif.Decode, gif.DecodeConfig)
 }
 
-// SetBaseUploadPath sets the base upload path for files upload
-func SetBaseUploadPath(bUploadPath string) {
-	if bUploadPath == "" {
-		return
-	}
-	BaseUploadPath = bUploadPath
-}
-
 // Upload validates and saves create file
 func Upload(fileName string, fileContent []byte, options *UploadOptions) (string, string, error) {
-	var filePath string
-
-	if options.Permissions == 0 {
-		options.Permissions = DefaultUploadOptions.Permissions
-	}
-
+	directoryPath := path.Join(_baseUploadPath, options.Destination)
 	fileName = buildFileName(fileName, options.FileExt)
-	directoryPath := path.Join(BaseUploadPath, options.Destination)
 
 	if err := os.MkdirAll(directoryPath, os.ModePerm); err != nil {
 		log.Printf("error creating directories: %v\n", err)
 		return filePath, fileName, err
 	}
 
-	filePath = filepath.Join(directoryPath, fileName)
+	filePath := filepath.Join(directoryPath, fileName)
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		if err := ioutil.WriteFile(filePath, fileContent, options.Permissions); err != nil {
+		if err := ioutil.WriteFile(filePath, fileContent, _fileMode); err != nil {
 			log.Printf("error writing %v: %v\n", filePath, err)
 			return filePath, fileName, err
 		}
@@ -168,55 +151,6 @@ func Upload(fileName string, fileContent []byte, options *UploadOptions) (string
 	}
 
 	return filePath, fileName, nil
-}
-
-// Delete deletes one file
-func Delete(fp string) error {
-	if err := os.Remove(fp); err != nil {
-		return err
-	}
-	return nil
-}
-
-// DeleteFromRel deletes one file using relative path
-func DeleteFromRel(prefix, filePathRel string) error {
-	filePathTrimmed := strings.TrimPrefix(filePathRel, prefix)
-	filePathDisk := filepath.Join(BaseUploadPath, filePathTrimmed)
-	return Delete(filePathDisk)
-}
-
-// DeleteMany deletes many files
-func DeleteMany(filespath map[string]string) {
-	for _, fp := range filespath {
-		if err := Delete(fp); err != nil {
-			log.Printf("error deleting file %v\n", err)
-		}
-	}
-}
-
-// RemoveContents deletes all contents of a directory
-func RemoveContents(dir, exception string) error {
-	dir = path.Join(BaseUploadPath, dir)
-	dirRead, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-
-	dirFiles, err := dirRead.Readdir(0)
-	if err != nil {
-		return err
-	}
-
-	for _, fileInfo := range dirFiles {
-		fullPath := path.Join(dir, fileInfo.Name())
-
-		if fullPath == exception {
-			continue
-		}
-
-		os.Remove(fullPath)
-	}
-	return nil
 }
 
 func buildFileName(oldFilename, newExt string) string {

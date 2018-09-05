@@ -7,6 +7,12 @@ const (
 	// WidgetTypeDate represents widget of type date
 	WidgetTypeDate = "date"
 
+	// WidgetTypeFile represents widget of type file
+	WidgetTypeFile = "file"
+
+	// WidgetTypeImage represents widget of type image
+	WidgetTypeImage = "image"
+
 	// WidgetTypeNumber represents widget of type number
 	WidgetTypeNumber = "number"
 

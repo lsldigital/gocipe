@@ -33,9 +33,9 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity *{{.E
 		return errors.WithStack(err)
 	}
 
-    if err = repo.preSave(ctx, tx, models.OperationUpdate, entity); err != nil {
+	if err = repo.preSave(ctx, tx, models.OperationUpdate, entity); err != nil {
 		tx.Rollback()
-        return errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {

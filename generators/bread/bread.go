@@ -9,40 +9,73 @@ import (
 
 // Generate returns generated code for a BREAD service - Browse, Read, Edit, Add & Delete
 func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
-	var ents []util.Entity
-
-	//2 jobs to be waited upon for: service_bread.proto and service_bread.go
-	work.Waitgroup.Add(2)
-
-	for i := range entities {
-		if entities[i].Bread.Generate {
-			ents = append(ents, entities[i])
-		}
-	}
-
-	code, err := util.ExecuteTemplate("bread/service_bread.gocipe.go.tmpl", struct {
-		Entities []util.Entity
-	}{ents})
-
-	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateBread", Code: code, Filename: "services/bread/service_bread.gocipe.go"}
-	} else {
-		work.Done <- util.GeneratedCode{Generator: "GenerateBread", Error: fmt.Errorf("failed to load execute template: %s", err)}
-	}
-
 	for _, entity := range entities {
-		switch true {
-		case
-			entity.Bread.Hooks.PreCreate,
-			entity.Bread.Hooks.PostCreate,
-			entity.Bread.Hooks.PreRead,
-			entity.Bread.Hooks.PostRead,
-			entity.Bread.Hooks.PreList,
-			entity.Bread.Hooks.PostList,
-			entity.Bread.Hooks.PreUpdate,
-			entity.Bread.Hooks.PostUpdate,
-			entity.Bread.Hooks.PreDelete,
-			entity.Bread.Hooks.PostDelete:
+		if !entity.Bread.Generate {
+			continue
+		}
+
+		var fileFields []string
+		for _, field := range entity.Fields {
+			switch field.EditWidget.Type {
+			case util.WidgetTypeFile, util.WidgetTypeImage:
+				fileFields = append(fileFields, field.Property.Name)
+			}
+		}
+
+		hasFileFields := len(fileFields) > 0
+		packagename := strings.ToLower(entity.Name)
+
+		proto, err := util.ExecuteTemplate("bread/service_bread_entity.proto.tmpl", struct {
+			Entity        util.Entity
+			AppImportPath string
+			HasFileFields bool
+		}{entity, util.AppImportPath, hasFileFields})
+
+		// generate separate bread services per entity
+		work.Waitgroup.Add(1)
+		if err == nil {
+			work.Done <- util.GeneratedCode{Generator: "GenerateBreadProto", Code: proto, Filename: fmt.Sprintf("proto/service_bread_%s.proto", strings.ToLower(entity.Name))}
+		} else {
+			work.Done <- util.GeneratedCode{Generator: "GenerateBreadProto", Error: err}
+		}
+
+		code, err := util.ExecuteTemplate("bread/service_bread.entity.gocipe.go.tmpl", struct {
+			Entity        util.Entity
+			FileFields    string
+			HasFileFields bool
+		}{
+			Entity:        entity,
+			FileFields:    `"` + strings.Join(fileFields, `","`) + `"`,
+			HasFileFields: hasFileFields,
+		})
+
+		work.Waitgroup.Add(1)
+		if err == nil {
+			work.Done <- util.GeneratedCode{Generator: "GenerateEntityBread|" + packagename, Code: code, Filename: "services/bread/" + packagename + "/bread.gocipe.go"}
+		} else {
+			work.Done <- util.GeneratedCode{Generator: "GenerateEntityBread|" + packagename, Error: fmt.Errorf("failed to execute template: %s", err)}
+		}
+
+		if hasFileFields {
+			code, err = util.ExecuteTemplate("bread/bread_config_upload.gocipe.go.tmpl", struct {
+				Entity        util.Entity
+				FileFields    []string
+				HasFileFields bool
+			}{
+				Entity:        entity,
+				FileFields:    fileFields,
+				HasFileFields: hasFileFields,
+			})
+
+			work.Waitgroup.Add(1)
+			if err == nil {
+				work.Done <- util.GeneratedCode{Generator: "GenerateBread Upload", Code: code, Filename: "services/bread/" + packagename + "/service_bread_config_upload.gocipe.go"}
+			} else {
+				work.Done <- util.GeneratedCode{Generator: "GenerateBread Upload", Error: fmt.Errorf("failed to execute template: %s", err)}
+			}
+		}
+
+		if hasHook(entity) {
 			hooks, err := util.ExecuteTemplate("bread/service_bread_hooks.go.tmpl", struct {
 				Entity     util.Entity
 				PreRead    bool
@@ -70,13 +103,13 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 			})
 
 			work.Waitgroup.Add(1)
-
 			if err == nil {
 				work.Done <- util.GeneratedCode{
 					Generator: "GenerateBreadHooks:" + entity.Name,
 					Code:      hooks,
 					Filename: fmt.Sprintf(
-						"services/bread/service_bread_%s_hooks.gocipe.go",
+						"services/bread/%s/%s_hooks.gocipe.go",
+						strings.ToLower(entity.Name),
 						strings.ToLower(entity.Name),
 					),
 					NoOverwrite: true,
@@ -85,19 +118,48 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 				work.Done <- util.GeneratedCode{Generator: "GenerateBreadHooks", Error: err}
 			}
 		}
+
 	}
 
+	// generate bread.proto
 	proto, err := util.ExecuteTemplate("bread/service_bread.proto.tmpl", struct {
-		Entities      []util.Entity
 		AppImportPath string
-	}{ents, util.AppImportPath})
+	}{util.AppImportPath})
 
+	work.Waitgroup.Add(1)
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateBreadProto", Code: proto, Filename: "proto/service_bread.proto"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateBreadProto", Code: proto, Filename: "proto/bread.proto"}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateBreadProto", Error: err}
 	}
 
+	code, err := util.ExecuteTemplate("bread/bread.gocipe.go.tmpl", struct{}{})
+
+	work.Waitgroup.Add(1)
+	if err == nil {
+		work.Done <- util.GeneratedCode{Generator: "GenerateBread", Code: code, Filename: "services/bread/bread.gocipe.go"}
+	} else {
+		work.Done <- util.GeneratedCode{Generator: "GenerateBread", Error: fmt.Errorf("failed to execute template: %s", err)}
+	}
+
 	work.Waitgroup.Done()
 	return nil
+}
+
+func hasHook(entity util.Entity) bool {
+	switch true {
+	case
+		entity.Bread.Hooks.PreCreate,
+		entity.Bread.Hooks.PostCreate,
+		entity.Bread.Hooks.PreRead,
+		entity.Bread.Hooks.PostRead,
+		entity.Bread.Hooks.PreList,
+		entity.Bread.Hooks.PostList,
+		entity.Bread.Hooks.PreUpdate,
+		entity.Bread.Hooks.PostUpdate,
+		entity.Bread.Hooks.PreDelete,
+		entity.Bread.Hooks.PostDelete:
+		return true
+	}
+	return false
 }

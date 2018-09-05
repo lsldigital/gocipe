@@ -1,0 +1,62 @@
+package bread
+
+import (
+	"github.com/pkg/errors"
+	"golang.org/x/net/context"
+)
+
+var (
+	ErrorInvalidOperation   = errors.New("invalid filter operation specified")
+	ErrorRequestEmpty       = errors.New("request object is malformed")
+	ErrorInvalidUploadField = errors.New("invalid upload field") 
+)
+
+// NewBoolFilter returns a new filter for boolean types
+func NewBoolFilter(filter *Filter) (*models.Filter, error) {
+	value, err := strconv.ParseBool(filter.Value); 
+	
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.Filter{Field: filter.Field, Operation: "=", Value: value}, nil
+}
+
+// NewStringFilter returns a new filter for text values
+func NewStringFilter(filter *Filter) (*models.Filter, error) {
+	switch filter.Operation {
+	case "=":
+		return &models.Filter{Field: filter.Field, Operation: "=", Value: filter.Value}, nil
+	case "~":
+		return &models.Filter{Field: filter.Field, Operation: "LIKE", Value: filter.Value}, nil
+	}
+
+	return nil, ErrorInvalidOperation
+}
+
+// NewDateFilter returns a new filter to handle dates
+func NewDateFilter(filter *Filter) (*models.Filter, error) {
+	var (
+		value time.Time
+		err   error
+	)
+
+	if value, err = time.Parse(time.RFC3339, filter.Value); err != nil {
+		return nil, err
+	}
+
+	switch filter.Operation {
+	case "=":
+		return &models.Filter{Field: filter.Field, Operation: "=", Value: value}, nil
+	case ">":
+		return &models.Filter{Field: filter.Field, Operation: ">", Value: value}, nil
+	case ">=":
+		return &models.Filter{Field: filter.Field, Operation: ">=", Value: value}, nil
+	case "<":
+		return &models.Filter{Field: filter.Field, Operation: "<", Value: value}, nil
+	case "<=":
+		return &models.Filter{Field: filter.Field, Operation: "<=", Value: value}, nil
+	}
+
+	return &models.Filter{Field: filter.Field, Operation: "LIKE", Value: value}, nil
+}
