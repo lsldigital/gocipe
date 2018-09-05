@@ -29,6 +29,10 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			entity.Fields[i] = field
 		}
 
+		if entity.DefaultSort == "" {
+			entity.DefaultSort = `t."id" DESC`
+		}
+
 		if entity.CrudHooks == nil {
 			entity.CrudHooks = &recipe.Crud.Hooks
 		}
@@ -71,6 +75,7 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			case util.RelationshipTypeOneMany:
 				rel.ThisID = "id"
 				isMany = true
+				rel.JoinTable = entities[rel.Entity].Table
 				if rel.ThatID == "" {
 					rel.ThatID = strings.ToLower(entity.Name) + "_id"
 				}

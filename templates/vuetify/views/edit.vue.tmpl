@@ -2,39 +2,60 @@
     <div>
         <div class="listing--container">
             <v-toolbar color="transparent" class="listing-toolbar" flat ml-0>
-                <v-btn icon>
-                    <v-icon large>{{.Entity.Vuetify.Icon}}</v-icon>
+                <v-btn icon :to="{name: '{{- plural (lower .Entity.Name) -}}_list'}">
+                    <v-icon large>arrow_back</v-icon>
                 </v-btn>
                 <v-toolbar-title class="ma-0 pa-0">
                     <h2>Edit {{.Entity.Name}}</h2>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-btn mr-0 color="primary" :to="''">
-                    <v-icon dark>save</v-icon> Save
+                <v-btn mr-0 color="" :to="''">
+                    <v-icon dark>arrow_back</v-icon> Prev
+                </v-btn>
+                <v-btn mr-0 color="" :to="''">
+                    <v-icon dark>arrow_forward</v-icon> Next
                 </v-btn>
             </v-toolbar>
         </div>
         <v-card>
             <v-card-text>
                 <v-form>
-                    <div class="gocipe-form-grid">
-                        {{ range .Entity.Fields }}
-                        <template v-if="entity">
+                    <div class="gocipe-form-grid" v-if="entity">
+                        {{ range .Entity.Fields }} {{if not .EditWidget.Hide }} {{if eq .EditWidget.Type "time"}}
+                        <!-- Date Template -->
+                        <template>
                             <div class="gocipe-field-container">
-                                <v-text-field label="{{ .Label }}" hint="{{ .EditWidget.Type }}" :value="entity.get{{ ucfirst .Property.Name }}() " @change="value=> entity.set{{ ucfirst .Property.Name }}(value)"></v-text-field>
+                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
                             </div>
                         </template>
-                        {{end}}
+                        {{ else }}
+                        <template>
+                            <div class="gocipe-field-container">
+                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" {{if eq .EditWidget.Type "select" }} :options='{{json .EditWidget.Options }}' {{ end }} :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
+                            </div>
+                        </template>
+                        {{end}} {{end}} {{ end }}
                     </div>
                 </v-form>
             </v-card-text>
-            <v-card-action>
+            <v-card-actions>
+                <v-spacer></v-spacer>
                 <v-btn color="primary" @click="update">
                     Save
                     <v-icon right>save</v-icon>
                 </v-btn>
-            </v-card-action>
+            </v-card-actions>
         </v-card>
+
+        <v-snackbar v-model="snackbar.show" :top="true" auto-height :color="snackbar.color" :timeout="6000">
+            {{ printf `{{ snackbar.text }}` }}
+            <v-btn dark flat v-if="snackbar.color !== 'error'" :to="{name: '{{- plural (lower .Entity.Name) -}}_list', params : { track : id}}">
+                <v-icon>arrow_back</v-icon>
+            </v-btn>
+            <v-btn dark flat @click="snackbarHide">
+                <v-icon>close</v-icon>
+            </v-btn>
+        </v-snackbar>
     </div>
 </template>
 
@@ -43,27 +64,67 @@
 import { BreadClient } from "@/services/service_bread_pb_service";
 import { Get{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { Update{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
+import gTextfield from "@/widgets/edit/gTextfield.vue";
+import gImagefield from "@/widgets/edit/gImagefield.vue";
+import gToggle from "@/widgets/edit/gToggle.vue";
+import gIcon from "@/widgets/edit/gIcon.vue";
+import gTime from "@/widgets/edit/gTime.vue";
+import gTextarea from "@/widgets/edit/gTextarea.vue";
+import gPublished from "@/widgets/edit/gPublished.vue";
+import gMap from "@/widgets/edit/gMap.vue";
+import gSelect from "@/widgets/edit/gSelect.vue";
 
 export default {
   data() {
     return {
-      messages: [],
+      messages: [],   
+      snackbar: {
+          show: false, 
+          text: ''
+      },
       entity: null,
       loading: false,
-      id: null
+      id: null,
+      cli : new BreadClient("/api")
+
     };
+  },
+  {{/*
+    The Code below tranforms into something like this. A computed property with custom getter and setters
+    computed: {
+        name: {
+        get: function() {
+            return this.entity.getName();
+        },
+        set: function(value) {
+            this.entity.setName(value);
+        }
+        }
+    },
+  */}}
+
+  components: {
+      gTextfield,
+      gImagefield,
+      gToggle,
+      gIcon,
+      gTime,
+      gTextarea,
+      gPublished,
+      gMap,
+      gSelect
   },
   mounted() {
     this.id = this.$route.params.id;
-    let cli = new BreadClient("/api");
     let req = new Get{{ .Entity.Name}}Request();
     req.setId(this.id);
 
     this.loading = true;
 
-    cli.get{{ .Entity.Name}}(req, (err, resp) => {
+    this.cli.get{{ .Entity.Name}}(req, (err, resp) => {
         if (err) {
             console.log(err);
+            this.snackbarShow(err.message, "error");
             return;
         }
         this.loading = false;
@@ -71,29 +132,42 @@ export default {
     });
   },
   methods: {
-      log: function(e) {
-          console.log(e)
-      },
-      update: function() {
-          let cli = new BreadClient("/api");
-          let req = new Update{{.Entity.Name}}Request();
-          req.set{{ ucfirst .Entity.Name}}(this.entity);
-          this.loading = true;
-          this.debug();
+        log: function(e) {
+            console.log(e)
+        },
+        update: function() {
+    
+            let req = new Update{{.Entity.Name}}Request();
+            req.set{{ ucfirst .Entity.Name}}(this.entity);
+            this.loading = true;
 
-           cli.update{{.Entity.Name}}(req, (err, resp) => {
-            if (err) {
-                console.log(err);
-                this.loading = false;
-                return;
-            }
-        });
-      },
-      debug: function() {
-          {{ range .Entity.Fields }}
-          console.log("{{.Property.Name}}", this.entity.get{{ ucfirst .Property.Name }}());
-          {{end}}
-      }
+            this.snackbarShow('{{ucfirst .Entity.Name}} Saved');
+            this.debug();
+
+            this.cli.update{{.Entity.Name}}(req, (err, resp) => {
+                if (err) {
+                    console.log(err);
+
+                    this.snackbarShow(err.message, "error");
+
+                    this.loading = false;
+                    return;
+                }
+            });
+        },
+        debug: function() {
+            {{ range .Entity.Fields }}
+            console.log("{{.Property.Name}}", this.entity.get{{ ucfirst .Property.Name }}());
+            {{end}}
+        },
+        snackbarShow: function(text, color) {
+            this.snackbar.show = true;
+            this.snackbar.color = color || 'info';
+            this.snackbar.text = text || 'something happened';
+        },
+        snackbarHide: function() {
+            this.snackbar.show = false
+        }
   }
 };
 </script>

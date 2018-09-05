@@ -69,13 +69,12 @@ func init() {
 func Upload(fileName string, fileContent []byte, options *UploadOptions) (string, string, error) {
 	directoryPath := path.Join(_baseUploadPath, options.Destination)
 	fileName = buildFileName(fileName, options.FileExt)
+	filePath := filepath.Join(directoryPath, fileName)
 
 	if err := os.MkdirAll(directoryPath, os.ModePerm); err != nil {
 		log.Printf("error creating directories: %v\n", err)
 		return filePath, fileName, err
 	}
-
-	filePath := filepath.Join(directoryPath, fileName)
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		if err := ioutil.WriteFile(filePath, fileContent, _fileMode); err != nil {
@@ -151,6 +150,14 @@ func Upload(fileName string, fileContent []byte, options *UploadOptions) (string
 	}
 
 	return filePath, fileName, nil
+}
+
+// Delete deletes one file
+func Delete(fp string) error {
+	if err := os.Remove(fp); err != nil {
+		return err
+	}
+	return nil
 }
 
 func buildFileName(oldFilename, newExt string) string {

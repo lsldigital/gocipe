@@ -6,6 +6,10 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity *{{.E
 		stmt *sql.Stmt
 	)
 
+	if entity == nil {
+		return moderrors.SaveEmptyEntityError
+	}
+
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
 			return errors.WithStack(err)
@@ -81,6 +85,10 @@ func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entit
 		stmt *sql.Stmt
 	)
 
+	if entity == nil {
+		return moderrors.SaveEmptyEntityError
+	}
+
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
 			return errors.WithStack(err)
@@ -123,16 +131,17 @@ func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entit
 		return errors.WithStack(err)
 	}
 
-	{{range .Related}}{{.}}
+	{{range $i, $r := .Related}}{{$r}}
 	if err != nil {
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
-	
+	{{if ne (plus1 $i) (len $.Related)}}
 	if err = util.CheckContext(ctx); err != nil {
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
+	{{end}}
 	{{end}}
 
 	{{if .HasPostHook}}
