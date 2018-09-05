@@ -13,11 +13,11 @@ service {{.Entity.Name}}Bread {
     {{- end}}
     {{if .Entity.Bread.Read}}
     // Get allows getting a single entity of type {{.Entity.Name}}
-    rpc Get(bread.GetRequest) returns (bread.GetResponse);
+    rpc Get(bread.GetRequest) returns (GetResponse);
     {{- end}}
     {{if .Entity.Bread.List}}
     // List allows listing all entity of type {{.Entity.Name}}
-    rpc List(bread.ListRequest) returns (bread.ListResponse);
+    rpc List(bread.ListRequest) returns (ListResponse);
     {{- end}}
     {{if .Entity.Bread.Update}}
     // Update allows updating one entity of type {{.Entity.Name}}
