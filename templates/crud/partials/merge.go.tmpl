@@ -15,7 +15,7 @@ func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity *{{.En
 			return errors.WithStack(err)
 		}
 		
-		tx, err = repo.DB.Begin()
+		tx, err = repo.db.Begin()
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -93,7 +93,7 @@ func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity
 			return errors.WithStack(err)
 		}
 		
-		tx, err = repo.DB.Begin()
+		tx, err = repo.db.Begin()
 		if err != nil {
 			return errors.WithStack(err)
 		}

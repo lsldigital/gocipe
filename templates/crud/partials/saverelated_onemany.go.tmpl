@@ -11,7 +11,7 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 			return errors.WithStack(err)
 		}
 
-		tx, err = repo.DB.Begin()
+		tx, err = repo.db.Begin()
 		if err != nil {
 			return errors.WithStack(err)
 		}

@@ -326,7 +326,7 @@ destination := path.Join(options.Entity, id, options.Field)
 		return errors.WithStack(err)
 	}
 
-	tx, err = models.{{.Entity.Name}}Repo.DB.Begin()
+	tx, err = models.StartTransaction()
 	if err != nil {
 		files.Delete(filePath)
 		return &res, err
