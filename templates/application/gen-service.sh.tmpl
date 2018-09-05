@@ -57,6 +57,25 @@ generate_files() {
                 --plugin="protoc-gen-ts=${d}node_modules/.bin/protoc-gen-ts" \
                 --js_out="import_style=commonjs,binary:${d}src/services" \
                 --ts_out="${d}src/services"
+
+            # proto/models.proto goes in "models" folder
+            protoc -I="${CURRENT_DIR}/proto" \
+                "${CURRENT_DIR}/proto/models.proto" \
+                --go_out=plugins=grpc:${GOPATH}/src
+        fi
+
+        if [ -f "${CURRENT_DIR}/proto/bread.proto" ]; then
+            echo "- generating JS services for bread"
+            protoc -I="${CURRENT_DIR}/proto" \
+                "${CURRENT_DIR}/proto/bread.proto" \
+                --plugin="protoc-gen-ts=${d}node_modules/.bin/protoc-gen-ts" \
+                --js_out="import_style=commonjs,binary:${d}src/services" \
+                --ts_out="${d}src/services"
+
+            # proto/bread.proto goes in "bread" folder
+            protoc -I="${CURRENT_DIR}/proto" \
+                "${CURRENT_DIR}/proto/bread.proto" \
+                --go_out=plugins=grpc:${GOPATH}/src
         fi
 
         # For each proto file (the argument)
@@ -73,11 +92,6 @@ generate_files() {
 
         echo -e ":: done\n"
     done
-
-    # proto/models.proto goes in "models" folder
-    protoc -I="${CURRENT_DIR}/proto" \
-        "${CURRENT_DIR}/proto/models.proto" \
-        --go_out=plugins=grpc:${GOPATH}/src
 
     # For each service proto file (the argument)
     for f in $@; do
