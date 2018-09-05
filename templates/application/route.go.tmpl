@@ -15,7 +15,7 @@ func newMuxRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
     {{end}}
 
-	if _, err := web.NewSubrouter(router, "/", "app", nil); err != nil {
+	if err := web.WebAppRouting(router, "/", "app", nil); err != nil {
 		logs := log.WithFields(log.Fields{
 			"error":  err,
 		})
