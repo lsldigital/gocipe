@@ -120,7 +120,7 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar.show" :right="true" :bottom="true" color="primary" :timeout="2000">
+    <v-snackbar v-model="snackbar.show" :top="true" color="primary" auto-height :timeout="2000">
       {{ printf `{{ snackbar.text }}` }}
       <v-btn dark flat @click="snackbarHide">
         <v-icon>close</v-icon>

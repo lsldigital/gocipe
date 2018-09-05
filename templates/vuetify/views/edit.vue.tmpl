@@ -47,7 +47,7 @@
             </v-card-actions>
         </v-card>
 
-        <v-snackbar v-model="snackbar.show" :right="true" :vertical="false" :bottom="true" :color="snackbar.color" :timeout="6000">
+        <v-snackbar v-model="snackbar.show" :top="true" auto-height :color="snackbar.color" :timeout="6000">
             {{ printf `{{ snackbar.text }}` }}
             <v-btn dark flat v-if="snackbar.color !== 'error'" :to="{name: '{{- plural (lower .Entity.Name) -}}_list', params : { track : id}}">
                 <v-icon>arrow_back</v-icon>
