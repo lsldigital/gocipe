@@ -248,7 +248,7 @@ export default {
       },
       deleteConfirm: function() {
 
-          let req = new Delete{{.Entity.Name}}Request();
+          let req = new DeleteRequest();
           req.setKey(this.token);
           req.setId(this.deleteItemId.id)
 
