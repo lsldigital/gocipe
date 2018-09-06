@@ -1,7 +1,7 @@
 package {{lower .Entity.Name}}
 
 {{range .FileFields}}
-const {{.}}UploadOpts = files.UploadOptions{
+var {{.}}UploadOpts = files.UploadOptions{
 	Destination:    "unsorted",
 	MediaPrefixURL: "media/",
 	FileExt:        "jpg",
