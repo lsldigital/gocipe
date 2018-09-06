@@ -61,6 +61,9 @@ func NewDateFilter(filter *Filter) (*models.Filter, error) {
 	return &models.Filter{Field: filter.Field, Operation: "LIKE", Value: value}, nil
 }
 
+// Service represents BREAD service implementation
+type Service struct {}
+
 {{range .Entities}}
 /**
  * [BEGIN] {{.Name}}
