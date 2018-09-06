@@ -104,7 +104,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	}{entities})
 	work.Waitgroup.Add(1)
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateBread", Code: code, Filename: "services/service_bread.gocipe.go"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateBread", Code: code, Filename: "services/bread/service_bread.gocipe.go"}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateBread", Error: fmt.Errorf("failed to execute template: %s", err)}
 	}

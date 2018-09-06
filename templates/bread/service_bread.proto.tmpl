@@ -61,8 +61,8 @@ service Bread {
     rpc Get{{.Name}}(GetRequest) returns (Get{{.Name}}Response);
     {{- end}}
     {{if .Bread.List}}
-    // List{{.Name}} allows listing all entity of type {{.Name}}
-    rpc List{{.Name}}(ListRequest) returns (List{{.Name}}Response);
+    // List{{plural .Name}} allows listing all entity of type {{.Name}}
+    rpc List{{plural .Name}}(ListRequest) returns (List{{plural .Name}}Response);
     {{- end}}
     {{if .Bread.Update}}
     // Update{{.Name}} allows updating one entity of type {{.Name}}
@@ -103,8 +103,8 @@ message Get{{.Name}}Response {
 }
 {{- end}}
 {{if .Bread.List}}
-// List{{.Name}}Response represents result to a ListRequest
-message List{{.Name}}Response {
+// List{{plural .Name}}Response represents result to a ListRequest
+message List{{plural .Name}}Response {
     repeated models.{{.Name}} {{plural .Name}} = 1;
 }
 {{- end}}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"regexp"
@@ -142,16 +143,17 @@ func init() {
 			}
 			return false
 		},
-		"getFileFields": func(entity Entity) string {
+		"getFileFields": func(entity Entity) []string {
 			var fileFields []string
 			for _, field := range entity.Fields {
 				switch field.EditWidget.Type {
 				case WidgetTypeFile, WidgetTypeImage:
-					fileFields = append(fileFields, field.Schema.Field)
+					tpl := strings.Join([]string{`case "%s":`, "options = &%s%sUploadOpts"}, "\n")
+					fileFields = append(fileFields, fmt.Sprintf(tpl, field.Schema.Field, entity.Name, field.Property.Name))
 				}
 			}
 
-			return `"` + strings.Join(fileFields, `", "`) + `"`
+			return fileFields
 		},
 	}
 }

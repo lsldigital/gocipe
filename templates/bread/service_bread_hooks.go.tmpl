@@ -50,13 +50,13 @@ func (s Service) {{lower .Entity.Name}}PostUpdate(ctx context.Context, req *Upda
 {{end}}
 {{if .PreDelete}}
 // {{lower .Entity.Name}}PreDelete is a hook that occurs before the elete operation in BREAD service. Returns stop (boolean) and error
-func (s Service) {{lower .Entity.Name}}PreDelete(ctx context.Context, tx *sql.Tx, req *DeleteRequest, res *Delete{{.Entity.Name}}Response, existing models.{{.Entity.Name}}, err error) (bool, error) {
+func (s Service) {{lower .Entity.Name}}PreDelete(ctx context.Context, tx *sql.Tx, req *DeleteRequest, res *DeleteResponse, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PostDelete}}
 // {{lower .Entity.Name}}PostDelete is a hook that occurs after the Delete operation in BREAD service. Returns stop (boolean) and error
-func (s Service) {{lower .Entity.Name}}PostDelete(ctx context.Context, req *DeleteRequest, res *Delete{{.Entity.Name}}Response, existing models.{{.Entity.Name}}, err error) (bool, error) {
+func (s Service) {{lower .Entity.Name}}PostDelete(ctx context.Context, req *DeleteRequest, res *DeleteResponse, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }
 {{end}}

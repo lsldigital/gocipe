@@ -6,8 +6,11 @@ import (
 )
 
 var (
+	// ErrorInvalidOperation indicates an error for an invalid operation
 	ErrorInvalidOperation   = errors.New("invalid filter operation specified")
+	// ErrorRequestEmpty indicates an error when empty request is received
 	ErrorRequestEmpty       = errors.New("request object is malformed")
+	// ErrorInvalidUploadField indicates an error for an unknown upload field
 	ErrorInvalidUploadField = errors.New("invalid upload field") 
 )
 
@@ -70,26 +73,26 @@ type Service struct {}
  */
 {{if .Bread.Create -}}
 // Create{{.Name}} allows creation of entity of type {{.Name}}
-func(s Service) Create{{.Name}}(ctx context.Context, req *CreateRequest) (*CreateResponse, error) {
+func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {
 	var (
 		err  error
 		tx   *sql.Tx
-		res  CreateResponse
+		res  Create{{.Name}}Response
 		{{if or .Bread.Hooks.PreCreate .Bread.Hooks.PostCreate -}}
 		stop bool
 		{{- end}}
 	)
 
 	if req == nil {
-		return nil, bread.ErrorRequestEmpty
+		return nil, ErrorRequestEmpty
 	}
 
 	if req.{{.Name}} == nil {
-		res.{{.Name}} = make({{.Name}})
+		res.{{.Name}} = new(models.{{.Name}})
 	} else {
 		res.{{.Name}} = req.{{.Name}}
 	}
-	tx, err = s.DB.Begin()
+	tx, err = models.StartTransaction()
 	{{if .Bread.Hooks.PreCreate}}
 	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, err)
 	if stop {
@@ -120,7 +123,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *CreateRequest) (*Creat
 
 {{if .Bread.Read -}}
 // Get{{.Name}} allows getting a single entity of type {{.Name}}
-func(s Service) Get{{.Name}}(ctx context.Context, req *bread.GetRequest) (*bread.GetResponse, error) {
+func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}}Response, error) {
 	var (
 		res  Get{{.Name}}Response
 		err  error
@@ -130,7 +133,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *bread.GetRequest) (*bread
 	)
 
 	if req == nil || req.ID == "" {
-		return nil, bread.ErrorRequestEmpty
+		return nil, ErrorRequestEmpty
 	}
 
 	{{if .Bread.Hooks.PreRead}}
@@ -159,7 +162,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *bread.GetRequest) (*bread
 
 {{if .Bread.List -}}
 // List{{plural .Name}} allows listing all entity of type {{.Name}}
-func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Name}}Request) (*List{{plural .Name}}Response, error) {
+func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*List{{plural .Name}}Response, error) {
 	var (
 		res  List{{plural .Name}}Response
 		err  error
@@ -170,7 +173,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 	)
 
 	if req == nil {
-		return nil, bread.ErrorRequestEmpty
+		return nil, ErrorRequestEmpty
 	}
 
 	{{if .Bread.Hooks.PreList -}}
@@ -191,7 +194,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 			switch req.Filters[i].Field {
 			{{if $filters.HasBool}}
 			case {{$filters.BoolFilters}}:
-				if f, err := bread.newBoolFilter(req.Filters[i]); err == nil {
+				if f, err := NewBoolFilter(req.Filters[i]); err == nil {
 					return nil, err
 				} else {
 					filters = append(filters, f)
@@ -199,7 +202,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 			{{end}}
 			{{if $filters.HasString}}
 			case {{$filters.StringFilters}}:
-				if f, err := bread.newStringFilter(req.Filters[i]); err == nil {
+				if f, err := NewStringFilter(req.Filters[i]); err == nil {
 					return nil, err
 				} else {
 					filters = append(filters, f)
@@ -207,7 +210,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Nam
 			{{end}}
 			{{if $filters.HasDate}}
 			case {{$filters.DateFilters}}:
-				if f, err := bread.newDateFilter(req.Filters[i]); err == nil {
+				if f, err := NewDateFilter(req.Filters[i]); err == nil {
 					return nil, err
 				} else {
 					filters = append(filters, f)
@@ -248,12 +251,8 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	)
 
 	if req == nil || req.{{.Name}} == nil {
-		return nil, bread.ErrorRequestEmpty
+		return nil, ErrorRequestEmpty
 	}
-
-	{{if or .Bread.Hooks.PreUpdate .Bread.Hooks.PostUpdate -}}
-	filespath := make(map[string]string)
-	{{- end}}
 
 	// existing records in DB
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)
@@ -268,7 +267,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	res.{{.Name}} = req.{{.Name}}
-	tx, err = s.DB.Begin()
+	tx, err = models.StartTransaction()
 
 	{{if .Bread.Hooks.PreUpdate -}}
 	stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
@@ -303,18 +302,18 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 
 {{if .Bread.Delete -}}
 // Delete{{.Name}} allows deleting an entity of type {{.Name}}
-func(s Service) Delete{{.Name}}(ctx context.Context, req *bread.Delete{{.Name}}Request) (*Delete{{.Name}}bread.DeleteResponse, error) {
+func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*DeleteResponse, error) {
 	var (
 		err  error
 		tx   *sql.Tx
-		res  Delete{{.Name}}Response
+		res  DeleteResponse
 		{{if or .Bread.Hooks.PreDelete .Bread.Hooks.PostDelete -}}
 		stop bool
 		{{- end}}
 	)
 
 	if req == nil || req.ID == "" {
-		return nil, bread.ErrorRequestEmpty
+		return nil, ErrorRequestEmpty
 	}
 
 	// existing records in DB
@@ -329,7 +328,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *bread.Delete{{.Name}}R
 		return nil, errors.WithStack(err)
 	}
 
-	tx, err = s.DB.Begin()
+	tx, err = models.StartTransaction()
 	{{if .Bread.Hooks.PreDelete}}
 	stop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
 	if stop {
@@ -356,19 +355,23 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *bread.Delete{{.Name}}R
 {{- end}}
 {{if hasFileFields .}}
 // Upload{{.Name}} Upload allows uploading of files for entity of type {{.Name}}
-func(s Service) Upload{{.Name}}(ctx context.Context, req *bread.UploadRequest) (*bread.UploadResponse, error) {
-destination := path.Join(options.Entity, id, options.Field)
-	var res bread.UploadResponse
+func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*UploadResponse, error) {
+	var (
+		res     UploadResponse
+		options *files.UploadOptions
+	)
 
 	if req == nil {
-		return &res, bread.ErrorRequestEmpty
+		return &res, ErrorRequestEmpty
 	}
 
 	switch req.Field {
-		case {{getFileFields .}}:
-			//do nothing
+		{{$EntityName := .Name}}
+		{{- range (getFileFields .)}}
+		{{.}}
+		{{- end}}
 		default:
-			return &res, bread.ErrorInvalidUploadField
+			return &res, ErrorInvalidUploadField
 	}
 
 	filePath, fileName, err := files.Upload(req.Filename, req.Content, options)
@@ -381,16 +384,16 @@ destination := path.Join(options.Entity, id, options.Field)
 
 	if err = util.CheckContext(ctx); err != nil {
 		files.Delete(filePath)
-		return errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
-	tx, err = models.StartTransaction()
+	tx, err := models.StartTransaction()
 	if err != nil {
 		files.Delete(filePath)
 		return &res, err
 	}
 	
-	stmt, err = tx.Prepare(`UPDATE {{.Table}} SET `+req.Field+` = $1 WHERE id = $2`)
+	stmt, err := tx.Prepare(`UPDATE {{.Table}} SET `+req.Field+` = $1 WHERE id = $2`)
 	if err != nil {
 		files.Delete(filePath)
 		return &res, errors.WithStack(err)
