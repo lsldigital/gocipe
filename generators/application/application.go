@@ -20,10 +20,10 @@ func Generate(recipe *util.Recipe, noSkip bool) {
 	output.GenerateAndSave("Scaffold", "application/makefile.tmpl", "Makefile", struct{ AppName string }{util.AppName}, true, noSkip)
 	output.GenerateAndSave("Scaffold", "application/main.go.tmpl", "main.go",
 		struct {
-			Bootstrap  util.BootstrapOpts
+			Recipe     *util.Recipe
 			ImportPath string
 		}{
-			Bootstrap:  recipe.Bootstrap,
+			Recipe:     recipe,
 			ImportPath: util.AppImportPath,
 		}, true, noSkip)
 	output.GenerateAndSave("Scaffold", "application/route.go.tmpl", "route.go", struct {

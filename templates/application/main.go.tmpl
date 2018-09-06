@@ -10,14 +10,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	"{{.ImportPath}}/app"
 	"{{.ImportPath}}/util/web"
-	{{- if .Bread.Generate}}
+	{{- if .Recipe.Bread.Generate}}
 	"{{.ImportPath}}/util/services/bread"
 	{{- end}}
 )
 
 //go:generate rice embed-go
 
-{{if not .Bootstrap.NoVersion}}
+{{if not .Recipe.Bootstrap.NoVersion}}
 // Versioning info
 var (
 	appVersion = "n/a"
@@ -27,7 +27,7 @@ var (
 {{end}}
 
 func main() {
-	{{- if not .Bootstrap.NoVersion}}
+	{{- if not .Recipe.Bootstrap.NoVersion}}
 	version := flag.Bool("v", false, "prints current app version")
 	flag.Parse()
 	if *version {
@@ -39,25 +39,25 @@ func main() {
 	config := app.Bootstrap()
 	models.Init(config.DB)
 	
-	{{if .Bootstrap.Assets}}
+	{{if .Recipe.Bootstrap.Assets}}
 	app.Assets = rice.MustFindBox("assets")
 	{{end}}
 
-	{{if not .Bootstrap.NoGRPCWeb}}
+	{{if not .Recipe.Bootstrap.NoGRPCWeb}}
 	g := grpc.NewServer()
-	{{- if .Bread.Generate}}
+	{{- if .Recipe.Bread.Generate}}
 	bread.RegisterBreadServer(g, &bread.Service{})
 	{{- end}}
 	ws := grpcweb.WrapServer(g)
 	var router *mux.Router
 	if app.Env == app.EnvironmentDev {
-		router = newDevRouter(nil)
+		router = newDevRouter({{if .Recipe.Bread.Generate}}ws{{else}}nil{{end}})
 	} else {
 		router = newProdRouter(ws)
 	}
 	{{end}}
 	
-	{{if not .Bootstrap.NoGRPCWire}}
+	{{if not .Recipe.Bootstrap.NoGRPCWire}}
 	go func() {
 		l, err := net.Listen("tcp", ":"+config.GRPCPort)
 		if err != nil {
