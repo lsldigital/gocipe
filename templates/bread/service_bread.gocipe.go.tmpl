@@ -357,8 +357,9 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 // Upload{{.Name}} Upload allows uploading of files for entity of type {{.Name}}
 func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*UploadResponse, error) {
 	var (
-		res     UploadResponse
-		options *files.UploadOptions
+		res       UploadResponse
+		options   *files.UploadOptions
+		fieldname string
 	)
 
 	if req == nil {
@@ -393,7 +394,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 		return &res, err
 	}
 	
-	stmt, err := tx.Prepare(`UPDATE {{.Table}} SET `+req.Field+` = $1 WHERE id = $2`)
+	stmt, err := tx.Prepare(`UPDATE {{.Table}} SET `+fieldname+` = $1 WHERE id = $2`)
 	if err != nil {
 		files.Delete(filePath)
 		return &res, errors.WithStack(err)
@@ -405,9 +406,10 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 		files.Delete(filePath)
 		return &res, errors.WithStack(err)
 	}
-	
+
+	err = tx.Commit()
 	res.URI = options.MediaPrefixURL + "/" + fileName
-	return &res, nil
+	return &res, err
 }
 {{- end}}
 /**

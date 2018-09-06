@@ -3,7 +3,7 @@ package bread
 {{range $.FileFields}}
 var {{.}}UploadOpts = files.UploadOptions{
 	Destination:    "unsorted",
-	MediaPrefixURL: "media/",
+	MediaPrefixURL: "/media/",
 	FileExt:        "jpg",
 	MaxSize:        files.NoLimit,
 	MinSize:        files.NoLimit,

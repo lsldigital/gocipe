@@ -148,8 +148,12 @@ func init() {
 			for _, field := range entity.Fields {
 				switch field.EditWidget.Type {
 				case WidgetTypeFile, WidgetTypeImage:
-					tpl := strings.Join([]string{`case "%s":`, "options = &%s%sUploadOpts"}, "\n")
-					fileFields = append(fileFields, fmt.Sprintf(tpl, field.Schema.Field, entity.Name, field.Property.Name))
+					tpl := strings.Join([]string{
+						`case "%s":`,
+						"options = &%s%sUploadOpts",
+						`fieldname = "%s"`,
+					}, "\n")
+					fileFields = append(fileFields, fmt.Sprintf(tpl, field.Property.Name, entity.Name, field.Property.Name, field.Schema.Field))
 				}
 			}
 
