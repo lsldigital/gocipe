@@ -8,6 +8,8 @@ import (
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"google.golang.org/grpc"
 	log "github.com/sirupsen/logrus"
+	"{{.ImportPath}}/app"
+	"{{.ImportPath}}/util/web"
 )
 
 //go:generate rice embed-go
@@ -42,7 +44,7 @@ func main() {
 	g := grpc.NewServer()
 	ws := grpcweb.WrapServer(g)
 	var router *mux.Router
-	if app.Environment == app.EnvironmentDev {
+	if app.Env == app.EnvironmentDev {
 		router = newDevRouter(nil)
 	} else {
 		router = newProdRouter(ws)

@@ -9,37 +9,16 @@ import (
 
 // Generate returns generated code for a BREAD service - Browse, Read, Edit, Add & Delete
 func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
+	var fileFields []string
 	for _, entity := range entities {
 		if !entity.Bread.Generate {
 			continue
 		}
 
-		var fileFields []string
 		for _, field := range entity.Fields {
 			switch field.EditWidget.Type {
 			case util.WidgetTypeFile, util.WidgetTypeImage:
 				fileFields = append(fileFields, fmt.Sprintf("%s%s", entity.Name, field.Property.Name))
-			}
-		}
-
-		hasFileFields := len(fileFields) > 0
-
-		if hasFileFields {
-			code, err := util.ExecuteTemplate("bread/bread_config_upload.gocipe.go.tmpl", struct {
-				Entity        util.Entity
-				FileFields    []string
-				HasFileFields bool
-			}{
-				Entity:        entity,
-				FileFields:    fileFields,
-				HasFileFields: hasFileFields,
-			})
-
-			work.Waitgroup.Add(1)
-			if err == nil {
-				work.Done <- util.GeneratedCode{Generator: "GenerateBread Upload", Code: code, Filename: "services/bread/service_bread_config_upload.gocipe.go"}
-			} else {
-				work.Done <- util.GeneratedCode{Generator: "GenerateBread Upload", Error: fmt.Errorf("failed to execute template: %s", err)}
 			}
 		}
 
@@ -85,7 +64,26 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 				work.Done <- util.GeneratedCode{Generator: "GenerateBreadHooks", Error: err}
 			}
 		}
+	}
 
+	hasFileFields := len(fileFields) > 0
+	if hasFileFields {
+		code, err := util.ExecuteTemplate("bread/bread_config_upload.gocipe.go.tmpl", struct {
+			Entities      map[string]util.Entity
+			FileFields    []string
+			HasFileFields bool
+		}{
+			Entities:      entities,
+			FileFields:    fileFields,
+			HasFileFields: hasFileFields,
+		})
+
+		work.Waitgroup.Add(1)
+		if err == nil {
+			work.Done <- util.GeneratedCode{Generator: "GenerateBread Upload", Code: code, Filename: "services/bread/service_bread_config_upload.gocipe.go"}
+		} else {
+			work.Done <- util.GeneratedCode{Generator: "GenerateBread Upload", Error: fmt.Errorf("failed to execute template: %s", err)}
+		}
 	}
 
 	// generate bread.proto

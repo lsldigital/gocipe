@@ -1,6 +1,6 @@
-package {{lower .Entity.Name}}
+package bread
 
-{{range .FileFields}}
+{{range $.FileFields}}
 var {{.}}UploadOpts = files.UploadOptions{
 	Destination:    "unsorted",
 	MediaPrefixURL: "media/",

@@ -17,8 +17,15 @@ func Generate(recipe *util.Recipe, noSkip bool) {
 	output.GenerateAndSave("Scaffold", "", "assets/templates/.gitkeep", "Place templates in this folder.", true, noSkip)
 	output.GenerateAndSave("Scaffold", "", "assets/web/app/.gitkeep", "Place web assets in this folder.", true, noSkip)
 	output.GenerateAndSave("Scaffold", "application/gen-service.sh.tmpl", "gen-service.sh", struct{ GeneratePath string }{GeneratePath: "$GOPATH" + strings.TrimPrefix(util.WorkingDir, os.Getenv("GOPATH")) + "/services"}, true, noSkip)
-	output.GenerateAndSave("Scaffold", "application/main.go.tmpl", "main.go", struct{ Bootstrap util.BootstrapOpts }{recipe.Bootstrap}, true, noSkip)
 	output.GenerateAndSave("Scaffold", "application/makefile.tmpl", "Makefile", struct{ AppName string }{util.AppName}, true, noSkip)
+	output.GenerateAndSave("Scaffold", "application/main.go.tmpl", "main.go",
+		struct {
+			Bootstrap  util.BootstrapOpts
+			ImportPath string
+		}{
+			Bootstrap:  recipe.Bootstrap,
+			ImportPath: util.AppImportPath,
+		}, true, noSkip)
 	output.GenerateAndSave("Scaffold", "application/route.go.tmpl", "route.go", struct {
 		Bootstrap util.BootstrapOpts
 		Bread     util.BreadOpts
