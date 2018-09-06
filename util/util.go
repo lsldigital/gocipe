@@ -133,6 +133,26 @@ func init() {
 			}
 			return "", err
 		},
+		"hasFileFields": func(entity Entity) bool {
+			for _, field := range entity.Fields {
+				switch field.EditWidget.Type {
+				case WidgetTypeFile, WidgetTypeImage:
+					return true
+				}
+			}
+			return false
+		},
+		"getFileFields": func(entity Entity) string {
+			var fileFields []string
+			for _, field := range entity.Fields {
+				switch field.EditWidget.Type {
+				case WidgetTypeFile, WidgetTypeImage:
+					fileFields = append(fileFields, field.Schema.Field)
+				}
+			}
+
+			return `"` + strings.Join(fileFields, `", "`) + `"`
+		},
 	}
 }
 

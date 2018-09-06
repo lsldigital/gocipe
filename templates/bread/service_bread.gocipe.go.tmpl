@@ -1,0 +1,410 @@
+package bread
+
+import (
+	"github.com/pkg/errors"
+	"golang.org/x/net/context"
+)
+
+var (
+	ErrorInvalidOperation   = errors.New("invalid filter operation specified")
+	ErrorRequestEmpty       = errors.New("request object is malformed")
+	ErrorInvalidUploadField = errors.New("invalid upload field") 
+)
+
+// NewBoolFilter returns a new filter for boolean types
+func NewBoolFilter(filter *Filter) (*models.Filter, error) {
+	value, err := strconv.ParseBool(filter.Value); 
+	
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.Filter{Field: filter.Field, Operation: "=", Value: value}, nil
+}
+
+// NewStringFilter returns a new filter for text values
+func NewStringFilter(filter *Filter) (*models.Filter, error) {
+	switch filter.Operation {
+	case "=":
+		return &models.Filter{Field: filter.Field, Operation: "=", Value: filter.Value}, nil
+	case "~":
+		return &models.Filter{Field: filter.Field, Operation: "LIKE", Value: filter.Value}, nil
+	}
+
+	return nil, ErrorInvalidOperation
+}
+
+// NewDateFilter returns a new filter to handle dates
+func NewDateFilter(filter *Filter) (*models.Filter, error) {
+	var (
+		value time.Time
+		err   error
+	)
+
+	if value, err = time.Parse(time.RFC3339, filter.Value); err != nil {
+		return nil, err
+	}
+
+	switch filter.Operation {
+	case "=":
+		return &models.Filter{Field: filter.Field, Operation: "=", Value: value}, nil
+	case ">":
+		return &models.Filter{Field: filter.Field, Operation: ">", Value: value}, nil
+	case ">=":
+		return &models.Filter{Field: filter.Field, Operation: ">=", Value: value}, nil
+	case "<":
+		return &models.Filter{Field: filter.Field, Operation: "<", Value: value}, nil
+	case "<=":
+		return &models.Filter{Field: filter.Field, Operation: "<=", Value: value}, nil
+	}
+
+	return &models.Filter{Field: filter.Field, Operation: "LIKE", Value: value}, nil
+}
+
+{{range .Entities}}
+/**
+ * [BEGIN] {{.Name}}
+ */
+{{if .Bread.Create -}}
+// Create{{.Name}} allows creation of entity of type {{.Name}}
+func(s Service) Create{{.Name}}(ctx context.Context, req *CreateRequest) (*CreateResponse, error) {
+	var (
+		err  error
+		tx   *sql.Tx
+		res  CreateResponse
+		{{if or .Bread.Hooks.PreCreate .Bread.Hooks.PostCreate -}}
+		stop bool
+		{{- end}}
+	)
+
+	if req == nil {
+		return nil, bread.ErrorRequestEmpty
+	}
+
+	if req.{{.Name}} == nil {
+		res.{{.Name}} = make({{.Name}})
+	} else {
+		res.{{.Name}} = req.{{.Name}}
+	}
+	tx, err = s.DB.Begin()
+	{{if .Bread.Hooks.PreCreate}}
+	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	err = models.{{.Name}}Repo.Save(ctx, res.{{.Name}}, tx, true)
+
+	{{if .Bread.Hooks.PostCreate -}}
+	stop, err = s.{{lower .Name}}PostCreate(ctx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &res, errors.WithStack(err)
+}
+{{- end}}
+
+{{if .Bread.Read -}}
+// Get{{.Name}} allows getting a single entity of type {{.Name}}
+func(s Service) Get{{.Name}}(ctx context.Context, req *bread.GetRequest) (*bread.GetResponse, error) {
+	var (
+		res  Get{{.Name}}Response
+		err  error
+		{{if or .Bread.Hooks.PreRead .Bread.Hooks.PostRead -}}
+		stop bool
+		{{- end}}
+	)
+
+	if req == nil || req.ID == "" {
+		return nil, bread.ErrorRequestEmpty
+	}
+
+	{{if .Bread.Hooks.PreRead}}
+	stop, err = s.{{lower .Name}}PreRead(ctx, req, &res)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	res.{{.Name}}, err = models.{{.Name}}Repo.GetWithRel(ctx, req.ID)
+
+	{{if .Bread.Hooks.PostRead -}}
+	stop, err = s.{{lower .Name}}PostRead(ctx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &res, nil
+}
+{{- end}}
+
+{{if .Bread.List -}}
+// List{{plural .Name}} allows listing all entity of type {{.Name}}
+func(s Service) List{{plural .Name}}(ctx context.Context, req *List{{plural .Name}}Request) (*List{{plural .Name}}Response, error) {
+	var (
+		res  List{{plural .Name}}Response
+		err  error
+		{{if or .Bread.Hooks.PreList .Bread.Hooks.PostList -}}
+		stop bool
+		{{- end}}
+		filters []*models.Filter
+	)
+
+	if req == nil {
+		return nil, bread.ErrorRequestEmpty
+	}
+
+	{{if .Bread.Hooks.PreList -}}
+	stop, err = s.{{lower .Name}}PreList(ctx, req, &res)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if req.ListOpts == nil {
+		req.ListOpts = &models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit}
+	}
+
+	{{$filters := getBreadFilters .Fields }}
+	{{if (or $filters.HasBool $filters.HasString $filters.HasDate)}}
+	if req.Filters != nil {
+		for i := range req.Filters {
+			switch req.Filters[i].Field {
+			{{if $filters.HasBool}}
+			case {{$filters.BoolFilters}}:
+				if f, err := bread.newBoolFilter(req.Filters[i]); err == nil {
+					return nil, err
+				} else {
+					filters = append(filters, f)
+				}
+			{{end}}
+			{{if $filters.HasString}}
+			case {{$filters.StringFilters}}:
+				if f, err := bread.newStringFilter(req.Filters[i]); err == nil {
+					return nil, err
+				} else {
+					filters = append(filters, f)
+				}
+			{{end}}
+			{{if $filters.HasDate}}
+			case {{$filters.DateFilters}}:
+				if f, err := bread.newDateFilter(req.Filters[i]); err == nil {
+					return nil, err
+				} else {
+					filters = append(filters, f)
+				}
+			{{end}}
+			}
+		}
+	}
+	{{end}}
+
+	res.{{plural .Name}}, err = models.{{.Name}}Repo.ListWithRel(ctx, req.ListOpts, filters...)
+
+	{{if .Bread.Hooks.PostList -}}
+	stop, err = s.{{lower .Name}}PostList(ctx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+	
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &res, nil
+}
+{{- end}}
+
+{{if .Bread.Update -}}
+// Update{{.Name}} allows updating one entity of type {{.Name}}
+func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request) (*Update{{.Name}}Response, error) {
+	var (
+		err  error
+		tx   *sql.Tx
+		res  Update{{.Name}}Response
+		{{if or .Bread.Hooks.PreUpdate .Bread.Hooks.PostUpdate -}}
+		stop bool
+		{{- end}}
+	)
+
+	if req == nil || req.{{.Name}} == nil {
+		return nil, bread.ErrorRequestEmpty
+	}
+
+	{{if or .Bread.Hooks.PreUpdate .Bread.Hooks.PostUpdate -}}
+	filespath := make(map[string]string)
+	{{- end}}
+
+	// existing records in DB
+	existing, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)
+	if err != nil {
+		{{if .Bread.Hooks.PreUpdate -}}
+		stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
+		if stop {
+			return &res, nil
+		}
+		{{end}}
+		return nil, errors.WithStack(err)
+	}
+
+	res.{{.Name}} = req.{{.Name}}
+	tx, err = s.DB.Begin()
+
+	{{if .Bread.Hooks.PreUpdate -}}
+	stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	err = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	{{if .Bread.Hooks.PostUpdate -}}
+	stop, err = s.{{lower .Name}}PostUpdate(ctx, req, &res, *existing, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &res, nil
+}
+{{- end}}
+
+{{if .Bread.Delete -}}
+// Delete{{.Name}} allows deleting an entity of type {{.Name}}
+func(s Service) Delete{{.Name}}(ctx context.Context, req *bread.Delete{{.Name}}Request) (*Delete{{.Name}}bread.DeleteResponse, error) {
+	var (
+		err  error
+		tx   *sql.Tx
+		res  Delete{{.Name}}Response
+		{{if or .Bread.Hooks.PreDelete .Bread.Hooks.PostDelete -}}
+		stop bool
+		{{- end}}
+	)
+
+	if req == nil || req.ID == "" {
+		return nil, bread.ErrorRequestEmpty
+	}
+
+	// existing records in DB
+	existing, err := models.{{.Name}}Repo.Get(ctx, req.ID)
+	if err != nil {
+		{{if .Bread.Hooks.PreDelete -}}
+		stop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
+		if stop {
+			return &res, nil
+		}
+		{{end}}
+		return nil, errors.WithStack(err)
+	}
+
+	tx, err = s.DB.Begin()
+	{{if .Bread.Hooks.PreDelete}}
+	stop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
+	if stop {
+		return &res, nil
+	}
+	{{end}}
+	err = models.{{.Name}}Repo.Delete(ctx, existing, tx, true)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	{{if .Bread.Hooks.PostDelete}}
+	stop, err = s.{{lower .Name}}PostDelete(ctx, req, &res, *existing, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+	
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &res, nil
+}
+{{- end}}
+{{if hasFileFields .}}
+// Upload{{.Name}} Upload allows uploading of files for entity of type {{.Name}}
+func(s Service) Upload{{.Name}}(ctx context.Context, req *bread.UploadRequest) (*bread.UploadResponse, error) {
+destination := path.Join(options.Entity, id, options.Field)
+	var res bread.UploadResponse
+
+	if req == nil {
+		return &res, bread.ErrorRequestEmpty
+	}
+
+	switch req.Field {
+		case {{getFileFields .}}:
+			//do nothing
+		default:
+			return &res, bread.ErrorInvalidUploadField
+	}
+
+	filePath, fileName, err := files.Upload(req.Filename, req.Content, options)
+	if err != nil {
+		if filePath != "" {
+			files.Delete(filePath)
+		}
+		return &res, nil
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		files.Delete(filePath)
+		return errors.WithStack(err)
+	}
+
+	tx, err = models.StartTransaction()
+	if err != nil {
+		files.Delete(filePath)
+		return &res, err
+	}
+	
+	stmt, err = tx.Prepare(`UPDATE {{.Table}} SET `+req.Field+` = $1 WHERE id = $2`)
+	if err != nil {
+		files.Delete(filePath)
+		return &res, errors.WithStack(err)
+	}
+
+	_, err = stmt.Exec(fileName, req.ID)
+	if err != nil {
+		tx.Rollback()
+		files.Delete(filePath)
+		return &res, errors.WithStack(err)
+	}
+	
+	res.URI = options.MediaPrefixURL + "/" + fileName
+	return &res, nil
+}
+{{- end}}
+/**
+ * [END] {{.Name}}
+ */
+{{end}}

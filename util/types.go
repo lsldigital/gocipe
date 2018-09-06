@@ -11,7 +11,7 @@ const (
 	WidgetTypeFile = "file"
 
 	// WidgetTypeImage represents widget of type image
-	WidgetTypeImage = "image"
+	WidgetTypeImage = "imagefield"
 
 	// WidgetTypeNumber represents widget of type number
 	WidgetTypeNumber = "number"

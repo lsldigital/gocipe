@@ -46,3 +46,80 @@ message UploadRequest {
 message UploadResponse {
     string URI = 1;
 }
+
+service Bread {
+{{- range .Entities}}
+/**
+ * [BEGIN SERVICE] {{.Name}}
+ */
+    {{- if .Bread.Create}}
+    // Create{{.Name}} allows creation of entity of type {{.Name}}
+    rpc Create{{.Name}}(Create{{.Name}}Request) returns (Create{{.Name}}Response);
+    {{- end}}
+    {{if .Bread.Read}}
+    // Get{{.Name}} allows getting a single entity of type {{.Name}}
+    rpc Get{{.Name}}(GetRequest) returns (Get{{.Name}}Response);
+    {{- end}}
+    {{if .Bread.List}}
+    // List{{.Name}} allows listing all entity of type {{.Name}}
+    rpc List{{.Name}}(ListRequest) returns (List{{.Name}}Response);
+    {{- end}}
+    {{if .Bread.Update}}
+    // Update{{.Name}} allows updating one entity of type {{.Name}}
+    rpc Update{{.Name}}(Update{{.Name}}Request) returns (Update{{.Name}}Response);
+    {{- end}}
+    {{if .Bread.Delete}}
+    // Delete{{.Name}} allows deleting an entity of type {{.Name}}
+    rpc Delete{{.Name}}(DeleteRequest) returns (DeleteResponse);
+    {{- end}}
+    {{- if hasFileFields .}}
+    // Upload{{.Name}} allows uploading of files for entity of type {{.Name}}
+    rpc Upload{{.Name}}(UploadRequest) returns (UploadResponse);
+    {{end}}
+/**
+ * [END SERVICES] {{.Name}}
+ */
+{{end}}
+}
+{{- range .Entities}}
+/**
+ * [BEGIN MESSAGES] {{.Name}}
+ */
+{{if .Bread.Create}}
+// Create{{.Name}}Request represents a request to allow creation of entity of type {{.Name}}
+message Create{{.Name}}Request {
+    string Key = 1;
+    models.{{.Name}} {{.Name}} = 2;
+}
+// Create{{.Name}}Response represents result to a Create{{.Name}}Request
+message Create{{.Name}}Response {
+    models.{{.Name}} {{.Name}} = 1;
+}
+{{- end}}
+{{if .Bread.Read}}
+// Get{{.Name}}Response represents result to a GetRequest
+message Get{{.Name}}Response {
+    models.{{.Name}} {{.Name}} = 1;
+}
+{{- end}}
+{{if .Bread.List}}
+// List{{.Name}}Response represents result to a ListRequest
+message List{{.Name}}Response {
+    repeated models.{{.Name}} {{plural .Name}} = 1;
+}
+{{- end}}
+{{if .Bread.Update}}
+// Update{{.Name}}Request represents a request to allow updating one entity of type {{.Name}}
+message Update{{.Name}}Request {
+    string Key = 1;
+    models.{{.Name}} {{.Name}} = 2;
+}
+// Update{{.Name}}Response represents result to an Update{{.Name}}Request
+message Update{{.Name}}Response {
+    models.{{.Name}} {{.Name}} = 1;
+}
+{{- end}}
+/**
+ * [END MESSAGES] {{.Name}}
+ */
+{{end}}

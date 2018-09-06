@@ -1,9 +1,9 @@
 package {{lower .Entity.Name}}
 
 {{range .FileFields}}
-const {{.}UploadOpts = files.UploadOptions{
-	Destination     "unsorted"
-	MediaPrefixURL: "media/"
+const {{.}}UploadOpts = files.UploadOptions{
+	Destination:    "unsorted",
+	MediaPrefixURL: "media/",
 	FileExt:        "jpg",
 	MaxSize:        files.NoLimit,
 	MinSize:        files.NoLimit,
