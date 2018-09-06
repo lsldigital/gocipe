@@ -62,7 +62,7 @@
 
 <script>
 import { BreadClient } from "@/services/service_bread_pb_service";
-import { Get{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
+import { GetRequest } from "@/services/service_bread_pb";
 import { Update{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import gTextfield from "@/widgets/edit/gTextfield.vue";
 import gImagefield from "@/widgets/edit/gImagefield.vue";
@@ -116,7 +116,7 @@ export default {
   },
   mounted() {
     this.id = this.$route.params.id;
-    let req = new Get{{ .Entity.Name}}Request();
+    let req = new GetRequest();
     req.setId(this.id);
 
     this.loading = true;

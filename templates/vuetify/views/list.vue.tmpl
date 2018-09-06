@@ -131,9 +131,9 @@
 
 <script>
 import { BreadClient } from "@/services/service_bread_pb_service";
-import { List{{plural .Entity.Name}}Request } from "@/services/service_bread_pb";
+import { ListRequest } from "@/services/service_bread_pb";
 import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
-import { Delete{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
+import { DeleteRequest } from "@/services/service_bread_pb";
 import { mapGetters } from 'vuex';
 import gSelect from "@/widgets/list/gSelect.vue";
 import gToggle from "@/widgets/list/gToggle.vue";
@@ -190,7 +190,7 @@ export default {
       },
 
       getList: function(){
-        let req = new List{{plural .Entity.Name}}Request();
+        let req = new ListRequest();
         req.setKey(this.token);
 
         this.cli.list{{plural .Entity.Name}}(req, (err, resp) => {
