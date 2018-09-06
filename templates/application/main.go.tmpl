@@ -41,9 +41,12 @@ func main() {
 	{{if not .Bootstrap.NoGRPCWeb}}
 	g := grpc.NewServer()
 	ws := grpcweb.WrapServer(g)
-	router := newProdRouter(ws)
-	{{else}}
-	router := newDevRouter(nil)
+	var router *mux.Router
+	if app.Environment == app.EnvironmentDev {
+		router = newDevRouter(nil)
+	} else {
+		router = newProdRouter(ws)
+	}
 	{{end}}
 	
 	{{if not .Bootstrap.NoGRPCWire}}
