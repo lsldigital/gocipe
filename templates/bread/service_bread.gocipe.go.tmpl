@@ -92,7 +92,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	} else {
 		res.{{.Name}} = req.{{.Name}}
 	}
-	tx, err = models.StartTransaction()
+	tx, err = models.StartTransaction(ctx)
 	{{if .Bread.Hooks.PreCreate}}
 	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, err)
 	if stop {
@@ -267,7 +267,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	res.{{.Name}} = req.{{.Name}}
-	tx, err = models.StartTransaction()
+	tx, err = models.StartTransaction(ctx)
 
 	{{if .Bread.Hooks.PreUpdate -}}
 	stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
@@ -328,7 +328,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 		return nil, errors.WithStack(err)
 	}
 
-	tx, err = models.StartTransaction()
+	tx, err = models.StartTransaction(ctx)
 	{{if .Bread.Hooks.PreDelete}}
 	stop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
 	if stop {
@@ -388,7 +388,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 		return &res, errors.WithStack(err)
 	}
 
-	tx, err := models.StartTransaction()
+	tx, err := models.StartTransaction(ctx)
 	if err != nil {
 		files.Delete(filePath)
 		return &res, err

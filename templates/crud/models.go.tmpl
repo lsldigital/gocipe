@@ -38,8 +38,8 @@ func Init(database *sql.DB) {
 }
 
 // StartTransaction initiates a database transaction
-func StartTransaction() (*sql.Tx, error) {
-	return db.Begin()
+func StartTransaction(ctx context.Context) (*sql.Tx, error) {
+	return db.Begin(ctx, nil)
 }
 
 {{- $Entities := .Entities -}}
