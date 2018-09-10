@@ -415,25 +415,25 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 
 // Lookup{{.Name}} lookup allows looking up an entity by its label for entity of type {{.Name}}
 func(s Service) Lookup{{.Name}}(ctx context.Context, req *LookupRequest) (*LookupResponse, error) {
-	var (
-		list []*Sponsor
-		err  error
-		rows *sql.Rows
-	)
-
-	rows, err = repo.db.Query(`SELECT id, t."TODO" FROM {{.Table}} t WHERE `, values...)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-	for rows.Next() {
-		if err = util.CheckContext(ctx); err != nil {
-			return nil, err
-		}
-
-		//TODO
-	}
+	//var (
+	//	list []*Sponsor
+	//	err  error
+	//	rows *sql.Rows
+	//)
+    //
+	//rows, err = repo.db.Query(`SELECT id, t."TODO" FROM {{.Table}} t WHERE `, values...)
+	//if err != nil {
+	//	return nil, err
+	//}
+    //
+	//defer rows.Close()
+	//for rows.Next() {
+	//	if err = util.CheckContext(ctx); err != nil {
+	//		return nil, err
+	//	}
+    //
+	//	//TODO
+	//}
 
 	return nil, nil
 }
