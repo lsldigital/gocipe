@@ -375,40 +375,40 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 			return &res, ErrorInvalidUploadField
 	}
 
-	filePath, fileName, err := files.Upload(req.Filename, req.Content, options)
+	fileDiskPath, filePath, err := files.Upload(req.Filename, req.Content, options)
 	if err != nil {
-		if filePath != "" {
-			files.Delete(filePath)
+		if fileDiskPath != "" {
+			files.Delete(fileDiskPath)
 		}
 		return &res, nil
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		files.Delete(filePath)
+		files.Delete(fileDiskPath)
 		return &res, errors.WithStack(err)
 	}
 
 	tx, err := models.StartTransaction(ctx)
 	if err != nil {
-		files.Delete(filePath)
+		files.Delete(fileDiskPath)
 		return &res, err
 	}
 	
 	stmt, err := tx.Prepare(`UPDATE {{.Table}} SET `+fieldname+` = $1 WHERE id = $2`)
 	if err != nil {
-		files.Delete(filePath)
+		files.Delete(fileDiskPath)
 		return &res, errors.WithStack(err)
 	}
 
-	_, err = stmt.Exec(fileName, req.ID)
+	_, err = stmt.Exec(filePath, req.ID)
 	if err != nil {
 		tx.Rollback()
-		files.Delete(filePath)
+		files.Delete(fileDiskPath)
 		return &res, errors.WithStack(err)
 	}
 
 	err = tx.Commit()
-	res.URI = options.MediaPrefixURL + "/" + fileName
+	res.URI = filePath
 	return &res, err
 }
 {{- end}}

@@ -2,6 +2,7 @@ package bread
 
 {{range .FileFields}}
 var {{.Entity}}{{.Field}}UploadOpts = files.UploadOptions{
+	Dir:			"media",
 	Destination:    "{{lower .Entity}}/{{lower .Field}}",
 	MediaPrefixURL: "/media/",
 	FileExt:        "jpg",
