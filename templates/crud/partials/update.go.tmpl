@@ -15,7 +15,7 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity *{{.E
 			return errors.WithStack(err)
 		}
 
-		tx, err = models.StartTransaction(ctx, nil)
+		tx, err = StartTransaction(ctx)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -37,7 +37,7 @@ func (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity *{{.E
 		return errors.WithStack(err)
 	}
 
-	if err = repo.preSave(ctx, tx, models.OperationUpdate, entity); err != nil {
+	if err = repo.preSave(ctx, tx, models.Update, entity); err != nil {
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -94,7 +94,7 @@ func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entit
 			return errors.WithStack(err)
 		}
 
-		tx, err = models.StartTransaction(ctx, nil)
+		tx, err = StartTransaction(ctx)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -116,7 +116,7 @@ func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entit
 		return errors.WithStack(err)
 	}
 
-    if err = repo.preSave(ctx, tx, models.OperationUpdate, entity); err != nil {
+    if err = repo.preSave(ctx, tx, models.Update, entity); err != nil {
 		tx.Rollback()
         return errors.WithStack(err)
 	}

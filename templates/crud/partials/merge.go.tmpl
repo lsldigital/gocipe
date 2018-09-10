@@ -15,7 +15,7 @@ func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity *{{.En
 			return errors.WithStack(err)
 		}
 		
-		tx, err = models.StartTransaction(ctx, nil)
+		tx, err = StartTransaction(ctx)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -38,7 +38,7 @@ func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity *{{.En
 		return errors.WithStack(err)
 	}
 	{{if .HasPreHook}}
-    if err = repo.preSave(ctx, tx, models.OperationMerge, entity); err != nil {
+    if err = repo.preSave(ctx, tx, models.Merge, entity); err != nil {
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -93,7 +93,7 @@ func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity
 			return errors.WithStack(err)
 		}
 		
-		tx, err = models.StartTransaction(ctx, nil)
+		tx, err = StartTransaction(ctx)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -116,7 +116,7 @@ func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity
 		return errors.WithStack(err)
 	}
 	{{if .HasPreHook}}
-    if err = repo.preSave(ctx, tx, models.OperationMerge, entity); err != nil {
+    if err = repo.preSave(ctx, tx, models.Merge, entity); err != nil {
 		tx.Rollback()
 		return errors.WithStack(err)
 	}

@@ -15,7 +15,7 @@ func crudPostGet(entity *{{.Entity.Name}}) error {
 {{end}}
 
 {{if .Hooks.PreList}}
-func crudPreList(filters []models.ListFilter) ([]models.ListFilter, error) {
+func crudPreList(filters []models.ListFilter) ([]ListFilter, error) {
 	return filters, nil
 }
 {{end}}

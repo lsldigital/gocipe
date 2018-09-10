@@ -224,7 +224,6 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 	if importUUID {
 		code.Imports = append(code.Imports, `uuid "github.com/satori/go.uuid"`)
 	}
-	code.Imports = append(code.Imports, `"`+util.AppImportPath+`/models"`)
 
 	return code, err
 }

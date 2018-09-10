@@ -14,7 +14,7 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, tx *sql.
 			return errors.WithStack(err)
 		}
 		
-		tx, err = models.StartTransaction(ctx, nil)
+		tx, err = StartTransaction(ctx)
 		if err != nil {
 			return errors.WithStack(err)
 		}
