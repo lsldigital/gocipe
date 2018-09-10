@@ -16,6 +16,7 @@ type fileField struct {
 func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	var fileFields []fileField
 	entitiesFileFields := make(map[string][]fileField)
+	entitiesLabelField := make(map[string]string)
 	for key, entity := range entities {
 		if !entity.Bread.Generate {
 			continue
@@ -27,6 +28,12 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 				fileFields = append(fileFields, fileField{Entity: entity.Name, Field: field.Property.Name})
 				entitiesFileFields[key] = append(entitiesFileFields[key], fileField{Entity: entity.Name, Field: field.Property.Name})
 			}
+		}
+
+		if entity.LabelField == "" {
+			entitiesLabelField[key] = "ID"
+		} else {
+			entitiesLabelField[key] = entity.LabelField
 		}
 
 		if hasHook(entity) {
@@ -105,7 +112,8 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	code, err := util.ExecuteTemplate("bread/service_bread.gocipe.go.tmpl", struct {
 		Entities           map[string]util.Entity
 		EntitiesFileFields map[string][]fileField
-	}{entities, entitiesFileFields})
+		EntitiesLabelField map[string]string
+	}{entities, entitiesFileFields, entitiesLabelField})
 	work.Waitgroup.Add(1)
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateBread", Code: code, Filename: "services/bread/service_bread.gocipe.go"}

@@ -424,7 +424,7 @@ func(s Service) Lookup{{.Name}}(ctx context.Context, req *LookupRequest) (*Looku
 	//	rows *sql.Rows
 	//)
     //
-	//rows, err = repo.db.Query(`SELECT id, t."TODO" FROM {{.Table}} t WHERE `, values...)
+	//rows, err = s.repo.db.Query(`SELECT id, t."{{index $.EntitiesLabelField .Name}}" FROM {{.Table}} t WHERE t."{{index $.EntitiesLabelField .Name}MAKE}" LIKE $1`, req.Term+"%")
 	//if err != nil {
 	//	return nil, err
 	//}
