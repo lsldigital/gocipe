@@ -173,7 +173,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 	)
 
 	if req == nil {
-		return nil, ErrorRequestEmpty
+		return &res, ErrorRequestEmpty
 	}
 
 	{{if .Bread.Hooks.PreList -}}
@@ -195,26 +195,23 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 			{{if $filters.HasBool}}
 			case {{$filters.BoolFilters}}:
 				if f, err := NewBoolFilter(req.Filters[i]); err == nil {
-					return nil, err
-				} else {
-					filters = append(filters, f)
+					return &res, err
 				}
+				filters = append(filters, f)
 			{{end}}
 			{{if $filters.HasString}}
 			case {{$filters.StringFilters}}:
 				if f, err := NewStringFilter(req.Filters[i]); err == nil {
-					return nil, err
-				} else {
-					filters = append(filters, f)
+					return &res, err
 				}
+				filters = append(filters, f)
 			{{end}}
 			{{if $filters.HasDate}}
 			case {{$filters.DateFilters}}:
 				if f, err := NewDateFilter(req.Filters[i]); err == nil {
-					return nil, err
-				} else {
-					filters = append(filters, f)
+					return &res, err
 				}
+				filters = append(filters, f)
 			{{end}}
 			}
 		}
@@ -231,7 +228,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 	{{- end}}
 	
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
 	return &res, nil
