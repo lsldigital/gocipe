@@ -31,7 +31,7 @@ type Filter struct {
 
 // Init is responsible to initialize all repositories
 func Init() {
-	{{range .Entities -}}
+	{{range .Entities }}
 	{{.Name}}Repo = {{.Name}}Repositorium{}
 	{{- end}}
 }
