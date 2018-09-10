@@ -11,7 +11,7 @@ build:
 	@echo "Compiling for DEV..."
 	@go clean && go build -ldflags ${BUILD_FLAGS} -o ${BUILD_DIR}/${APPNAME}
 	@echo "Build done!"
-	@./${BUILD_DIR}/${APPNAME}
+	@cd ${BUILD_DIR} && ./${APPNAME}
 
 prod:
 	@echo "Compiling for PROD ..."
