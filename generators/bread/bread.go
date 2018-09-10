@@ -7,9 +7,14 @@ import (
 	"github.com/fluxynet/gocipe/util"
 )
 
+type fieldField struct {
+	Entity string
+	Field  string
+}
+
 // Generate returns generated code for a BREAD service - Browse, Read, Edit, Add & Delete
 func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
-	var fileFields []string
+	var fileFields []fieldField
 	for _, entity := range entities {
 		if !entity.Bread.Generate {
 			continue
@@ -18,7 +23,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 		for _, field := range entity.Fields {
 			switch field.EditWidget.Type {
 			case util.WidgetTypeFile, util.WidgetTypeImage:
-				fileFields = append(fileFields, fmt.Sprintf("%s%s", entity.Name, field.Property.Name))
+				fileFields = append(fileFields, fieldField{Entity: entity.Name, Field: field.Property.Name})
 			}
 		}
 
@@ -69,13 +74,9 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	hasFileFields := len(fileFields) > 0
 	if hasFileFields {
 		code, err := util.ExecuteTemplate("bread/bread_config_upload.gocipe.go.tmpl", struct {
-			Entities      map[string]util.Entity
-			FileFields    []string
-			HasFileFields bool
+			FileFields []fieldField
 		}{
-			Entities:      entities,
-			FileFields:    fileFields,
-			HasFileFields: hasFileFields,
+			FileFields: fileFields,
 		})
 
 		work.Waitgroup.Add(1)

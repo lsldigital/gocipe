@@ -1,8 +1,8 @@
 package bread
 
-{{range $.FileFields}}
-var {{.}}UploadOpts = files.UploadOptions{
-	Destination:    "unsorted",
+{{range .FileFields}}
+var {{.Entity}}{{.Field}}UploadOpts = files.UploadOptions{
+	Destination:    "{{lower .Entity}}/{{lower .Field}}",
 	MediaPrefixURL: "/media/",
 	FileExt:        "jpg",
 	MaxSize:        files.NoLimit,
