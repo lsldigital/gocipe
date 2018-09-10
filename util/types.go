@@ -323,6 +323,9 @@ type Entity struct {
 	// Fields is a list of fields for the entity
 	Fields []Field `json:"fields"`
 
+	// LabelField indicates which field is used as label for the entity
+	LabelField string `json:"label_field"`
+
 	// Relationships represent relationship information between this entity and others
 	Relationships []Relationship `json:"relationships"`
 

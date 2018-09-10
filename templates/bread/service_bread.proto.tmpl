@@ -47,6 +47,23 @@ message UploadResponse {
     string URI = 1;
 }
 
+// LookupRequest represents a request to lookup an entity by its label
+message LookupRequest {
+    string Key  = 1;
+    string Term = 2;
+}
+
+// LookupResult represents one (of many) results for an entity lookup request
+message LookupResult {
+    string ID    = 1;
+    string Label = 2;
+}
+
+// LookupResponse represents a series of results to a lookup request
+message LookupResponse {
+    repeated LookupResult Result = 1;
+}
+
 service Bread {
 {{- range .Entities}}
 /**
@@ -76,6 +93,7 @@ service Bread {
     // Upload{{.Name}} allows uploading of files for entity of type {{.Name}}
     rpc Upload{{.Name}}(UploadRequest) returns (UploadResponse);
     {{end}}
+    rpc Lookup{{.Name}}(LookupRequest) returns (LookupResponse);
 /**
  * [END SERVICES] {{.Name}}
  */
