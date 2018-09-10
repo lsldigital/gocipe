@@ -18,7 +18,7 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.E
 			return errors.WithStack(err)
 		}
 		
-		tx, err = repo.db.Begin()
+		tx, err = models.StartTransaction(ctx, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -127,7 +127,7 @@ func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entit
 			return errors.WithStack(err)
 		}
 		
-		tx, err = repo.db.Begin()
+		tx, err = models.StartTransaction(ctx, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}

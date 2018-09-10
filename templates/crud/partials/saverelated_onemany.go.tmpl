@@ -11,7 +11,7 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 			return errors.WithStack(err)
 		}
 
-		tx, err = repo.db.Begin()
+		tx, err = models.StartTransaction(ctx, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}

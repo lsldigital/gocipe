@@ -30,16 +30,15 @@ type Filter struct {
 }
 
 // Init is responsible to initialize all repositories
-func Init(database *sql.DB) {
-	db = database
-	{{range .Entities}}
-	{{.Name}}Repo = {{.Name}}Repositorium{db: database}
+func Init() {
+	{{range .Entities -}}
+	{{.Name}}Repo = {{.Name}}Repositorium{}
 	{{- end}}
 }
 
 // StartTransaction initiates a database transaction
 func StartTransaction(ctx context.Context) (*sql.Tx, error) {
-	return db.Begin(ctx, nil)
+	return db.BeginTx(ctx, nil)
 }
 
 {{- $Entities := .Entities -}}
@@ -106,9 +105,7 @@ type {{.Name}}Repository interface {
 }
 
 // {{.Name}}Repositorium implements {{.Name}}Repository
-type {{.Name}}Repositorium struct {
-	db *sql.DB
-}
+type {{.Name}}Repositorium struct {}
 {{end}}
 
 // QueryAddIN adds IN condition to query
