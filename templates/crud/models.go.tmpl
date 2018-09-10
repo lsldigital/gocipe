@@ -30,9 +30,10 @@ type Filter struct {
 }
 
 // Init is responsible to initialize all repositories
-func Init() {
-	{{range .Entities }}
-	{{.Name}}Repo = {{.Name}}Repositorium{}
+func Init(database *sql.DB) {
+	db = database
+	{{range .Entities}}
+	{{.Name}}Repo = {{.Name}}Repositorium{db: database}
 	{{- end}}
 }
 
@@ -105,7 +106,9 @@ type {{.Name}}Repository interface {
 }
 
 // {{.Name}}Repositorium implements {{.Name}}Repository
-type {{.Name}}Repositorium struct {}
+type {{.Name}}Repositorium struct {
+	db *sql.DB
+}
 {{end}}
 
 // QueryAddIN adds IN condition to query

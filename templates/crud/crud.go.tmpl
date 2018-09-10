@@ -4,7 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"github.com/pkg/errors"
-	{{range .Imports}}{{.}}{{end}}
+	{{range .Imports}}{{.}}
+	{{end}}
 )
 {{.Structure}}
 {{.Get}}

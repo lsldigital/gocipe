@@ -37,7 +37,7 @@ func main() {
 	{{end}}
 
 	config := app.Bootstrap()
-	models.Init()
+	models.Init(config.DB)
 	
 	{{if .Recipe.Bootstrap.Assets}}
 	app.Assets = rice.MustFindBox("assets")
