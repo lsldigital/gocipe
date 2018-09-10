@@ -7,15 +7,16 @@ import (
 	"github.com/fluxynet/gocipe/util"
 )
 
-type fieldField struct {
+type fileField struct {
 	Entity string
 	Field  string
 }
 
 // Generate returns generated code for a BREAD service - Browse, Read, Edit, Add & Delete
 func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
-	var fileFields []fieldField
-	for _, entity := range entities {
+	var fileFields []fileField
+	entitiesFileFields := make(map[string][]fileField)
+	for key, entity := range entities {
 		if !entity.Bread.Generate {
 			continue
 		}
@@ -23,7 +24,8 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 		for _, field := range entity.Fields {
 			switch field.EditWidget.Type {
 			case util.WidgetTypeFile, util.WidgetTypeImage:
-				fileFields = append(fileFields, fieldField{Entity: entity.Name, Field: field.Property.Name})
+				fileFields = append(fileFields, fileField{Entity: entity.Name, Field: field.Property.Name})
+				entitiesFileFields[key] = append(entitiesFileFields[key], fileField{Entity: entity.Name, Field: field.Property.Name})
 			}
 		}
 
@@ -74,7 +76,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	hasFileFields := len(fileFields) > 0
 	if hasFileFields {
 		code, err := util.ExecuteTemplate("bread/bread_config_upload.gocipe.go.tmpl", struct {
-			FileFields []fieldField
+			FileFields []fileField
 		}{
 			FileFields: fileFields,
 		})
@@ -101,8 +103,9 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	}
 
 	code, err := util.ExecuteTemplate("bread/service_bread.gocipe.go.tmpl", struct {
-		Entities map[string]util.Entity
-	}{entities})
+		Entities           map[string]util.Entity
+		EntitiesFileFields map[string][]fileField
+	}{entities, entitiesFileFields})
 	work.Waitgroup.Add(1)
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateBread", Code: code, Filename: "services/bread/service_bread.gocipe.go"}

@@ -267,6 +267,9 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	res.{{.Name}} = req.{{.Name}}
+	{{range $fileField := index $.EntitiesFileFields .Name}}
+	res.{{.Entity}}.{{.Field}} = existing.{{.Field}}
+	{{end}}
 	tx, err = models.StartTransaction(ctx)
 
 	{{if .Bread.Hooks.PreUpdate -}}
