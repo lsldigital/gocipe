@@ -21,11 +21,18 @@
             <v-card-text>
                 <v-form>
                     <div class="gocipe-form-grid" v-if="entity">
-                        {{ range .Entity.Fields }} {{if not .EditWidget.Hide }} {{if eq .EditWidget.Type "time"}}
+                        {{ $EntityName := .Entity.Name }} {{ range .Entity.Fields }} {{if not .EditWidget.Hide }} {{if eq .EditWidget.Type "time"}}
                         <!-- Date Template -->
                         <template>
                             <div class="gocipe-field-container">
                                 <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
+                            </div>
+                        </template>
+                        {{ else if eq .EditWidget.Type "imagefield"}}
+                        <!-- Date Template -->
+                        <template>
+                            <div class="gocipe-field-container">
+                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :field="'{{ .Property.Name}}'" :rpc="'upload{{ $EntityName }}'" :entityid="id" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
                             </div>
                         </template>
                         {{ else }}
