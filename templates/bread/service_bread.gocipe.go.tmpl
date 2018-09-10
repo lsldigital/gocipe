@@ -196,22 +196,25 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 			case {{$filters.BoolFilters}}:
 				if f, err := NewBoolFilter(req.Filters[i]); err == nil {
 					filters = append(filters, f)
+				} else {
+					return &res, err
 				}
-				return &res, err
 			{{end}}
 			{{if $filters.HasString}}
 			case {{$filters.StringFilters}}:
 				if f, err := NewStringFilter(req.Filters[i]); err == nil {
 					filters = append(filters, f)
+				} else {
+					return &res, err
 				}
-				return &res, err
 			{{end}}
 			{{if $filters.HasDate}}
 			case {{$filters.DateFilters}}:
 				if f, err := NewDateFilter(req.Filters[i]); err == nil {
 					filters = append(filters, f)
+				} else {
+					return &res, err
 				}
-				return &res, err
 			{{end}}
 			}
 		}
