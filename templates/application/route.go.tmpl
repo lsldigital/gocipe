@@ -37,17 +37,17 @@ func newProdRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	}
 	{{end}}
 
-	if err := web.WebAppRouting(router, "/", "app", nil); err != nil {
-		log.Fatalf("Failed to create subroute app: %s\n", err)
-		return nil
-	}
-
 	{{if .Bread.Generate}}
 	if err := web.WebAppRouting(router, "/admin", "admin", nil); err != nil {
 		log.Fatalf("Failed to create subroute admin: %s\n", err)
 		return nil
 	}
 	{{end}}
+
+	if err := web.WebAppRouting(router, "/", "app", nil); err != nil {
+		log.Fatalf("Failed to create subroute app: %s\n", err)
+		return nil
+	}
 
 	return router
 }
@@ -61,8 +61,10 @@ func newDevRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	{{end}}
 
 	{{if .Bread.Generate}}
+	router.PathPrefix("/media").Handler(http.StripPrefix("/media", http.FileServer(http.Dir("media"))))
+
 	if err := web.WebDevRouting(router, "/admin", "admin", "8081"); err != nil {
-		log.Warnf("Failed to create subrouter backofice: %s\n", err)
+		log.Warnf("Failed to create subrouter backoffice: %s\n", err)
 	}
 	{{end}}
 	
