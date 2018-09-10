@@ -23,7 +23,6 @@ const (
 	NoLimit   = -1
 
 	_fileMode       = os.FileMode(0644)
-	_baseUploadPath = "media/"
 )
 
 // ImageDimensions holds dimensions options
@@ -36,6 +35,7 @@ type ImageDimensions struct {
 
 // UploadOptions holds file upload options
 type UploadOptions struct {
+	Dir 		   string
 	Destination    string
 	MediaPrefixURL string
 	FileExt        string
@@ -67,33 +67,34 @@ func init() {
 
 // Upload validates and saves create file
 func Upload(fileName string, fileContent []byte, options *UploadOptions) (string, string, error) {
-	directoryPath := path.Join(_baseUploadPath, options.Destination)
+	dirPath := path.Join(options.Dir, options.Destination)
 	fileName = buildFileName(fileName, options.FileExt)
-	filePath := filepath.Join(directoryPath, fileName)
+	filePath := path.Join(options.MediaPrefixURL, options.Destination, fileName)
+	fileDiskPath := filepath.Join(dirPath, fileName)
 
-	if err := os.MkdirAll(directoryPath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
 		log.Printf("error creating directories: %v\n", err)
-		return filePath, fileName, err
+		return fileDiskPath, filePath, err
 	}
 
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		if err := ioutil.WriteFile(filePath, fileContent, _fileMode); err != nil {
-			log.Printf("error writing %v: %v\n", filePath, err)
-			return filePath, fileName, err
+	if _, err := os.Stat(fileDiskPath); os.IsNotExist(err) {
+		if err := ioutil.WriteFile(fileDiskPath, fileContent, _fileMode); err != nil {
+			log.Printf("error writing %v: %v\n", fileDiskPath, err)
+			return fileDiskPath, filePath, err
 		}
 	}
 
-	file, err := os.Open(filePath)
+	file, err := os.Open(fileDiskPath)
 	if err != nil {
-		log.Printf("error opening %v: %v\n", filePath, err)
-		return filePath, fileName, err
+		log.Printf("error opening %v: %v\n", fileDiskPath, err)
+		return fileDiskPath, filePath, err
 	}
 	defer file.Close()
 
-	buf, err := ioutil.ReadFile(filePath)
+	buf, err := ioutil.ReadFile(fileDiskPath)
 	if err != nil {
-		log.Printf("error reading %v: %v\n", filePath, err)
-		return filePath, fileName, err
+		log.Printf("error reading %v: %v\n", fileDiskPath, err)
+		return fileDiskPath, filePath, err
 	}
 
 	fileSize := len(buf)
@@ -104,24 +105,24 @@ func Upload(fileName string, fileContent []byte, options *UploadOptions) (string
 
 	if !filetype.IsExtension(buf, options.FileExt) {
 		log.Printf("file not a valid %v file\n", options.FileExt)
-		return filePath, fileName, fmt.Errorf("file type invalid")
+		return fileDiskPath, filePath, fmt.Errorf("file type invalid")
 	}
 
 	if options.MaxSize != NoLimit && fileSize > options.MaxSize {
 		log.Printf("file %v greater than max file size: %v\n", fileName, options.MaxSize)
-		return filePath, fileName, fmt.Errorf("file max size error")
+		return fileDiskPath, filePath, fmt.Errorf("file max size error")
 	}
 
 	if options.MinSize != NoLimit && fileSize < options.MinSize {
 		log.Printf("file %v lower than min file size: %v\n", fileName, options.MinSize)
-		return filePath, fileName, fmt.Errorf("file min size error")
+		return fileDiskPath, filePath, fmt.Errorf("file min size error")
 	}
 
 	if filetype.IsImage(buf) {
 		image, _, err := image.DecodeConfig(file)
 		if err != nil {
 			log.Printf("error decoding image: %v", err)
-			return filePath, fileName, err
+			return fileDiskPath, filePath, err
 		}
 
 		if options.ImgDimensions == nil {
@@ -130,26 +131,26 @@ func Upload(fileName string, fileContent []byte, options *UploadOptions) (string
 
 		if options.ImgDimensions.MaxHeight != NoLimit && image.Height > options.ImgDimensions.MaxHeight {
 			log.Printf("image %v greater than max height: %v\n", fileName, options.ImgDimensions.MaxHeight)
-			return filePath, fileName, fmt.Errorf("image max height error")
+			return fileDiskPath, filePath, fmt.Errorf("image max height error")
 		}
 
 		if options.ImgDimensions.MinHeight != NoLimit && image.Height < options.ImgDimensions.MinHeight {
 			log.Printf("image %v lower than min height: %v\n", fileName, options.ImgDimensions.MinHeight)
-			return filePath, fileName, fmt.Errorf("image min height error")
+			return fileDiskPath, filePath, fmt.Errorf("image min height error")
 		}
 
 		if options.ImgDimensions.MaxWidth != NoLimit && image.Width > options.ImgDimensions.MaxWidth {
 			log.Printf("image %v greater than max width: %v\n", fileName, options.ImgDimensions.MaxWidth)
-			return filePath, fileName, fmt.Errorf("image max width error")
+			return fileDiskPath, filePath, fmt.Errorf("image max width error")
 		}
 
 		if options.ImgDimensions.MinWidth != NoLimit && image.Width < options.ImgDimensions.MinWidth {
 			log.Printf("image %v lower than min width: %v\n", fileName, options.ImgDimensions.MinWidth)
-			return filePath, fileName, fmt.Errorf("image min width error")
+			return fileDiskPath, filePath, fmt.Errorf("image min width error")
 		}
 	}
 
-	return filePath, fileName, nil
+	return fileDiskPath, filePath, nil
 }
 
 // Delete deletes one file
