@@ -91,6 +91,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 		res.{{.Name}} = new(models.{{.Name}})
 	} else {
 		res.{{.Name}} = req.{{.Name}}
+		res.ID        = {{pkeyPropertyEmptyVal .PrimaryKey}}
 	}
 	tx, err = models.StartTransaction(ctx)
 	{{if .Bread.Hooks.PreCreate}}
