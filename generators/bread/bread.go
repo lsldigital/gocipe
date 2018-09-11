@@ -30,11 +30,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 			}
 		}
 
-		if entity.LabelField == "" {
-			entitiesLabelField[key] = "ID"
-		} else {
-			entitiesLabelField[key] = entity.LabelField
-		}
+		entitiesLabelField[key] = entity.LabelField
 
 		if hasHook(entity) {
 			hooks, err := util.ExecuteTemplate("bread/service_bread_hooks.go.tmpl", struct {

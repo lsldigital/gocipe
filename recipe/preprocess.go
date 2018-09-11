@@ -13,6 +13,7 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 	var (
 		err error
 	)
+	fieldLabelWhiteList := []string{"name", "description", "summary"}
 
 	entities := make(map[string]util.Entity)
 	for i, entity := range recipe.Entities {
@@ -47,6 +48,24 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 
 		if entity.Vuetify.Icon == "" {
 			entity.Vuetify.Icon = "dashboard"
+		}
+
+		if entity.LabelField == "" {
+			var defaultLabelField string
+			for _, fieldName := range fieldLabelWhiteList {
+				for _, field := range entity.Fields {
+					fieldSchemaName := strings.ToLower(field.Schema.Field)
+					propertyType := strings.ToLower(field.Property.Type)
+					if fieldName == fieldSchemaName && propertyType == "string" {
+						defaultLabelField = field.Schema.Field
+						break
+					}
+					if defaultLabelField == "" && propertyType == "string" {
+						defaultLabelField = field.Schema.Field
+					}
+				}
+				entity.LabelField = defaultLabelField
+			}
 		}
 
 		entities[entity.Name] = entity
