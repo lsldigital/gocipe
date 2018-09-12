@@ -33,6 +33,8 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 	}
 
 	for _, rel := range entity.Relationships {
+		// No SaveRelated needed:
+		// RelationshipTypeManyManyInverse, RelationshipTypeOneMany, RelationshipTypeManyOne, RelationshipTypeOneOne
 		if rel.Type == util.RelationshipTypeManyMany || rel.Type == util.RelationshipTypeManyManyOwner {
 			related = append(related, fmt.Sprintf("repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name))
 		} else if rel.Type == util.RelationshipTypeManyOne || rel.Type == util.RelationshipTypeOneOne {
