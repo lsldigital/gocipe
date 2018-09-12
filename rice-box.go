@@ -130,165 +130,170 @@ func init() {
 	}
 	filev := &embedded.EmbeddedFile{
 		Filename:    "crud/partials/saverelated_manymany.go.tmpl",
-		FileModTime: time.Unix(1536569857, 0),
+		FileModTime: time.Unix(1536736877, 0),
 		Content:     string("\n// Save{{.Funcname}} is a helper function to save related {{.PropertyName}} in a pivot table (many-many relationship)\nfunc (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{.ThatType}}) error {\n\tvar (\n\t\tstmt *sql.Stmt\n\t\terr  error\n\t)\n\n\tif tx == nil {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\ttx, err = StartTransaction(ctx)\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\tstmt, err = tx.Prepare(\"DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1\")\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\t_, err = stmt.Exec(idthis)\n\tif err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tstmt, err = tx.Prepare(\"INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)\")\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tfor _, rel := range relatives {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\t_, err = stmt.Exec(idthis, rel.ID)\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\tif autocommit {\n\t\terr = tx.Commit()\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t}\n\t}\n\n\treturn errors.WithStack(err)\n}\n\n// Save{{.Funcname}}IDs is a helper function to save related {{.PropertyName}} IDs in a pivot table (many-many relationship)\nfunc (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{pkeyPropertyType .ThatPrimaryKey}}) error {\n\tvar (\n\t\tstmt *sql.Stmt\n\t\terr  error\n\t)\n\n\tif tx == nil {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\ttx, err = StartTransaction(ctx)\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\t\n\tstmt, err = tx.Prepare(\"DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1\")\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\t_, err = stmt.Exec(idthis)\n\tif err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tstmt, err = tx.Prepare(\"INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)\")\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tfor _, relid := range relatives {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\t_, err = stmt.Exec(idthis, relid)\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\tif autocommit {\n\t\terr = tx.Commit()\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t}\n\t}\n\n\treturn errors.WithStack(err)\n}\n"),
 	}
 	filew := &embedded.EmbeddedFile{
+		Filename:    "crud/partials/saverelated_manymanyowner.go.tmpl",
+		FileModTime: time.Unix(1536744814, 0),
+		Content:     string("\n// Save{{.Funcname}} is a helper function to save related {{.PropertyName}} in a pivot table (many-many-owner relationship)\nfunc (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{.ThatType}}) error {\n\tvar (\n\t\tstmt *sql.Stmt\n\t\terr  error\n\t)\n\n\tif tx == nil {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\ttx, err = StartTransaction(ctx)\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\tstmt, err = tx.Prepare(\"DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1\")\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\t_, err = stmt.Exec(idthis)\n\tif err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tstmt, err = tx.Prepare(\"INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)\")\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tfor _, rel := range relatives {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\t_, err = stmt.Exec(idthis, rel.ID)\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\tif autocommit {\n\t\terr = tx.Commit()\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t}\n\t}\n\n\treturn errors.WithStack(err)\n}\n\n// Save{{.Funcname}}IDs is a helper function to save related {{.PropertyName}} IDs in a pivot table (many-many-owner relationship)\nfunc (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{pkeyPropertyType .ThatPrimaryKey}}) error {\n\tvar (\n\t\tstmt *sql.Stmt\n\t\terr  error\n\t)\n\n\tif tx == nil {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\ttx, err = StartTransaction(ctx)\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\t\n\tstmt, err = tx.Prepare(\"DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1\")\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\t_, err = stmt.Exec(idthis)\n\tif err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tstmt, err = tx.Prepare(\"INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)\")\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tfor _, relid := range relatives {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\t_, err = stmt.Exec(idthis, relid)\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\tif autocommit {\n\t\terr = tx.Commit()\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t}\n\t}\n\n\treturn errors.WithStack(err)\n}\n"),
+	}
+	filex := &embedded.EmbeddedFile{
 		Filename:    "crud/partials/saverelated_onemany.go.tmpl",
 		FileModTime: time.Unix(1536569857, 0),
 		Content:     string("\n// Save{{.Funcname}} is a helper function to save related {{.PropertyName}} (one-many relationship)\nfunc (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{.ThatType}}) error {\n\tvar (\n\t\tstmt *sql.Stmt\n\t\terr  error\n\t)\n\n\tif tx == nil {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\ttx, err = StartTransaction(ctx)\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\tstmt, err = tx.Prepare(\"UPDATE {{.Table}} SET {{.ThatColumn}} = $1 WHERE {{.ThatColumn}} = $2\")\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\t_, err = stmt.Exec({{.DanglingVal}}, idthis)\n\tif err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tstmt, err = tx.Prepare(\"UPDATE {{.Table}} SET {{.ThatColumn}} = $1 WHERE {{.ThisColumn}} = $2\")\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tfor _, rel := range relatives {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\t_, err = stmt.Exec(idthis, rel.ID)\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\n\tif autocommit {\n\t\terr = tx.Commit()\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t}\n\t}\n\n\treturn errors.WithStack(err)\n}\n"),
 	}
-	filex := &embedded.EmbeddedFile{
+	filey := &embedded.EmbeddedFile{
 		Filename:    "crud/partials/update.go.tmpl",
 		FileModTime: time.Unix(1536569857, 0),
 		Content:     string("\n// Update Will execute an SQLUpdate Statement for {{.EntityName}} in the database. Prefer using Save instead of Update directly.\nfunc (repo {{.EntityName}}Repositorium) Update(ctx context.Context, entity *{{.EntityName}}, tx *sql.Tx, autocommit bool) error {\n\tvar (\n\t\terr error\n\t\tstmt *sql.Stmt\n\t)\n\n\tif entity == nil {\n\t\treturn moderrors.SaveEmptyEntityError\n\t}\n\n\tif tx == nil {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\ttx, err = StartTransaction(ctx)\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\t\n\t{{range .Before}}{{.}}\n\t{{end}}\n\n\tstmt, err = tx.Prepare(`UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1`)\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\t{{range .After}}{{.}}\n\t{{end}}\n\n\t{{if .HasPreHook}}\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = repo.preSave(ctx, tx, models.Update, entity); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\t{{end}}\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\t_, err = stmt.Exec({{.StructFields}})\n\tif err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\t{{if .HasPostHook}}\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = repo.postSave(ctx, \"UPDATE\", entity, tx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\t{{end}}\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif autocommit {\n\t\terr = tx.Commit()\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t}\n\t}\n\n\treturn errors.WithStack(err)\n}\n\n// UpdateWithRel Will execute an SQLUpdate Statement for {{.EntityName}} in the database; including related entities. Prefer using Save instead of Update directly.\nfunc (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entity *{{.EntityName}}, tx *sql.Tx, autocommit bool) error {\n\tvar (\n\t\terr error\n\t\tstmt *sql.Stmt\n\t)\n\n\tif entity == nil {\n\t\treturn moderrors.SaveEmptyEntityError\n\t}\n\n\tif tx == nil {\n\t\tif err = util.CheckContext(ctx); err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\n\t\ttx, err = StartTransaction(ctx)\n\t\tif err != nil {\n\t\t\treturn errors.WithStack(err)\n\t\t}\n\t}\n\t\n\t{{range .Before}}{{.}}\n\t{{end}}\n\n\tstmt, err = tx.Prepare(`UPDATE {{.Table}} SET {{.SQLFields}} WHERE id = $1`)\n\tif err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n\t{{range .After}}{{.}}\n\t{{end}}\n\n\t{{if .HasPreHook}}\n\tif err = util.CheckContext(ctx); err != nil {\n\t\treturn errors.WithStack(err)\n\t}\n\n    if err = repo.preSave(ctx, tx, models.Update, entity); err != nil {\n\t\ttx.Rollback()\n        return errors.WithStack(err)\n\t}\n\t{{end}}\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\t_, err = stmt.Exec({{.StructFields}})\n\tif err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\t{{range $i, $r := .Related}}{{$r}}\n\tif err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\t{{if ne (plus1 $i) (len $.Related)}}\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\t{{end}}\n\t{{end}}\n\n\t{{if .HasPostHook}}\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif err = repo.postSave(ctx, \"UPDATE\", entity, tx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\t{{end}}\n\tif err = util.CheckContext(ctx); err != nil {\n\t\ttx.Rollback()\n\t\treturn errors.WithStack(err)\n\t}\n\n\tif autocommit {\n\t\terr = tx.Commit()\n\t\tif err != nil {\n\t\t\ttx.Rollback()\n\t\t}\n\t}\n\n\treturn errors.WithStack(err)\n}\n"),
 	}
-	filey := &embedded.EmbeddedFile{
+	filez := &embedded.EmbeddedFile{
 		Filename:    "crud/protobuf.proto.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("syntax = \"proto3\";\n\npackage models;\noption go_package = \"{{.AppImportPath}}/models\";\n\n{{range .Imports -}}\n{{.}}\n{{- end}}\n\nmessage ListOpts {\n\tint64 Offset = 1;\n\tint64 Limit = 2;\n\tstring Sort = 3;\n}\n\n{{ range .Entities -}}\n// {{.Name}} {{.Description}}\nmessage {{.Name}} { {{ range .Fields }}\n\t{{.Type}} {{.Name}} = {{.Index}};\n{{- end}}\n}\n\n{{end}}\n"),
 	}
-	filez := &embedded.EmbeddedFile{
+	file10 := &embedded.EmbeddedFile{
 		Filename:    "http.go.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("package app\n\nimport (\n\t\"log\"\n\t\"net/http\"\n\t\"os\"\n\t\"os/signal\"\n\t\"syscall\"\n\n\t\"github.com/gorilla/mux\"\n)\n\n// ServeHTTP starts an http server\nfunc ServeHTTP(listen string, route func(router *mux.Router) error) {\n\tvar err error\n\tsigs := make(chan os.Signal, 1)\n\tsignal.Notify(sigs, syscall.SIGTERM)\n\n\trouter := mux.NewRouter()\n\terr = route(router)\n\n\tif err != nil {\n\t\tlog.Fatal(\"Failed to register routes: \", err)\n\t}\n\n\tgo func() {\n\t\terr = http.ListenAndServe(listen, router)\n\t\tif err != nil {\n\t\t\tlog.Fatal(\"Failed to start http server: \", err)\n\t\t}\n\t}()\n\n\tlog.Println(\"Listening on \" + listen)\n\t<-sigs\n\tlog.Println(\"Server stopped\")\n}\n"),
 	}
-	file10 := &embedded.EmbeddedFile{
+	file11 := &embedded.EmbeddedFile{
 		Filename:    "rest.go.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("package {{.Package}}\nimport (\n\t\"database/sql\"\n\t\"encoding/json\"\n\t\"fmt\"\n\t\"io/ioutil\"\n\t\"net/http\"\n\t\"strconv\"\n\n\t\"github.com/gorilla/mux\"\n)\n\ntype responseSingle struct {\n\tStatus   bool      `json:\"status\"`\n\tMessages []message `json:\"messages\"`\n\tEntity   *{{.Entity.Name}} `json:\"entity\"`\n}\n\ntype responseList struct {\n\tStatus   bool                `json:\"status\"`\n\tMessages []message           `json:\"messages\"`\n\tEntities []*{{.Entity.Name}} `json:\"entities\"`\n}\n\ntype message struct {\n\tType    rune   `json:\"type\"`\n\tMessage string `json:\"message\"`\n}\n\n//RegisterRoutes registers routes with a mux Router\nfunc RegisterRoutes(router *mux.Router) {\n\t{{if .Entity.Rest.Read}}router.HandleFunc(\"/{{.Endpoint}}/{id}\", RestGet).Methods(\"GET\"){{end}}\n\t{{if .Entity.Rest.ReadList}}router.HandleFunc(\"/{{.Endpoint}}\", RestList).Methods(\"GET\"){{end}}\n\t{{if .Entity.Rest.Create}}router.HandleFunc(\"/{{.Endpoint}}\", RestCreate).Methods(\"POST\"){{end}}\n\t{{if .Entity.Rest.Update}}router.HandleFunc(\"/{{.Endpoint}}/{id}\", RestUpdate).Methods(\"PUT\"){{end}}\n\t{{if .Entity.Rest.Delete}}router.HandleFunc(\"/{{.Endpoint}}/{id}\", RestDelete).Methods(\"DELETE\"){{end}}\n}\n\n{{if .Entity.Rest.Read}}\n//RestGet is a REST endpoint for GET /{{.Endpoint}}/{id}\nfunc RestGet(w http.ResponseWriter, r *http.Request) {\n\tvar (\n\t\tid       {{pkeyPropertyType .Entity.PrimaryKey}}\n\t\terr      error\n\t\tresponse responseSingle\n\t\t{{if or .Entity.Rest.Hooks.PreRead .Entity.Rest.Hooks.PostRead -}}\n\t\tstop     bool\n\t\t{{- end}}\n\t)\n\n\tvars := mux.Vars(r)\n\t{{if pkeyIsInt .Entity.PrimaryKey -}}\n\tvalid := false\n\tif _, ok := vars[\"id\"]; ok {\n\t\tid, err = strconv.ParseInt(vars[\"id\"], 10, 64)\n\t\tvalid = err == nil && id > 0\n\t}\n\t{{else}}\n\tid, valid := vars[\"id\"]\n\t{{- end}}\n\n\tif !valid {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusBadRequest)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Invalid ID\"}]}`)\n\t\treturn\n\t}\n\n\t{{if .Entity.Rest.Hooks.PreRead}}\n    if stop, err = restPreGet(w, r, id); err != nil || stop {\n        return\n    }\n    {{end}}\n\n\tresponse.Entity, err = Get(id)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"An error occurred\"}]}`)\n\t\treturn\n\t}\n\n\tif response.Entity == nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusNotFound)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Entity not found\"}]}`)\n\t\treturn\n\t}\n\n\t{{if .Entity.Rest.Hooks.PostRead}}\n    if stop, err = restPostGet(w, r, response.Entity); err != nil || stop {\n        return\n    }\n    {{end}}\n\n\tresponse.Status = true\n\tresponse.Status = true\t\n\toutput, err := json.Marshal(response)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"JSON encoding failed\"}]}`)\n\t\treturn\n\t}\n\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tw.WriteHeader(http.StatusOK)\n\tfmt.Fprint(w, string(output))\n}\n{{end}}\n\n{{if .Entity.Rest.ReadList}}\n//RestList is a REST endpoint for GET /{{.Endpoint}}\nfunc RestList(w http.ResponseWriter, r *http.Request) {\n\tvar (\n\t\terr      error\n\t\tresponse responseList\n\t\tfilters  []models.ListFilter\n\t\t{{if or .Entity.Rest.Hooks.PreList .Entity.Rest.Hooks.PostList}}stop     bool{{end}}\n\t)\n\t{{range .Entity.Fields}}{{if .Filterable}}\n\t{{if eq .Property.Type \"bool\"}}\n\tif val := query.Get(\"{{.Serialized}}\"); val != \"\" {\n\t\tif t, e := strconv.ParseBool(val); e == nil {\n\t\t\tfilters = append(filters, models.ListFilter{Field:\"{{.Schema.Field}}\", Operation:\"=\", Value:t})\n\t\t}\n\t}\n\t{{end}}\n\t{{if eq .Property.Type \"string\"}}\n\tif val := query.Get(\"{{.Serialized}}\"); val != \"\" {\n\t\tfilters = append(filters, models.ListFilter{Field:\"{{.Schema.Field}}\", Operation:\"=\", Value:val})\n\t}\n\n\tif val := query.Get(\"{{.Serialized}}-lk\"); val != \"\" {\n\t\tfilters = append(filters, models.ListFilter{Field:\"{{.Schema.Field}}\", Operation:\"LIKE\", Value:\"%\" + val + \"%\"})\n\t}\n\t{{end}}\n\t{{if eq .Property.Type \"time.Time\"}}\n\tif val := query.Get(\"{{.Serialized}}\"); len(val) == 16 {\n\t\tif t, e := time.Parse(\"2006-01-02-15-04\", val); e == nil {\n\t\t\tfilters = append(filters, models.ListFilter{Field:\"{{.Schema.Field}}\", Operation:\"=\", Value:t})\n\t\t}\n\t}\n\n\tif val := query.Get(\"{{.Serialized}}-gt\"); len(val) == 16 {\n\t\tif t, e := time.Parse(\"2006-01-02-15-04\", val); e == nil {\n\t\t\tfilters = append(filters, models.ListFilter{Field:\"{{.Schema.Field}}\", Operation:\">\", Value:t})\n\t\t}\n\t}\n\n\tif val := query.Get(\"{{.Serialized}}-ge\"); len(val) == 16 {\n\t\tif t, e := time.Parse(\"2006-01-02-15-04\", val); e == nil {\n\t\t\tfilters = append(filters, models.ListFilter{Field:\"{{.Schema.Field}}\", Operation:\">=\", Value:t})\n\t\t}\n\t}\n\n\tif val := query.Get(\"{{.Serialized}}-lt\"); len(val) == 16 {\n\t\tif t, e := time.Parse(\"2006-01-02-15-04\", val); e == nil {\n\t\t\tfilters = append(filters, models.ListFilter{Field:\"{{.Schema.Field}}\", Operation:\"<\", Value:t})\n\t\t}\n\t}\n\n\tif val := query.Get(\"{{.Serialized}}-le\"); len(val) == 16 {\n\t\tif t, e := time.Parse(\"2006-01-02-15-04\", val); e == nil {\n\t\t\tfilters = append(filters, models.ListFilter{Field:\"{{.Schema.Field}}\", Operation:\"<=\", Value:t})\n\t\t}\n\t}\n\t{{end}}\n\t{{end}}{{end}}\n\n\t{{if .Entity.Rest.Hooks.PreList}}\n    if filters, stop, err = restPreList(w, r, filters); err != nil || stop {\n        return\n    }\n    {{end}}\n\n\tresponse.Entities, err = List(filters)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"An error occurred\"}]}`)\n\t\treturn\n\t}\n\n\t{{if .Entity.Rest.Hooks.PostList}}\n    if response.Entities, stop, err = restPostList(w, r, response.Entities); err != nil || stop {\n        return\n    }\n    {{end}}\n\n\tresponse.Status = true\n\tresponse.Status = true\t\n\toutput, err := json.Marshal(response)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"JSON encoding failed\"}]}`)\n\t\treturn\n\t}\n\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tw.WriteHeader(http.StatusOK)\n\tfmt.Fprint(w, string(output))\n}\n{{end}}\n\n{{if .Entity.Rest.Create}}\n//RestCreate is a REST endpoint for POST /{{.Endpoint}}\nfunc RestCreate(w http.ResponseWriter, r *http.Request) {\n\tvar (\n\t\terr      error\n\t\trawbody  []byte\n\t\tresponse responseSingle\n\t\ttx       *sql.Tx\n\t\t{{if or .Entity.Rest.Hooks.PreCreate .Entity.Rest.Hooks.PostCreate}}stop     bool{{end}}\n\t)\n\n\trawbody, err = ioutil.ReadAll(r.Body)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusBadRequest)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Failed to read body\"}]}`)\n\t\treturn\n\t}\n\n\tresponse.Entity = New()\n\terr = json.Unmarshal(rawbody, response.Entity)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusBadRequest)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Failed to decode body\"}]}`)\n\t\treturn\n\t}\n\t{{if pkeyIsAuto .Entity.PrimaryKey -}}\n\tresponse.Entity.ID = nil\n\t{{- end}}\n\n\ttx, err = db.Begin()\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Failed to process\"}]}`)\n\t\treturn\n\t}\n\n\t{{if .Entity.Rest.Hooks.PreCreate}}\n\tif stop, err = restPreCreate(w, r, response.Entity, tx); err != nil {\n\t\ttx.Rollback()\n\t\treturn\n\t} else if stop {\n\t\treturn\n\t}\n\t{{end}}\n\n\terr = response.Entity.Save(tx, false)\n\tif err != nil {\n\t\ttx.Rollback()\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Save failed\"}]}`)\n\t\treturn\n\t}\n\n\t{{if .Entity.Rest.Hooks.PostCreate}}\n\tif stop, err = restPostCreate(w, r, response.Entity, tx); err != nil {\n\t\ttx.Rollback()\n\t\treturn\n\t} else if stop {\n\t\treturn\n\t}\n\t{{end}}\n\t\n\tif err = tx.Commit(); err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusBadRequest)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"E\", \"message\": \"RestCreate could not commit transaction\"}]}`)\n\t\treturn\n\t}\n\n\tresponse.Status = true\t\n\toutput, err := json.Marshal(response)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"JSON encoding failed\"}]}`)\n\t\treturn\n\t}\n\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tw.WriteHeader(http.StatusOK)\n\tfmt.Fprint(w, string(output))\n}\n{{end}}\n\n{{if .Entity.Rest.Update}}\n//RestUpdate is a REST endpoint for PUT /{{.Endpoint}}/{id}\nfunc RestUpdate(w http.ResponseWriter, r *http.Request) {\n\tvar (\n\t\terr      error\n\t\trawbody  []byte\n\t\tid       {{pkeyPropertyType .Entity.PrimaryKey}}\n\t\tresponse responseSingle\n\t\ttx       *sql.Tx\n\t\t{{if or .Entity.Rest.Hooks.PreUpdate .Entity.Rest.Hooks.PostUpdate -}}\n\t\tstop     bool\n\t\t{{- end}}\n\t)\n\n\tvars := mux.Vars(r)\n\t{{if pkeyIsInt .Entity.PrimaryKey -}}\n\tvalid := false\n\tif _, ok := vars[\"id\"]; ok {\n\t\tid, err = strconv.ParseInt(vars[\"id\"], 10, 64)\n\t\tvalid = err == nil && id > 0\n\t}\n\t{{else}}\n\tid, valid := vars[\"id\"]\n\t{{- end}}\n\n\tif !valid {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusBadRequest)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Invalid ID\"}]}`)\n\t\treturn\n\t}\n\n\tresponse.Entity, err = Get(id)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"An error occurred\"}]}`)\n\t\treturn\n\t}\n\n\tif response.Entity == nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusNotFound)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Entity not found\"}]}`)\n\t\treturn\n\t}\n\n\trawbody, err = ioutil.ReadAll(r.Body)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusBadRequest)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Failed to read body\"}]}`)\n\t\treturn\n\t}\n\n\terr = json.Unmarshal(rawbody, response.Entity)\n\tif err != nil {\n\t\tif err != nil {\n\t\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\t\tw.WriteHeader(http.StatusBadRequest)\n\t\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Failed to decode body\"}]}`)\n\t\t\treturn\n\t\t}\n\t}\n\tresponse.Entity.ID = &id\n\n\ttx, err = db.Begin()\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Failed to process\"}]}`)\n\t\treturn\n\t}\n\n\t{{if .Entity.Rest.Hooks.PreUpdate}}\n    if stop, err = restPreUpdate(w, r, response.Entity, tx); err != nil {\n\t\ttx.Rollback()\n        return\n    } else if stop {\n\t\treturn\n\t}\n    {{end}}\n\n\terr = response.Entity.Save(tx, false)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Save failed\"}]}`)\n\t\treturn\n\t}\n\n\t{{if .Entity.Rest.Hooks.PostUpdate}}\n    if stop, err = restPostUpdate(w, r, response.Entity, tx); err != nil {\n\t\ttx.Rollback()\n        return\n    } else if stop {\n\t\treturn\n\t}\n\t{{end}}\n\t\n\tif err = tx.Commit(); err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusBadRequest)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"E\", \"message\": \"RestUpdate could not commit transaction\"}]}`)\n\t\treturn\n\t}\n\n\tresponse.Status = true\t\n\toutput, err := json.Marshal(response)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"JSON encoding failed\"}]}`)\n\t\treturn\n\t}\n\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tw.WriteHeader(http.StatusOK)\n\tfmt.Fprint(w, string(output))\n}\n{{end}}\n\n{{if .Entity.Rest.Delete}}\n//RestDelete is a REST endpoint for DELETE /{{.Endpoint}}/{id}\nfunc RestDelete(w http.ResponseWriter, r *http.Request) {\n\tvar (\n\t\tid       {{pkeyPropertyType .Entity.PrimaryKey}}\n\t\terr      error\n\t\tresponse responseSingle\n\t\ttx       *sql.Tx\n\t\t{{if or .Entity.Rest.Hooks.PreDelete .Entity.Rest.Hooks.PostDelete -}}\n\t\tstop     bool\n\t\t{{- end}}\n\t)\n\n\tvars := mux.Vars(r)\n\t{{if pkeyIsInt .Entity.PrimaryKey -}}\n\tvalid := false\n\tif _, ok := vars[\"id\"]; ok {\n\t\tid, err = strconv.ParseInt(vars[\"id\"], 10, 64)\n\t\tvalid = err == nil && id > 0\n\t}\n\t{{else}}\n\tid, valid := vars[\"id\"]\n\t{{- end}}\n\n\tif !valid {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusBadRequest)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Invalid ID\"}]}`)\n\t\treturn\n\t}\n\n\tresponse.Entity, err = Get(id)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"An error occurred\"}]}`)\n\t\treturn\n\t}\n\n\tif response.Entity == nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusNotFound)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Entity not found\"}]}`)\n\t\treturn\n\t}\n\n\ttx, err = db.Begin()\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Failed to process\"}]}`)\n\t\treturn\n\t}\n\t{{if .Entity.Rest.Hooks.PreDelete}}\n\tif stop, err = restPreDelete(w, r, id, tx); err != nil {\n\t\ttx.Rollback()\n\t\treturn\n\t} else if stop {\n\t\treturn\n\t}\n    {{end}}\n\terr = response.Entity.Delete(tx, false)\n\tif err != nil {\n\t\ttx.Rollback()\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"Delete failed\"}]}`)\n\t\treturn\n\t}\n\t{{if .Entity.Rest.Hooks.PostDelete}}\n\tif stop, err = restPostDelete(w, r, id, tx); err != nil {\n\t\ttx.Rollback()\n\t\treturn\n\t} else if stop {\n\t\treturn\n\t}\n\t{{end}}\n\tif err = tx.Commit(); err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusBadRequest)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"E\", \"message\": \"RestDelete could not commit transaction\"}]}`)\n\t\treturn\n\t}\n\n\tresponse.Status = true\t\n\toutput, err := json.Marshal(response)\n\tif err != nil {\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tfmt.Fprint(w, `{\"status\": false, \"messages\": [{\"type\": \"error\", \"text\": \"JSON encoding failed\"}]}`)\n\t\treturn\n\t}\n\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tw.WriteHeader(http.StatusOK)\n\tfmt.Fprint(w, string(output))\n}\n{{end}}\n"),
 	}
-	file11 := &embedded.EmbeddedFile{
+	file12 := &embedded.EmbeddedFile{
 		Filename:    "rest_hooks.go.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("package {{.Package}}\n\nimport (\n\t\"database/sql\"\n\t\"net/http\"\n)\n\n{{if .Hooks.PreRead}}\nfunc restPreGet(w http.ResponseWriter, r *http.Request, id {{pkeyPropertyType .Entity.PrimaryKey}}) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n{{if .Hooks.PostRead}}\nfunc restPostGet(w http.ResponseWriter, r *http.Request, entity *{{.Entity.Name}}) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n\n{{if .Hooks.PreList}}\nfunc restPreList(w http.ResponseWriter, r *http.Request, filters []models.ListFilter) ([]models.ListFilter, bool, error) {\n\treturn filters, false, nil\n}\n{{end}}\n{{if .Hooks.PostList}}\nfunc restPostList(w http.ResponseWriter, r *http.Request, list []*{{.Entity.Name}}) ([]*{{.Entity.Name}}, bool, error) {\n\treturn list, false, nil\n}\n{{end}}\n\n{{if .Hooks.PreCreate}}\nfunc restPreCreate(w http.ResponseWriter, r *http.Request, entity *{{.Entity.Name}}, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n{{if .Hooks.PostCreate}}\nfunc restPostCreate(w http.ResponseWriter, r *http.Request, entity *{{.Entity.Name}}, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n\n{{if .Hooks.PreUpdate}}\nfunc restPreUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Entity.Name}}, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n{{if .Hooks.PostUpdate}}\nfunc restPostUpdate(w http.ResponseWriter, r *http.Request, entity *{{.Entity.Name}}, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n\n{{if .Hooks.PreDelete}}\nfunc restPreDelete(w http.ResponseWriter, r *http.Request, id {{pkeyPropertyType .Entity.PrimaryKey}}, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}\n{{if .Hooks.PostDelete}}\nfunc restPostDelete(w http.ResponseWriter, r *http.Request, id {{pkeyPropertyType .Entity.PrimaryKey}}, tx *sql.Tx) (bool, error) {\n\treturn false, nil\n}\n{{end}}"),
 	}
-	file13 := &embedded.EmbeddedFile{
+	file14 := &embedded.EmbeddedFile{
 		Filename:    "schema/schema.sql.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("DROP TABLE IF EXISTS {{.Entity.Table}};\n\nCREATE TABLE {{.Entity.Table}} (\n\t\"id\" {{pkeyFieldType .Entity.PrimaryKey}},\n\t{{- range $i, $e := .Entity.Fields}}{{if ne .Schema.Field \"\"}}\n\t\"{{.Schema.Field}}\" {{$e.Schema.Type}} NOT NULL\n\t{{- if ne .Schema.Default \"\"}} DEFAULT {{.Schema.Default}}{{end}},\n\t{{- end}}{{- end}}\n\t{{- range .RelatedFields}}\n\t\"{{.Name}}\" {{.Type}} NOT NULL,\n\t{{end}}\n\t{{range .Entity.TableConstraints}}{{.}},{{end}}\n\tPRIMARY KEY (\"id\")\n);\n\n{{range .RelatedTables}}\nDROP TABLE IF EXISTS {{.Table}};\n\nCREATE TABLE {{.Table}} (\n\t\"{{.ThisID}}\" {{.ThisType}} NOT NULL,\n\t\"{{.ThatID}}\" {{.ThatType}} NOT NULL\n);\n\nDROP INDEX IF EXISTS {{.Table}}_{{.ThisID}};\nDROP INDEX IF EXISTS {{.Table}}_{{.ThatID}};\n\nCREATE INDEX {{.Table}}_{{.ThisID}} ON {{.Table}} ({{.ThisID}});\nCREATE INDEX {{.Table}}_{{.ThatID}} ON {{.Table}} ({{.ThatID}});\n{{end}}"),
 	}
-	file15 := &embedded.EmbeddedFile{
+	file16 := &embedded.EmbeddedFile{
 		Filename:    "util/credentials.go.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("package credentials\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\n// Credentials represents connection to a service having a protocol, identifier, password, host and port\ntype Credentials struct {\n\tProtocol   string\n\tIdentifier string\n\tPassword   string\n\tHost       string\n\tPort       string\n}\n\n// String returns a human friendly representation of the credentials\nfunc (c *Credentials) String() string {\n\treturn fmt.Sprintf(\"Protocol: %s Identifier: %s Password: %s Host: %s Port: %s\", c.Protocol, c.Identifier, c.Password, c.Host, c.Port)\n}\n\n// getProtocol returns Protocol portion of the credentials\nfunc (c *Credentials) GetProtocol() string {\n\treturn c.Protocol\n}\n\n// getIdentifier returns Identifier portion of the credentials\nfunc (c *Credentials) GetIdentifier() string {\n\treturn c.Identifier\n}\n\n// getPassword returns Password portion of the credentials\nfunc (c *Credentials) GetPassword() string {\n\treturn c.Password\n}\n\n// getHost returns Host portion of the credentials\nfunc (c *Credentials) GetHost() string {\n\treturn c.Host\n}\n\n// getPort returns Port portion of the credentials\nfunc (c *Credentials) GetPort() string {\n\treturn c.Port\n}\n\n\n// NewCredentials returns a connection from string in the format protocol://username:password@host:port\nfunc NewCredentials(conn string, defaults ...*Credentials) *Credentials {\n\tvar (\n\t\tcredentials   *Credentials\n\t\tcreds, server string\n\t)\n\n\tif len(defaults) == 1 {\n\t\tcredentials = defaults[0]\n\t} else {\n\t\tcredentials = new(Credentials)\n\t}\n\n\tif i := strings.Index(conn, \"://\"); i != -1 {\n\t\tcredentials.Protocol = conn[:i]\n\t\tconn = conn[i+3:]\n\t}\n\n\tif i := strings.Index(conn, \"@\"); i == -1 { //no username password\n\t\tserver = conn\n\t} else {\n\t\tcreds = conn[:i]\n\t\tserver = conn[i+1:]\n\t}\n\n\tif creds == \"\" {\n\t\t//do nothing\n\t} else if i := strings.Index(creds, \":\"); i != -1 { //both id and password\n\t\tcredentials.Identifier = creds[:i]\n\t\tcredentials.Password = creds[i+1:]\n\t} else { //only id\n\t\tcredentials.Identifier = creds\n\t}\n\n\tif server == \"\" {\n\t\t//do nothing\n\t} else if i := strings.Index(server, \":\"); i != -1 { //both host and port\n\t\tcredentials.Host = server[:i]\n\t\tcredentials.Port = server[i+1:]\n\t} else { //only host\n\t\tcredentials.Host = conn\n\t}\n\n\treturn credentials\n}\n"),
 	}
-	file16 := &embedded.EmbeddedFile{
+	file17 := &embedded.EmbeddedFile{
 		Filename:    "util/files.go.tmpl",
 		FileModTime: time.Unix(1536575512, 0),
 		Content:     string("package files\n\nimport (\n\t\"fmt\"\n\t\"image\"\n\t\"image/gif\"\n\t\"image/jpeg\"\n\t\"image/png\"\n\t\"io/ioutil\"\n\t\"log\"\n\t\"os\"\n\t\"path\"\n\t\"path/filepath\"\n\t\"strings\"\n\t\"time\"\n\n\t\"gopkg.in/h2non/filetype.v1\"\n)\n\n// Constants for files package\nconst (\n  // NoLimit is used to indicate no restriction (on dimensions or size)\n\tNoLimit   = -1\n\n\t_fileMode       = os.FileMode(0644)\n)\n\n// ImageDimensions holds dimensions options\ntype ImageDimensions struct {\n\tMinHeight int\n\tMaxHeight int\n\tMinWidth  int\n\tMaxWidth  int\n}\n\n// UploadOptions holds file upload options\ntype UploadOptions struct {\n\tDir \t\t   string\n\tDestination    string\n\tMediaPrefixURL string\n\tFileExt        string\n\tMaxSize        int\n\tMinSize        int\n\tImgDimensions  *ImageDimensions\n}\n\nvar (\n\t// DefaultUploadOptions holds default upload options\n\tDefaultUploadOptions = &UploadOptions{\n\t\tFileExt:     \"jpg\",\n\t\tMaxSize:     NoLimit,\n\t\tMinSize:     NoLimit,\n\t\tImgDimensions: &ImageDimensions{\n\t\t\tMinHeight: NoLimit,\n\t\t\tMaxHeight: NoLimit,\n\t\t\tMinWidth:  NoLimit,\n\t\t\tMaxWidth:  NoLimit,\n\t\t},\n\t}\n)\n\nfunc init() {\n\timage.RegisterFormat(\"jpeg\", \"jpeg\", jpeg.Decode, jpeg.DecodeConfig)\n\timage.RegisterFormat(\"png\", \"png\", png.Decode, png.DecodeConfig)\n\timage.RegisterFormat(\"gif\", \"gif\", gif.Decode, gif.DecodeConfig)\n}\n\n// Upload validates and saves create file\nfunc Upload(fileName string, fileContent []byte, options *UploadOptions) (string, string, error) {\n\tdirPath := path.Join(options.Dir, options.Destination)\n\tfileName = buildFileName(fileName, options.FileExt)\n\tfilePath := path.Join(options.MediaPrefixURL, options.Destination, fileName)\n\tfileDiskPath := filepath.Join(dirPath, fileName)\n\n\tif err := os.MkdirAll(dirPath, os.ModePerm); err != nil {\n\t\tlog.Printf(\"error creating directories: %v\\n\", err)\n\t\treturn fileDiskPath, filePath, err\n\t}\n\n\tif _, err := os.Stat(fileDiskPath); os.IsNotExist(err) {\n\t\tif err := ioutil.WriteFile(fileDiskPath, fileContent, _fileMode); err != nil {\n\t\t\tlog.Printf(\"error writing %v: %v\\n\", fileDiskPath, err)\n\t\t\treturn fileDiskPath, filePath, err\n\t\t}\n\t}\n\n\tfile, err := os.Open(fileDiskPath)\n\tif err != nil {\n\t\tlog.Printf(\"error opening %v: %v\\n\", fileDiskPath, err)\n\t\treturn fileDiskPath, filePath, err\n\t}\n\tdefer file.Close()\n\n\tbuf, err := ioutil.ReadFile(fileDiskPath)\n\tif err != nil {\n\t\tlog.Printf(\"error reading %v: %v\\n\", fileDiskPath, err)\n\t\treturn fileDiskPath, filePath, err\n\t}\n\n\tfileSize := len(buf)\n\n\tif options.FileExt == \"\" {\n\t\toptions.FileExt = DefaultUploadOptions.FileExt\n\t}\n\n\tif !filetype.IsExtension(buf, options.FileExt) {\n\t\tlog.Printf(\"file not a valid %v file\\n\", options.FileExt)\n\t\treturn fileDiskPath, filePath, fmt.Errorf(\"file type invalid\")\n\t}\n\n\tif options.MaxSize != NoLimit && fileSize > options.MaxSize {\n\t\tlog.Printf(\"file %v greater than max file size: %v\\n\", fileName, options.MaxSize)\n\t\treturn fileDiskPath, filePath, fmt.Errorf(\"file max size error\")\n\t}\n\n\tif options.MinSize != NoLimit && fileSize < options.MinSize {\n\t\tlog.Printf(\"file %v lower than min file size: %v\\n\", fileName, options.MinSize)\n\t\treturn fileDiskPath, filePath, fmt.Errorf(\"file min size error\")\n\t}\n\n\tif filetype.IsImage(buf) {\n\t\timage, _, err := image.DecodeConfig(file)\n\t\tif err != nil {\n\t\t\tlog.Printf(\"error decoding image: %v\", err)\n\t\t\treturn fileDiskPath, filePath, err\n\t\t}\n\n\t\tif options.ImgDimensions == nil {\n\t\t\toptions.ImgDimensions = DefaultUploadOptions.ImgDimensions\n\t\t}\n\n\t\tif options.ImgDimensions.MaxHeight != NoLimit && image.Height > options.ImgDimensions.MaxHeight {\n\t\t\tlog.Printf(\"image %v greater than max height: %v\\n\", fileName, options.ImgDimensions.MaxHeight)\n\t\t\treturn fileDiskPath, filePath, fmt.Errorf(\"image max height error\")\n\t\t}\n\n\t\tif options.ImgDimensions.MinHeight != NoLimit && image.Height < options.ImgDimensions.MinHeight {\n\t\t\tlog.Printf(\"image %v lower than min height: %v\\n\", fileName, options.ImgDimensions.MinHeight)\n\t\t\treturn fileDiskPath, filePath, fmt.Errorf(\"image min height error\")\n\t\t}\n\n\t\tif options.ImgDimensions.MaxWidth != NoLimit && image.Width > options.ImgDimensions.MaxWidth {\n\t\t\tlog.Printf(\"image %v greater than max width: %v\\n\", fileName, options.ImgDimensions.MaxWidth)\n\t\t\treturn fileDiskPath, filePath, fmt.Errorf(\"image max width error\")\n\t\t}\n\n\t\tif options.ImgDimensions.MinWidth != NoLimit && image.Width < options.ImgDimensions.MinWidth {\n\t\t\tlog.Printf(\"image %v lower than min width: %v\\n\", fileName, options.ImgDimensions.MinWidth)\n\t\t\treturn fileDiskPath, filePath, fmt.Errorf(\"image min width error\")\n\t\t}\n\t}\n\n\treturn fileDiskPath, filePath, nil\n}\n\n// Delete deletes one file\nfunc Delete(fp string) error {\n\tif err := os.Remove(fp); err != nil {\n\t\treturn err\n\t}\n\treturn nil\n}\n\nfunc buildFileName(oldFilename, newExt string) string {\n\toldExt := filepath.Ext(oldFilename)\n\tnewFilename := strings.TrimSuffix(oldFilename, oldExt)\n\tnewFilename = newFilename + \"_\" + time.Now().Format(\"20060102150405\")\n\treturn newFilename + \".\" + newExt\n}\n"),
 	}
-	file17 := &embedded.EmbeddedFile{
+	file18 := &embedded.EmbeddedFile{
 		Filename:    "util/rice.go.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("package util\n\nimport (\n\t\"net/http\"\n\t\"strings\"\n\n\trice \"github.com/GeertJohan/go.rice\"\n)\n\n// WebBox implements http.FileSystem which allows the use of Box with a http.FileServer.\n//   e.g.: http.Handle(\"/\", http.FileServer(rice.MustFindBox(\"http-files\").HTTPBox()))\ntype WebBox struct {\n\tBox  *rice.Box\n\tApp  string\n\tPath string\n}\n\n// NewWebBoxHandler returns a new WebBox File Server Handler\nfunc NewWebBoxHandler(box *rice.Box, app, path string) http.Handler {\n\treturn http.FileServer(WebBox{Box: box, App: app, Path: \"/\" + path})\n}\n\n// Open returns a File using the http.File interface\nfunc (b WebBox) Open(name string) (http.File, error) {\n\tname = strings.TrimPrefix(name, b.Path)\n\treturn b.Box.Open(b.App + name)\n}\n"),
 	}
-	file18 := &embedded.EmbeddedFile{
+	file19 := &embedded.EmbeddedFile{
 		Filename:    "util/util.go.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("package util\n\nimport (\n\t\"context\"\n)\n\n// CheckContext returns an error if context is done\nfunc CheckContext(ctx context.Context) error {\n\tselect {\n\tcase <-ctx.Done():\n\t\treturn ctx.Err()\n\tdefault:\n\t\treturn nil\n\t}\n}"),
 	}
-	file19 := &embedded.EmbeddedFile{
+	file1a := &embedded.EmbeddedFile{
 		Filename:    "util/web.go.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("package web\n\nimport (\n\t\"net/http\"\n\t\"os\"\n\t\"path\"\n\t\"strings\"\n\n\t\"github.com/gorilla/mux\"\n\tlog \"github.com/sirupsen/logrus\"\n)\n\nfunc lookupContent(root http.FileSystem, upath string) (http.File, os.FileInfo, bool) {\n\tvar (\n\t\terr  error\n\t\tfile http.File\n\t\tinfo os.FileInfo\n\t)\n\n\tif !strings.HasPrefix(upath, \"/\") {\n\t\tupath = \"/\" + upath\n\t}\n\n\tupath = path.Clean(upath)\n\n\tif file, err = root.Open(upath); err != nil {\n\t\treturn nil, nil, false\n\t}\n\n\tif info, err = file.Stat(); err != nil {\n\t\treturn nil, nil, false\n\t}\n\n\tif info.IsDir() {\n\t\tupath += \"/index.html\"\n\t\treturn lookupContent(root, upath+\"/index.html\")\n\t}\n\n\treturn file, info, true\n}\n\ntype fileHandlerWithFallback struct {\n\troot     http.FileSystem\n\tfallback http.File\n}\n\n// FileServerWithFallback returns an HTTP static fileserver with a default file fallback if requested url was not found\nfunc FileServerWithFallback(root http.FileSystem, fallback http.File) http.Handler {\n\treturn &fileHandlerWithFallback{root: root, fallback: fallback}\n}\n\nfunc (f *fileHandlerWithFallback) ServeHTTP(w http.ResponseWriter, r *http.Request) {\n\tvar (\n\t\tfile http.File\n\t\tinfo os.FileInfo\n\t\tok   bool\n\t\terr  error\n\t)\n\n\tfile, info, ok = lookupContent(f.root, r.URL.Path)\n\n\tif !ok {\n\t\tfile = f.fallback\n\t\tif info, err = file.Stat(); err == nil {\n\t\t\tok = true\n\t\t}\n\t}\n\n\tif ok {\n\t\thttp.ServeContent(w, r, info.Name(), info.ModTime(), file)\n\t} else {\n\t\tw.Header().Set(\"Content-Type\", \"text/plain; charset=utf-8\")\n\t\tw.Header().Set(\"X-Content-Type-Options\", \"nosniff\")\n\t\tw.WriteHeader(http.StatusInternalServerError)\n\t\tw.Write([]byte(\"File not found and default could not be served.\"))\n\t}\n}\n\ntype fileHandlerWithNotFoundHandler struct {\n\troot    http.FileSystem\n\thandler http.Handler\n}\n\n// FileServerWithNotFoundHandler returns an HTTP static fileserver with a custom http.Handler if requested url was not found\nfunc FileServerWithNotFoundHandler(root http.FileSystem, handler http.Handler) http.Handler {\n\treturn &fileHandlerWithNotFoundHandler{root: root, handler: handler}\n}\n\nfunc (f *fileHandlerWithNotFoundHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {\n\tif file, info, ok := lookupContent(f.root, r.URL.Path); ok {\n\t\thttp.ServeContent(w, r, info.Name(), info.ModTime(), file)\n\t} else {\n\t\tf.handler.ServeHTTP(w, r)\n\t}\n}\n\n// WebAppRouting returns a new subrouter\nfunc WebAppRouting(router *mux.Router, prefix string, appName string, mwf ...mux.MiddlewareFunc) error {\n\tvar (\n\t\tfileSystem   http.FileSystem\n\t\tfallbackFile http.File\n\t\terr          error\n\t)\n\n\tfallbackFile, err = app.Assets.Open(\"web/\" + appName + \"/index.html\")\n\tif err != nil {\n\t\treturn err\n\t}\n\t\n\tfileSystem = util.WebBox{Box: app.Assets, App: \"web/\" + appName, Path: \"/\" + appName}\n\n\trouter.PathPrefix(prefix).Handler(\n\t\thttp.StripPrefix(\n\t\t\tprefix,\n\t\t\tFileServerWithFallback(fileSystem, fallbackFile),\n\t\t),\n\t)\n\n\treturn nil\n}\n\n// WebDevRouting returns a new subrouter\nfunc WebDevRouting(router *mux.Router, prefix string, app string, port string, mwf ...mux.MiddlewareFunc) error {\n\tvar (\n\t\turl\t\t  = &url.URL{Scheme: \"http\", Host: \"localhost:\" + port}\n\t\twsprox    = NewWSReverseProxy(url)\n\t\thtprox    = httputil.NewSingleHostReverseProxy(url)\n\t)\n\n\trouter.PathPrefix(prefix).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\tif IsWebsocket(r) {\n\t\t\twsprox.ServeHTTP(w, r)\n\t\t} else {\n\t\t\thtprox.ServeHTTP(w, r)\n\t\t}\n\t})\n\n\treturn nil\n}\n"),
 	}
-	file1a := &embedded.EmbeddedFile{
+	file1b := &embedded.EmbeddedFile{
 		Filename:    "util/ws.go.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("package web\n\n// WSReverseProxy implements http.HandlerFunc to reverse proxy websocket requests\ntype WSReverseProxy struct {\n\tTarget string\n}\n\n// NewWSReverseProxy creates a new websocket reverse proxy\nfunc NewWSReverseProxy(url *url.URL) *WSReverseProxy {\n\tvar proxy = new(WSReverseProxy)\n\tproxy.Target = fmt.Sprintf(\"%s:%s\", url.Hostname(), url.Port())\n\n\treturn proxy\n}\n\nfunc (ws *WSReverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {\n\td, err := net.Dial(\"tcp\", ws.Target)\n\tif err != nil {\n\t\thttp.Error(w, \"Error contacting backend server.\", http.StatusBadGateway)\n\t\tlog.Printf(\"Error dialing websocket backend %s: %s\", ws.Target, err)\n\t\treturn\n\t}\n\n\thj, ok := w.(http.Hijacker)\n\tif !ok {\n\t\thttp.Error(w, \"Not a hijacker?\", http.StatusInternalServerError)\n\t\treturn\n\t}\n\n\tnc, _, err := hj.Hijack()\n\tif err != nil {\n\t\tlog.Printf(\"Hijack error: %v\", err)\n\t\treturn\n\t}\n\n\tdefer nc.Close()\n\tdefer d.Close()\n\n\terr = r.Write(d)\n\tif err != nil {\n\t\tlog.Printf(\"Error copying request to target: %v\", err)\n\t\treturn\n\t}\n\n\terrc := make(chan error, 2)\n\tcp := func(dst io.Writer, src io.Reader) {\n\t\t_, err := io.Copy(dst, src)\n\n\t\tif err != nil {\n\t\t\terrc <- err\n\t\t}\n\t}\n\tgo cp(d, nc)\n\tgo cp(nc, d)\n\t<-errc\n}\n\n// IsWebsocket determines whether or not an http request is using websocket\nfunc IsWebsocket(r *http.Request) bool {\n\tconnHdr := \"\"\n\tconnHdrs := r.Header[\"Connection\"]\n\tif len(connHdrs) > 0 {\n\t\tconnHdr = connHdrs[0]\n\t}\n\n\tupgradeWs := false\n\tif strings.ToLower(connHdr) == \"upgrade\" {\n\t\tupgradeHdrs := r.Header[\"Upgrade\"]\n\t\tif len(upgradeHdrs) > 0 {\n\t\t\tupgradeWs = (strings.ToLower(upgradeHdrs[0]) == \"websocket\")\n\t\t}\n\t}\n\n\treturn upgradeWs\n}\n"),
 	}
-	file1d := &embedded.EmbeddedFile{
+	file1e := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/actions.js.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("import types from \"./types\";\n\nexport default {}"),
 	}
-	file1e := &embedded.EmbeddedFile{
+	file1f := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/getters.js.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("export default {}\n"),
 	}
-	file1f := &embedded.EmbeddedFile{
+	file1g := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/index.js.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("import actions from \"./actions\";\nimport getters from \"./getters\";\nimport mutations from \"./mutations\";\nimport routes from \"./routes\";\n\nconst namespaced = true;\n\nconst state = {\n  entities: routes.routes\n};\n\nexport default {\n  namespaced,\n  state,\n  actions,\n  getters,\n  mutations\n};"),
 	}
-	file1g := &embedded.EmbeddedFile{
+	file1h := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/mutations.js.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("import types from \"./types\";\n\nexport default {}\n"),
 	}
-	file1h := &embedded.EmbeddedFile{
+	file1i := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/routes.js.tmpl",
 		FileModTime: time.Unix(1536300261, 0),
 		Content:     string("{{range .Entities}}\n// {{.Name}} {{.Description}}\nimport {{.Name}}List from \"./views/{{plural .Name}}List.vue\";\nimport {{.Name}}Edit from \"./views/{{plural .Name}}Edit.vue\";\n{{end}}\n\nlet routes = [\n  {{range $i, $v := .Entities}}\n  {\n    path: \"{{lower (plural .Name)}}\",\n    name: \"{{lower (plural .Name)}}_list\",\n    component: {{.Name}}List,\n    meta: {\n      icon: \"{{.Vuetify.Icon}}\",\n      entity: \"{{plural .Name}}\",\n      showInMenu: {{if .Vuetify.NotInMenu}}false{{else}}true{{end}}\n    }\n  },\n  {\n    path: \"g_{{lower (plural .Name)}}/edit/:id\",\n    name: \"g_{{lower (plural .Name)}}_edit\",\n    component: {{.Name}}Edit,\n    meta: {\n      icon: \"{{.Vuetify.Icon}}\",\n      entity: \"{{plural .Name}}\",\n      showInMenu: false\n    }\n  }{{if ne (plus1 $i) (len $.Entities)}},{{end}}\n  {{end}}\n];\n\nexport default routes;"),
 	}
-	file1i := &embedded.EmbeddedFile{
+	file1j := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/types.js.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("export default {}\n"),
 	}
-	file1k := &embedded.EmbeddedFile{
+	file1l := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_edit.vue.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("<template>\n    <div class=\"container\">\n\t\t<v-toolbar color=\"transparent\" flat>\n            <v-toolbar-title class=\"grey--text text--darken-4 ml-0\"><h2>{{.Entity.Name}}</h2></v-toolbar-title>\n            <v-spacer></v-spacer>\n            <v-btn ml-0 small color=\"grey\" flat :to=\"{name: '{{.Endpoint}}List'}\">\n                <v-icon dark>arrow_back</v-icon> Back\n            </v-btn>\n        </v-toolbar>\n\t\t<v-alert :type=\"message.type\" :value=\"true\" v-for=\"(message, index) in messages\" :key=\"index\">\n\t\t{{ \"{{ message.text }}\" }}\n\t\t</v-alert>\n  \n        {{range .Entity.Fields -}}\n        {{widget_field \"vuetify\" .Widget.Type .}}\n        {{- end}}\n\n        <v-btn color=\"primary\" @click=\"save()\">Save</v-btn>\n        <v-btn color=\"gray\" :to=\"{name: '{{.Endpoint}}List'}\">Cancel</v-btn>\n\t</div>\n</template>\n  \n<script>\nimport axios from \"axios\"\n\nexport default {\n    props: [\"id\"],\n    created() {\n        if (!this.id) {\n            return\n        }\n\n        axios.get(\"/api/{{.Endpoint}}/\" + this.id).then(response => {\n            this.id = response.data.entity.id\n            {{range .Entity.Fields}}{{if ne .Serialized \"id\"}}\n            this.entity.{{.Serialized}} = response.data.entity.{{.Serialized}}\n            {{if eq .Widget.Type \"date\"}}this.dates.{{.Serialized}}.value = response.data.entity.{{.Serialized}}.substr(0,10){{end}}\n            {{end}}{{end}}\n        })\n    },\n    data() {\n        return {\n            select: {\n                {{range $i, $v := .Entity.Fields}}{{if eq .Widget.Type \"date\"}}\n                {{.Serialized}}: {\n                    items:[\n                        {{range $j, $u := .Widget.Options}}\n                        {text: \"{{.Label}}\", value: \"{{.Value}}\"}{{if eq (plus1 $j) (len $u)}},{{end}}\n                        {{end}}\n                    ]\n                }{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n                {{end}}{{end}}\n\t\t\t},\n\t\t\tdates: {\n                {{range $i, $v := .Entity.Fields}}{{if eq .Widget.Type \"date\"}}\n\t\t\t\t{{.Serialized}}: {value: null, menuAppear: false}{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n                {{end}}{{end}}\n\t\t\t},\n            messages: [],\n            entity: {\n                {{range $i, $e := .Entity.Fields}}{{if ne .Serialized \"id\"}}\n                {{.Serialized}} : null{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n                {{end}}{{end}}\n            }\n        }\n    },\n    watch: {\n        {{range $i, $e := .Entity.Fields}}\n        \"select.{{.Serialized}}.search\": function(val) {\n            val && this.querySelections(\"{{.Serialized}}\", \"{{$.Endpoint}}\", \"{{$.Prefix}}{{.Relationship.Target.Endpoint}}\", val)\n        }{{if ne (plus1 $i) (len $.Entity.Fields)}},{{end}}\n        {{end}}\n    },\n    methods: {\n        querySelections(fieldname, endpoint, filter, val) {\n            this.select[fieldname].loading = true\n            axios.get(\"/api/\" + endpoint + \"?\" + filter + \"-lk=\" + encodeURIComponent(val)).then(response => {\n                this.select[fieldname].loading = false\n                this.select[fieldname].items = response.data.entities.map(function(e) {\n                    return { text: e[filter], value: e.id }\n                })\n            })\n        },\n        save() {\n            if (this.id) {\n                axios.put(\"/api/{{.Endpoint}}/\" + this.id, this.entity).then(this.saved)\n            } else {\n                axios.post(\"/api/{{.Endpoint}}\", this.entity).then(this.saved)\n            }\n\t\t},\n\t\tsaved(response) {\n\t\t\tthis.id = response.data.entity.id\n\t\t\t{{range .Entity.Fields}}{{if ne .Serialized \"id\"}}\n            this.entity.{{.Serialized}} = response.data.entity.{{.Serialized}}\n            {{end}}{{end}}\n\n\t\t\tthis.messages.push({\n\t\t\t\ttype: \"success\",\n\t\t\t\ttext: \"{{.Entity.Name}} saved successfully\"\n\t\t\t})\n\t\t}\n    }\n}\n</script>"),
 	}
-	file1l := &embedded.EmbeddedFile{
+	file1m := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-checkbox.vue.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("<v-checkbox label=\"{{.Label}}\" v-model=\"entity.{{.Serialized}}\"></v-checkbox>"),
 	}
-	file1m := &embedded.EmbeddedFile{
+	file1n := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-date.vue.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("<v-menu\n\tref=\"menu_{{.Serialized}}\"\n\tlazy\n\t:close-on-content-click=\"false\"\n\tv-model=\"dates.{{.Serialized}}.menuAppear\"\n\ttransition=\"scale-transition\"\n\toffset-y\n\tfull-width\n\t:nudge-right=\"40\"\n\tmin-width=\"290px\"\n\t:return-value.sync=\"dates.{{.Serialized}}.value\"\n\t>\n\t<v-text-field\n\t\tslot=\"activator\"\n\t\tlabel=\"{{.Label}}\"\n\t\tv-model=\"dates.{{.Serialized}}.value\"\n\t\tprepend-icon=\"event\"\n\t\treadonly\n\t\t></v-text-field>\n\t\t<v-date-picker v-model=\"dates.{{.Serialized}}.value\" @change=\"entity.{{.Serialized}} = dates.{{.Serialized}}.value + 'T00:00:00Z'\" no-title scrollable>\n\t\t<v-spacer></v-spacer>\n\t\t<v-btn flat color=\"primary\" @click=\"menu_{{.Serialized}} = false\">Cancel</v-btn>\n\t\t<v-btn flat color=\"primary\" @click=\"$refs.menu_{{.Serialized}}.save(dates.{{.Serialized}}.value)\">OK</v-btn>\n\t\t</v-date-picker>\n</v-menu>"),
 	}
-	file1n := &embedded.EmbeddedFile{
+	file1o := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-number.vue.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("<v-text-field v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" type=\"number\" />"),
 	}
-	file1o := &embedded.EmbeddedFile{
+	file1p := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-password.vue.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("<v-text-field\n\tv-model=\"entity.{{.Serialized}}\"\n\t:append-icon=\"e1 ? 'visibility' : 'visibility_off'\"\n\t:append-icon-cb=\"() => (e1 = !e1)\"\n\t:type=\"e1 ? 'password' : 'text'\"\n\tcounter\n  ></v-text-field>"),
 	}
-	file1p := &embedded.EmbeddedFile{
+	file1q := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-select-rel.vue.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("<v-select\n    autocomplete\n    cache-items\n    required\n    label=\"{{.Label}}\"\n    :loading=\"select.{{.Serialized}}.isloading\"\n    :items=\"select.{{.Serialized}}.items\"\n\t:search-input.sync=\"select.{{.Serialized}}.search\"\n\tv-model=\"entity.{{.Serialized}}\"\n\t{{if .Widget.Multiple}}multiple chips{{end}}\n></v-select>"),
 	}
-	file1q := &embedded.EmbeddedFile{
+	file1r := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-select.vue.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("<v-select\n\tautocomplete\n\tcache-items\n\trequired\n\tlabel=\"{{.Label}}\"\n\t:items=\"select.{{.Serialized}}.items\"\n\tv-model=\"entity.{{.Serialized}}\"\n\t{{if .Widget.Multiple}}multiple chips{{end}}\n></v-select>"),
 	}
-	file1r := &embedded.EmbeddedFile{
+	file1s := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-textarea.vue.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("<v-text-field v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" multiline />"),
 	}
-	file1s := &embedded.EmbeddedFile{
+	file1t := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-textfield.vue.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("<v-text-field v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" />"),
 	}
-	file1t := &embedded.EmbeddedFile{
+	file1u := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-time.vue.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("<div>\n\t<v-time-picker v-model=\"entity.{{.Serialized}}\" label=\"{{.Label}}\" :landscape=\"landscape\"></v-time-picker>\n</div>"),
 	}
-	file1u := &embedded.EmbeddedFile{
+	file1v := &embedded.EmbeddedFile{
 		Filename:    "vuetify/old/vuetify_editor-field-toggle.vue.tmpl",
 		FileModTime: time.Unix(1535186687, 0),
 		Content:     string("<v-switch\n\tlabel=\"{{.Label}}\"\n\tv-model=\"entity.{{.Serialized}}\"\n></v-switch>"),
 	}
-	file1w := &embedded.EmbeddedFile{
+	file1x := &embedded.EmbeddedFile{
 		Filename:    "vuetify/views/edit.vue.tmpl",
 		FileModTime: time.Unix(1536574747, 0),
 		Content:     string("<template>\n    <div>\n        <div class=\"listing--container\">\n            <v-toolbar color=\"transparent\" class=\"listing-toolbar\" flat ml-0>\n                <v-btn icon :to=\"{name: '{{- plural (lower .Entity.Name) -}}_list'}\">\n                    <v-icon large>arrow_back</v-icon>\n                </v-btn>\n                <v-toolbar-title class=\"ma-0 pa-0\">\n                    <h2>Edit {{.Entity.Name}}</h2>\n                </v-toolbar-title>\n                <v-spacer></v-spacer>\n                <v-btn mr-0 color=\"\" :to=\"''\">\n                    <v-icon dark>arrow_back</v-icon> Prev\n                </v-btn>\n                <v-btn mr-0 color=\"\" :to=\"''\">\n                    <v-icon dark>arrow_forward</v-icon> Next\n                </v-btn>\n            </v-toolbar>\n        </div>\n        <v-card>\n            <v-card-text>\n                <v-form>\n                    <div class=\"gocipe-form-grid\" v-if=\"entity\">\n                        {{ $EntityName := .Entity.Name }} {{ range .Entity.Fields }} {{if not .EditWidget.Hide }} {{if eq .EditWidget.Type \"time\"}}\n                        <!-- Date Template -->\n                        <template>\n                            <div class=\"gocipe-field-container\">\n                                <component :is=\"'g{{ucfirst .EditWidget.Type }}'\" :label=\"'{{ .Label }}'\" :hint=\"'widget: {{ .EditWidget.Type }}'\" @gocipe=\"(e) => this.entity.set{{ucfirst .Property.Name}}(e)\" :value=\"this.entity.get{{ucfirst .Property.Name}}()\"></component>\n                            </div>\n                        </template>\n                        {{ else if eq .EditWidget.Type \"imagefield\"}}\n                        <!-- Date Template -->\n                        <template>\n                            <div class=\"gocipe-field-container\">\n                                <component :is=\"'g{{ucfirst .EditWidget.Type }}'\" :field=\"'{{ .Property.Name}}'\" :rpc=\"'upload{{ $EntityName }}'\" :entityid=\"id\" :label=\"'{{ .Label }}'\" :hint=\"'widget: {{ .EditWidget.Type }}'\" @gocipe=\"(e) => this.entity.set{{ucfirst .Property.Name}}(e)\" :value=\"this.entity.get{{ucfirst .Property.Name}}()\"></component>\n                            </div>\n                        </template>\n                        {{ else }}\n                        <template>\n                            <div class=\"gocipe-field-container\">\n                                <component :is=\"'g{{ucfirst .EditWidget.Type }}'\" :label=\"'{{ .Label }}'\" {{if eq .EditWidget.Type \"select\" }} :options='{{json .EditWidget.Options }}' {{ end }} :hint=\"'widget: {{ .EditWidget.Type }}'\" @gocipe=\"(e) => this.entity.set{{ucfirst .Property.Name}}(e)\" :value=\"this.entity.get{{ucfirst .Property.Name}}()\"></component>\n                            </div>\n                        </template>\n                        {{end}} {{end}} {{ end }}\n                    </div>\n                </v-form>\n            </v-card-text>\n            <v-card-actions>\n                <v-spacer></v-spacer>\n                <v-btn color=\"primary\" @click=\"update\">\n                    Save\n                    <v-icon right>save</v-icon>\n                </v-btn>\n            </v-card-actions>\n        </v-card>\n\n        <v-snackbar v-model=\"snackbar.show\" :top=\"true\" auto-height :color=\"snackbar.color\" :timeout=\"6000\">\n            {{ printf `{{ snackbar.text }}` }}\n            <v-btn dark flat v-if=\"snackbar.color !== 'error'\" :to=\"{name: '{{- plural (lower .Entity.Name) -}}_list', params : { track : id}}\">\n                <v-icon>arrow_back</v-icon>\n            </v-btn>\n            <v-btn dark flat @click=\"snackbarHide\">\n                <v-icon>close</v-icon>\n            </v-btn>\n        </v-snackbar>\n    </div>\n</template>\n\n\n<script>\nimport { BreadClient } from \"@/services/service_bread_pb_service\";\nimport { GetRequest } from \"@/services/service_bread_pb\";\nimport { Update{{ .Entity.Name}}Request } from \"@/services/service_bread_pb\";\nimport gTextfield from \"@/widgets/edit/gTextfield.vue\";\nimport gImagefield from \"@/widgets/edit/gImagefield.vue\";\nimport gToggle from \"@/widgets/edit/gToggle.vue\";\nimport gIcon from \"@/widgets/edit/gIcon.vue\";\nimport gTime from \"@/widgets/edit/gTime.vue\";\nimport gTextarea from \"@/widgets/edit/gTextarea.vue\";\nimport gPublished from \"@/widgets/edit/gPublished.vue\";\nimport gMap from \"@/widgets/edit/gMap.vue\";\nimport gSelect from \"@/widgets/edit/gSelect.vue\";\n\nexport default {\n  data() {\n    return {\n      messages: [],   \n      snackbar: {\n          show: false, \n          text: ''\n      },\n      entity: null,\n      loading: false,\n      id: null,\n      cli : new BreadClient(\"/api\")\n\n    };\n  },\n  {{/*\n    The Code below tranforms into something like this. A computed property with custom getter and setters\n    computed: {\n        name: {\n        get: function() {\n            return this.entity.getName();\n        },\n        set: function(value) {\n            this.entity.setName(value);\n        }\n        }\n    },\n  */}}\n\n  components: {\n      gTextfield,\n      gImagefield,\n      gToggle,\n      gIcon,\n      gTime,\n      gTextarea,\n      gPublished,\n      gMap,\n      gSelect\n  },\n  mounted() {\n    this.id = this.$route.params.id;\n    let req = new GetRequest();\n    req.setId(this.id);\n\n    this.loading = true;\n\n    this.cli.get{{ .Entity.Name}}(req, (err, resp) => {\n        if (err) {\n            console.log(err);\n            this.snackbarShow(err.message, \"error\");\n            return;\n        }\n        this.loading = false;\n        this.entity = resp.get{{ucfirst .Entity.Name}}();\n    });\n  },\n  methods: {\n        log: function(e) {\n            console.log(e)\n        },\n        update: function() {\n    \n            let req = new Update{{.Entity.Name}}Request();\n            req.set{{ ucfirst .Entity.Name}}(this.entity);\n            this.loading = true;\n\n            this.snackbarShow('{{ucfirst .Entity.Name}} Saved');\n            this.debug();\n\n            this.cli.update{{.Entity.Name}}(req, (err, resp) => {\n                if (err) {\n                    console.log(err);\n\n                    this.snackbarShow(err.message, \"error\");\n\n                    this.loading = false;\n                    return;\n                }\n            });\n        },\n        debug: function() {\n            {{ range .Entity.Fields }}\n            console.log(\"{{.Property.Name}}\", this.entity.get{{ ucfirst .Property.Name }}());\n            {{end}}\n        },\n        snackbarShow: function(text, color) {\n            this.snackbar.show = true;\n            this.snackbar.color = color || 'info';\n            this.snackbar.text = text || 'something happened';\n        },\n        snackbarHide: function() {\n            this.snackbar.show = false\n        }\n  }\n};\n</script>\n\n<style lang=\"scss\" scoped>\n.gocipe-form-grid {\n  width: 100%;\n  max-width: 800px;\n  margin: 0 auto;\n  display: grid;\n  grid-template-columns: 1fr;\n  grid-column-gap: var(--gutter, 40px);\n  .gocipe-field-container {\n    // grid-column: 1/2;\n  }\n}\n</style>\n"),
 	}
-	file1x := &embedded.EmbeddedFile{
+	file1y := &embedded.EmbeddedFile{
 		Filename:    "vuetify/views/list.vue.tmpl",
 		FileModTime: time.Unix(1536300261, 0),
 		Content:     string("<template>\n  <div class=\"listing--container\">\n    <v-toolbar color=\"transparent\" class=\"listing-toolbar\" flat ml-0>\n      <v-btn icon>\n        <v-icon large>{{.Entity.Vuetify.Icon}}</v-icon>\n      </v-btn>\n      <v-toolbar-title class=\"ma-0 pa-0\">\n        <h2>{{.Entity.Name}}</h2>\n      </v-toolbar-title>\n      <v-spacer></v-spacer>\n      <v-btn mr-0 color=\"primary\" @click=\"create\">\n        <v-icon dark>add</v-icon> Add\n      </v-btn>\n    </v-toolbar>\n\n    <!-- Error Messages -->\n    <v-alert :type=\"message.type==='E' ? 'error' : message.type\" :value=\"true\" v-for=\"(message, index) in messages\" :key=\"index\">\n      {{ \"{{ message.text }}\" }}\n    </v-alert>\n\n    <!-- Empty Check -->\n    <div v-if=\"loading\" centered>\n      <v-progress-linear :indeterminate=\"true\"></v-progress-linear>\n      <p class=\"text-xs-center\">contacting server...</p>\n    </div>\n    <v-alert type=\"info\" value=\"true\" color=\"primary\" outline icon=\"info\" v-else-if=\"entities.length===0 && !loading\">\n      No {{.Entity.Name}} exist. Would you like to create one now?\n      <v-btn color=\"primary\" @click=\"create\">create new</v-btn>\n    </v-alert>\n\n    <!-- Table form listing -->\n    <template v-else>\n      <v-text-field mb-4 append-icon=\"search\" label=\"Search\" single-line hide-details v-model=\"search\"></v-text-field>\n      <v-data-table :headers=\"headers\" :items=\"entities\" class=\"elevation-1\" :search=\"search\">\n        <template slot=\"items\" slot-scope=\"props\">\n          <tr :class=\"{'highlight': recentlySaved(props.item.id)}\">\n            <td class=\"justify-center layout px-0\">\n              <v-btn icon class=\"mx-0\" :to=\"{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}\">\n                <v-icon>edit</v-icon>\n              </v-btn>\n              <v-btn icon class=\"mx-0\" @click=\"deleteTry(props.item.id, props.item.Name )\">\n                <v-icon>delete</v-icon>\n              </v-btn>\n              <v-tooltip top>\n                <v-btn slot=\"activator\" icon class=\"mx-0\" :to=\"{name: 'g_{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}\">\n                  <v-icon>accessible_forward</v-icon>\n                </v-btn>\n                <span>Automatically generated Edit Form</span>\n              </v-tooltip>\n            </td>\n            <!-- Check if it should appear in the list -->\n            {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}\n            <!-- Use different rendering for dates -->\n            {{ if eq .ListWidget.Type \"time\" }}\n            <td>\n              <component :is=\"'g{{ucfirst .ListWidget.Type}}'\" :time=\"{{ printf \" props.item.%s \" (ucfirst .Property.Name) }}\" />\n            </td>\n            {{- else -}}\n            <!-- Use different rendering for dates -->\n            {{if eq .ListWidget.Type \"image\"}}\n            <td>\n              <v-img :src=\"{{ printf \" props.item.%s \" (ucfirst .Property.Name) }} \" width=\"50\" max-width=\"50\" contain height=\"40\" max-height=\"40\"></v-img>\n            </td>\n            {{- else -}}\n            <!-- Use different rendering for select types -->\n            {{if eq .ListWidget.Type \"select\"}}\n            <td>\n              <component :is=\"'g{{ucfirst .ListWidget.Type}}'\" :field=\"'{{ .Property.Name }}'\" :status=\"{{ printf \" props.item.%s \" (ucfirst .Property.Name) }}\" />\n            </td>\n            {{- else -}}\n            <!-- Use different rendering for dates -->\n            {{if eq .ListWidget.Type \"icon\"}}\n            <td>\n              <v-icon>{{ printf \"{{ props.item.%s }}\" (ucfirst .Property.Name) }}</v-icon>\n            </td>\n            {{else}}\n            <!-- Use different rendering for toggles -->\n            {{if eq .ListWidget.Type \"toggle\"}}\n            <td>\n              <component :is=\"'g{{ucfirst .ListWidget.Type}}'\" :value=\"{{ printf \" props.item.%s \" (ucfirst .Property.Name) }}\" />\n            </td>\n            {{else}}\n            <td>\n              <v-tooltip top>\n                <span slot=\"activator\">\n                  {{ printf \"{{ props.item.%s}}\" (ucfirst .Property.Name) }}\n\n                </span>\n                <span>Widget Type : {{ ucfirst .Property.Type}}</span>\n              </v-tooltip>\n            </td>\n            {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}\n          </tr>\n        </template>\n\n        <template slot=\"no-data\">\n          <v-flex ma-4>\n            <v-alert slot=\"no-results\" :value=\"true\" color=\"primary\" outline icon=\"info\" v-if=\"search.length> 0\"> Your search for \"{{ \"{{ search }}\" }}\" found no results.\n            </v-alert>\n            <v-alert slot=\"no-results\" :value=\"true\" color=\"primary\" outline icon=\"info\" v-else>\n              No {{.Entity.Name}} found.\n            </v-alert>\n          </v-flex>\n        </template>\n      </v-data-table>\n    </template>\n\n    <v-dialog v-model=\"dialog\" persistent max-width=\"300\">\n      <v-card dark>\n        <v-card-title class=\"headline\">Confirm Delete</v-card-title>\n        <v-card-text>\n          You are about to delete\n          <strong>\"{{ printf \"{{deleteItemId.label}}\" }}\"</strong>\n        </v-card-text>\n        <v-card-actions>\n          <v-btn flat @click.native=\"dialog = false;\">Cancel</v-btn>\n          <v-spacer></v-spacer>\n          <v-btn color=\"error\" dark @click.native=\"deleteConfirm\">Yes, Delete</v-btn>\n        </v-card-actions>\n      </v-card>\n    </v-dialog>\n\n    <v-snackbar v-model=\"snackbar.show\" :top=\"true\" color=\"primary\" auto-height :timeout=\"2000\">\n      {{ printf `{{ snackbar.text }}` }}\n      <v-btn dark flat @click=\"snackbarHide\">\n        <v-icon>close</v-icon>\n      </v-btn>\n    </v-snackbar>\n  </div>\n</template>\n\n<script>\nimport { BreadClient } from \"@/services/service_bread_pb_service\";\nimport { ListRequest } from \"@/services/service_bread_pb\";\nimport { Create{{ .Entity.Name}}Request } from \"@/services/service_bread_pb\";\nimport { DeleteRequest } from \"@/services/service_bread_pb\";\nimport { mapGetters } from 'vuex';\nimport gSelect from \"@/widgets/list/gSelect.vue\";\nimport gToggle from \"@/widgets/list/gToggle.vue\";\nimport gTime from \"@/widgets/list/gTime.vue\";\n\nexport default {\n  data() {\n    return {\n      messages: [],\n      track: null,\n      search: \"\",\n      snackbar: {\n          show: false, \n          text: ''\n      },\n      dialog: null,\n      deleteItemId: {\n        id: null,\n        label: null\n      },\n      text: \"hola\",\n      headers: [\n        {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},\n\t\t{{range .Entity.Fields }}{{if not .ListWidget.Hide}}\n\t\t{text: \"{{.Label}}\", value: \"{{.Property.Name}}\"},\n\t\t{{end}}{{end}}\n      ],\n      entities: [],\n      loading: false,\n      cli : new BreadClient(\"/api\")\n    };\n  },\n  components: {\n      gSelect,\n      gToggle,\n      gTime\n  },\n  computed: {\n    ...mapGetters({\n      'token': 'auth/getToken'\n    })\n  },\n  mounted() {\n    this.loading = true;\n    this.getList();\n    this.track = this.$route.params.track;\n  },\n  methods: {    \n      recentlySaved(id) {\n          if (this.track === id) {\n              return true;\n          }\n          return false;\n      },\n\n      getList: function(){\n        let req = new ListRequest();\n        req.setKey(this.token);\n\n        this.cli.list{{plural .Entity.Name}}(req, (err, resp) => {\n          if (err) {\n            console.log(err);\n\n            this.snackbarShow(err.message, \"error\");\n\n            return;\n          }\n          this.loading = false;\n          this.snackbarShow('{{ucfirst (plural .Entity.Name)}} Loaded');\n\n          this.entities = resp.get{{ucfirst (plural .Entity.Name)}}List().map(entity => {\n            return {\n              {{ range .Entity.Fields -}}\n                {{- if eq .ListWidget.Type \"time\" -}}\n                  {{ucfirst .Property.Name}}: {{- printf \" entity.get%s().toDate() \" (ucfirst .Property.Name)}},\n                {{- else -}}\n                  {{ucfirst .Property.Name}}: {{- printf \" entity.get%s() \" (ucfirst .Property.Name)}},\n                {{- end }}\n              {{ end }}\n              id: entity.getId()\n            }\n          })\n          \n        });\n       },\n      create: function() {\n          let req = new Create{{.Entity.Name}}Request();\n          req.setKey(this.token);\n\n          this.snackbarShow('Loading {{ucfirst (plural .Entity.Name)}}');\n          this.loading = true;\n\n           this.cli.create{{.Entity.Name}}(req, (err, resp) => {\n            if (err) {\n                console.log(err);\n\n                this.snackbarShow(\"Create Error \" + err.message, \"error\");\n\n                this.loading = false;\n                return;\n            }\n\n            this.$router.push({\n                name: \"g_{{lower (plural .Entity.Name)}}_edit\",\n                params: { id: resp.get{{ucfirst .Entity.Name}}().getId() }\n            });\n        });\n      },\n      deleteTry: function(id, label) {\n          this.deleteItemId = { id: id, label, label };\n          this.dialog = true;\n      },\n      deleteConfirm: function() {\n\n          let req = new DeleteRequest();\n          req.setKey(this.token);\n          req.setId(this.deleteItemId.id)\n\n          this.cli.delete{{.Entity.Name}}(req, (err, resp) => {\n            if (err) {\n                console.log(err);\n                this.snackbarShow(\"Delete error: \" + err.message, \"error\");\n\n                this.loading = false;\n                return;\n            } else {\n              this.snackbarShow('Deleted', this.deleteItemId.label);\n              this.getList();\n            }\n          })\n\n          this.dialog = false;\n\n      },\n      snackbarShow: function(text, color) {\n          this.snackbar.show = true;\n          this.snackbar.color = color || 'info';\n          this.snackbar.text = text || 'something happened';\n      },\n      snackbarHide: function() {\n          this.snackbar.show = false\n      }\n  }\n};\n</script>\n\n<style lang=\"scss\">\n.listing-toolbar .v-toolbar__content {\n  padding: 0;\n}\n\n.listing--container td {\n  img {\n    display: block !important;\n    height: 48px;\n    width: auto;\n  }\n}\n</style>\n\n\n<style lang=\"scss\" scoped>\n.bounce-enter-active {\n  animation: bounce-in 0.5s;\n}\n.bounce-leave-active {\n  animation: bounce-in 0.5s reverse;\n}\n@keyframes bounce-in {\n  0% {\n    transform: scale(0);\n  }\n  50% {\n    transform: scale(1.5);\n  }\n  100% {\n    transform: scale(1);\n  }\n}\n\n.highlight {\n  animation: highlight 10s 1 ease-in-out;\n}\n\n@keyframes highlight {\n  0% {\n    background: #b9f6ca;\n  }\n  100% {\n    background: transparent;\n  }\n}\n</style>\n"),
@@ -299,9 +304,9 @@ func init() {
 		Filename:   "",
 		DirModTime: time.Unix(1535186687, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
-			filez,  // "http.go.tmpl"
-			file10, // "rest.go.tmpl"
-			file11, // "rest_hooks.go.tmpl"
+			file10, // "http.go.tmpl"
+			file11, // "rest.go.tmpl"
+			file12, // "rest_hooks.go.tmpl"
 
 		},
 	}
@@ -344,13 +349,13 @@ func init() {
 			fileh, // "crud/hooks.go.tmpl"
 			filei, // "crud/models.go.tmpl"
 			filej, // "crud/moderrors.go.tmpl"
-			filey, // "crud/protobuf.proto.tmpl"
+			filez, // "crud/protobuf.proto.tmpl"
 
 		},
 	}
 	dirk := &embedded.EmbeddedDir{
 		Filename:   "crud/partials",
-		DirModTime: time.Unix(1536569857, 0),
+		DirModTime: time.Unix(1536744364, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			filel, // "crud/partials/delete_many.go.tmpl"
 			filem, // "crud/partials/delete_single.go.tmpl"
@@ -363,74 +368,75 @@ func init() {
 			filet, // "crud/partials/merge.go.tmpl"
 			fileu, // "crud/partials/save.go.tmpl"
 			filev, // "crud/partials/saverelated_manymany.go.tmpl"
-			filew, // "crud/partials/saverelated_onemany.go.tmpl"
-			filex, // "crud/partials/update.go.tmpl"
+			filew, // "crud/partials/saverelated_manymanyowner.go.tmpl"
+			filex, // "crud/partials/saverelated_onemany.go.tmpl"
+			filey, // "crud/partials/update.go.tmpl"
 
 		},
 	}
-	dir12 := &embedded.EmbeddedDir{
+	dir13 := &embedded.EmbeddedDir{
 		Filename:   "schema",
 		DirModTime: time.Unix(1535186687, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
-			file13, // "schema/schema.sql.tmpl"
+			file14, // "schema/schema.sql.tmpl"
 
 		},
 	}
-	dir14 := &embedded.EmbeddedDir{
+	dir15 := &embedded.EmbeddedDir{
 		Filename:   "util",
 		DirModTime: time.Unix(1536574789, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
-			file15, // "util/credentials.go.tmpl"
-			file16, // "util/files.go.tmpl"
-			file17, // "util/rice.go.tmpl"
-			file18, // "util/util.go.tmpl"
-			file19, // "util/web.go.tmpl"
-			file1a, // "util/ws.go.tmpl"
+			file16, // "util/credentials.go.tmpl"
+			file17, // "util/files.go.tmpl"
+			file18, // "util/rice.go.tmpl"
+			file19, // "util/util.go.tmpl"
+			file1a, // "util/web.go.tmpl"
+			file1b, // "util/ws.go.tmpl"
 
 		},
 	}
-	dir1b := &embedded.EmbeddedDir{
+	dir1c := &embedded.EmbeddedDir{
 		Filename:   "vuetify",
 		DirModTime: time.Unix(1535186687, 0),
 		ChildFiles: []*embedded.EmbeddedFile{},
 	}
-	dir1c := &embedded.EmbeddedDir{
+	dir1d := &embedded.EmbeddedDir{
 		Filename:   "vuetify/js",
 		DirModTime: time.Unix(1536300261, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
-			file1d, // "vuetify/js/actions.js.tmpl"
-			file1e, // "vuetify/js/getters.js.tmpl"
-			file1f, // "vuetify/js/index.js.tmpl"
-			file1g, // "vuetify/js/mutations.js.tmpl"
-			file1h, // "vuetify/js/routes.js.tmpl"
-			file1i, // "vuetify/js/types.js.tmpl"
+			file1e, // "vuetify/js/actions.js.tmpl"
+			file1f, // "vuetify/js/getters.js.tmpl"
+			file1g, // "vuetify/js/index.js.tmpl"
+			file1h, // "vuetify/js/mutations.js.tmpl"
+			file1i, // "vuetify/js/routes.js.tmpl"
+			file1j, // "vuetify/js/types.js.tmpl"
 
 		},
 	}
-	dir1j := &embedded.EmbeddedDir{
+	dir1k := &embedded.EmbeddedDir{
 		Filename:   "vuetify/old",
 		DirModTime: time.Unix(1535186687, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
-			file1k, // "vuetify/old/vuetify_edit.vue.tmpl"
-			file1l, // "vuetify/old/vuetify_editor-field-checkbox.vue.tmpl"
-			file1m, // "vuetify/old/vuetify_editor-field-date.vue.tmpl"
-			file1n, // "vuetify/old/vuetify_editor-field-number.vue.tmpl"
-			file1o, // "vuetify/old/vuetify_editor-field-password.vue.tmpl"
-			file1p, // "vuetify/old/vuetify_editor-field-select-rel.vue.tmpl"
-			file1q, // "vuetify/old/vuetify_editor-field-select.vue.tmpl"
-			file1r, // "vuetify/old/vuetify_editor-field-textarea.vue.tmpl"
-			file1s, // "vuetify/old/vuetify_editor-field-textfield.vue.tmpl"
-			file1t, // "vuetify/old/vuetify_editor-field-time.vue.tmpl"
-			file1u, // "vuetify/old/vuetify_editor-field-toggle.vue.tmpl"
+			file1l, // "vuetify/old/vuetify_edit.vue.tmpl"
+			file1m, // "vuetify/old/vuetify_editor-field-checkbox.vue.tmpl"
+			file1n, // "vuetify/old/vuetify_editor-field-date.vue.tmpl"
+			file1o, // "vuetify/old/vuetify_editor-field-number.vue.tmpl"
+			file1p, // "vuetify/old/vuetify_editor-field-password.vue.tmpl"
+			file1q, // "vuetify/old/vuetify_editor-field-select-rel.vue.tmpl"
+			file1r, // "vuetify/old/vuetify_editor-field-select.vue.tmpl"
+			file1s, // "vuetify/old/vuetify_editor-field-textarea.vue.tmpl"
+			file1t, // "vuetify/old/vuetify_editor-field-textfield.vue.tmpl"
+			file1u, // "vuetify/old/vuetify_editor-field-time.vue.tmpl"
+			file1v, // "vuetify/old/vuetify_editor-field-toggle.vue.tmpl"
 
 		},
 	}
-	dir1v := &embedded.EmbeddedDir{
+	dir1w := &embedded.EmbeddedDir{
 		Filename:   "vuetify/views",
 		DirModTime: time.Unix(1536574747, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
-			file1w, // "vuetify/views/edit.vue.tmpl"
-			file1x, // "vuetify/views/list.vue.tmpl"
+			file1x, // "vuetify/views/edit.vue.tmpl"
+			file1y, // "vuetify/views/list.vue.tmpl"
 
 		},
 	}
@@ -441,9 +447,9 @@ func init() {
 		dir7,  // "bootstrap"
 		dira,  // "bread"
 		dirf,  // "crud"
-		dir12, // "schema"
-		dir14, // "util"
-		dir1b, // "vuetify"
+		dir13, // "schema"
+		dir15, // "util"
+		dir1c, // "vuetify"
 
 	}
 	dir2.ChildDirs = []*embedded.EmbeddedDir{}
@@ -454,17 +460,17 @@ func init() {
 
 	}
 	dirk.ChildDirs = []*embedded.EmbeddedDir{}
-	dir12.ChildDirs = []*embedded.EmbeddedDir{}
-	dir14.ChildDirs = []*embedded.EmbeddedDir{}
-	dir1b.ChildDirs = []*embedded.EmbeddedDir{
-		dir1c, // "vuetify/js"
-		dir1j, // "vuetify/old"
-		dir1v, // "vuetify/views"
+	dir13.ChildDirs = []*embedded.EmbeddedDir{}
+	dir15.ChildDirs = []*embedded.EmbeddedDir{}
+	dir1c.ChildDirs = []*embedded.EmbeddedDir{
+		dir1d, // "vuetify/js"
+		dir1k, // "vuetify/old"
+		dir1w, // "vuetify/views"
 
 	}
-	dir1c.ChildDirs = []*embedded.EmbeddedDir{}
-	dir1j.ChildDirs = []*embedded.EmbeddedDir{}
-	dir1v.ChildDirs = []*embedded.EmbeddedDir{}
+	dir1d.ChildDirs = []*embedded.EmbeddedDir{}
+	dir1k.ChildDirs = []*embedded.EmbeddedDir{}
+	dir1w.ChildDirs = []*embedded.EmbeddedDir{}
 
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`templates`, &embedded.EmbeddedBox{
@@ -477,12 +483,12 @@ func init() {
 			"bread":         dira,
 			"crud":          dirf,
 			"crud/partials": dirk,
-			"schema":        dir12,
-			"util":          dir14,
-			"vuetify":       dir1b,
-			"vuetify/js":    dir1c,
-			"vuetify/old":   dir1j,
-			"vuetify/views": dir1v,
+			"schema":        dir13,
+			"util":          dir15,
+			"vuetify":       dir1c,
+			"vuetify/js":    dir1d,
+			"vuetify/old":   dir1k,
+			"vuetify/views": dir1w,
 		},
 		Files: map[string]*embedded.EmbeddedFile{
 			"application/gen-service.sh.tmpl":                      file3,
@@ -510,38 +516,39 @@ func init() {
 			"crud/partials/merge.go.tmpl":                          filet,
 			"crud/partials/save.go.tmpl":                           fileu,
 			"crud/partials/saverelated_manymany.go.tmpl":           filev,
-			"crud/partials/saverelated_onemany.go.tmpl":            filew,
-			"crud/partials/update.go.tmpl":                         filex,
-			"crud/protobuf.proto.tmpl":                             filey,
-			"http.go.tmpl":                                         filez,
-			"rest.go.tmpl":                                         file10,
-			"rest_hooks.go.tmpl":                                   file11,
-			"schema/schema.sql.tmpl":                               file13,
-			"util/credentials.go.tmpl":                             file15,
-			"util/files.go.tmpl":                                   file16,
-			"util/rice.go.tmpl":                                    file17,
-			"util/util.go.tmpl":                                    file18,
-			"util/web.go.tmpl":                                     file19,
-			"util/ws.go.tmpl":                                      file1a,
-			"vuetify/js/actions.js.tmpl":                           file1d,
-			"vuetify/js/getters.js.tmpl":                           file1e,
-			"vuetify/js/index.js.tmpl":                             file1f,
-			"vuetify/js/mutations.js.tmpl":                         file1g,
-			"vuetify/js/routes.js.tmpl":                            file1h,
-			"vuetify/js/types.js.tmpl":                             file1i,
-			"vuetify/old/vuetify_edit.vue.tmpl":                    file1k,
-			"vuetify/old/vuetify_editor-field-checkbox.vue.tmpl":   file1l,
-			"vuetify/old/vuetify_editor-field-date.vue.tmpl":       file1m,
-			"vuetify/old/vuetify_editor-field-number.vue.tmpl":     file1n,
-			"vuetify/old/vuetify_editor-field-password.vue.tmpl":   file1o,
-			"vuetify/old/vuetify_editor-field-select-rel.vue.tmpl": file1p,
-			"vuetify/old/vuetify_editor-field-select.vue.tmpl":     file1q,
-			"vuetify/old/vuetify_editor-field-textarea.vue.tmpl":   file1r,
-			"vuetify/old/vuetify_editor-field-textfield.vue.tmpl":  file1s,
-			"vuetify/old/vuetify_editor-field-time.vue.tmpl":       file1t,
-			"vuetify/old/vuetify_editor-field-toggle.vue.tmpl":     file1u,
-			"vuetify/views/edit.vue.tmpl":                          file1w,
-			"vuetify/views/list.vue.tmpl":                          file1x,
+			"crud/partials/saverelated_manymanyowner.go.tmpl":      filew,
+			"crud/partials/saverelated_onemany.go.tmpl":            filex,
+			"crud/partials/update.go.tmpl":                         filey,
+			"crud/protobuf.proto.tmpl":                             filez,
+			"http.go.tmpl":                                         file10,
+			"rest.go.tmpl":                                         file11,
+			"rest_hooks.go.tmpl":                                   file12,
+			"schema/schema.sql.tmpl":                               file14,
+			"util/credentials.go.tmpl":                             file16,
+			"util/files.go.tmpl":                                   file17,
+			"util/rice.go.tmpl":                                    file18,
+			"util/util.go.tmpl":                                    file19,
+			"util/web.go.tmpl":                                     file1a,
+			"util/ws.go.tmpl":                                      file1b,
+			"vuetify/js/actions.js.tmpl":                           file1e,
+			"vuetify/js/getters.js.tmpl":                           file1f,
+			"vuetify/js/index.js.tmpl":                             file1g,
+			"vuetify/js/mutations.js.tmpl":                         file1h,
+			"vuetify/js/routes.js.tmpl":                            file1i,
+			"vuetify/js/types.js.tmpl":                             file1j,
+			"vuetify/old/vuetify_edit.vue.tmpl":                    file1l,
+			"vuetify/old/vuetify_editor-field-checkbox.vue.tmpl":   file1m,
+			"vuetify/old/vuetify_editor-field-date.vue.tmpl":       file1n,
+			"vuetify/old/vuetify_editor-field-number.vue.tmpl":     file1o,
+			"vuetify/old/vuetify_editor-field-password.vue.tmpl":   file1p,
+			"vuetify/old/vuetify_editor-field-select-rel.vue.tmpl": file1q,
+			"vuetify/old/vuetify_editor-field-select.vue.tmpl":     file1r,
+			"vuetify/old/vuetify_editor-field-textarea.vue.tmpl":   file1s,
+			"vuetify/old/vuetify_editor-field-textfield.vue.tmpl":  file1t,
+			"vuetify/old/vuetify_editor-field-time.vue.tmpl":       file1u,
+			"vuetify/old/vuetify_editor-field-toggle.vue.tmpl":     file1v,
+			"vuetify/views/edit.vue.tmpl":                          file1x,
+			"vuetify/views/list.vue.tmpl":                          file1y,
 		},
 	})
 }

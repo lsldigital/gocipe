@@ -186,7 +186,21 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 
 	if err == nil {
 		for _, rel := range entity.Relationships {
+			// No SaveRelated template generated:
+			// RelationshipTypeManyManyInverse, RelationshipTypeOneMany, RelationshipTypeManyOne, RelationshipTypeOneOne
 			switch rel.Type {
+			case util.RelationshipTypeManyManyOwner:
+				c, err := generateLoadRelatedManyMany(entities, entity, rel)
+				if err != nil {
+					return code, err
+				}
+				code.LoadRelated = append(code.LoadRelated, c)
+
+				c, err = generateSaveRelatedManyManyOwner(entities, entity, rel)
+				if err != nil {
+					return code, err
+				}
+				code.SaveRelated = append(code.SaveRelated, c)
 			case util.RelationshipTypeManyMany:
 				c, err := generateLoadRelatedManyMany(entities, entity, rel)
 				if err != nil {
@@ -199,19 +213,7 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 					return code, err
 				}
 				code.SaveRelated = append(code.SaveRelated, c)
-			case util.RelationshipTypeOneMany:
-				c, err := generateLoadRelatedOneMany(entities, entity, rel)
-				if err != nil {
-					return code, err
-				}
-				code.LoadRelated = append(code.LoadRelated, c)
-
-				c, err = generateSaveRelatedOneMany(entities, entity, rel)
-				if err != nil {
-					return code, err
-				}
-				code.SaveRelated = append(code.SaveRelated, c)
-			case util.RelationshipTypeManyOne:
+			case util.RelationshipTypeManyOne, util.RelationshipTypeOneOne:
 				c, err := generateLoadRelatedManyOne(entities, entity, rel)
 				if err != nil {
 					return code, err
@@ -312,37 +314,29 @@ func generateSaveRelatedManyMany(entities map[string]util.Entity, entity util.En
 	})
 }
 
-// generateSaveRelatedManyMany produces code for database saving of related entities
-func generateSaveRelatedOneMany(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
-
-	var danglingVal string
-
-	switch entity.PrimaryKey {
-	case util.PrimaryKeyInt, util.PrimaryKeySerial:
-		danglingVal = "0"
-	case util.PrimaryKeyString, util.PrimaryKeyUUID:
-		danglingVal = `""`
-	}
-
-	return util.ExecuteTemplate("crud/partials/saverelated_onemany.go.tmpl", struct {
-		PropertyName string
-		PrimaryKey   string
-		EntityName   string
-		Table        string
-		Funcname     string
-		ThisColumn   string
-		ThatColumn   string
-		ThatType     string
-		DanglingVal  string
+// generateSaveRelatedManyManyOwner produces code for database saving of related entities
+func generateSaveRelatedManyManyOwner(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
+	return util.ExecuteTemplate("crud/partials/saverelated_manymanyowner.go.tmpl", struct {
+		PropertyName   string
+		PrimaryKey     string
+		PropertyType   string
+		EntityName     string
+		Table          string
+		Funcname       string
+		ThisColumn     string
+		ThatColumn     string
+		ThatType       string
+		ThatPrimaryKey string
 	}{
-		PropertyName: rel.Name,
-		PrimaryKey:   entity.PrimaryKey,
-		EntityName:   entity.Name,
-		Table:        rel.JoinTable,
-		Funcname:     util.RelFuncName(rel),
-		ThisColumn:   rel.ThisID,
-		ThatColumn:   rel.ThatID,
-		ThatType:     "*" + entities[rel.Entity].Name,
-		DanglingVal:  danglingVal,
+		PropertyName:   rel.Name,
+		PrimaryKey:     entity.PrimaryKey,
+		PropertyType:   entities[rel.Entity].PrimaryKey,
+		EntityName:     entity.Name,
+		Table:          rel.JoinTable,
+		Funcname:       util.RelFuncName(rel),
+		ThisColumn:     rel.ThisID,
+		ThatColumn:     rel.ThatID,
+		ThatType:       "*" + entities[rel.Entity].Name,
+		ThatPrimaryKey: entities[rel.Entity].PrimaryKey,
 	})
 }

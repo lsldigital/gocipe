@@ -40,6 +40,12 @@ const (
 	// RelationshipTypeManyMany represents a relationship of type Many-Many
 	RelationshipTypeManyMany = "many-many"
 
+	// RelationshipTypeManyManyOwner represents a relationship of type Many-Many(Owner)
+	RelationshipTypeManyManyOwner = "many-many-owner"
+
+	// RelationshipTypeManyManyInverse represents a relationship of type Many(owner)-Many
+	RelationshipTypeManyManyInverse = "many-many-inverse"
+
 	// RelationshipTypeOneOne represents a relationship of type One-One
 	RelationshipTypeOneOne = "one-one"
 
