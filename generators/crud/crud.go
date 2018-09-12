@@ -192,9 +192,9 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 			// Case: Save triggered on Entity A
 			// | Relationship Types | Entity A  | Entity B   |
 			// |--------------------|-----------|------------|
-			// | One-One            | Saved     | Not Saved* | * Save foreign key value (i.e UUID)
+			// | One-One            | Saved     | Not Saved* | * Save foreign key value of entity A  (i.e UUID)
 			// | One-Many           | Saved     | Not Saved  |
-			// | Many-One           | Saved     | Not Saved* | * Save foreign key value (i.e UUID)
+			// | Many-One           | Saved*    | Not Saved  | * Save foreign key value of entity B (i.e UUID)
 			// | Many-Many          | Saved     | Saved      |
 			// | Many-Many-Owner    | Saved     | Saved*     | * Only in pivot table
 			// | Many-Many-Inverse  | Saved     | Not Saved  |
