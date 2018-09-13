@@ -17,8 +17,8 @@ let routes = [
     }
   },
   {
-    path: "g_{{lower (plural .Name)}}/edit/:id",
-    name: "g_{{lower (plural .Name)}}_edit",
+    path: "{{lower (plural .Name)}}/edit/:id",
+    name: "{{lower (plural .Name)}}_edit",
     component: {{.Name}}Edit,
     meta: {
       icon: "{{.Vuetify.Icon}}",

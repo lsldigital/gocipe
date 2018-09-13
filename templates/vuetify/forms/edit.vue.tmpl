@@ -65,7 +65,7 @@
                                         :key="'{{plural .Entity }}_key'"
                                         :filter_id="id" 
                                         :filter_field="'{{lower $.Entity.Name}}_id'"
-                                        :rpc="'set{{fkeyPropertyTypeName $.Entities .}}id'"
+                                        :rpc="'set{{ $.Entity.Name }}id'"
                                         :nested="true" 
                                     />
                                 </template>
@@ -197,6 +197,9 @@ export default {
                     this.loading = false;
                     return;
                 }
+
+                this.$emit("closeform", true);
+
             });
         },
         emitSaveAndCloseForm: function() {

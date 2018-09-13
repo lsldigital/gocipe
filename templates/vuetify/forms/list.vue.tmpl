@@ -48,8 +48,8 @@
                 <span>Open Nested Edit</span>
               </v-tooltip>
               <v-tooltip top v-else>
-                <v-btn slot="activator" icon class="mx-0" :to="{name: 'g_{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
-                  <v-icon>accessible_forward</v-icon>
+                <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
+                  <v-icon>edit</v-icon>
                 </v-btn>
                 <span>Automatically generated Edit Form</span>
               </v-tooltip>
@@ -127,7 +127,7 @@
     </v-dialog>
 
     <!-- Edit In Place -->
-    <v-dialog :lazy="true" v-model="nestedForm.visible" persistent max-width="500px">
+    <v-dialog :lazy="true" v-model="nestedForm.visible" persistent width="auto" max-width="1000px">
       <component :is="'{{plural .Entity.Name}}Edit'" :key="nestedForm.id" @closeform="nestedFormClose" :visible="nestedForm.visible" :filter_id="nestedForm.id" :nested="true" />
     </v-dialog>
     <!-- !# Edit In Place -->
@@ -150,6 +150,8 @@ import { DeleteRequest } from "@/services/service_bread_pb";
 import { mapGetters } from 'vuex';
 
 import { {{ .Entity.Name }} } from "@/services/models_pb.js";
+
+let cli = new BreadClient("/api");
 
 export default {
   data() {
@@ -179,8 +181,7 @@ export default {
 		{{end}}{{end}}
       ],
       entities: [],
-      loading: false,
-      cli : new BreadClient("/api")
+      loading: false
     };
   },
   components: {
@@ -195,6 +196,7 @@ export default {
     this.loading = true;
     this.getList();
     this.track = this.$route.params.track;
+
   },
   methods: {    
       recentlySaved(id) {
@@ -213,6 +215,7 @@ export default {
       },
       nestedFormClose() {
         // clear and reset nested form
+        console.log('recieve close form request');
         this.getList();
         this.nestedForm = {
           visible: false,
@@ -234,12 +237,10 @@ export default {
 
         req.setKey(this.token);
 
-        this.cli.list{{plural .Entity.Name}}(req, (err, resp) => {
+        cli.list{{plural .Entity.Name}}(req, (err, resp) => {
           if (err) {
             console.log(err);
-
             this.snackbarShow(err.message, "error");
-
             return;
           }
           this.loading = false;
@@ -270,7 +271,7 @@ export default {
 
         this.loading = true;
 
-        this.cli.get{{.Entity.Name}}(req, (err, resp) => {
+        cli.get{{.Entity.Name}}(req, (err, resp) => {
           if (err) {
             console.log(err);
             this.snackbarShow(err.message, "error");
@@ -278,7 +279,7 @@ export default {
           }
           this.loading = false;
           ///
-          toBeDuplicatedEntity = resp.get{{.Entity.Name}}();
+          toBeDuplicatedEntity = resp.get{{ucfirst .Entity.Name}}();
           this.create("existing", toBeDuplicatedEntity);
         });
       },
@@ -287,17 +288,17 @@ export default {
         req.setKey(this.token);
 
         if (from === "existing" && existingEntity) {
-          req.set{{.Entity.Name}}(existingEntity);
+          req.set{{ucfirst .Entity.Name}}(existingEntity);
         } else if (this.nested) {
           let entity = new {{.Entity.Name}}();
-          entity[rpc](this.filter_id);
-          req.set{{.Entity.Name}}(entity);
+          entity[this.rpc](this.filter_id);
+          req.set{{ucfirst .Entity.Name}}(entity);
         }
 
         this.snackbarShow('Loading {{ucfirst (plural .Entity.Name)}}');
         this.loading = true;
 
-        this.cli.create{{.Entity.Name}}(req, (err, resp) => {
+        cli.create{{.Entity.Name}}(req, (err, resp) => {
           if (err) {
             console.log(err);
 
@@ -310,13 +311,13 @@ export default {
           if (this.nested) {
             this.nestedForm = {
               visible: true,
-              id: resp.get{{.Entity.Name}}().getId(),
+              id: resp.get{{ucfirst .Entity.Name}}().getId(),
               label: ""
             };
           } else {
             this.$router.push({
-              name: "g_{{lower (plural .Entity.Name)}}_edit",
-              params: { id: resp.get{{.Entity.Name}}().getId() }
+              name: "{{lower (plural .Entity.Name)}}_edit",
+              params: { id: resp.get{{ucfirst .Entity.Name}}().getId() }
             });
           }
         });
@@ -331,7 +332,7 @@ export default {
           req.setKey(this.token);
           req.setId(this.deleteItemId.id)
 
-          this.cli.delete{{.Entity.Name}}(req, (err, resp) => {
+          cli.delete{{.Entity.Name}}(req, (err, resp) => {
             if (err) {
                 console.log(err);
                 this.snackbarShow("Delete error: " + err.message, "error");
