@@ -22,9 +22,10 @@ type toolset struct {
 }
 
 var (
-	_recipePath    string
-	_log, _gofiles []string
-	_tools         toolset
+	_recipePath                 string
+	_log, _gofiles              []string
+	_tools                      toolset
+	_written, _skipped, _failed int
 )
 
 func init() {
@@ -62,8 +63,7 @@ func WriteLog() {
 func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 
 	var (
-		output                   []string
-		written, skipped, failed int
+		output []string
 	)
 
 	aggregates := make(map[string][]util.GeneratedCode)
@@ -71,10 +71,10 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 	for generated := range work.Done {
 		if generated.Error == util.ErrorSkip {
 			Log("[Skipped] Generation skipped [%s]", generated.Generator)
-			skipped++
+			_skipped++
 		} else if generated.Error != nil {
 			Log("[Error] Generation failed [%s]: %s", generated.Generator, generated.Error)
-			failed++
+			_failed++
 		} else if generated.Aggregate {
 			a := aggregates[generated.Filename]
 			aggregates[generated.Filename] = append(a, generated)
@@ -89,11 +89,11 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 					os.Chmod(fname, 0755)
 				}
 
-				written++
+				_written++
 			} else if err == util.ErrorSkip {
-				skipped++
+				_skipped++
 			} else {
-				failed++
+				_failed++
 			}
 		}
 
@@ -109,26 +109,26 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 				AddGoFile(fname)
 			}
 
-			written++
+			_written++
 		} else if err == util.ErrorSkip {
-			skipped++
+			_skipped++
 		} else {
-			failed++
+			_failed++
 		}
 	}
 
 	// WriteLog()
 
-	if skipped > 0 {
-		output = append(output, fmt.Sprintf("Skipped %d files.", skipped))
+	if _skipped > 0 {
+		output = append(output, fmt.Sprintf("Skipped %d files.", _skipped))
 	}
 
-	if written > 0 {
-		output = append(output, fmt.Sprintf("Wrote %d files.", written))
+	if _written > 0 {
+		output = append(output, fmt.Sprintf("Wrote %d files.", _written))
 	}
 
-	if failed > 0 {
-		output = append(output, fmt.Sprintf("%d errors occurred during recipe generation.", failed))
+	if _failed > 0 {
+		output = append(output, fmt.Sprintf("%d errors occurred during recipe generation.", _failed))
 	}
 
 	output = append(output, fmt.Sprintf("See log file %s.log for details.", _recipePath))
@@ -177,7 +177,7 @@ func saveGenerated(generated util.GeneratedCode, noSkip bool) (string, string, e
 }
 
 // GenerateAndSave saves a generated file and returns error
-func GenerateAndSave(component string, template string, filename string, data interface{}, noOverwrite bool, noSkip bool) error {
+func GenerateAndSave(component string, template string, filename string, data interface{}, noOverwrite bool) error {
 	var (
 		code     string
 		err      error
@@ -188,16 +188,19 @@ func GenerateAndSave(component string, template string, filename string, data in
 	filename, err = util.GetAbsPath(filename)
 	if err != nil {
 		Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
+		_failed++
 		return err
 	}
 
-	if !noSkip && noOverwrite && util.FileExists(filename) {
+	if noOverwrite && util.FileExists(filename) {
 		Log("[skipped] %s (%s)", filename, component)
+		_skipped++
 		return util.ErrorSkip
 	}
 
 	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
 		Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
+		_failed++
 		return err
 	}
 
@@ -205,6 +208,7 @@ func GenerateAndSave(component string, template string, filename string, data in
 		code, err = util.ExecuteTemplate(template, data)
 		if err != nil {
 			Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
+			_failed++
 			return err
 		}
 	}
@@ -212,10 +216,12 @@ func GenerateAndSave(component string, template string, filename string, data in
 	err = ioutil.WriteFile(filename, []byte(code), mode)
 	if err != nil {
 		Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
+		_failed++
 		return err
 	}
 
 	Log("[%s] Wrote %s.", component, filename)
+	_written++
 
 	if strings.HasSuffix(filename, ".go") {
 		AddGoFile(filename)

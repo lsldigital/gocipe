@@ -40,7 +40,6 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 			filename+"List.vue",
 			data,
 			false,
-			false,
 		)
 
 		output.GenerateAndSave(
@@ -48,7 +47,6 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 			"vuetify/views/edit.vue.tmpl",
 			filename+"Edit.vue",
 			data,
-			false,
 			false,
 		)
 
@@ -81,7 +79,6 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 			Entities []util.Entity
 		}{menuEntities},
 		false,
-		false,
 	)
 
 	widgets := []string{
@@ -100,19 +97,19 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 	}
 
 	for _, widget := range widgets {
-		output.GenerateAndSave("Vuetify", "vuetify/widgets/"+widget+".tmpl", path+"/widgets/"+widget, nil, false, false)
+		output.GenerateAndSave("Vuetify", "vuetify/widgets/"+widget+".tmpl", path+"/widgets/"+widget, nil, false)
 	}
 
 	// components
 	output.GenerateAndSave("Vuetify", "vuetify/js/components-registration.js.tmpl", path+"/components-registration.js", struct {
 		Widgets []string
-	}{Widgets: widgets}, false, false)
+	}{Widgets: widgets}, false)
 
-	// output.GenerateAndSave("Vuetify", "vuetify/store/index.js.tmpl", path+"/store/index.js", nil, true, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/actions.js.tmpl", path+"/store/actions.js", nil, true, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/getters.js.tmpl", path+"/store/getters.js", nil, true, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/mutations.js.tmpl", path+"/store/mutations.js", nil, true, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/types.js.tmpl", path+"/store/types.js", nil, true, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/index.js.tmpl", path+"/store/index.js", nil, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/actions.js.tmpl", path+"/store/actions.js", nil, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/getters.js.tmpl", path+"/store/getters.js", nil, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/mutations.js.tmpl", path+"/store/mutations.js", nil, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/types.js.tmpl", path+"/store/types.js", nil, false)
 
 	work.Waitgroup.Done()
 }
