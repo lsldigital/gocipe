@@ -63,6 +63,7 @@ func AddGoFile(filename string) {
 
 // WriteLog write logs in log-file
 func WriteLog() {
+	var output []string
 	err := ioutil.WriteFile(_recipePath+".log", []byte(strings.Join(_log, "\n")), os.FileMode(0755))
 	if err != nil {
 		fmt.Printf("failed to write file log file %s.log: %s", _recipePath, err)
@@ -73,16 +74,29 @@ func WriteLog() {
 		fmt.Println(strings.Join(_log, "\n"))
 	}
 
+	if _skipped > 0 {
+		output = append(output, fmt.Sprintf(logSkipped+"Skipped %d files.", _skipped))
+	}
+
+	if _written > 0 {
+		output = append(output, fmt.Sprintf(logSuccess+"Wrote %d files.", _written))
+	}
+
+	if _failed > 0 {
+		output = append(output, fmt.Sprintf(logError+" %d errors occurred during recipe generation.", _failed))
+	}
+
+	if len(output) > 0 {
+		output = append(output, fmt.Sprintf("See log file %s.log for details.", _recipePath))
+		fmt.Println("\n# Summary")
+		fmt.Println(strings.Join(output, "\n") + "\n")
+	}
+
 	_log = []string{}
 }
 
 // Process listens to generators and processes generated files
 func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
-
-	var (
-		output []string
-	)
-
 	aggregates := make(map[string][]util.GeneratedCode)
 
 	for generated := range work.Done {
@@ -135,21 +149,6 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 	}
 
 	// WriteLog()
-
-	if _skipped > 0 {
-		output = append(output, fmt.Sprintf("Skipped %d files.", _skipped))
-	}
-
-	if _written > 0 {
-		output = append(output, fmt.Sprintf("Wrote %d files.", _written))
-	}
-
-	if _failed > 0 {
-		output = append(output, fmt.Sprintf("%d errors occurred during recipe generation.", _failed))
-	}
-
-	output = append(output, fmt.Sprintf("See log file %s.log for details.", _recipePath))
-	fmt.Println(strings.Join(output, " "))
 	waitgroup.Done()
 }
 
