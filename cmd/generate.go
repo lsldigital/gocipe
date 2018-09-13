@@ -39,6 +39,8 @@ var generateCmd = &cobra.Command{
 			Done:      make(chan util.GeneratedCode),
 		}
 
+		output.SetVerbose(verbose)
+
 		rcp, err := recipe.Load()
 
 		if err != nil {
