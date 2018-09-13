@@ -15,7 +15,7 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 
 	path := util.WorkingDir + "/web/" + recipe.Vuetify.App + "/src/gocipe"
 
-	// work.Waitgroup.Add(len(recipe.Entities) * 1) //2 jobs to be waited upon for each thread - Editor and List
+	var forms []string
 	for _, entity := range entities {
 		if entity.Vuetify.NoGenerate {
 			continue
@@ -32,23 +32,25 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 		data.Entity = entity
 		data.Entities = entities
 
-		filename := path + "/views/" + inflection.Plural(data.Entity.Name)
+		filename := path + "/forms/" + inflection.Plural(data.Entity.Name)
 
 		output.GenerateAndSave(
 			"VuetifyList",
-			"vuetify/views/list.vue.tmpl",
+			"vuetify/forms/list.vue.tmpl",
 			filename+"List.vue",
 			data,
 			false,
 		)
+		forms = append(forms, inflection.Plural(data.Entity.Name)+"List")
 
 		output.GenerateAndSave(
 			"VuetifyEdit",
-			"vuetify/views/edit.vue.tmpl",
+			"vuetify/forms/edit.vue.tmpl",
 			filename+"Edit.vue",
 			data,
 			false,
 		)
+		forms = append(forms, inflection.Plural(data.Entity.Name)+"Edit")
 
 		// edit, err := util.ExecuteTemplate("vuetify_edit.vue.tmpl", data)
 		// if err == nil {
@@ -96,14 +98,15 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 		"list/gToggle.vue":     "gToggle",
 	}
 
-	for file, _ := range widgets {
+	for file := range widgets {
 		output.GenerateAndSave("Vuetify", "vuetify/widgets/"+file+".tmpl", path+"/widgets/"+file, nil, false)
 	}
 
 	// components
 	output.GenerateAndSave("Vuetify", "vuetify/js/components-registration.js.tmpl", path+"/components-registration.js", struct {
 		Widgets map[string]string
-	}{Widgets: widgets}, false)
+		Forms   []string
+	}{Widgets: widgets, Forms: forms}, false)
 
 	// output.GenerateAndSave("Vuetify", "vuetify/store/index.js.tmpl", path+"/store/index.js", nil, false)
 	// output.GenerateAndSave("Vuetify", "vuetify/store/actions.js.tmpl", path+"/store/actions.js", nil, false)

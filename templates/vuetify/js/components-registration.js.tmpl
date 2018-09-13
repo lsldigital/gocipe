@@ -2,6 +2,9 @@ import Vue from "vue";
 {{range $file, $name := .Widgets -}}
 import {{ $name }} from "@/gocipe/widgets/{{ $file }}";
 {{ end }}
+{{range .Forms -}}
+import {{ . }} from "@/gocipe/forms/{{.}}.vue"
+{{ end }}
 
 {{range $file, $name := .Widgets -}}
 Vue.component("{{$name}}", {{$name}});
