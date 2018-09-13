@@ -21,11 +21,18 @@ type toolset struct {
 	Dep       string
 }
 
+const (
+	logWritten = "✅ [Wrote]"
+	logSkipped = "💤 [Skipped]"
+	logError   = "❌ [Error]"
+)
+
 var (
 	_recipePath                 string
 	_log, _gofiles              []string
 	_tools                      toolset
 	_written, _skipped, _failed int
+	_verbose                    bool
 )
 
 func init() {
@@ -35,6 +42,11 @@ func init() {
 // Inject gets path injected into this package
 func Inject(path string) {
 	_recipePath = path
+}
+
+// SetVerbose can be used to toggle verbosity
+func SetVerbose(verbose bool) {
+	_verbose = verbose
 }
 
 // Log outputs to log file
@@ -56,6 +68,10 @@ func WriteLog() {
 		return
 	}
 
+	if _verbose {
+		fmt.Println(strings.Join(_log, "\n"))
+	}
+
 	_log = []string{}
 }
 
@@ -70,10 +86,10 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 
 	for generated := range work.Done {
 		if generated.Error == util.ErrorSkip {
-			Log("[Skipped] Generation skipped [%s]", generated.Generator)
+			Log(logSkipped+" Generation skipped [%s]", generated.Generator)
 			_skipped++
 		} else if generated.Error != nil {
-			Log("[Error] Generation failed [%s]: %s", generated.Generator, generated.Error)
+			Log(logError+" Generation failed [%s]: %s", generated.Generator, generated.Error)
 			_failed++
 		} else if generated.Aggregate {
 			a := aggregates[generated.Filename]
@@ -140,16 +156,16 @@ func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
 func saveGenerated(generated util.GeneratedCode, noSkip bool) (string, string, error) {
 	filename, err := util.GetAbsPath(generated.Filename)
 	if err != nil {
-		return "", fmt.Sprintf("[WriteError] cannot resolve path [%s] %s: %s", generated.Generator, generated.Filename, err), err
+		return "", fmt.Sprintf(logError+" cannot resolve path [%s] %s: %s", generated.Generator, generated.Filename, err), err
 	}
 
 	if !noSkip && util.FileExists(filename) && generated.NoOverwrite {
-		return "", fmt.Sprintf("[Skip] skipping existing file [%s] %s", generated.Generator, generated.Filename), util.ErrorSkip
+		return "", fmt.Sprintf(logSkipped+" skipping existing file [%s] %s", generated.Generator, generated.Filename), util.ErrorSkip
 	}
 
 	var mode os.FileMode = 0755
 	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
-		return "", fmt.Sprintf("[WriteError] directory creation failed [%s] %s: %s", generated.Generator, generated.Filename, err), err
+		return "", fmt.Sprintf(logError+" directory creation failed [%s] %s: %s", generated.Generator, generated.Filename, err), err
 	}
 
 	var code []byte
@@ -170,10 +186,10 @@ func saveGenerated(generated util.GeneratedCode, noSkip bool) (string, string, e
 
 	err = ioutil.WriteFile(filename, code, mode)
 	if err != nil {
-		return "", fmt.Sprintf("[WriteError] failed to write file [%s] %s: %s", generated.Generator, generated.Filename, err), err
+		return "", fmt.Sprintf(logError+" failed to write file [%s] %s: %s", generated.Generator, generated.Filename, err), err
 	}
 
-	return filename, fmt.Sprintf("[Wrote] %s", filename), nil
+	return filename, fmt.Sprintf(logWritten+" %s", filename), nil
 }
 
 // GenerateAndSave saves a generated file and returns error
@@ -187,19 +203,19 @@ func GenerateAndSave(component string, template string, filename string, data in
 
 	filename, err = util.GetAbsPath(filename)
 	if err != nil {
-		Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
+		Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
 		_failed++
 		return err
 	}
 
 	if noOverwrite && util.FileExists(filename) {
-		Log("[skipped] %s (%s)", filename, component)
+		Log(logSkipped+" %s (%s)", filename, component)
 		_skipped++
 		return util.ErrorSkip
 	}
 
 	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
-		Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
+		Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
 		_failed++
 		return err
 	}
@@ -207,7 +223,7 @@ func GenerateAndSave(component string, template string, filename string, data in
 	if code, isString = data.(string); !isString {
 		code, err = util.ExecuteTemplate(template, data)
 		if err != nil {
-			Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
+			Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
 			_failed++
 			return err
 		}
@@ -215,12 +231,12 @@ func GenerateAndSave(component string, template string, filename string, data in
 
 	err = ioutil.WriteFile(filename, []byte(code), mode)
 	if err != nil {
-		Log("[Error] Generate (%s) %s failed: %s", component, filename, err)
+		Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
 		_failed++
 		return err
 	}
 
-	Log("[%s] Wrote %s.", component, filename)
+	Log(logWritten+" %s", filename)
 	_written++
 
 	if strings.HasSuffix(filename, ".go") {

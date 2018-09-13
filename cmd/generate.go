@@ -26,6 +26,7 @@ var (
 	generateBread     bool
 	generateUtils     bool
 	generateVuetify   bool
+	verbose           bool
 )
 
 var generateCmd = &cobra.Command{
