@@ -81,28 +81,28 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 		false,
 	)
 
-	widgets := []string{
-		"edit/gIcon.vue",
-		"edit/gImagefield.vue",
-		"edit/gMap.vue",
-		"edit/gPublished.vue",
-		"edit/gSelect.vue",
-		"edit/gTextarea.vue",
-		"edit/gTextfield.vue",
-		"edit/gTime.vue",
-		"edit/gToggle.vue",
-		"list/gSelect.vue",
-		"list/gTime.vue",
-		"list/gToggle.vue",
+	widgets := map[string]string{
+		"edit/gIcon.vue":       "gIcon",
+		"edit/gImagefield.vue": "gImagefield",
+		"edit/gMap.vue":        "gMap",
+		"edit/gPublished.vue":  "gPublished",
+		"edit/gSelect.vue":     "gSelect",
+		"edit/gTextarea.vue":   "gTextarea",
+		"edit/gTextfield.vue":  "gTextfield",
+		"edit/gTime.vue":       "gTime",
+		"edit/gToggle.vue":     "gToggle",
+		"list/gSelect.vue":     "gSelect",
+		"list/gTime.vue":       "gTime",
+		"list/gToggle.vue":     "gToggle",
 	}
 
-	for _, widget := range widgets {
-		output.GenerateAndSave("Vuetify", "vuetify/widgets/"+widget+".tmpl", path+"/widgets/"+widget, nil, false)
+	for file, _ := range widgets {
+		output.GenerateAndSave("Vuetify", "vuetify/widgets/"+file+".tmpl", path+"/widgets/"+file, nil, false)
 	}
 
 	// components
 	output.GenerateAndSave("Vuetify", "vuetify/js/components-registration.js.tmpl", path+"/components-registration.js", struct {
-		Widgets []string
+		Widgets map[string]string
 	}{Widgets: widgets}, false)
 
 	// output.GenerateAndSave("Vuetify", "vuetify/store/index.js.tmpl", path+"/store/index.js", nil, false)

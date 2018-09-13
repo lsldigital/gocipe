@@ -1,8 +1,8 @@
 import Vue from "vue";
-{{range .Widgets -}}
-import {{.}} from "@/gocipe/widgets/{{.}}";
+{{range $file, $name := .Widgets -}}
+import {{ $name }} from "@/gocipe/widgets/{{ $file }}";
 {{ end }}
 
-{{range .Widgets -}}
-Vue.component("{{.}}", {{.}});
+{{range $file, $name := .Widgets -}}
+Vue.component("{{$name}}", {{$name}});
 {{ end }}
