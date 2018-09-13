@@ -33,7 +33,7 @@
                             {{if not .EditWidget.Hide }} 
                             <template>
                                 <div class="gocipe-field-container">
-                                    <component  :is="'g{{ucfirst .EditWidget.Type }}'"
+                                    <component  :is="'EditWidget{{ucfirst .EditWidget.Type }}'"
                                                 :label="'{{ .Label }}'"
                                                 :hint="'widget: {{ .EditWidget.Type }}'" 
                                                 :value="this.entity.get{{ucfirst .Property.Name}}()" 
@@ -114,10 +114,6 @@
 import { BreadClient } from "@/services/service_bread_pb_service";
 import { GetRequest } from "@/services/service_bread_pb";
 import { Update{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
-
-{{ range .Entity.Relationships }} 
-import {{plural .Entity }}List from './{{plural .Entity }}List.vue'
-{{ end }}
 
 let cli = new BreadClient("/api");
 export default {
