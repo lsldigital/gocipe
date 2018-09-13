@@ -59,7 +59,7 @@
             <!-- Use different rendering for dates -->
             {{ if eq .ListWidget.Type "time" }}
             <td>
-              <component :is="'g{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
             </td>
             {{- else -}}
             <!-- Use different rendering for dates -->
@@ -71,7 +71,7 @@
             <!-- Use different rendering for select types -->
             {{if eq .ListWidget.Type "select"}}
             <td>
-              <component :is="'g{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
             </td>
             {{- else -}}
             <!-- Use different rendering for dates -->
@@ -83,7 +83,7 @@
             <!-- Use different rendering for toggles -->
             {{if eq .ListWidget.Type "toggle"}}
             <td>
-              <component :is="'g{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
             </td>
             {{else}}
             <td>
@@ -184,9 +184,6 @@ export default {
     };
   },
   components: {
-      gSelect,
-      gToggle,
-      gTime
   },
   computed: {
     ...mapGetters({

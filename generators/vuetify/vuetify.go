@@ -84,21 +84,21 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 	)
 
 	widgets := map[string]string{
-		"edit/gIcon.vue":       "gIcon",
-		"edit/gImagefield.vue": "gImagefield",
-		"edit/gMap.vue":        "gMap",
-		"edit/gPublished.vue":  "gPublished",
-		"edit/gSelect.vue":     "gSelect",
-		"edit/gTextarea.vue":   "gTextarea",
-		"edit/gTextfield.vue":  "gTextfield",
-		"edit/gTime.vue":       "gTime",
-		"edit/gToggle.vue":     "gToggle",
-		"list/gSelect.vue":     "gSelect",
-		"list/gTime.vue":       "gTime",
-		"list/gToggle.vue":     "gToggle",
+		"EditWidgetIcon": "edit/Icon.vue",       
+		"EditWidgetImagefield": "edit/Imagefield.vue", 
+		"EditWidgetMap": "edit/Map.vue",        
+		"EditWidgetPublished": "edit/Published.vue",  
+		"EditWidgetSelect": "edit/Select.vue",     
+		"EditWidgetTextarea": "edit/Textarea.vue",   
+		"EditWidgetTextfield": "edit/Textfield.vue",  
+		"EditWidgetTime": "edit/Time.vue",       
+		"EditWidgetToggle": "edit/Toggle.vue",     
+		"ListWidgetSelect": "list/Select.vue",     
+		"ListWidgetTime": "list/Time.vue",       
+		"ListWidgetToggle": "list/Toggle.vue",     
 	}
 
-	for file := range widgets {
+	for _,file := range widgets {
 		output.GenerateAndSave("Vuetify", "vuetify/widgets/"+file+".tmpl", path+"/widgets/"+file, nil, false)
 	}
 

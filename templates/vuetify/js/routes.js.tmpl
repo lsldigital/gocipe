@@ -1,7 +1,7 @@
 {{range .Entities}}
 // {{.Name}} {{.Description}}
-import {{.Name}}List from "./views/{{plural .Name}}List.vue";
-import {{.Name}}Edit from "./views/{{plural .Name}}Edit.vue";
+import {{.Name}}List from "./forms/{{plural .Name}}List.vue";
+import {{.Name}}Edit from "./forms/{{plural .Name}}Edit.vue";
 {{end}}
 
 let routes = [
