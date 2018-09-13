@@ -86,7 +86,11 @@ type {{.Name}}Repository interface {
 
 {{- $ThisEntity := . -}}
 {{range .Relationships -}}
-{{if eq .Type "many-many" -}}
+{{if eq .Type "many-many-owner" -}}
+	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
+	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
+{{end -}}
+{{if or (eq .Type "many-many") (eq .Type "many-many-inverse") -}}
 	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
 	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 	// Save{{RelFuncName .}} is a helper function to save related {{.Name}} in a pivot table (many-many relationship)

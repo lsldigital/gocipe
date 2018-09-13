@@ -186,7 +186,27 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 
 	if err == nil {
 		for _, rel := range entity.Relationships {
+			// No SaveRelated template generated:
+			// RelationshipTypeManyManyOwner, RelationshipTypeOneMany, RelationshipTypeManyOne, RelationshipTypeOneOne
 			switch rel.Type {
+			case util.RelationshipTypeManyManyOwner:
+				c, err := generateLoadRelatedManyMany(entities, entity, rel)
+				if err != nil {
+					return code, err
+				}
+				code.LoadRelated = append(code.LoadRelated, c)
+			case util.RelationshipTypeManyManyInverse:
+				c, err := generateLoadRelatedManyMany(entities, entity, rel)
+				if err != nil {
+					return code, err
+				}
+				code.LoadRelated = append(code.LoadRelated, c)
+
+				c, err = generateSaveRelatedManyManyInverse(entities, entity, rel)
+				if err != nil {
+					return code, err
+				}
+				code.SaveRelated = append(code.SaveRelated, c)
 			case util.RelationshipTypeManyMany:
 				c, err := generateLoadRelatedManyMany(entities, entity, rel)
 				if err != nil {
@@ -205,13 +225,7 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 					return code, err
 				}
 				code.LoadRelated = append(code.LoadRelated, c)
-
-				c, err = generateSaveRelatedOneMany(entities, entity, rel)
-				if err != nil {
-					return code, err
-				}
-				code.SaveRelated = append(code.SaveRelated, c)
-			case util.RelationshipTypeManyOne:
+			case util.RelationshipTypeManyOne, util.RelationshipTypeOneOne:
 				c, err := generateLoadRelatedManyOne(entities, entity, rel)
 				if err != nil {
 					return code, err
@@ -233,7 +247,7 @@ func generateDeleteSingle(entities map[string]util.Entity, entity util.Entity) (
 	var post []string
 
 	for _, rel := range entity.Relationships {
-		if rel.Type == util.RelationshipTypeManyMany {
+		if rel.Type == util.RelationshipTypeManyMany || rel.Type == util.RelationshipTypeManyManyInverse {
 			post = append(post, fmt.Sprintf("repo.Save%s(ctx, tx, false, entity.ID)", util.RelFuncName(rel)))
 		}
 	}
@@ -312,37 +326,29 @@ func generateSaveRelatedManyMany(entities map[string]util.Entity, entity util.En
 	})
 }
 
-// generateSaveRelatedManyMany produces code for database saving of related entities
-func generateSaveRelatedOneMany(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
-
-	var danglingVal string
-
-	switch entity.PrimaryKey {
-	case util.PrimaryKeyInt, util.PrimaryKeySerial:
-		danglingVal = "0"
-	case util.PrimaryKeyString, util.PrimaryKeyUUID:
-		danglingVal = `""`
-	}
-
-	return util.ExecuteTemplate("crud/partials/saverelated_onemany.go.tmpl", struct {
-		PropertyName string
-		PrimaryKey   string
-		EntityName   string
-		Table        string
-		Funcname     string
-		ThisColumn   string
-		ThatColumn   string
-		ThatType     string
-		DanglingVal  string
+// generateSaveRelatedManyManyInverse produces code for database saving of related entities
+func generateSaveRelatedManyManyInverse(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
+	return util.ExecuteTemplate("crud/partials/saverelated_manymanyinverse.go.tmpl", struct {
+		PropertyName   string
+		PrimaryKey     string
+		PropertyType   string
+		EntityName     string
+		Table          string
+		Funcname       string
+		ThisColumn     string
+		ThatColumn     string
+		ThatType       string
+		ThatPrimaryKey string
 	}{
-		PropertyName: rel.Name,
-		PrimaryKey:   entity.PrimaryKey,
-		EntityName:   entity.Name,
-		Table:        rel.JoinTable,
-		Funcname:     util.RelFuncName(rel),
-		ThisColumn:   rel.ThisID,
-		ThatColumn:   rel.ThatID,
-		ThatType:     "*" + entities[rel.Entity].Name,
-		DanglingVal:  danglingVal,
+		PropertyName:   rel.Name,
+		PrimaryKey:     entity.PrimaryKey,
+		PropertyType:   entities[rel.Entity].PrimaryKey,
+		EntityName:     entity.Name,
+		Table:          rel.JoinTable,
+		Funcname:       util.RelFuncName(rel),
+		ThisColumn:     rel.ThisID,
+		ThatColumn:     rel.ThatID,
+		ThatType:       "*" + entities[rel.Entity].Name,
+		ThatPrimaryKey: entities[rel.Entity].PrimaryKey,
 	})
 }

@@ -33,9 +33,11 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 	}
 
 	for _, rel := range entity.Relationships {
-		if rel.Type == util.RelationshipTypeManyMany || rel.Type == util.RelationshipTypeOneMany {
+		// No SaveRelated needed:
+		// RelationshipTypeManyManyOwner, RelationshipTypeOneMany, RelationshipTypeManyOne, RelationshipTypeOneOne
+		if rel.Type == util.RelationshipTypeManyMany || rel.Type == util.RelationshipTypeManyManyInverse {
 			related = append(related, fmt.Sprintf("repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name))
-		} else if rel.Type == util.RelationshipTypeManyOne {
+		} else if rel.Type == util.RelationshipTypeManyOne || rel.Type == util.RelationshipTypeOneOne {
 			sqlfields = append(sqlfields, fmt.Sprintf(`"%s" = $%d`, rel.ThisID, count))
 			structFields = append(structFields, fmt.Sprintf("entity.%sID", rel.Name))
 			count++

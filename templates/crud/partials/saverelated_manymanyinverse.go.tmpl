@@ -1,0 +1,124 @@
+
+// Save{{.Funcname}} is a helper function to save related {{.PropertyName}} in a pivot table (many-many-inverse relationship)
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{.ThatType}}) error {
+	var (
+		stmt *sql.Stmt
+		err  error
+	)
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			return errors.WithStack(err)
+		}
+
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	_, err = stmt.Exec(idthis)
+	if err != nil {
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	for _, rel := range relatives {
+		if err = util.CheckContext(ctx); err != nil {
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+
+		_, err = stmt.Exec(idthis, rel.ID)
+		if err != nil {
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+// Save{{.Funcname}}IDs is a helper function to save related {{.PropertyName}} IDs in a pivot table (many-many-inverse relationship)
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{pkeyPropertyType .ThatPrimaryKey}}) error {
+	var (
+		stmt *sql.Stmt
+		err  error
+	)
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			return errors.WithStack(err)
+		}
+
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	
+	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	_, err = stmt.Exec(idthis)
+	if err != nil {
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	for _, relid := range relatives {
+		if err = util.CheckContext(ctx); err != nil {
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+
+		_, err = stmt.Exec(idthis, relid)
+		if err != nil {
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}

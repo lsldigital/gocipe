@@ -30,7 +30,11 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 
 	for _, rel := range entity.Relationships {
 		switch rel.Type {
-		case util.RelationshipTypeManyMany, util.RelationshipTypeOneMany, util.RelationshipTypeManyOne:
+		case util.RelationshipTypeManyMany,
+			util.RelationshipTypeManyManyOwner,
+			util.RelationshipTypeManyManyInverse,
+			util.RelationshipTypeOneMany,
+			util.RelationshipTypeManyOne:
 			related = append(related, fmt.Sprintf("err = repo.Load%s(ctx, entities...)", util.RelFuncName(rel)))
 		}
 		if rel.Type == util.RelationshipTypeManyOne {

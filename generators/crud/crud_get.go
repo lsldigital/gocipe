@@ -34,7 +34,7 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 			structfields = append(structfields, fmt.Sprintf("&entity.%s", rel.Name+"ID"))
 			sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, strings.ToLower(other.Name)+"_id"))
 			fallthrough
-		case util.RelationshipTypeManyMany, util.RelationshipTypeOneMany:
+		case util.RelationshipTypeManyMany, util.RelationshipTypeManyManyOwner, util.RelationshipTypeManyManyInverse, util.RelationshipTypeOneMany:
 			related = append(related, fmt.Sprintf("err = repo.Load%s(ctx, entity)", util.RelFuncName(rel)))
 		}
 	}

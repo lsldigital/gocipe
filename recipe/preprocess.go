@@ -125,7 +125,7 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 				if rel.ThisID == "" {
 					rel.ThisID = strings.ToLower(rel.Entity) + "_id"
 				}
-			case util.RelationshipTypeManyMany:
+			case util.RelationshipTypeManyMany, util.RelationshipTypeManyManyOwner, util.RelationshipTypeManyManyInverse:
 				isMany = true
 				if rel.ThatID == "" {
 					rel.ThatID = strings.ToLower(entity.Name) + "_id"
