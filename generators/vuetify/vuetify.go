@@ -13,7 +13,7 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 		return
 	}
 
-	path := util.WorkingDir + "/web/" + recipe.Vuetify.App + "/src/bread"
+	path := util.WorkingDir + "/web/" + recipe.Vuetify.App + "/src/gocipe"
 
 	// work.Waitgroup.Add(len(recipe.Entities) * 1) //2 jobs to be waited upon for each thread - Editor and List
 	for _, entity := range entities {
@@ -83,6 +83,30 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 		false,
 		false,
 	)
+
+	widgets := []string{
+		"edit/gIcon.vue",
+		"edit/gImagefield.vue",
+		"edit/gMap.vue",
+		"edit/gPublished.vue",
+		"edit/gSelect.vue",
+		"edit/gTextarea.vue",
+		"edit/gTextfield.vue",
+		"edit/gTime.vue",
+		"edit/gToggle.vue",
+		"list/gSelect.vue",
+		"list/gTime.vue",
+		"list/gToggle.vue",
+	}
+
+	for _, widget := range widgets {
+		output.GenerateAndSave("Vuetify", "vuetify/widgets/"+widget+".tmpl", path+"/widgets/"+widget, nil, false, false)
+	}
+
+	// components
+	output.GenerateAndSave("Vuetify", "vuetify/js/components-registration.js.tmpl", path+"/components-registration.js", struct {
+		Widgets []string
+	}{Widgets: widgets}, false, false)
 
 	// output.GenerateAndSave("Vuetify", "vuetify/store/index.js.tmpl", path+"/store/index.js", nil, true, false)
 	// output.GenerateAndSave("Vuetify", "vuetify/store/actions.js.tmpl", path+"/store/actions.js", nil, true, false)

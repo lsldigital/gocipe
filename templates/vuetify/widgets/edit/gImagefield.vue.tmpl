@@ -1,0 +1,85 @@
+<template>
+  <div class="mt-4 mb-4">
+    <div class="caption desc-span">{{ $attrs.label }}</div>
+    <picture-input buttonClass ref="pictureInput" :crop="false" :z-index="0" class="image-uploader" :prefill="image" width="400" height="200" margin="16" accept="image/jpeg,image/png" size="10" button-class="btn" :custom-strings="{
+                    upload: '<h1>Image</h1>', drag: 'Click here to upload image' }" @change="onChange">
+    </picture-input>
+  </div>
+</template>
+
+<script>
+import { BreadClient } from "@/services/service_bread_pb_service";
+import { UploadRequest } from "@/services/service_bread_pb";
+import { File } from "@/services/service_bread_pb";
+import PictureInput from "vue-picture-input";
+
+function convertDataURIToBinary(dataURI) {
+  var base64Index = dataURI.indexOf(";base64,") + 8;
+  var base64 = dataURI.substring(base64Index);
+  var raw = window.atob(base64);
+  var rawLength = raw.length;
+  var array = new Uint8Array(new ArrayBuffer(rawLength));
+
+  for (var i = 0; i < rawLength; i++) {
+    array[i] = raw.charCodeAt(i);
+  }
+
+  return array;
+}
+
+let cli = new BreadClient("/api");
+
+export default {
+  inheritAttrs: false,
+  props: ["field", "rpc", "entityid"],
+  data() {
+    return {
+      image: ""
+    };
+  },
+  components: {
+    PictureInput
+  },
+  created() {
+    this.image = this.$attrs.value;
+  },
+  methods: {
+    onChange(image) {
+      console.log("upload triggered");
+      if (!image) {
+        console.log("FileReader API not supported: use the <form>, Luke!");
+        return;
+      }
+
+      // Finds image name
+      let req = new UploadRequest();
+      req.setId(this.entityid);
+      req.setField(this.field);
+      req.setFilename(this.$refs.pictureInput.file.name);
+      req.setContent(convertDataURIToBinary(image));
+
+      cli[this.rpc](req, (err, resp) => {
+        if (err) {
+          console.log(err);
+          return;
+        }
+
+        console.log(resp.getUri());
+        this.image = resp.getUri();
+      });
+    }
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.image-container {
+  height: 200px;
+  width: 200px;
+  img {
+    display: block;
+    height: 200px;
+    width: auto;
+  }
+}
+</style>

@@ -84,13 +84,14 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	)
 
 	if req == nil {
-		return nil, ErrorRequestEmpty
+		return &res, ErrorRequestEmpty
 	}
 
 	if req.{{.Name}} == nil {
 		res.{{.Name}} = new(models.{{.Name}})
 	} else {
-		res.{{.Name}} = req.{{.Name}}
+		res.{{.Name}}    = req.{{.Name}}
+		res.{{.Name}}.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
 	}
 	tx, err = models.StartTransaction(ctx)
 	{{if .Bread.Hooks.PreCreate}}
@@ -101,7 +102,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	{{- end}}
 
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
 	err = models.{{.Name}}Repo.Save(ctx, res.{{.Name}}, tx, true)
@@ -114,7 +115,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	{{- end}}
 
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
 	return &res, errors.WithStack(err)
@@ -133,7 +134,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 	)
 
 	if req == nil || req.ID == "" {
-		return nil, ErrorRequestEmpty
+		return &res, ErrorRequestEmpty
 	}
 
 	{{if .Bread.Hooks.PreRead}}
@@ -153,7 +154,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 	{{- end}}
 
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
 	return &res, nil
@@ -173,7 +174,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 	)
 
 	if req == nil {
-		return nil, ErrorRequestEmpty
+		return &res, ErrorRequestEmpty
 	}
 
 	{{if .Bread.Hooks.PreList -}}
@@ -187,7 +188,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 		req.ListOpts = &models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit}
 	}
 
-	{{$filters := getBreadFilters .Fields }}
+	{{$filters := getBreadFilters $.Entities . }}
 	{{if (or $filters.HasBool $filters.HasString $filters.HasDate)}}
 	if req.Filters != nil {
 		for i := range req.Filters {
@@ -195,25 +196,25 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 			{{if $filters.HasBool}}
 			case {{$filters.BoolFilters}}:
 				if f, err := NewBoolFilter(req.Filters[i]); err == nil {
-					return nil, err
-				} else {
 					filters = append(filters, f)
+				} else {
+					return &res, err
 				}
 			{{end}}
 			{{if $filters.HasString}}
 			case {{$filters.StringFilters}}:
 				if f, err := NewStringFilter(req.Filters[i]); err == nil {
-					return nil, err
-				} else {
 					filters = append(filters, f)
+				} else {
+					return &res, err
 				}
 			{{end}}
 			{{if $filters.HasDate}}
 			case {{$filters.DateFilters}}:
 				if f, err := NewDateFilter(req.Filters[i]); err == nil {
-					return nil, err
-				} else {
 					filters = append(filters, f)
+				} else {
+					return &res, err
 				}
 			{{end}}
 			}
@@ -231,7 +232,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 	{{- end}}
 	
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
 	return &res, nil
@@ -251,7 +252,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	)
 
 	if req == nil || req.{{.Name}} == nil {
-		return nil, ErrorRequestEmpty
+		return &res, ErrorRequestEmpty
 	}
 
 	// existing records in DB
@@ -263,10 +264,13 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 			return &res, nil
 		}
 		{{end}}
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
 	res.{{.Name}} = req.{{.Name}}
+	{{range $fileField := index $.EntitiesFileFields .Name}}
+	res.{{.Entity}}.{{.Field}} = existing.{{.Field}}
+	{{end}}
 	tx, err = models.StartTransaction(ctx)
 
 	{{if .Bread.Hooks.PreUpdate -}}
@@ -277,12 +281,12 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	{{- end}}
 
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
 	err = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
 	{{if .Bread.Hooks.PostUpdate -}}
@@ -293,7 +297,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	{{- end}}
 
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
 	return &res, nil
@@ -313,7 +317,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	)
 
 	if req == nil || req.ID == "" {
-		return nil, ErrorRequestEmpty
+		return &res, ErrorRequestEmpty
 	}
 
 	// existing records in DB
@@ -325,7 +329,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 			return &res, nil
 		}
 		{{end}}
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
 	tx, err = models.StartTransaction(ctx)
@@ -337,7 +341,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	{{end}}
 	err = models.{{.Name}}Repo.Delete(ctx, existing, tx, true)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 	{{if .Bread.Hooks.PostDelete}}
 	stop, err = s.{{lower .Name}}PostDelete(ctx, req, &res, *existing, err)
@@ -347,7 +351,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	{{- end}}
 	
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return &res, errors.WithStack(err)
 	}
 
 	return &res, nil
@@ -415,27 +419,42 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 
 // Lookup{{.Name}} lookup allows looking up an entity by its label for entity of type {{.Name}}
 func(s Service) Lookup{{.Name}}(ctx context.Context, req *LookupRequest) (*LookupResponse, error) {
-	//var (
-	//	list []*Sponsor
-	//	err  error
-	//	rows *sql.Rows
-	//)
-    //
-	//rows, err = repo.db.Query(`SELECT id, t."TODO" FROM {{.Table}} t WHERE `, values...)
-	//if err != nil {
-	//	return nil, err
-	//}
-    //
-	//defer rows.Close()
-	//for rows.Next() {
-	//	if err = util.CheckContext(ctx); err != nil {
-	//		return nil, err
-	//	}
-    //
-	//	//TODO
-	//}
+	var (
+		err  error
+		rows *sql.Rows
+		res  LookupResponse
+	)
 
-	return nil, nil
+	if req == nil {
+		return &res, ErrorRequestEmpty
+	}
+
+	tx, err := models.StartTransaction(ctx)
+	if err != nil {
+		return &res, err
+	}
+    
+	rows, err = tx.Query(`SELECT id, t."{{index $.EntitiesLabelField .Name}}" FROM {{.Table}} t WHERE t."{{index $.EntitiesLabelField .Name}}" LIKE $1`, req.Term+"%")
+	if err != nil {
+		return &res, err
+	}
+    
+	defer rows.Close()
+	for rows.Next() {
+		var id, label string
+		if err = util.CheckContext(ctx); err != nil {
+			return &res, err
+		}
+
+		err = rows.Scan(&id, &label)
+		if err != nil {
+			return &res, err
+		}
+    
+		res.Result = append(res.Result, &LookupResult{ID: id, Label: label})
+	}
+
+	return &res, err
 }
 /**
  * [END] {{.Name}}

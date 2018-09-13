@@ -93,23 +93,34 @@ func init() {
 			return GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
 		},
 		// getBreadFilters returns possible filters from fields in an entity
-		"getBreadFilters": func(fields []Field) BreadFilters {
+		"getBreadFilters": func(entities map[string]Entity, entity Entity) BreadFilters {
 			var (
 				filters                                 BreadFilters
 				filtersBool, filtersString, filtersDate []string
 			)
 
-			for _, field := range fields {
+			for _, field := range entity.Fields {
 				switch field.Property.Type {
 				case "bool":
-					filtersBool = append(filtersBool, field.Property.Name)
+					filtersBool = append(filtersBool, field.Schema.Field)
 					filters.HasBool = true
 				case "string":
-					filtersString = append(filtersString, field.Property.Name)
+					filtersString = append(filtersString, field.Schema.Field)
 					filters.HasString = true
 				case "date":
-					filtersDate = append(filtersDate, field.Property.Name)
+					filtersDate = append(filtersDate, field.Schema.Field)
 					filters.HasDate = true
+				}
+			}
+
+			for _, rel := range entity.Relationships {
+				switch rel.Type {
+				case RelationshipTypeOneOne, RelationshipTypeManyOne:
+					switch entities[entity.Name].PrimaryKey {
+					case PrimaryKeyUUID, PrimaryKeyString:
+						filtersString = append(filtersString, rel.ThisID)
+						filters.HasString = true
+					}
 				}
 			}
 

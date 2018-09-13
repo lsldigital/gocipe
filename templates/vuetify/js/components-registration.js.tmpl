@@ -1,0 +1,8 @@
+import Vue from "vue";
+{{range .Widgets -}}
+import {{.}} from "@/gocipe/widgets/{{.}}"
+{{- end}}
+
+{{range .Widgets -}}
+Vue.component("{{.}}", {{.}});
+{{- end}}

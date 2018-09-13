@@ -1,0 +1,196 @@
+<template>
+  <v-chip :color="statusText.color" text-color="white">
+    <v-avatar>
+      <v-icon>{{ statusText.icon }}</v-icon>
+    </v-avatar>
+    {{ statusText.label }}
+  </v-chip>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      status: "",
+      field: "",
+      definitions: {
+        Published: {
+          P: {
+            label: "Published",
+            icon: "check_circle",
+            color: "success"
+          },
+          S: {
+            label: "Saved",
+            icon: "bookmark",
+            color: "info"
+          },
+          D: {
+            label: "Draft",
+            icon: "rowing",
+            color: "warning"
+          },
+          U: {
+            label: "Unpublished",
+            icon: "visibility_off",
+            color: "error"
+          },
+          other: {
+            label: "undefined",
+            icon: "dashboard",
+            color: "info"
+          }
+        },
+        BannerType: {
+          I: {
+            icon: "view_day",
+            color: "info",
+            label: "Intersection Ad"
+          },
+          H: {
+            icon: "view_carousel",
+            color: "info",
+            label: "Hero Banner"
+          }
+        },
+        AdsType: {
+          I: {
+            icon: "view_day",
+            color: "info",
+            label: "Intersection Ad"
+          },
+          H: {
+            icon: "view_carousel",
+            color: "info",
+            label: "Hero Banner"
+          }
+        },
+        EntityType: {
+          Banners: {
+            icon: "view_carousel",
+            color: "info",
+            label: "Banners"
+          },
+          Settings: {
+            icon: "settings",
+            color: "info",
+            label: "Settings"
+          },
+          Event: {
+            icon: "event",
+            color: "info",
+            label: "Events"
+          },
+          EventTypes: {
+            icon: "local_offer",
+            color: "info",
+            label: "EventTypes"
+          },
+          Venues: {
+            icon: "place",
+            color: "info",
+            label: "Venues"
+          },
+          Recipe: {
+            icon: "restaurant",
+            color: "info",
+            label: "Recipes"
+          },
+          VenueTypes: {
+            icon: "map",
+            color: "info",
+            label: "VenueTypes"
+          },
+          Showtimes: {
+            icon: "movie_filter",
+            color: "info",
+            label: "Showtimes"
+          },
+          RecipeInstructions: {
+            icon: "list",
+            color: "info",
+            label: "RecipeInstructions"
+          },
+          Products: {
+            icon: "shopping_basket",
+            color: "info",
+            label: "Products"
+          },
+          Towns: {
+            icon: "location_city",
+            color: "info",
+            label: "Towns"
+          },
+          Movie: {
+            icon: "movie",
+            color: "info",
+            label: "Movies"
+          },
+          Genres: {
+            icon: "movie_filter",
+            color: "info",
+            label: "Genres"
+          },
+          Sponsors: {
+            icon: "attach_money",
+            color: "info",
+            label: "Sponsors"
+          },
+          EventTopics: {
+            icon: "tag",
+            color: "info",
+            label: "EventTopics"
+          },
+          VenueGalleries: {
+            icon: "gallery",
+            color: "info",
+            label: "VenueGalleries"
+          },
+          Ads: {
+            icon: "spa",
+            color: "info",
+            label: "Ads"
+          }
+        }
+      }
+    };
+  },
+  created() {
+    this.status = this.$attrs.status.trim();
+    this.field = this.$attrs.field.trim();
+  },
+  computed: {
+    statusText() {
+      // Lots of error checking
+      // Will return a sad face if definition not found
+      let field = this.definitions[this.field];
+      if (typeof field === "undefined") {
+        console.log(
+          `The definition of the list widget "${this.field}" was not found`
+        );
+        return {
+          label: "¯\\_(ツ)_/¯",
+          icon: "sentiment_very_dissatisfied",
+          color: "grey"
+        };
+      } else {
+        let fieldtype = this.definitions[this.field][this.status];
+        if (typeof fieldtype === "undefined") {
+          console.log(
+            `The definition of the type "${
+              this.status
+            }" was not found for the list widget "${this.field}"`
+          );
+          return {
+            label: "¯\\_(ツ)_/¯",
+            icon: "sentiment_very_dissatisfied",
+            color: "info"
+          };
+        } else {
+          return fieldtype;
+        }
+      }
+    }
+  }
+};
+</script>

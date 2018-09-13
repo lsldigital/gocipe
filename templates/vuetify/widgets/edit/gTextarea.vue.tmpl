@@ -1,0 +1,20 @@
+<template>
+  <div>
+    <div class="caption desc-span">{{ $attrs.label }}</div>
+    <wysiwyg v-model="text" @change="$emit('gocipe',text)" />
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      text: ""
+    };
+  },
+  created() {
+    this.text = this.$attrs.value;
+  },
+  inheritAttrs: false
+};
+</script>

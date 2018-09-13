@@ -13,6 +13,7 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 	var (
 		err error
 	)
+	fieldLabelWhiteList := []string{"name", "description", "summary", "banner_type"}
 
 	entities := make(map[string]util.Entity)
 	for i, entity := range recipe.Entities {
@@ -47,6 +48,46 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 
 		if entity.Vuetify.Icon == "" {
 			entity.Vuetify.Icon = "dashboard"
+		}
+
+		if entity.LabelField != "" {
+			var fieldValid bool
+			for _, field := range entity.Fields {
+				fieldSchemaName := strings.ToLower(field.Schema.Field)
+				propertyType := strings.ToLower(field.Property.Type)
+				if entity.LabelField == fieldSchemaName && propertyType == "string" {
+					fieldValid = true
+					break
+				}
+			}
+			if !fieldValid {
+				entity.LabelField = ""
+			}
+		}
+
+		if entity.LabelField == "" {
+			var defaultLabelField string
+			var firstStringField string
+			for _, field := range entity.Fields {
+				if defaultLabelField != "" {
+					break
+				}
+				fieldSchemaName := strings.ToLower(field.Schema.Field)
+				propertyType := strings.ToLower(field.Property.Type)
+				for _, fieldName := range fieldLabelWhiteList {
+					if fieldName == fieldSchemaName && propertyType == "string" {
+						defaultLabelField = field.Schema.Field
+						break
+					}
+				}
+				if firstStringField == "" && propertyType == "string" {
+					firstStringField = field.Schema.Field
+				}
+			}
+			if defaultLabelField == "" {
+				defaultLabelField = firstStringField
+			}
+			entity.LabelField = defaultLabelField
 		}
 
 		entities[entity.Name] = entity
