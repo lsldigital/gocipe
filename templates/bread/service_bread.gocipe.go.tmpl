@@ -12,6 +12,8 @@ var (
 	ErrorRequestEmpty       = errors.New("request object is malformed")
 	// ErrorInvalidUploadField indicates an error for an unknown upload field
 	ErrorInvalidUploadField = errors.New("invalid upload field") 
+	// ErrorInvalidStatus indicates an invalid status has been submitted 
+	ErrorInvalidStatus      = errors.New("invalid status")
 )
 
 // NewBoolFilter returns a new filter for boolean types
@@ -93,6 +95,9 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 		res.{{.Name}}    = req.{{.Name}}
 		res.{{.Name}}.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
 	}
+
+	res.{{.Name}}.Status = "D"
+
 	tx, err = models.StartTransaction(ctx)
 	{{if .Bread.Hooks.PreCreate}}
 	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, err)
@@ -268,6 +273,13 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 		}
 		{{end}}
 		return &res, errors.WithStack(err)
+	}
+
+	switch res.{{.Name}}.Status {
+		case "D", "S", "P", "U":
+			//all good
+		default:
+			return &res, ErrorInvalidStatus
 	}
 
 	res.{{.Name}} = req.{{.Name}}
