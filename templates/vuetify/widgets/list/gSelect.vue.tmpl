@@ -1,9 +1,9 @@
 <template>
   <v-chip :color="statusText.color" text-color="white">
     <v-avatar>
-      <v-icon>{{ statusText.icon }}</v-icon>
+      <v-icon>{{ "{{ statusText.icon }}" }}</v-icon>
     </v-avatar>
-    {{ statusText.label }}
+    {{ "{{ statusText.label }}" }}
   </v-chip>
 </template>
 

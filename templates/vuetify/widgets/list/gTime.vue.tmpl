@@ -2,9 +2,9 @@
   <div>
     <v-tooltip top v-if="one">
       <timeago slot="activator" locale="fr-FR" :datetime="date"></timeago>
-      <span>{{ date.toLocaleDateString() }} {{ date.toLocaleTimeString() }}</span>
+      <span>{{ "{{ date.toLocaleDateString() }} {{ date.toLocaleTimeString() }}" }}</span>
     </v-tooltip>
-    <span v-else>{{ date.toLocaleDateString() }} {{ date.toLocaleTimeString() }}</span>
+    <span v-else>{{ "{{ date.toLocaleDateString() }} {{ date.toLocaleTimeString() }}" }}</span>
   </div>
 </template>
 

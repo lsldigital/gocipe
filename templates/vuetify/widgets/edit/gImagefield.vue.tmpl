@@ -1,6 +1,6 @@
 <template>
   <div class="mt-4 mb-4">
-    <div class="caption desc-span">{{ $attrs.label }}</div>
+    <div class="caption desc-span">{{ "{{ $attrs.label }}" }}</div>
     <picture-input buttonClass ref="pictureInput" :crop="false" :z-index="0" class="image-uploader" :prefill="image" width="400" height="200" margin="16" accept="image/jpeg,image/png" size="10" button-class="btn" :custom-strings="{
                     upload: '<h1>Image</h1>', drag: 'Click here to upload image' }" @change="onChange">
     </picture-input>
