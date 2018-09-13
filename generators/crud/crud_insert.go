@@ -43,9 +43,7 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 
 	for _, rel := range entity.Relationships {
 		if rel.Type == util.RelationshipTypeManyMany ||
-			rel.Type == util.RelationshipTypeManyManyOwner ||
-			rel.Type == util.RelationshipTypeManyManyInverse ||
-			rel.Type == util.RelationshipTypeOneMany {
+			rel.Type == util.RelationshipTypeManyManyInverse {
 			related = append(related, fmt.Sprintf("err = repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name))
 		} else if rel.Type == util.RelationshipTypeManyOne {
 			sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
