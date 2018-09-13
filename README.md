@@ -172,3 +172,16 @@ Type         | Description                                                      
 `select`     | Select with predefined options                                            | `(key1:value1, key2:value2, ... keyn:value1)` |              
 `select-rel` | Select with options fetched asynchronously from a related entity endpoint | `(endpoint,filtername)` e.g: `(persons;name)` |                                                        
 > If no data, then it must be ommitted, including the `()`
+
+
+## Update for related entities
+
+Current case: Save triggered on Entity A
+| Relationship Types | Entity A  | Entity B   | Notes                                            |
+|--------------------|-----------|------------|--------------------------------------------------|
+| One-One            | Saved     | Not Saved* | * Save foreign key value of entity A  (i.e UUID) |
+| One-Many           | Saved     | Not Saved  |                                                  |
+| Many-One           | Saved*    | Not Saved  | * Save foreign key value of entity B (i.e UUID)  |
+| Many-Many          | Saved     | Saved      |                                                  |
+| Many-Many-Owner    | Saved     | Saved*     | * Only in pivot table                            |
+| Many-Many-Inverse  | Saved     | Not Saved  |                                                  |

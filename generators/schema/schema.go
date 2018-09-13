@@ -59,7 +59,9 @@ func Generate(work util.GenerationWork, opts util.SchemaOpts, entities map[strin
 					n := strings.ToLower(related.Name) + "_id"
 					t, _ := util.GetPrimaryKeyFieldType(related.PrimaryKey)
 					data.RelatedFields = append(data.RelatedFields, RelatedField{Name: n, Type: t})
-				} else if rel.Type == util.RelationshipTypeManyMany && strings.Compare(entity.Table, related.Table) > 0 {
+				} else if (rel.Type == util.RelationshipTypeManyMany ||
+					rel.Type == util.RelationshipTypeManyManyOwner ||
+					rel.Type == util.RelationshipTypeManyManyInverse) && strings.Compare(entity.Table, related.Table) > 0 {
 					table := rel.JoinTable
 					thisID := rel.ThisID
 					thatID := rel.ThatID

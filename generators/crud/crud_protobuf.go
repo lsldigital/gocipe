@@ -51,7 +51,7 @@ func generateProtobuf(entities map[string]util.Entity) (string, error) {
 			t = related.Name
 
 			switch rel.Type {
-			case util.RelationshipTypeManyMany:
+			case util.RelationshipTypeManyMany, util.RelationshipTypeManyManyOwner, util.RelationshipTypeManyManyInverse:
 				ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name, Type: "repeated " + t})
 			case util.RelationshipTypeOneOne:
 				ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name, Type: t})
