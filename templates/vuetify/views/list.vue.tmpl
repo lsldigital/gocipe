@@ -35,13 +35,19 @@
         <template slot="items" slot-scope="props">
           <tr :class="{'highlight': recentlySaved(props.item.id)}">
             <td class="justify-center layout px-0">
-              <v-btn icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
-                <v-icon>edit</v-icon>
-              </v-btn>
-              <v-btn icon class="mx-0" @click="deleteTry(props.item.id, props.item.Name )">
+            <v-btn icon class="mx-0" @click="deleteTry(props.item.id, props.item.Name)">
                 <v-icon>delete</v-icon>
               </v-btn>
-              <v-tooltip top>
+              <v-btn icon class="mx-0" @click="duplicate(props.item.id)">
+                <v-icon>file_copy</v-icon>
+              </v-btn>
+              <v-tooltip top v-if="nested">
+                <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.id, props.item.Name)">
+                  <v-icon>edit</v-icon>
+                </v-btn>
+                <span>Open Nested Edit</span>
+              </v-tooltip>
+              <v-tooltip top v-else>
                 <v-btn slot="activator" icon class="mx-0" :to="{name: 'g_{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
                   <v-icon>accessible_forward</v-icon>
                 </v-btn>
@@ -120,6 +126,13 @@
       </v-card>
     </v-dialog>
 
+    <!-- Edit In Place -->
+    <v-dialog :lazy="true" v-model="nestedForm.visible" persistent max-width="500px">
+      <component :is="'{{plural .Entity.Name}}Edit'" :key="nestedForm.id" @closeform="nestedFormClose" :visible="nestedForm.visible" :filter_id="nestedForm.id" :nested="true" />
+    </v-dialog>
+    <!-- !# Edit In Place -->
+
+
     <v-snackbar v-model="snackbar.show" :top="true" color="primary" auto-height :timeout="2000">
       {{ printf `{{ snackbar.text }}` }}
       <v-btn dark flat @click="snackbarHide">
@@ -131,13 +144,16 @@
 
 <script>
 import { BreadClient } from "@/services/service_bread_pb_service";
-import { ListRequest } from "@/services/service_bread_pb";
+import { ListRequest, GetRequest, Filter} from "@/services/service_bread_pb";
 import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { DeleteRequest } from "@/services/service_bread_pb";
 import { mapGetters } from 'vuex';
 import gSelect from "@/widgets/list/gSelect.vue";
 import gToggle from "@/widgets/list/gToggle.vue";
 import gTime from "@/widgets/list/gTime.vue";
+
+import {{plural .Entity.Name}}Edit from "./{{plural .Entity.Name}}Edit.vue";
+import { {{ .Entity.Name }} } from "@/services/models_pb.js";
 
 export default {
   data() {
@@ -154,7 +170,12 @@ export default {
         id: null,
         label: null
       },
-      text: "hola",
+      nestedForm: {
+        visible: null,
+        id: null,
+        label: null
+      },
+      text: "",
       headers: [
         {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
 		{{range .Entity.Fields }}{{if not .ListWidget.Hide}}
@@ -167,6 +188,7 @@ export default {
     };
   },
   components: {
+      {{plural .Entity.Name}}Edit,
       gSelect,
       gToggle,
       gTime
@@ -176,6 +198,7 @@ export default {
       'token': 'auth/getToken'
     })
   },
+  props: ["filter_id", "filter_field", "nested", "rpc"],
   mounted() {
     this.loading = true;
     this.getList();
@@ -188,9 +211,35 @@ export default {
           }
           return false;
       },
-
+      nestedFormEdit(editid, name) {
+        console.log(editid);
+        this.nestedForm = {
+          visible: true,
+          id: editid,
+          label: name
+        };
+      },
+      nestedFormClose() {
+        // clear and reset nested form
+        this.getList();
+        this.nestedForm = {
+          visible: false,
+          id: "",
+          label: ""
+        };
+      },
       getList: function(){
         let req = new ListRequest();
+
+        if (this.filter_id) {
+          let filter = new Filter();
+          filter.setField(this.filter_field);
+          filter.setOperation("=");
+          filter.setValue(this.filter_id);
+
+          req.addFilters(filter);
+        }
+
         req.setKey(this.token);
 
         this.cli.list{{plural .Entity.Name}}(req, (err, resp) => {
@@ -219,27 +268,65 @@ export default {
           
         });
        },
-      create: function() {
-          let req = new Create{{.Entity.Name}}Request();
-          req.setKey(this.token);
+      duplicate(id) {
+        let toBeDuplicatedId = id;
+        let toBeDuplicatedEntity = null;
+        // Get the entity
+        let req = new GetRequest();
+        console.log("requesting using the id", toBeDuplicatedId);
+        req.setId(toBeDuplicatedId);
 
-          this.snackbarShow('Loading {{ucfirst (plural .Entity.Name)}}');
-          this.loading = true;
+        this.loading = true;
 
-           this.cli.create{{.Entity.Name}}(req, (err, resp) => {
-            if (err) {
-                console.log(err);
+        this.cli.get{{.Entity.Name}}(req, (err, resp) => {
+          if (err) {
+            console.log(err);
+            this.snackbarShow(err.message, "error");
+            return;
+          }
+          this.loading = false;
+          ///
+          toBeDuplicatedEntity = resp.get{{.Entity.Name}}();
+          this.create("existing", toBeDuplicatedEntity);
+        });
+      },
+      create: function(from, existingEntity) {
+        let req = new Create{{.Entity.Name}}Request();
+        req.setKey(this.token);
 
-                this.snackbarShow("Create Error " + err.message, "error");
+        if (from === "existing" && existingEntity) {
+          req.set{{.Entity.Name}}(existingEntity);
+        } else if (this.nested) {
+          let entity = new {{.Entity.Name}}();
+          entity[rpc](this.filter_id);
+          req.set{{.Entity.Name}}(entity);
+        }
 
-                this.loading = false;
-                return;
-            }
+        this.snackbarShow('Loading {{ucfirst (plural .Entity.Name)}}');
+        this.loading = true;
 
+        this.cli.create{{.Entity.Name}}(req, (err, resp) => {
+          if (err) {
+            console.log(err);
+
+            this.snackbarShow("Create Error " + err.message, "error");
+
+            this.loading = false;
+            return;
+          }
+          this.loading = false;
+          if (this.nested) {
+            this.nestedForm = {
+              visible: true,
+              id: resp.get{{.Entity.Name}}().getId(),
+              label: ""
+            };
+          } else {
             this.$router.push({
-                name: "g_{{lower (plural .Entity.Name)}}_edit",
-                params: { id: resp.get{{ucfirst .Entity.Name}}().getId() }
+              name: "g_{{lower (plural .Entity.Name)}}_edit",
+              params: { id: resp.get{{.Entity.Name}}().getId() }
             });
+          }
         });
       },
       deleteTry: function(id, label) {

@@ -1,12 +1,13 @@
 <template>
     <div>
         <div class="listing--container">
-            <v-toolbar color="transparent" class="listing-toolbar" flat ml-0>
+            <!-- Normal Toolbar -->
+            <v-toolbar color="transparent" class="listing-toolbar" flat ml-0 v-if="!nested">
                 <v-btn icon :to="{name: '{{- plural (lower .Entity.Name) -}}_list'}">
                     <v-icon large>arrow_back</v-icon>
                 </v-btn>
                 <v-toolbar-title class="ma-0 pa-0">
-                    <h2>Edit {{.Entity.Name}}</h2>
+                    <h2>Edit {{.Entity.Name}} </h2>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-btn mr-0 color="" :to="''">
@@ -16,40 +17,82 @@
                     <v-icon dark>arrow_forward</v-icon> Next
                 </v-btn>
             </v-toolbar>
+            <!-- Nested Form Toolbar -->
+            <v-toolbar class="listing-toolbar" flat v-else>
+                <v-toolbar-title class="pl-3">
+                    <h2>Edit {{.Entity.Name}} </h2>
+                </v-toolbar-title>
+            </v-toolbar>
         </div>
         <v-card>
             <v-card-text>
                 <v-form>
                     <div class="gocipe-form-grid" v-if="entity">
-                        {{ $EntityName := .Entity.Name }} {{ range .Entity.Fields }} {{if not .EditWidget.Hide }} {{if eq .EditWidget.Type "time"}}
-                        <!-- Date Template -->
-                        <template>
-                            <div class="gocipe-field-container">
-                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
-                            </div>
-                        </template>
-                        {{ else if eq .EditWidget.Type "imagefield"}}
-                        <!-- Date Template -->
-                        <template>
-                            <div class="gocipe-field-container">
-                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :field="'{{ .Property.Name}}'" :rpc="'upload{{ $EntityName }}'" :entityid="id" :label="'{{ .Label }}'" :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
-                            </div>
-                        </template>
-                        {{ else }}
-                        <template>
-                            <div class="gocipe-field-container">
-                                <component :is="'g{{ucfirst .EditWidget.Type }}'" :label="'{{ .Label }}'" {{if eq .EditWidget.Type "select" }} :options='{{json .EditWidget.Options }}' {{ end }} :hint="'widget: {{ .EditWidget.Type }}'" @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" :value="this.entity.get{{ucfirst .Property.Name}}()"></component>
-                            </div>
-                        </template>
-                        {{end}} {{end}} {{ end }}
+                        {{ $EntityName := .Entity.Name }} 
+                        {{ range .Entity.Fields }} 
+                            {{if not .EditWidget.Hide }} 
+                            <template>
+                                <div class="gocipe-field-container">
+                                    <component  :is="'g{{ucfirst .EditWidget.Type }}'"
+                                                :label="'{{ .Label }}'"
+                                                :hint="'widget: {{ .EditWidget.Type }}'" 
+                                                :value="this.entity.get{{ucfirst .Property.Name}}()" 
+                                                @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" 
+                                                
+                                                {{- /* SELECTBOX */ -}}
+                                                {{- if eq .EditWidget.Type "select" -}} 
+                                                    :options='{{json .EditWidget.Options }}' 
+                                                {{- end -}}
+                                                
+                                                {{- /* IMAGEFIELD */ -}}
+                                                {{- if eq .EditWidget.Type "imagefield" -}}
+                                                    :field="'{{ .Property.Name}}'" 
+                                                    :rpc="'upload{{ $EntityName }}'" 
+                                                    :entityid="id"
+                                                {{- end -}}
+
+                                    ></component>
+                                </div>
+                            </template>
+                            {{ end }} 
+                        {{ end }}
+
+                        {{ range .Entity.Relationships }}
+                            {{ if eq .Type "one-many"}}
+                                <template v-if="componentLoaded">
+                                    <component
+                                        :is="'{{plural .Entity }}List'"
+                                        :key="'{{plural .Entity }}_key'"
+                                        :filter_id="id" 
+                                        :filter_field="'{{lower $.Entity.Name}}_id'"
+                                        :rpc="'set{{fkeyPropertyTypeName $.Entities .}}id'"
+                                        :nested="true" 
+                                    />
+                                </template>
+                            {{ else }}
+                                <!-- TODO select rel -->
+                                --
+                            {{ end }}
+                        {{ end }}
                     </div>
                 </v-form>
             </v-card-text>
-            <v-card-actions>
+            <v-card-actions v-if="!nested">
                 <v-spacer></v-spacer>
                 <v-btn color="primary" @click="update">
                     Save
                     <v-icon right>save</v-icon>
+                </v-btn>
+            </v-card-actions>
+            <v-card-actions v-else>
+                <v-btn color="gray" @click="emitCloseForm">
+                    Cancel
+                    <v-icon right>close</v-icon>
+                </v-btn>
+                <v-spacer></v-spacer>
+                <v-btn color="primary" @click="emitSaveAndCloseForm">
+                    Save &amp; Close
+                    <v-icon right>assignment_return</v-icon>
                 </v-btn>
             </v-card-actions>
         </v-card>
@@ -81,6 +124,11 @@ import gPublished from "@/widgets/edit/gPublished.vue";
 import gMap from "@/widgets/edit/gMap.vue";
 import gSelect from "@/widgets/edit/gSelect.vue";
 
+{{ range .Entity.Relationships }} 
+import {{plural .Entity }}List from './{{plural .Entity }}List.vue'
+{{ end }}
+
+let cli = new BreadClient("/api");
 export default {
   data() {
     return {
@@ -92,7 +140,8 @@ export default {
       entity: null,
       loading: false,
       id: null,
-      cli : new BreadClient("/api")
+      componentLoaded: false,
+      
 
     };
   },
@@ -111,36 +160,49 @@ export default {
   */}}
 
   components: {
-      gTextfield,
-      gImagefield,
-      gToggle,
-      gIcon,
-      gTime,
-      gTextarea,
-      gPublished,
-      gMap,
-      gSelect
+        {{ range .Entity.Relationships }} 
+            {{ plural .Entity }}List,
+        {{ end }}
+        gTextfield,
+        gImagefield,
+        gToggle,
+        gIcon,
+        gTime,
+        gTextarea,
+        gPublished,
+        gMap,
+        gSelect
   },
+  props: ["filter_id", "nested", "visible"],
   mounted() {
-    this.id = this.$route.params.id;
-    let req = new GetRequest();
-    req.setId(this.id);
-
-    this.loading = true;
-
-    this.cli.get{{ .Entity.Name}}(req, (err, resp) => {
-        if (err) {
-            console.log(err);
-            this.snackbarShow(err.message, "error");
-            return;
-        }
-        this.loading = false;
-        this.entity = resp.get{{ucfirst .Entity.Name}}();
-    });
+    this.request()
+    
   },
   methods: {
         log: function(e) {
             console.log(e)
+        },
+        request: function() {
+            if (this.filter_id) {
+                this.id = this.filter_id
+            } else {
+                this.id = this.$route.params.id;
+            }
+            let req = new GetRequest();
+            req.setId(this.id);
+
+            this.loading = true;
+
+            cli.get{{ .Entity.Name}}(req, (err, resp) => {
+                if (err) {
+                    console.log(err);
+                    this.snackbarShow(err.message, "error");
+                    return;
+                }
+                this.loading = false;
+                this.entity = resp.get{{ucfirst .Entity.Name}}();
+                this.componentLoaded = true;
+            });
         },
         update: function() {
     
@@ -151,7 +213,7 @@ export default {
             this.snackbarShow('{{ucfirst .Entity.Name}} Saved');
             this.debug();
 
-            this.cli.update{{.Entity.Name}}(req, (err, resp) => {
+            cli.update{{.Entity.Name}}(req, (err, resp) => {
                 if (err) {
                     console.log(err);
 
@@ -161,6 +223,14 @@ export default {
                     return;
                 }
             });
+        },
+        emitSaveAndCloseForm: function() {
+            console.log("emitting close form to parent");
+            this.update();
+        },
+        emitCloseForm: function() {
+            console.log("emitting close form to parent");
+            this.$emit("closeform", true);
         },
         debug: function() {
             {{ range .Entity.Fields }}
@@ -176,6 +246,14 @@ export default {
             this.snackbar.show = false
         }
   }
+  /* watch: {
+    visible: function(val) {
+      if (val) {
+        console.log("watching");
+        this.request();
+      }
+    }
+  } */
 };
 </script>
 

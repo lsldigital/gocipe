@@ -24,11 +24,13 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 		// go func(entity util.Entity) {
 		var (
 			data struct {
-				Entity util.Entity
+				Entity   util.Entity
+				Entities map[string]util.Entity
 			}
 		)
 
 		data.Entity = entity
+		data.Entities = entities
 
 		filename := path + "/views/" + inflection.Plural(data.Entity.Name)
 
