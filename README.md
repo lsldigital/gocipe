@@ -185,3 +185,9 @@ Current case: Save triggered on Entity A
 | Many-Many          | Saved     | Saved      |                                                  |
 | Many-Many-Owner    | Saved     | Saved*     | * Only in pivot table                            |
 | Many-Many-Inverse  | Saved     | Not Saved  |                                                  |
+
+### Notes
+> * The owning side of a `one-to-one` association is the entity with the table containing the foreign key.
+> * `One-to-many` is always the inverse side of a bidirectional association.
+> * `Many-to-one` is always the owning side of a bidirectional association.
+> * You can pick the owning side of a `many-to-many` association yourself.
