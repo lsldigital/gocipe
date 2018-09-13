@@ -205,8 +205,8 @@ func init() {
 	}
 	file1e := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/components-registration.js.tmpl",
-		FileModTime: time.Unix(1536822688, 0),
-		Content:     string("import Vue from \"vue\";\n{{range .Widgets -}}\nimport {{.}} from \"@/gocipe/widgets/{{.}}\";\n{{ end }}\n\n{{range .Widgets -}}\nVue.component(\"{{.}}\", {{.}});\n{{ end }}"),
+		FileModTime: time.Unix(1536823004, 0),
+		Content:     string("import Vue from \"vue\";\n{{range $file, $name := .Widgets -}}\nimport {{ $name }} from \"@/gocipe/widgets/{{ $file }}\";\n{{ end }}\n\n{{range $file, $name := .Widgets -}}\nVue.component(\"{{$name}}\", {{$name}});\n{{ end }}"),
 	}
 	file1f := &embedded.EmbeddedFile{
 		Filename:    "vuetify/js/getters.js.tmpl",
@@ -461,7 +461,7 @@ func init() {
 	}
 	dir1c := &embedded.EmbeddedDir{
 		Filename:   "vuetify/js",
-		DirModTime: time.Unix(1536822021, 0),
+		DirModTime: time.Unix(1536823004, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file1d, // "vuetify/js/actions.js.tmpl"
 			file1e, // "vuetify/js/components-registration.js.tmpl"

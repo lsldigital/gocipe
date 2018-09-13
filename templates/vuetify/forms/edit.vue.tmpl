@@ -114,15 +114,6 @@
 import { BreadClient } from "@/services/service_bread_pb_service";
 import { GetRequest } from "@/services/service_bread_pb";
 import { Update{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
-import gTextfield from "@/widgets/edit/gTextfield.vue";
-import gImagefield from "@/widgets/edit/gImagefield.vue";
-import gToggle from "@/widgets/edit/gToggle.vue";
-import gIcon from "@/widgets/edit/gIcon.vue";
-import gTime from "@/widgets/edit/gTime.vue";
-import gTextarea from "@/widgets/edit/gTextarea.vue";
-import gPublished from "@/widgets/edit/gPublished.vue";
-import gMap from "@/widgets/edit/gMap.vue";
-import gSelect from "@/widgets/edit/gSelect.vue";
 
 {{ range .Entity.Relationships }} 
 import {{plural .Entity }}List from './{{plural .Entity }}List.vue'
@@ -160,18 +151,6 @@ export default {
   */}}
 
   components: {
-        {{ range .Entity.Relationships }} 
-            {{ plural .Entity }}List,
-        {{ end }}
-        gTextfield,
-        gImagefield,
-        gToggle,
-        gIcon,
-        gTime,
-        gTextarea,
-        gPublished,
-        gMap,
-        gSelect
   },
   props: ["filter_id", "nested", "visible"],
   mounted() {

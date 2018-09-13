@@ -148,11 +148,7 @@ import { ListRequest, GetRequest, Filter} from "@/services/service_bread_pb";
 import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
 import { DeleteRequest } from "@/services/service_bread_pb";
 import { mapGetters } from 'vuex';
-import gSelect from "@/widgets/list/gSelect.vue";
-import gToggle from "@/widgets/list/gToggle.vue";
-import gTime from "@/widgets/list/gTime.vue";
 
-import {{plural .Entity.Name}}Edit from "./{{plural .Entity.Name}}Edit.vue";
 import { {{ .Entity.Name }} } from "@/services/models_pb.js";
 
 export default {
@@ -188,7 +184,6 @@ export default {
     };
   },
   components: {
-      {{plural .Entity.Name}}Edit,
       gSelect,
       gToggle,
       gTime
