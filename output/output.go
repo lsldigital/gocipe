@@ -22,9 +22,10 @@ type toolset struct {
 }
 
 const (
-	logWritten = "✅ [Wrote]"
-	logSkipped = "💤 [Skipped]"
-	logError   = "❌ [Error]"
+	logSuccess = "✅ [Ok]"
+	logSkipped = "👻 [Skipped]"
+	logError   = "❗️ [Error]"
+	logInfo    = "🦋 [Info]"
 )
 
 var (
@@ -189,7 +190,7 @@ func saveGenerated(generated util.GeneratedCode, noSkip bool) (string, string, e
 		return "", fmt.Sprintf(logError+" failed to write file [%s] %s: %s", generated.Generator, generated.Filename, err), err
 	}
 
-	return filename, fmt.Sprintf(logWritten+" %s", filename), nil
+	return filename, fmt.Sprintf(logSuccess+" %s", filename), nil
 }
 
 // GenerateAndSave saves a generated file and returns error
@@ -236,7 +237,7 @@ func GenerateAndSave(component string, template string, filename string, data in
 		return err
 	}
 
-	Log(logWritten+" %s", filename)
+	Log(logSuccess+" %s", filename)
 	_written++
 
 	if strings.HasSuffix(filename, ".go") {
@@ -378,17 +379,17 @@ func ProcessProto() {
 		gopath             = os.Getenv("GOPATH") + "/src/"
 	)
 
-	Log("[Protobuf] Executing protoc to generate go files...")
+	Log(logInfo + " Executing protoc to generate go files...")
 
 	// models.proto
 	if !util.FileExists(util.WorkingDir + "/models") {
 		if err = os.MkdirAll(util.WorkingDir+"/models", mode); err != nil {
-			Log("✗ could not create folder: %s", util.WorkingDir+"/models")
-			fmt.Printf("Error creating folder %s: %s\n", util.WorkingDir+"/models", err)
+			Log(logError+" could not create folder: %s", util.WorkingDir+"/models")
+			fmt.Printf(logError+" Error creating folder %s: %s\n", util.WorkingDir+"/models", err)
 			return
 		}
 
-		Log("✓ created folder: %s", util.WorkingDir+"/models")
+		Log(logSuccess+" created folder: %s", util.WorkingDir+"/models")
 	}
 	cmd = exec.Command(
 		_tools.Protoc,
@@ -401,23 +402,21 @@ func ProcessProto() {
 	err = cmd.Run()
 
 	if err != nil {
-		Log("✗ protoc execution error (%s): %s", "models.proto", err)
-		fmt.Printf("Error running %s: %s\n", _tools.Protoc, err)
+		Log(logError+" protoc execution error (%s): %s", "models.proto", err)
 		return
 	}
 
-	Log("✓ protoc generated go files from: %s", "models.proto")
+	Log(logSuccess+" protoc generated go files from: %s", "models.proto")
 
 	// service_bread.proto, if bread service is to be generated
 	if util.FileExists(util.WorkingDir + `/proto/service_bread.proto`) {
 		if !util.FileExists(util.WorkingDir + "/services/bread") {
 			if err = os.MkdirAll(util.WorkingDir+"/services/bread", mode); err != nil {
-				Log("✗ could not create folder: %s", util.WorkingDir+"/services/bread")
-				fmt.Printf("Error creating folder %s: %s\n", util.WorkingDir+"/services/bread", err)
+				Log(logError+" could not create folder: %s : %s", util.WorkingDir+"/services/bread", err)
 				return
 			}
 
-			Log("✓ created folder: %s", util.WorkingDir+"/services/bread")
+			Log(logSuccess+" created folder: %s", util.WorkingDir+"/services/bread")
 		}
 		cmd = exec.Command(
 			_tools.Protoc,
@@ -430,12 +429,11 @@ func ProcessProto() {
 		err = cmd.Run()
 
 		if err != nil {
-			Log("✗ protoc execution error (%s): %s", "service_bread.proto", err)
-			fmt.Printf("Error running %s: %s\n", _tools.Protoc, err)
+			Log(logError+" protoc execution error (%s): %s", "service_bread.proto", err)
 			return
 		}
 
-		Log("✓ protoc generated go files from: %s", "service_bread.proto")
+		Log(logSuccess+" protoc generated go files from: %s", "service_bread.proto")
 	}
 
 	// cmd = exec.Command(
