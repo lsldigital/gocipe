@@ -38,12 +38,13 @@ const (
 	WidgetTypeToggle = "toggle"
 
 	// RelationshipTypeManyMany represents a relationship of type Many-Many
+	// TODO: remove?
 	RelationshipTypeManyMany = "many-many"
 
-	// RelationshipTypeManyManyOwner represents a relationship of type Many-Many(Owner)
+	// RelationshipTypeManyManyOwner represents a relationship of type Many(Owner)-Many
 	RelationshipTypeManyManyOwner = "many-many-owner"
 
-	// RelationshipTypeManyManyInverse represents a relationship of type Many(owner)-Many
+	// RelationshipTypeManyManyInverse represents a relationship of type Many-Many(owner)
 	RelationshipTypeManyManyInverse = "many-many-inverse"
 
 	// RelationshipTypeOneOne represents a relationship of type One-One
