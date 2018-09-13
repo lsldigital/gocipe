@@ -1,0 +1,21 @@
+<template>
+    <div>
+        <v-select :hint="$attrs.hint" :label="$attrs.label" @change="$emit('gocipe',text)" v-model="text" :items="options"></v-select>
+    </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      text: "",
+      options: []
+    };
+  },
+  created() {
+    this.text = this.$attrs.value;
+    this.options = this.$attrs.options;
+  },
+  inheritAttrs: false
+};
+</script>

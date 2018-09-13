@@ -1,0 +1,117 @@
+<template>
+  <div>
+
+    <v-text-field @click="dialog = true" :hint="$attrs.hint" :label="$attrs.label" append-icon="map" :value="geo" :placeholder="$attrs.label"></v-text-field>
+
+    <v-dialog v-model="dialog" :max-width="1200">
+
+      <v-card>
+        <v-card-title class="headline grey lighten-2" primary-title>
+          Pick a location | {{ coordinate }}
+        </v-card-title>
+
+        <v-card-text class="ma-0 pa-0">
+          <div class="map-container">
+            <mgl-map :accessToken="accessToken" :mapStyle="mapStyle" :center.sync="center" ref="mapbox" :zoom.sync="zoom" :repaint="true" class="">
+              <mgl-navigation-control position="top-right" />
+              <mgl-geolocate-control position="top-right" />
+              <mgl-marker :coordinates.sync="coordinate" @update:coordinates="updateCoordinates" :draggable="true" color="#004a8f"></mgl-marker>
+            </mgl-map>
+
+          </div>
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="gray" flat @click="dialog = false">
+            Cancel
+          </v-btn>
+          <v-btn color="primary" flat @click="saveCoordinates">
+            Confirm
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+  </div>
+</template>
+
+<script>
+import {
+  MglMap,
+  MglMarker,
+  MglNavigationControl,
+  MglGeolocateControl
+} from "vue-mapbox";
+export default {
+  data() {
+    return {
+      geo: "",
+      accessToken:
+        "pk.eyJ1Ijoiamplc2h0YSIsImEiOiJjaml2YmdvMXUyamMyM3dwYXN4NHF3Mmx6In0.asPeKTbLW9O-oa3fLuoFog",
+      mapStyle: "mapbox://styles/mapbox/streets-v10",
+      dialog: false,
+      popupCoordinates: [10, 10],
+      center: [],
+      coordinate: [],
+      marker: [],
+      zoom: 9
+    };
+  },
+  components: {
+    MglMap,
+    MglNavigationControl,
+    MglGeolocateControl,
+    MglMarker
+  },
+  created() {
+    this.geo = this.$attrs.value;
+    this.center = this.makeCoordinateArray(this.geo);
+    this.coordinate = this.makeCoordinateArray(this.geo);
+  },
+  computed: {},
+  methods: {
+    makeCoordinateArray(coordinate) {
+      if (coordinate.length === 0) {
+        return [57.61076888351013, -20.122395281744758];
+      } else if (typeof coordinate === "string") {
+        return coordinate.split(",");
+      } else {
+        return coordinate;
+      }
+    },
+    updateCoordinates(event) {
+      this.geo = event;
+      //   this.addrlong = event[0];
+      //   this.addrlat = event[1];
+    },
+    saveCoordinates() {
+      this.dialog = false;
+      let latlong = this.geo.toString();
+      this.$emit("gocipe", latlong);
+    }
+  },
+  watch: {
+    dialog: function(visible) {
+      if (visible) {
+        setTimeout(() => {
+          this.$refs.mapbox.resize();
+        }, 100);
+        // this.$refs.mapbox.fitBounds();
+      }
+    }
+  },
+  inheritAttrs: false
+};
+</script>
+
+
+<style lang="scss" scoped>
+.map-container {
+  //   width: 300px;
+  //   height: 200px;
+  display: block;
+}
+</style>
