@@ -25,6 +25,9 @@ const (
 	// WidgetTypeSelectRel represents widget of type select-rel
 	WidgetTypeSelectRel = "select-rel"
 
+	// WidgetTypeStatus represents a widget of type status
+	WidgetTypeStatus = "status"
+
 	// WidgetTypeTextArea represents widget of type textarea
 	WidgetTypeTextArea = "textarea"
 
@@ -371,9 +374,6 @@ type Field struct {
 
 	// ListWidget represents widget information for the field
 	ListWidget ListWidgetOpts `json:"list_widget"`
-
-	// Filterable indicates if queries can be made using this field
-	Filterable bool `json:"filterable"`
 }
 
 // FieldProperty represents code information for the field

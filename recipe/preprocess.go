@@ -27,8 +27,25 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			if field.Schema.Field == "" {
 				field.Schema.Field = strings.ToLower(field.Property.Name)
 			}
+
+			switch field.Schema.Field {
+			case "status", "id":
+				return nil, fmt.Errorf("%s is a reserved fieldname", field.Schema.Field)
+			}
 			entity.Fields[i] = field
 		}
+
+		entity.Fields = append(entity.Fields, util.Field{
+			Label:    "Status",
+			Property: util.FieldProperty{Name: "Status", Type: "string"},
+			Schema:   util.FieldSchema{Field: "status", Type: "CHAR(1)", Default: "'D'"},
+			EditWidget: util.EditWidgetOpts{
+				Type: util.WidgetTypeStatus,
+			},
+			ListWidget: util.ListWidgetOpts{
+				Type: util.WidgetTypeSelect,
+			},
+		})
 
 		if entity.DefaultSort == "" {
 			entity.DefaultSort = `t."id" DESC`
