@@ -275,7 +275,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 		return &res, errors.WithStack(err)
 	}
 
-	switch res.{{.Name}}.Status {
+	switch req.{{.Name}}.Status {
 		case "D", "S", "P", "U":
 			//all good
 		default:
