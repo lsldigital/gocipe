@@ -94,8 +94,8 @@ func (f *fileHandlerWithNotFoundHandler) ServeHTTP(w http.ResponseWriter, r *htt
 	}
 }
 
-// WebAppRouting returns a new subrouter
-func WebAppRouting(router *mux.Router, prefix string, appName string, mwf ...mux.MiddlewareFunc) error {
+// VueAppRouting returns a new subrouter
+func VueAppRouting(router *mux.Router, prefix string, appName string, mwf ...mux.MiddlewareFunc) error {
 	var (
 		fileSystem   http.FileSystem
 		fallbackFile http.File
@@ -119,8 +119,8 @@ func WebAppRouting(router *mux.Router, prefix string, appName string, mwf ...mux
 	return nil
 }
 
-// WebDevRouting returns a new subrouter
-func WebDevRouting(router *mux.Router, prefix string, app string, port string, mwf ...mux.MiddlewareFunc) error {
+// DevRouting returns a new subrouter
+func DevRouting(router *mux.Router, prefix string, app string, port string, mwf ...mux.MiddlewareFunc) error {
 	var (
 		url		  = &url.URL{Scheme: "http", Host: "localhost:" + port}
 		wsprox    = NewWSReverseProxy(url)
