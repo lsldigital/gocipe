@@ -24,7 +24,11 @@
                 </v-toolbar-title>
             </v-toolbar>
         </div>
-        <v-card>
+        <div v-if="loading" centered>
+            <v-progress-linear :indeterminate="true"></v-progress-linear>
+            <p class="text-xs-center">contacting server...</p>
+        </div>
+        <v-card v-else>
             <v-card-text>
                 <v-form>
                     <div class="gocipe-form-grid" v-if="entity">
