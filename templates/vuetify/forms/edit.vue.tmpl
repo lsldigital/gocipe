@@ -2,7 +2,7 @@
     <div>
         <div class="listing--container">
             <!-- Normal Toolbar -->
-            <v-toolbar color="transparent" class="listing-toolbar" flat ml-0 v-if="!nested">
+            <v-toolbar color="black" dark class="listing-toolbar" flat ml-0 v-if="!nested">
                 <v-btn icon :to="{name: '{{- plural (lower .Entity.Name) -}}_list'}">
                     <v-icon large>arrow_back</v-icon>
                 </v-btn>
@@ -18,10 +18,14 @@
                 </v-btn>
             </v-toolbar>
             <!-- Nested Form Toolbar -->
-            <v-toolbar class="listing-toolbar" flat v-else>
-                <v-toolbar-title class="pl-3">
-                    <h2>Edit {{.Entity.Name}} </h2>
+            <v-toolbar class="primary listing-toolbar px-3" dense dark v-else>
+                <v-toolbar-title>
+                    <h3>Edit {{.Entity.Name}} </h3>
                 </v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn flat @click.stop="emitCloseForm">
+                    <v-icon dark>close</v-icon> Close
+                </v-btn>
             </v-toolbar>
         </div>
         <div v-if="loading" centered>
@@ -83,7 +87,7 @@
             </v-card-text>
             <v-card-actions v-if="!nested">
                 <v-spacer></v-spacer>
-                <v-btn color="primary" @click="update">
+                <v-btn color="primary" large @click="update">
                     Save
                     <v-icon right>save</v-icon>
                 </v-btn>
