@@ -75,20 +75,31 @@
                                     :rpc="'set{{ $.Entity.Name }}id'"
                                     :nested="true" 
                                 />
-                            {{ else if or (eq .Type "many-many") (eq .Type "many-many-owner")}}
-                                    <component  :is="'EditWidgetSelectRel'"
-                                                :label="'{{ .Name }}'"
-                                                :hint="'widget: select rel'" 
-                                                :value="this.entity.get{{ucfirst .Name}}List()" 
-                                                :rpc="'lookup{{.Name}}'"
-                                                :multiple="true"
-                                                :item-text-getter="'get{{ucfirst (getEntityLabelField $.Entities .Entity)}}'"
-                                                @gocipe="(e) => setRelated{{.Name}}(e)"
-                                                {{- /* SELECTREL */ -}}
-                                    ></component>
-                            {{ end }}
-                            </template>
+                        {{ else if or (eq .Type "many-many") (eq .Type "many-many-owner")}}
+                                <component  :is="'EditWidgetSelectRel'"
+                                    :label="'{{ .Name }}'"
+                                    :hint="'widget: select rel'" 
+                                    :value="this.entity.get{{ucfirst .Name}}List()" 
+                                    :rpc="'lookup{{.Name}}'"
+                                    :multiple="true"
+                                    :item-text-getter="'get{{ucfirst (getEntityLabelField $.Entities .Entity)}}'"
+                                    @gocipe="(e) => setRelated{{.Name}}(e)"
+                                    {{- /* SELECTREL */ -}}
+                                ></component>
+                        {{ else if eq .Type "many-one" }}
+                                <component  :is="'EditWidgetSelectRel'"
+                                    :label="'{{ .Name }}'"
+                                    :hint="'widget: select rel'" 
+                                    :value="this.entity.get{{ucfirst .Name}}()" 
+                                    :rpc="'lookup{{.Name}}'"
+                                    :multiple="false"
+                                    :item-text-getter="'get{{ucfirst (getEntityLabelField $.Entities .Entity)}}'"
+                                    @gocipe="(e) => set{{ucfirst .Entity}}Id(e)"
+                                    {{- /* SELECTREL */ -}}
+                                ></component>
                         {{ end }}
+                        </template>
+                    {{ end }}
                     </div>
                 </v-form>
             </v-card-text>
@@ -176,7 +187,6 @@ export default {
         {{- range .Entity.Relationships -}}
         {{- if or (eq .Type "many-many") (eq .Type "many-many-owner") }}
         setRelated{{.Name}}: function(values) {
-            window.DEBUG = values;
             this.entity.set{{ucfirst (plural .Entity)}}List(
                 values.map((value) => { 
                     let related = new {{.Entity}}();

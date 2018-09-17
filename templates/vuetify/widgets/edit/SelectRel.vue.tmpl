@@ -18,15 +18,12 @@ export default {
       selection: this.multiple ? [] : ""
     };
   },
-  props: ["rpc", "multiple", "item-text-getter"],
+  props: ["rpc", "multiple"],
   created() {
     this.options = this.$attrs.options;
-    this.selection = this.$attrs.value.map(item => {
-      return {
-        text: item[this["item-text-getter"]],
-        value: item.getId()
-      };
-    });
+    if (this.multiple) {
+      this.selection = this.$attrs.value.map(item => item.getId());
+    }
   },
   mounted() {
     this.lookup();
