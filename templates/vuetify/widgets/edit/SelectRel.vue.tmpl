@@ -1,3 +1,4 @@
+
 <template>
   <div>
     {{"{{ selection }}"}}
@@ -6,10 +7,10 @@
 </template>
 
 <script>
-import { BreadClient } from "@/services/service_bread_pb_service.js";
-import { LookupRequest } from "@/services/service_bread_pb.js";
+import { AdminClient } from "@/services/service_admin_pb_service.js";
+import { LookupRequest } from "@/services/service_admin_pb.js";
 
-let cli = new BreadClient("/api");
+let cli = new AdminClient("/api");
 
 export default {
   data() {
