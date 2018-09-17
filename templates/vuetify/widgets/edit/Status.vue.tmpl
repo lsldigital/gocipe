@@ -1,19 +1,89 @@
 <template>
-    <div>
-        <v-text-field :hint="$attrs.hint" :label="$attrs.label" v-model="text" @change="$emit('gocipe',text)"></v-text-field>
-    </div>
+  <div>
+    <v-card class="elevation-3 px-3 pt-3 pb-2">
+      <v-card-text>
+        <v-layout align-center>
+          <v-flex sm12>
+            <v-slider :label="$attrs.label" v-model="statusValue" :value="valueTranslation(textValue)"
+              @change="onChange" :tick-labels="stages.labels" :thumb-size="30" thumb-label="always"
+              :color="thumbColor" :track-color="thumbColor" :thumb-color="thumbColor"
+              :max="3" :step="1" :validate-on-blur="true" :prepend-icon="thumbLabel"
+              :always-dirty="true" ticks="always" tick-size="5">
+              <template slot="thumb-label" slot-scope="props">
+                <v-icon flat>{{ "{{ thumbLabel }}" }}</v-icon>
+              </template>
+            </v-slider>
+          </v-flex>
+        </v-layout>
+      </v-card-text>
+    </v-card>
+
+  </div>
 </template>
 
 <script>
 export default {
   data() {
     return {
-      text: ""
+      statusValue: "",
+      textValue: "",
+      stages: {
+        labels: ["Unpublished", "Draft", "Saved", "Published"],
+        icon: ["visibility_off", "rowing", "bookmark", "check_circle"],
+        colors: ["error", "warning", "primary", "success"]
+      }
     };
   },
-  created() {
-    this.text = this.$attrs.value;
+  computed: {
+    thumbColor: function() {
+      // console.log(this.statusValue);
+      if (typeof this.statusValue === "NaN") {
+        return "warning";
+      }
+      return this.stages.colors[this.statusValue];
+    },
+    thumbLabel: function() {
+      return this.stages.icon[this.statusValue];
+    }
   },
+  methods: {
+    onChange() {
+      this.statusText = this.textTranslation(this.statusValue);
+      console.log(this.statusText);
+      console.log(this.statusValue);
+      this.$emit("gocipe", this.statusText);
+    },
+    textTranslation(val) {
+      switch (val) {
+        case 1:
+          return "D";
+        case 2:
+          return "S";
+        case 3:
+          return "P";
+        case 0:
+          return "U";
+      }
+    },
+    valueTranslation(val) {
+      switch (val) {
+        case "D":
+          return 1;
+        case "S":
+          return 2;
+        case "P":
+          return 3;
+        case "U":
+          return 0;
+      }
+    }
+  },
+  created() {
+    this.textValue = this.$attrs.value;
+    this.statusValue = this.valueTranslation(this.textValue);
+    // console.log(this.textValue);
+  },
+  mounted() {},
   inheritAttrs: false
 };
 </script>

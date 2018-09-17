@@ -40,7 +40,7 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			Property: util.FieldProperty{Name: "Status", Type: "string"},
 			Schema:   util.FieldSchema{Field: "status", Type: "CHAR(1)", Default: "'D'"},
 			EditWidget: util.EditWidgetOpts{
-				Type: util.WidgetTypeSelect,
+				Type: util.WidgetTypeStatus,
 				Options: []util.EditWidgetOption{
 					util.EditWidgetOption{Text: "Draft", Value: "D"},
 					util.EditWidgetOption{Text: "Saved", Value: "S"},

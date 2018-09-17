@@ -89,6 +89,7 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 		"EditWidgetMap":        "edit/Map.vue",
 		"EditWidgetStatus":     "edit/Status.vue",
 		"EditWidgetSelect":     "edit/Select.vue",
+		"EditWidgetSelectRel":  "edit/e",
 		"EditWidgetTextarea":   "edit/Textarea.vue",
 		"EditWidgetTextfield":  "edit/Textfield.vue",
 		"EditWidgetTime":       "edit/Time.vue",
