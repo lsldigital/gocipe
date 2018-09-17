@@ -77,9 +77,16 @@
                                         :nested="true" 
                                     />
                                 </template>
-                            {{ else }}
+                            {{ else if or (eq .Type "many-many") (eq .Type "many-many-owner") (eq .Type "one-many") }}
+                                SELECT REL
                                 <!-- TODO select rel -->
-                                
+                                    <component  :is="'EditWidgetSelectRel'"
+                                                :label="'{{ .Name }}'"
+                                                :hint="'widget: select rel'" 
+                                                :value="this.entity.get{{ucfirst .Name}}()" 
+                                                
+                                                {{- /* SELECTREL */ -}}
+                                    ></component>
                             {{ end }}
                         {{ end }}
                     </div>
