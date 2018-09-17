@@ -170,6 +170,13 @@ func init() {
 
 			return fileFields
 		},
+		"getEntityLabelField": func(entities map[string]Entity, name string) (string, error) {
+			if entity, ok := entities[name]; ok {
+				return entity.LabelField, nil
+			}
+
+			return "", errors.New("entity not found: " + name)
+		},
 	}
 }
 

@@ -93,7 +93,7 @@ service Admin {
     // Upload{{.Name}} allows uploading of files for entity of type {{.Name}}
     rpc Upload{{.Name}}(UploadRequest) returns (UploadResponse);
     {{end}}
-    rpc Lookup{{.Name}}(LookupRequest) returns (LookupResponse);
+    rpc Lookup{{plural .Name}}(LookupRequest) returns (LookupResponse);
 /**
  * [END SERVICES] {{.Name}}
  */

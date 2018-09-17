@@ -433,7 +433,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 {{- end}}
 
 // Lookup{{.Name}} lookup allows looking up an entity by its label for entity of type {{.Name}}
-func(s Service) Lookup{{.Name}}(ctx context.Context, req *LookupRequest) (*LookupResponse, error) {
+func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) (*LookupResponse, error) {
 	var (
 		err  error
 		rows *sql.Rows

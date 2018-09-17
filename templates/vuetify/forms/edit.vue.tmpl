@@ -77,14 +77,15 @@
                                         :nested="true" 
                                     />
                                 </template>
-                            {{ else if or (eq .Type "many-many") (eq .Type "many-many-owner") (eq .Type "one-many") }}
-                                SELECT REL
-                                <!-- TODO select rel -->
+                            {{ else if or (eq .Type "many-many") (eq .Type "many-many-owner")}}
                                     <component  :is="'EditWidgetSelectRel'"
                                                 :label="'{{ .Name }}'"
                                                 :hint="'widget: select rel'" 
-                                                :value="this.entity.get{{ucfirst .Name}}()" 
-                                                
+                                                :value="this.entity.get{{ucfirst .Name}}List()" 
+                                                :rpc="'lookup{{.Name}}'"
+                                                :multiple="true"
+                                                :item-text-getter="'get{{ucfirst (getEntityLabelField $.Entities .Entity)}}'"
+                                                @gocipe="(e) => setRelated{{.Name}}(e)"
                                                 {{- /* SELECTREL */ -}}
                                     ></component>
                             {{ end }}
@@ -130,6 +131,10 @@ import { AdminClient } from "@/services/service_admin_pb_service";
 import { GetRequest } from "@/services/service_admin_pb";
 import { Update{{ .Entity.Name}}Request } from "@/services/service_admin_pb";
 
+{{range .Entity.Relationships -}}{{- if or (eq .Type "many-many") (eq .Type "many-many-owner") }}
+import { {{.Entity}} } from "@/services/models_pb"
+{{end}}{{end}}
+
 let cli = new AdminClient("/api");
 export default {
   data() {
@@ -169,6 +174,20 @@ export default {
     
   },
   methods: {
+        {{- range .Entity.Relationships -}}
+        {{- if or (eq .Type "many-many") (eq .Type "many-many-owner") }}
+        setRelated{{.Name}}: function(values) {
+            window.DEBUG = values;
+            this.entity.set{{ucfirst (plural .Entity)}}List(
+                values.map((value) => { 
+                    let related = new {{.Entity}}();
+                    related.setId(value);
+                    return related; 
+                })
+            );
+        },
+        {{- end -}}
+        {{- end -}}
         log: function(e) {
             console.log(e)
         },

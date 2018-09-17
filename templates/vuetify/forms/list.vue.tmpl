@@ -208,7 +208,6 @@ export default {
           return false;
       },
       nestedFormEdit(editid, name) {
-        console.log(editid);
         this.nestedForm = {
           visible: true,
           id: editid,
@@ -217,7 +216,6 @@ export default {
       },
       nestedFormClose() {
         // clear and reset nested form
-        console.log('recieve close form request');
         this.getList();
         this.nestedForm = {
           visible: false,
@@ -268,7 +266,6 @@ export default {
         let toBeDuplicatedEntity = null;
         // Get the entity
         let req = new GetRequest();
-        console.log("requesting using the id", toBeDuplicatedId);
         req.setId(toBeDuplicatedId);
 
         this.loading = true;
