@@ -111,11 +111,11 @@
 
 
 <script>
-import { BreadClient } from "@/services/service_bread_pb_service";
-import { GetRequest } from "@/services/service_bread_pb";
-import { Update{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
+import { AdminClient } from "@/services/service_admin_pb_service";
+import { GetRequest } from "@/services/service_admin_pb";
+import { Update{{ .Entity.Name}}Request } from "@/services/service_admin_pb";
 
-let cli = new BreadClient("/api");
+let cli = new AdminClient("/api");
 export default {
   data() {
     return {

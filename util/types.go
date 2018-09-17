@@ -86,8 +86,8 @@ type Recipe struct {
 	// Crud describes options for Crud generation
 	Crud CrudOpts `json:"crud"`
 
-	// Bread describes options for Browse, Read, Edit, Add & Delete service generation
-	Bread BreadOpts `json:"bread"`
+	// Admin describes options for Admin service generation
+	Admin AdminOpts `json:"admin"`
 
 	// Rest describes options for Rest generation
 	Rest RestOpts `json:"rest"`
@@ -234,27 +234,27 @@ type RestOpts struct {
 	Hooks ResourceHooks `json:"hooks"`
 }
 
-// BreadOpts represents which BREAD functions should be generated
-type BreadOpts struct {
-	// Generate indicates whether or not to generate the BREAD service
+// AdminOpts represents which Admin functions should be generated
+type AdminOpts struct {
+	// Generate indicates whether or not to generate the Admin service
 	Generate bool `json:"generate"`
 
-	// Create indicates if code Add component of BREAD service, method Create, should be automatically generated
+	// Create indicates if code Add component of Admin service, method Create, should be automatically generated
 	Create bool `json:"create"`
 
-	// Read indicates if code Read component of BREAD service, method Read, should be automatically generated
+	// Read indicates if code Read component of Admin service, method Read, should be automatically generated
 	Read bool `json:"read"`
 
-	// List indicates if code Browse component of BREAD service, method List, should be automatically generated
+	// List indicates if code Browse component of Admin service, method List, should be automatically generated
 	List bool `json:"list"`
 
-	// Update indicates if code Edit component of BREAD service, method Update, should be automatically generated
+	// Update indicates if code Edit component of Admin service, method Update, should be automatically generated
 	Update bool `json:"update"`
 
-	// Delete indicates if code Delete component of BREAD service, method Delete, should be automatically generated
+	// Delete indicates if code Delete component of Admin service, method Delete, should be automatically generated
 	Delete bool `json:"delete"`
 
-	// Hooks describes hooks options for BREAD generation
+	// Hooks describes hooks options for Admin generation
 	Hooks ResourceHooks `json:"hooks"`
 }
 
@@ -345,8 +345,8 @@ type Entity struct {
 	// Crud describes options for CRUD generation - overrides recipe level Crud config
 	CrudHooks *CrudHooks `json:"crud"`
 
-	// Bread describes options for Bread generation - overrides recipe level Bread config
-	Bread *BreadOpts `json:"bread"`
+	// Admin describes options for Admin generation - overrides recipe level Admin config
+	Admin *AdminOpts `json:"admin"`
 
 	// Rest describes options for Rest generation - overrides recipe level Rest config
 	Rest *RestOpts `json:"rest"`

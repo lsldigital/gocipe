@@ -143,15 +143,15 @@
 </template>
 
 <script>
-import { BreadClient } from "@/services/service_bread_pb_service";
-import { ListRequest, GetRequest, Filter} from "@/services/service_bread_pb";
-import { Create{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
-import { DeleteRequest } from "@/services/service_bread_pb";
+import { AdminClient } from "@/services/service_admin_pb_service";
+import { ListRequest, GetRequest, Filter} from "@/services/service_admin_pb";
+import { Create{{ .Entity.Name}}Request } from "@/services/service_admin_pb";
+import { DeleteRequest } from "@/services/service_admin_pb";
 import { mapGetters } from 'vuex';
 
 import { {{ .Entity.Name }} } from "@/services/models_pb.js";
 
-let cli = new BreadClient("/api");
+let cli = new AdminClient("/api");
 
 export default {
   data() {

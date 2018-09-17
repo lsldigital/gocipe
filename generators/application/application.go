@@ -28,6 +28,6 @@ func Generate(recipe *util.Recipe, noSkip bool) {
 		}, !noSkip)
 	output.GenerateAndSave("Scaffold", "application/route.go.tmpl", "route.go", struct {
 		Bootstrap util.BootstrapOpts
-		Bread     util.BreadOpts
-	}{recipe.Bootstrap, recipe.Bread}, !noSkip)
+		Admin     util.AdminOpts
+	}{recipe.Bootstrap, recipe.Admin}, !noSkip)
 }

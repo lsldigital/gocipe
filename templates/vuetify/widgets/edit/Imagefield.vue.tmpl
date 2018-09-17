@@ -8,9 +8,9 @@
 </template>
 
 <script>
-import { BreadClient } from "@/services/service_bread_pb_service";
-import { UploadRequest } from "@/services/service_bread_pb";
-import { File } from "@/services/service_bread_pb";
+import { AdminClient } from "@/services/service_admin_pb_service";
+import { UploadRequest } from "@/services/service_admin_pb";
+import { File } from "@/services/service_admin_pb";
 import PictureInput from "vue-picture-input";
 
 function convertDataURIToBinary(dataURI) {
@@ -27,7 +27,7 @@ function convertDataURIToBinary(dataURI) {
   return array;
 }
 
-let cli = new BreadClient("/api");
+let cli = new AdminClient("/api");
 
 export default {
   inheritAttrs: false,
