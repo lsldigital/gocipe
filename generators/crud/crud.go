@@ -187,22 +187,22 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 	if err == nil {
 		for _, rel := range entity.Relationships {
 			// No SaveRelated template generated:
-			// RelationshipTypeManyManyOwner, RelationshipTypeOneMany, RelationshipTypeManyOne, RelationshipTypeOneOne
+			// RelationshipTypeManyManyInverse, RelationshipTypeOneMany, RelationshipTypeManyOne, RelationshipTypeOneOne
 			switch rel.Type {
-			case util.RelationshipTypeManyManyOwner:
-				c, err := generateLoadRelatedManyMany(entities, entity, rel)
-				if err != nil {
-					return code, err
-				}
-				code.LoadRelated = append(code.LoadRelated, c)
 			case util.RelationshipTypeManyManyInverse:
 				c, err := generateLoadRelatedManyMany(entities, entity, rel)
 				if err != nil {
 					return code, err
 				}
 				code.LoadRelated = append(code.LoadRelated, c)
+			case util.RelationshipTypeManyManyOwner:
+				c, err := generateLoadRelatedManyMany(entities, entity, rel)
+				if err != nil {
+					return code, err
+				}
+				code.LoadRelated = append(code.LoadRelated, c)
 
-				c, err = generateSaveRelatedManyManyInverse(entities, entity, rel)
+				c, err = generateSaveRelatedManyManyOwner(entities, entity, rel)
 				if err != nil {
 					return code, err
 				}
@@ -247,7 +247,7 @@ func generateDeleteSingle(entities map[string]util.Entity, entity util.Entity) (
 	var post []string
 
 	for _, rel := range entity.Relationships {
-		if rel.Type == util.RelationshipTypeManyMany || rel.Type == util.RelationshipTypeManyManyInverse {
+		if rel.Type == util.RelationshipTypeManyMany || rel.Type == util.RelationshipTypeManyManyOwner {
 			post = append(post, fmt.Sprintf("repo.Save%s(ctx, tx, false, entity.ID)", util.RelFuncName(rel)))
 		}
 	}
@@ -326,9 +326,9 @@ func generateSaveRelatedManyMany(entities map[string]util.Entity, entity util.En
 	})
 }
 
-// generateSaveRelatedManyManyInverse produces code for database saving of related entities
-func generateSaveRelatedManyManyInverse(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
-	return util.ExecuteTemplate("crud/partials/saverelated_manymanyinverse.go.tmpl", struct {
+// generateSaveRelatedManyManyOwner produces code for database saving of related entities
+func generateSaveRelatedManyManyOwner(entities map[string]util.Entity, entity util.Entity, rel util.Relationship) (string, error) {
+	return util.ExecuteTemplate("crud/partials/saverelated_manymanyowner.go.tmpl", struct {
 		PropertyName   string
 		PrimaryKey     string
 		PropertyType   string
