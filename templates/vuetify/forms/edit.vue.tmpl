@@ -65,8 +65,8 @@
                     {{- end -}}
 
                     {{- range .Entity.Relationships }}
+                        <template v-if="componentLoaded">
                         {{- if eq .Type "one-many" }}
-                            <template v-if="componentLoaded">
                                 <component
                                     :is="'{{plural .Entity }}List'"
                                     :key="'{{plural .Entity }}_key'"
@@ -75,22 +75,6 @@
                                     :rpc="'set{{ $.Entity.Name }}id'"
                                     :nested="true" 
                                 />
-                            </template>
-                            {{ end }} 
-                        {{ end }}
-
-                        {{ range .Entity.Relationships }}
-                            {{ if eq .Type "one-many"}}
-                                <template v-if="componentLoaded">
-                                    <component
-                                        :is="'{{plural .Entity }}List'"
-                                        :key="'{{plural .Entity }}_key'"
-                                        :filter_id="id" 
-                                        :filter_field="'{{lower $.Entity.Name}}_id'"
-                                        :rpc="'set{{ $.Entity.Name }}id'"
-                                        :nested="true" 
-                                    />
-                                </template>
                             {{ else if or (eq .Type "many-many") (eq .Type "many-many-owner")}}
                                     <component  :is="'EditWidgetSelectRel'"
                                                 :label="'{{ .Name }}'"
@@ -103,6 +87,7 @@
                                                 {{- /* SELECTREL */ -}}
                                     ></component>
                             {{ end }}
+                            </template>
                         {{ end }}
                     </div>
                 </v-form>
