@@ -1,0 +1,55 @@
+<template>
+  <div>
+    {{"{{ selection }}"}}
+    <v-autocomplete @change="updateParent" v-model="selection" :multiple="multiple" :items="options" :label="$attrs.label"></v-autocomplete>
+  </div>
+</template>
+
+<script>
+//@ts-check
+import { BreadClient } from "../../services/service_bread_pb_service.js";
+import { LookupRequest } from "../../services/service_bread_pb.js";
+
+let cli = new BreadClient("/api");
+
+export default {
+  data() {
+    return {
+      options: [],
+      selection: this.multiple ? [] : ""
+    };
+  },
+  props: ["rpc", "multiple"],
+  created() {
+    this.selection = this.$attrs.value;
+    this.options = this.$attrs.options;
+  },
+  mounted() {
+    this.lookup();
+  },
+  methods: {
+    updateParent() {
+      this.$emit("gocipe", this.selection);
+    },
+    lookup() {
+      let req = new LookupRequest();
+      req.setTerm(this.text);
+
+      cli[this.rpc](req, (err, resp) => {
+        if (err) {
+          console.log(err);
+          return;
+        }
+
+        this.options = resp.getResultList().map(result => {
+          return {
+            value: result.getId(),
+            text: result.getLabel()
+          };
+        });
+      });
+    }
+  },
+  inheritAttrs: false
+};
+</script>
