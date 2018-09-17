@@ -1,22 +1,14 @@
 <template>
   <div>
-    <v-card class="elevation-3 px-3 pt-3 pb-2">
-      <v-card-text>
-        <v-layout align-center>
-          <v-flex sm12>
-            <v-slider :label="$attrs.label" v-model="statusValue" :value="valueTranslation(textValue)"
-              @change="onChange" :tick-labels="stages.labels" :thumb-size="30" thumb-label="always"
-              :color="thumbColor" :track-color="thumbColor" :thumb-color="thumbColor"
-              :max="3" :step="1" :validate-on-blur="true" :prepend-icon="thumbLabel"
-              :always-dirty="true" ticks="always" tick-size="5">
-              <template slot="thumb-label" slot-scope="props">
-                <v-icon flat>{{ "{{ thumbLabel }}" }}</v-icon>
-              </template>
-            </v-slider>
-          </v-flex>
-        </v-layout>
-      </v-card-text>
-    </v-card>
+    <v-slider class="py-3" :label="$attrs.label" v-model="statusValue" :value="valueTranslation(textValue)"
+      @change="onChange" :tick-labels="stages.labels" :thumb-size="30" thumb-label="always"
+      :color="thumbColor" :track-color="thumbColor" :thumb-color="thumbColor"
+      :max="3" :step="1" :validate-on-blur="true" :prepend-icon="thumbLabel"
+      :always-dirty="true" ticks="always" tick-size="5">
+      <template slot="thumb-label" slot-scope="props">
+        <v-icon flat>{{ "{{ thumbLabel }}" }}</v-icon>
+      </template>
+    </v-slider>
 
   </div>
 </template>

@@ -19,7 +19,7 @@ func init() {
 	generateCmd.Flags().BoolVarP(&generateBootstrap, "Bootstrap", "", true, "")
 	generateCmd.Flags().BoolVarP(&generateSchema, "Schema", "", true, "")
 	generateCmd.Flags().BoolVarP(&generateCrud, "Crud", "", true, "")
-	generateCmd.Flags().BoolVarP(&generateBread, "Bread", "", true, "")
+	generateCmd.Flags().BoolVarP(&generateAdmin, "Admin", "", true, "")
 	generateCmd.Flags().BoolVarP(&generateUtils, "Utils", "", true, "")
 	generateCmd.Flags().BoolVarP(&generateVuetify, "Vuetify", "", true, "")
 

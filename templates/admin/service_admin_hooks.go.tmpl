@@ -1,61 +1,61 @@
-package bread
+package admin
 
 {{if .PreRead}}
-// {{lower .Entity.Name}}PreRead is a hook that occurs before the ead operation in BREAD service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PreRead is a hook that occurs before the ead operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PreRead(ctx context.Context, req *GetRequest, res *Get{{.Entity.Name}}Response) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PostRead}}
-// {{lower .Entity.Name}}PostRead is a hook that occurs after the Read operation in BREAD service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PostRead is a hook that occurs after the Read operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PostRead(ctx context.Context, req *GetRequest, res *Get{{.Entity.Name}}Response, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PreList}}
-// {{lower .Entity.Name}}PreList is a hook that occurs before the ist operation in BREAD service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PreList is a hook that occurs before the ist operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PreList(ctx context.Context, req *ListRequest, res *List{{plural .Entity.Name}}Response) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PostList}}
-// {{lower .Entity.Name}}PostList is a hook that occurs after the List operation in BREAD service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PostList is a hook that occurs after the List operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PostList(ctx context.Context, req *ListRequest, res *List{{plural  .Entity.Name}}Response, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PreCreate}}
-// {{lower .Entity.Name}}PreCreate is a hook that occurs before the reate operation in BREAD service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PreCreate is a hook that occurs before the reate operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PreCreate(ctx context.Context, tx *sql.Tx, req *Create{{.Entity.Name}}Request, res *Create{{.Entity.Name}}Response, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PostCreate}}
-// {{lower .Entity.Name}}PostCreate is a hook that occurs after the Create operation in BREAD service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PostCreate is a hook that occurs after the Create operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PostCreate(ctx context.Context, req *Create{{.Entity.Name}}Request, res *Create{{.Entity.Name}}Response, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PreUpdate}}
-// {{lower .Entity.Name}}PreUpdate is a hook that occurs before the pdate operation in BREAD service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PreUpdate is a hook that occurs before the pdate operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PreUpdate(ctx context.Context, tx *sql.Tx, req *Update{{.Entity.Name}}Request, res *Update{{.Entity.Name}}Response, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PostUpdate}}
-// {{lower .Entity.Name}}PostUpdate is a hook that occurs after the Update operation in BREAD service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PostUpdate is a hook that occurs after the Update operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PostUpdate(ctx context.Context, req *Update{{.Entity.Name}}Request, res *Update{{.Entity.Name}}Response, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PreDelete}}
-// {{lower .Entity.Name}}PreDelete is a hook that occurs before the elete operation in BREAD service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PreDelete is a hook that occurs before the elete operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PreDelete(ctx context.Context, tx *sql.Tx, req *DeleteRequest, res *DeleteResponse, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }
 {{end}}
 {{if .PostDelete}}
-// {{lower .Entity.Name}}PostDelete is a hook that occurs after the Delete operation in BREAD service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PostDelete is a hook that occurs after the Delete operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PostDelete(ctx context.Context, req *DeleteRequest, res *DeleteResponse, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }

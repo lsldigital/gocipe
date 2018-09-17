@@ -1,15 +1,15 @@
+
 <template>
   <div>
-    {{"{{ selection }}"}}
     <v-autocomplete @change="updateParent" v-model="selection" :multiple="multiple" :items="options" :label="$attrs.label"></v-autocomplete>
   </div>
 </template>
 
 <script>
-import { BreadClient } from "@/services/service_bread_pb_service.js";
-import { LookupRequest } from "@/services/service_bread_pb.js";
+import { AdminClient } from "@/services/service_admin_pb_service.js";
+import { LookupRequest } from "@/services/service_admin_pb.js";
 
-let cli = new BreadClient("/api");
+let cli = new AdminClient("/api");
 
 export default {
   data() {
@@ -20,8 +20,10 @@ export default {
   },
   props: ["rpc", "multiple"],
   created() {
-    this.selection = this.$attrs.value;
     this.options = this.$attrs.options;
+    if (this.multiple) {
+      this.selection = this.$attrs.value.map(item => item.getId());
+    }
   },
   mounted() {
     this.lookup();

@@ -36,59 +36,70 @@
             <v-card-text>
                 <v-form>
                     <div class="gocipe-form-grid" v-if="entity">
-                        {{ $EntityName := .Entity.Name }} 
-                        {{ range .Entity.Fields }} 
-                            {{if not .EditWidget.Hide }} 
-                            <template>
-                                <div class="gocipe-field-container">
-                                    <component  :is="'EditWidget{{ucfirst .EditWidget.Type }}'"
-                                                :label="'{{ .Label }}'"
-                                                :hint="'widget: {{ .EditWidget.Type }}'" 
-                                                :value="this.entity.get{{ucfirst .Property.Name}}()" 
-                                                @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" 
-                                                
-                                                {{- /* SELECTBOX */ -}}
-                                                {{- if eq .EditWidget.Type "select" -}} 
-                                                    :options='{{json .EditWidget.Options }}' 
-                                                {{- end -}}
-                                                
-                                                {{- /* IMAGEFIELD */ -}}
-                                                {{- if eq .EditWidget.Type "imagefield" -}}
-                                                    :field="'{{ .Property.Name}}'" 
-                                                    :rpc="'upload{{ $EntityName }}'" 
-                                                    :entityid="id"
-                                                {{- end -}}
+                    {{- $EntityName := .Entity.Name -}} 
+                    {{- range .Entity.Fields -}} 
+                        {{- if not .EditWidget.Hide }} 
+                        <template>
+                            <div class="gocipe-field-container">
+                                <component  :is="'EditWidget{{ucfirst .EditWidget.Type }}'"
+                                            :label="'{{ .Label }}'"
+                                            :hint="'widget: {{ .EditWidget.Type }}'" 
+                                            :value="this.entity.get{{ucfirst .Property.Name}}()" 
+                                            @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" 
+                                            
+                                            {{- /* SELECTBOX */ -}}
+                                            {{- if eq .EditWidget.Type "select" }} 
+                                            :options='{{json .EditWidget.Options }}' 
+                                            {{- end -}}
+                                            
+                                            {{- /* IMAGEFIELD */ -}}
+                                            {{- if eq .EditWidget.Type "imagefield" }}
+                                            :field="'{{ .Property.Name}}'" 
+                                            :rpc="'upload{{ $EntityName }}'" 
+                                            :entityid="id"
+                                            {{- end -}}
+                                ></component>
+                            </div>
+                        </template>
+                        {{- end }} 
+                    {{- end -}}
 
-                                    ></component>
-                                </div>
-                            </template>
-                            {{ end }} 
+                    {{- range .Entity.Relationships }}
+                        <template v-if="componentLoaded">
+                        {{- if eq .Type "one-many" }}
+                                <component
+                                    :is="'{{plural .Entity }}List'"
+                                    :key="'{{plural .Entity }}_key'"
+                                    :filter_id="id" 
+                                    :filter_field="'{{lower $.Entity.Name}}_id'"
+                                    :rpc="'set{{ $.Entity.Name }}id'"
+                                    :nested="true" 
+                                />
+                        {{ else if or (eq .Type "many-many") (eq .Type "many-many-owner")}}
+                                <component  :is="'EditWidgetSelectRel'"
+                                    :label="'{{ .Name }}'"
+                                    :hint="'widget: select rel'" 
+                                    :value="this.entity.get{{ucfirst .Name}}List()" 
+                                    :rpc="'lookup{{.Name}}'"
+                                    :multiple="true"
+                                    :item-text-getter="'get{{ucfirst (getEntityLabelField $.Entities .Entity)}}'"
+                                    @gocipe="(e) => setRelated{{.Name}}(e)"
+                                    {{- /* SELECTREL */ -}}
+                                ></component>
+                        {{ else if eq .Type "many-one" }}
+                                <component  :is="'EditWidgetSelectRel'"
+                                    :label="'{{ .Name }}'"
+                                    :hint="'widget: select rel'" 
+                                    :value="this.entity.get{{ucfirst .Name}}()" 
+                                    :rpc="'lookup{{.Name}}'"
+                                    :multiple="false"
+                                    :item-text-getter="'get{{ucfirst (getEntityLabelField $.Entities .Entity)}}'"
+                                    @gocipe="(e) => set{{ucfirst .Entity}}Id(e)"
+                                    {{- /* SELECTREL */ -}}
+                                ></component>
                         {{ end }}
-
-                        {{ range .Entity.Relationships }}
-                            {{ if eq .Type "one-many"}}
-                                <template v-if="componentLoaded">
-                                    <component
-                                        :is="'{{plural .Entity }}List'"
-                                        :key="'{{plural .Entity }}_key'"
-                                        :filter_id="id" 
-                                        :filter_field="'{{lower $.Entity.Name}}_id'"
-                                        :rpc="'set{{ $.Entity.Name }}id'"
-                                        :nested="true" 
-                                    />
-                                </template>
-                            {{ else if or (eq .Type "many-many") (eq .Type "many-many-owner") (eq .Type "one-many") }}
-                                SELECT REL
-                                <!-- TODO select rel -->
-                                    <component  :is="'EditWidgetSelectRel'"
-                                                :label="'{{ .Name }}'"
-                                                :hint="'widget: select rel'" 
-                                                :value="this.entity.get{{ucfirst .Name}}()" 
-                                                
-                                                {{- /* SELECTREL */ -}}
-                                    ></component>
-                            {{ end }}
-                        {{ end }}
+                        </template>
+                    {{ end }}
                     </div>
                 </v-form>
             </v-card-text>
@@ -126,11 +137,15 @@
 
 
 <script>
-import { BreadClient } from "@/services/service_bread_pb_service";
-import { GetRequest } from "@/services/service_bread_pb";
-import { Update{{ .Entity.Name}}Request } from "@/services/service_bread_pb";
+import { AdminClient } from "@/services/service_admin_pb_service";
+import { GetRequest } from "@/services/service_admin_pb";
+import { Update{{ .Entity.Name}}Request } from "@/services/service_admin_pb";
 
-let cli = new BreadClient("/api");
+{{range .Entity.Relationships -}}{{- if or (eq .Type "many-many") (eq .Type "many-many-owner") }}
+import { {{.Entity}} } from "@/services/models_pb"
+{{end}}{{end}}
+
+let cli = new AdminClient("/api");
 export default {
   data() {
     return {
@@ -169,6 +184,19 @@ export default {
     
   },
   methods: {
+        {{- range .Entity.Relationships -}}
+        {{- if or (eq .Type "many-many") (eq .Type "many-many-owner") }}
+        setRelated{{.Name}}: function(values) {
+            this.entity.set{{ucfirst (plural .Entity)}}List(
+                values.map((value) => { 
+                    let related = new {{.Entity}}();
+                    related.setId(value);
+                    return related; 
+                })
+            );
+        },
+        {{- end -}}
+        {{- end -}}
         log: function(e) {
             console.log(e)
         },

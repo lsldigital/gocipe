@@ -407,20 +407,20 @@ func ProcessProto() {
 
 	Log(logSuccess+" protoc generated go files from: %s", "models.proto")
 
-	// service_bread.proto, if bread service is to be generated
-	if util.FileExists(util.WorkingDir + `/proto/service_bread.proto`) {
-		if !util.FileExists(util.WorkingDir + "/services/bread") {
-			if err = os.MkdirAll(util.WorkingDir+"/services/bread", mode); err != nil {
-				Log(logError+" could not create folder: %s : %s", util.WorkingDir+"/services/bread", err)
+	// service_admin.proto, if admin service is to be generated
+	if util.FileExists(util.WorkingDir + `/proto/service_admin.proto`) {
+		if !util.FileExists(util.WorkingDir + "/services/admin") {
+			if err = os.MkdirAll(util.WorkingDir+"/services/admin", mode); err != nil {
+				Log(logError+" could not create folder: %s : %s", util.WorkingDir+"/services/admin", err)
 				return
 			}
 
-			Log(logSuccess+" created folder: %s", util.WorkingDir+"/services/bread")
+			Log(logSuccess+" created folder: %s", util.WorkingDir+"/services/admin")
 		}
 		cmd = exec.Command(
 			_tools.Protoc,
 			`-I=`+util.WorkingDir+`/proto`,
-			util.WorkingDir+`/proto/service_bread.proto`,
+			util.WorkingDir+`/proto/service_admin.proto`,
 			`--go_out=plugins=grpc:`+gopath,
 		)
 		cmd.Stdout = os.Stdout
@@ -428,11 +428,11 @@ func ProcessProto() {
 		err = cmd.Run()
 
 		if err != nil {
-			Log(logError+" protoc execution error (%s): %s", "service_bread.proto", err)
+			Log(logError+" protoc execution error (%s): %s", "service_admin.proto", err)
 			return
 		}
 
-		Log(logSuccess+" protoc generated go files from: %s", "service_bread.proto")
+		Log(logSuccess+" protoc generated go files from: %s", "service_admin.proto")
 	}
 
 	// cmd = exec.Command(

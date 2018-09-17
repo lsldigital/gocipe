@@ -1,4 +1,4 @@
-package bread
+package admin
 
 import (
 	"github.com/pkg/errors"
@@ -66,21 +66,21 @@ func NewDateFilter(filter *Filter) (*models.Filter, error) {
 	return &models.Filter{Field: filter.Field, Operation: "LIKE", Value: value}, nil
 }
 
-// Service represents BREAD service implementation
+// Service represents Admin service implementation
 type Service struct {}
 
 {{range .Entities}}
 /**
  * [BEGIN] {{.Name}}
  */
-{{if .Bread.Create -}}
+{{if .Admin.Create -}}
 // Create{{.Name}} allows creation of entity of type {{.Name}}
 func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {
 	var (
 		err  error
 		tx   *sql.Tx
 		res  Create{{.Name}}Response
-		{{if or .Bread.Hooks.PreCreate .Bread.Hooks.PostCreate -}}
+		{{if or .Admin.Hooks.PreCreate .Admin.Hooks.PostCreate -}}
 		stop bool
 		{{- end}}
 	)
@@ -99,7 +99,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	res.{{.Name}}.Status = "D"
 
 	tx, err = models.StartTransaction(ctx)
-	{{if .Bread.Hooks.PreCreate}}
+	{{if .Admin.Hooks.PreCreate}}
 	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, err)
 	if stop {
 		return &res, nil
@@ -112,7 +112,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 
 	err = models.{{.Name}}Repo.Save(ctx, res.{{.Name}}, tx, true)
 
-	{{if .Bread.Hooks.PostCreate -}}
+	{{if .Admin.Hooks.PostCreate -}}
 	stop, err = s.{{lower .Name}}PostCreate(ctx, req, &res, err)
 	if stop {
 		return &res, nil
@@ -127,13 +127,13 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 }
 {{- end}}
 
-{{if .Bread.Read -}}
+{{if .Admin.Read -}}
 // Get{{.Name}} allows getting a single entity of type {{.Name}}
 func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}}Response, error) {
 	var (
 		res  Get{{.Name}}Response
 		err  error
-		{{if or .Bread.Hooks.PreRead .Bread.Hooks.PostRead -}}
+		{{if or .Admin.Hooks.PreRead .Admin.Hooks.PostRead -}}
 		stop bool
 		{{- end}}
 	)
@@ -142,7 +142,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 		return &res, ErrorRequestEmpty
 	}
 
-	{{if .Bread.Hooks.PreRead}}
+	{{if .Admin.Hooks.PreRead}}
 	stop, err = s.{{lower .Name}}PreRead(ctx, req, &res)
 	if stop {
 		return &res, nil
@@ -151,7 +151,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 
 	res.{{.Name}}, err = models.{{.Name}}Repo.GetWithRel(ctx, req.ID)
 
-	{{if .Bread.Hooks.PostRead -}}
+	{{if .Admin.Hooks.PostRead -}}
 	stop, err = s.{{lower .Name}}PostRead(ctx, req, &res, err)
 	if stop {
 		return &res, nil
@@ -166,13 +166,13 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 }
 {{- end}}
 
-{{if .Bread.List -}}
+{{if .Admin.List -}}
 // List{{plural .Name}} allows listing all entity of type {{.Name}}
 func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*List{{plural .Name}}Response, error) {
 	var (
 		res  List{{plural .Name}}Response
 		err  error
-		{{if or .Bread.Hooks.PreList .Bread.Hooks.PostList -}}
+		{{if or .Admin.Hooks.PreList .Admin.Hooks.PostList -}}
 		stop bool
 		{{- end}}
 		filters []*models.Filter
@@ -182,7 +182,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 		return &res, ErrorRequestEmpty
 	}
 
-	{{if .Bread.Hooks.PreList -}}
+	{{if .Admin.Hooks.PreList -}}
 	stop, err = s.{{lower .Name}}PreList(ctx, req, &res)
 	if stop {
 		return &res, nil
@@ -193,7 +193,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 		req.ListOpts = &models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit}
 	}
 
-	{{$filters := getBreadFilters $.Entities . }}
+	{{$filters := getAdminFilters $.Entities . }}
 	{{if (or $filters.HasBool $filters.HasString $filters.HasDate)}}
 	if req.Filters != nil {
 		for i := range req.Filters {
@@ -232,7 +232,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 		return &res, errors.WithStack(err)
 	}
 
-	{{if .Bread.Hooks.PostList -}}
+	{{if .Admin.Hooks.PostList -}}
 	stop, err = s.{{lower .Name}}PostList(ctx, req, &res, err)
 	if stop {
 		return &res, nil
@@ -247,14 +247,14 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 }
 {{- end}}
 
-{{if .Bread.Update -}}
+{{if .Admin.Update -}}
 // Update{{.Name}} allows updating one entity of type {{.Name}}
 func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request) (*Update{{.Name}}Response, error) {
 	var (
 		err  error
 		tx   *sql.Tx
 		res  Update{{.Name}}Response
-		{{if or .Bread.Hooks.PreUpdate .Bread.Hooks.PostUpdate -}}
+		{{if or .Admin.Hooks.PreUpdate .Admin.Hooks.PostUpdate -}}
 		stop bool
 		{{- end}}
 	)
@@ -266,7 +266,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	// existing records in DB
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)
 	if err != nil {
-		{{if .Bread.Hooks.PreUpdate -}}
+		{{if .Admin.Hooks.PreUpdate -}}
 		stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
 		if stop {
 			return &res, nil
@@ -288,7 +288,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	{{end}}
 	tx, err = models.StartTransaction(ctx)
 
-	{{if .Bread.Hooks.PreUpdate -}}
+	{{if .Admin.Hooks.PreUpdate -}}
 	stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
 	if stop {
 		return &res, nil
@@ -304,7 +304,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 		return &res, errors.WithStack(err)
 	}
 
-	{{if .Bread.Hooks.PostUpdate -}}
+	{{if .Admin.Hooks.PostUpdate -}}
 	stop, err = s.{{lower .Name}}PostUpdate(ctx, req, &res, *existing, err)
 	if stop {
 		return &res, nil
@@ -319,14 +319,14 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 }
 {{- end}}
 
-{{if .Bread.Delete -}}
+{{if .Admin.Delete -}}
 // Delete{{.Name}} allows deleting an entity of type {{.Name}}
 func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*DeleteResponse, error) {
 	var (
 		err  error
 		tx   *sql.Tx
 		res  DeleteResponse
-		{{if or .Bread.Hooks.PreDelete .Bread.Hooks.PostDelete -}}
+		{{if or .Admin.Hooks.PreDelete .Admin.Hooks.PostDelete -}}
 		stop bool
 		{{- end}}
 	)
@@ -338,7 +338,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	// existing records in DB
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.ID)
 	if err != nil {
-		{{if .Bread.Hooks.PreDelete -}}
+		{{if .Admin.Hooks.PreDelete -}}
 		stop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
 		if stop {
 			return &res, nil
@@ -348,7 +348,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	}
 
 	tx, err = models.StartTransaction(ctx)
-	{{if .Bread.Hooks.PreDelete}}
+	{{if .Admin.Hooks.PreDelete}}
 	stop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
 	if stop {
 		return &res, nil
@@ -358,7 +358,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
-	{{if .Bread.Hooks.PostDelete}}
+	{{if .Admin.Hooks.PostDelete}}
 	stop, err = s.{{lower .Name}}PostDelete(ctx, req, &res, *existing, err)
 	if stop {
 		return &res, nil
@@ -433,7 +433,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 {{- end}}
 
 // Lookup{{.Name}} lookup allows looking up an entity by its label for entity of type {{.Name}}
-func(s Service) Lookup{{.Name}}(ctx context.Context, req *LookupRequest) (*LookupResponse, error) {
+func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) (*LookupResponse, error) {
 	var (
 		err  error
 		rows *sql.Rows
