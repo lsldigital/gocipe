@@ -36,31 +36,45 @@
             <v-card-text>
                 <v-form>
                     <div class="gocipe-form-grid" v-if="entity">
-                        {{ $EntityName := .Entity.Name }} 
-                        {{ range .Entity.Fields }} 
-                            {{if not .EditWidget.Hide }} 
-                            <template>
-                                <div class="gocipe-field-container">
-                                    <component  :is="'EditWidget{{ucfirst .EditWidget.Type }}'"
-                                                :label="'{{ .Label }}'"
-                                                :hint="'widget: {{ .EditWidget.Type }}'" 
-                                                :value="this.entity.get{{ucfirst .Property.Name}}()" 
-                                                @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" 
-                                                
-                                                {{- /* SELECTBOX */ -}}
-                                                {{if eq .EditWidget.Type "select" -}} 
-                                                    :options='{{json .EditWidget.Options }}' 
-                                                {{- end -}}
-                                                
-                                                {{- /* IMAGEFIELD */ -}}
-                                                {{if eq .EditWidget.Type "imagefield" -}}
-                                                    :field="'{{ .Property.Name}}'" 
-                                                    :rpc="'upload{{ $EntityName }}'" 
-                                                    :entityid="id"
-                                                {{- end -}}
+                    {{- $EntityName := .Entity.Name -}} 
+                    {{- range .Entity.Fields -}} 
+                        {{- if not .EditWidget.Hide }} 
+                        <template>
+                            <div class="gocipe-field-container">
+                                <component  :is="'EditWidget{{ucfirst .EditWidget.Type }}'"
+                                            :label="'{{ .Label }}'"
+                                            :hint="'widget: {{ .EditWidget.Type }}'" 
+                                            :value="this.entity.get{{ucfirst .Property.Name}}()" 
+                                            @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" 
+                                            
+                                            {{- /* SELECTBOX */ -}}
+                                            {{- if eq .EditWidget.Type "select" }} 
+                                            :options='{{json .EditWidget.Options }}' 
+                                            {{- end -}}
+                                            
+                                            {{- /* IMAGEFIELD */ -}}
+                                            {{- if eq .EditWidget.Type "imagefield" }}
+                                            :field="'{{ .Property.Name}}'" 
+                                            :rpc="'upload{{ $EntityName }}'" 
+                                            :entityid="id"
+                                            {{- end -}}
+                                ></component>
+                            </div>
+                        </template>
+                        {{- end }} 
+                    {{- end -}}
 
-                                    ></component>
-                                </div>
+                    {{- range .Entity.Relationships }}
+                        {{- if eq .Type "one-many" }}
+                            <template v-if="componentLoaded">
+                                <component
+                                    :is="'{{plural .Entity }}List'"
+                                    :key="'{{plural .Entity }}_key'"
+                                    :filter_id="id" 
+                                    :filter_field="'{{lower $.Entity.Name}}_id'"
+                                    :rpc="'set{{ $.Entity.Name }}id'"
+                                    :nested="true" 
+                                />
                             </template>
                             {{ end }} 
                         {{ end }}
