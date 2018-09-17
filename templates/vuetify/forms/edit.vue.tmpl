@@ -40,12 +40,12 @@
                                                 @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" 
                                                 
                                                 {{- /* SELECTBOX */ -}}
-                                                {{- if eq .EditWidget.Type "select" -}} 
+                                                {{if eq .EditWidget.Type "select" -}} 
                                                     :options='{{json .EditWidget.Options }}' 
                                                 {{- end -}}
                                                 
                                                 {{- /* IMAGEFIELD */ -}}
-                                                {{- if eq .EditWidget.Type "imagefield" -}}
+                                                {{if eq .EditWidget.Type "imagefield" -}}
                                                     :field="'{{ .Property.Name}}'" 
                                                     :rpc="'upload{{ $EntityName }}'" 
                                                     :entityid="id"
