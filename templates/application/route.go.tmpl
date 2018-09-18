@@ -8,30 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-<<<<<<< HEAD
-=======
-func newMuxRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
-	router := mux.NewRouter()
-
-    {{if not .Bootstrap.NoGRPCWeb}}
-	router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
-    {{end}}
-
-	if err := web.VueAppRouting(router, "/", "app", nil); err != nil {
-		logs := log.WithFields(log.Fields{
-			"error":  err,
-		})
-		if app.Env == app.EnvironmentDev {
-			logs.Warn("Could not create sub route")
-		} else {
-			logs.Fatal("Could not create sub route")
-		}
-	}
-
-	return router
-}
-
->>>>>>> 5a1ab2ab179fee0ff7b6004083330b3eb31c55d8
 func newProdRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	router := mux.NewRouter()
 	{{if not .Bootstrap.NoGRPCWeb}}
