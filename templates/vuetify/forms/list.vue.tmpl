@@ -33,7 +33,7 @@
       <v-text-field mb-4 append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>
       <v-data-table :headers="headers" max :items="entities" class="elevation-1" :search="search">
         <template slot="items" slot-scope="props">
-          <tr :class="{'highlight': recentlySaved(props.item.id)}">
+          <tr :class="{'highlight': recentlySaved(props.item.id)}" :key="props.item.id">
             <td class="justify-center layout">
               <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.id, props.item.Name)">
                 <v-icon>delete</v-icon>
@@ -362,10 +362,6 @@ export default {
 <style lang="scss">
 .listing-toolbar .v-toolbar__content {
   padding: 0;
-}
-
-.listing--container tr {
-  cursor:pointer;
 }
 
 .listing--container td {
