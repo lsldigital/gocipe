@@ -13,7 +13,7 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 	var (
 		err error
 	)
-	fieldLabelWhiteList := []string{"name", "description", "summary", "banner_type"}
+	fieldLabelWhiteList := []string{"name", "title", "description", "summary", "banner_type"}
 
 	entities := make(map[string]util.Entity)
 	for i, entity := range recipe.Entities {
