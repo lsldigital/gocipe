@@ -21,7 +21,9 @@ export default {
   props: ["rpc", "multiple"],
   created() {
     this.options   = this.$attrs.options;
-    this.selection = this.multiple ? this.$attrs.value.map(item => item.getId()) : this.$attrs.value.getId();
+    if (this.$attrs.value) {
+      this.selection = this.multiple ? this.$attrs.value.map(item => item.getId()) : this.$attrs.value.getId();
+    }
   },
   mounted() {
     this.lookup();
