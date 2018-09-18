@@ -83,7 +83,7 @@
                                     :rpc="'lookup{{plural .Entity}}'"
                                     :multiple="true"
                                     :item-text-getter="'get{{ucfirst (getEntityLabelField $.Entities .Entity)}}'"
-                                    @gocipe="(e) => setRelated{{.Name}}(e)"
+                                    @gocipe="(e) => this.setRelated{{.Name}}(e)"
                                     {{- /* SELECTREL */ -}}
                                 ></component>
                         {{ else if eq .Type "many-one" }}
@@ -94,7 +94,7 @@
                                     :rpc="'lookup{{plural .Entity}}'"
                                     :multiple="false"
                                     :item-text-getter="'get{{ucfirst (getEntityLabelField $.Entities .Entity)}}'"
-                                    @gocipe="(e) => set{{ucfirst .Entity}}Id(e)"
+                                    @gocipe="(e) => this.entity.set{{ucfirst .Entity}}id(e)"
                                     {{- /* SELECTREL */ -}}
                                 ></component>
                         {{ end }}
