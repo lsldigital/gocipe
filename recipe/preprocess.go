@@ -167,13 +167,13 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 				}
 			}
 
-			if rel.Name == "" {
-				if isMany {
-					rel.Name = inflection.Plural(strings.Title(strings.ToLower(rel.Entity)))
-				} else {
-					rel.Name = strings.Title(rel.Entity)
-				}
+			// if rel.Name == "" {
+			if isMany {
+				rel.Name = inflection.Plural(strings.Title(strings.ToLower(rel.Entity)))
+			} else {
+				rel.Name = strings.Title(rel.Entity)
 			}
+			// }
 		}
 		entities[entity.Name] = entity
 	}

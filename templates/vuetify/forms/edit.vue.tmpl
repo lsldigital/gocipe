@@ -72,7 +72,7 @@
                                     :key="'{{plural .Entity }}_key'"
                                     :filter_id="id" 
                                     :filter_field="'{{lower $.Entity.Name}}_id'"
-                                    :rpc="'set{{ $.Entity.Name }}id'"
+                                    :rpc="'set{{plural $.Entity.Name }}id'"
                                     :nested="true" 
                                 />
                         {{ else if or (eq .Type "many-many") (eq .Type "many-many-owner")}}
