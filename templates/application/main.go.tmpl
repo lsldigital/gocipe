@@ -10,8 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"{{.ImportPath}}/app"
 	"{{.ImportPath}}/util/web"
-	{{- if .Recipe.Bread.Generate}}
-	"{{.ImportPath}}/services/bread"
+	{{- if .Recipe.Admin.Generate}}
+	"{{.ImportPath}}/services/admin"
 	{{- end}}
 )
 
@@ -45,13 +45,13 @@ func main() {
 
 	{{if not .Recipe.Bootstrap.NoGRPCWeb}}
 	g := grpc.NewServer()
-	{{- if .Recipe.Bread.Generate}}
-	bread.RegisterBreadServer(g, &bread.Service{})
+	{{- if .Recipe.Admin.Generate}}
+	admin.RegisterAdminServer(g, &admin.Service{})
 	{{- end}}
 	ws := grpcweb.WrapServer(g)
 	var router *mux.Router
 	if app.Env == app.EnvironmentDev {
-		router = newDevRouter({{if .Recipe.Bread.Generate}}ws{{else}}nil{{end}})
+		router = newDevRouter({{if .Recipe.Admin.Generate}}ws{{else}}nil{{end}})
 	} else {
 		router = newProdRouter(ws)
 	}

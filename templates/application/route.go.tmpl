@@ -8,6 +8,30 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+<<<<<<< HEAD
+=======
+func newMuxRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
+	router := mux.NewRouter()
+
+    {{if not .Bootstrap.NoGRPCWeb}}
+	router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
+    {{end}}
+
+	if err := web.VueAppRouting(router, "/", "app", nil); err != nil {
+		logs := log.WithFields(log.Fields{
+			"error":  err,
+		})
+		if app.Env == app.EnvironmentDev {
+			logs.Warn("Could not create sub route")
+		} else {
+			logs.Fatal("Could not create sub route")
+		}
+	}
+
+	return router
+}
+
+>>>>>>> 5a1ab2ab179fee0ff7b6004083330b3eb31c55d8
 func newProdRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	router := mux.NewRouter()
 	{{if not .Bootstrap.NoGRPCWeb}}
@@ -16,14 +40,14 @@ func newProdRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	}
 	{{end}}
 
-	{{if .Bread.Generate}}
-	if err := web.WebAppRouting(router, "/admin", "admin", nil); err != nil {
+	{{if .Admin.Generate}}
+	if err := web.VueAppRouting(router, "/admin", "admin", nil); err != nil {
 		log.Fatalf("Failed to create subroute admin: %s\n", err)
 		return nil
 	}
 	{{end}}
 
-	if err := web.WebAppRouting(router, "/", "app", nil); err != nil {
+	if err := web.VueAppRouting(router, "/", "app", nil); err != nil {
 		log.Fatalf("Failed to create subroute app: %s\n", err)
 		return nil
 	}
@@ -39,15 +63,15 @@ func newDevRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	}
 	{{end}}
 
-	{{if .Bread.Generate}}
+	{{if .Admin.Generate}}
 	router.PathPrefix("/media").Handler(http.StripPrefix("/media", http.FileServer(http.Dir("media"))))
 
-	if err := web.WebDevRouting(router, "/admin", "admin", "8081"); err != nil {
+	if err := web.DevRouting(router, "/admin", "admin", "8081"); err != nil {
 		log.Warnf("Failed to create subrouter backoffice: %s\n", err)
 	}
 	{{end}}
 	
-	if err := web.WebDevRouting(router, "/", "app", "8080"); err != nil {
+	if err := web.DevRouting(router, "/", "app", "8080"); err != nil {
 		log.Warnf("Failed to create subrouter app: %s\n", err)
 	}
 

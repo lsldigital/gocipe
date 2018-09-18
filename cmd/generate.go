@@ -5,9 +5,9 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/fluxynet/gocipe/generators/admin"
 	"github.com/fluxynet/gocipe/generators/application"
 	"github.com/fluxynet/gocipe/generators/bootstrap"
-	"github.com/fluxynet/gocipe/generators/bread"
 	"github.com/fluxynet/gocipe/generators/crud"
 	"github.com/fluxynet/gocipe/generators/schema"
 	utils "github.com/fluxynet/gocipe/generators/util"
@@ -23,7 +23,7 @@ var (
 	generateBootstrap bool
 	generateSchema    bool
 	generateCrud      bool
-	generateBread     bool
+	generateAdmin     bool
 	generateUtils     bool
 	generateVuetify   bool
 	verbose           bool
@@ -59,7 +59,7 @@ var generateCmd = &cobra.Command{
 			work.Waitgroup.Add(1)
 		}
 
-		if generateBread {
+		if generateAdmin {
 			work.Waitgroup.Add(1)
 		}
 
@@ -91,8 +91,8 @@ var generateCmd = &cobra.Command{
 			go crud.Generate(work, rcp.Crud, entities)
 		}
 
-		if generateBread {
-			go bread.Generate(work, entities)
+		if generateAdmin {
+			go admin.Generate(work, entities)
 		}
 
 		if generateUtils {

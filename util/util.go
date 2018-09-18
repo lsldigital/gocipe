@@ -73,9 +73,9 @@ func init() {
 		"trimPrefix": func(str, prefix string) string {
 			return strings.TrimPrefix(str, prefix)
 		},
-		"DerefBreadOpts": func(b *BreadOpts) (BreadOpts, error) {
+		"DerefAdminOpts": func(b *AdminOpts) (AdminOpts, error) {
 			if b == nil {
-				return BreadOpts{}, errors.New("bread opts is nil")
+				return AdminOpts{}, errors.New("admin opts is nil")
 			}
 			return *b, nil
 		},
@@ -92,10 +92,10 @@ func init() {
 		"fkeyPropertyType": func(entities map[string]Entity, rel Relationship) (string, error) {
 			return GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
 		},
-		// getBreadFilters returns possible filters from fields in an entity
-		"getBreadFilters": func(entities map[string]Entity, entity Entity) BreadFilters {
+		// getAdminFilters returns possible filters from fields in an entity
+		"getAdminFilters": func(entities map[string]Entity, entity Entity) AdminFilters {
 			var (
-				filters                                 BreadFilters
+				filters                                 AdminFilters
 				filtersBool, filtersString, filtersDate []string
 			)
 
@@ -170,6 +170,13 @@ func init() {
 
 			return fileFields
 		},
+		"getEntityLabelField": func(entities map[string]Entity, name string) (string, error) {
+			if entity, ok := entities[name]; ok {
+				return entity.LabelField, nil
+			}
+
+			return "", errors.New("entity not found: " + name)
+		},
 	}
 }
 
@@ -203,8 +210,8 @@ type GeneratedCode struct {
 	GeneratedHeaderFormat string
 }
 
-// BreadFilters used for List
-type BreadFilters struct {
+// AdminFilters used for List
+type AdminFilters struct {
 	HasBool, HasString, HasDate             bool
 	BoolFilters, StringFilters, DateFilters string
 }

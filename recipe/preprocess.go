@@ -61,8 +61,8 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			entity.CrudHooks = &recipe.Crud.Hooks
 		}
 
-		if entity.Bread == nil {
-			entity.Bread = &recipe.Bread
+		if entity.Admin == nil {
+			entity.Admin = &recipe.Admin
 		}
 
 		if entity.PrimaryKey == "" {
