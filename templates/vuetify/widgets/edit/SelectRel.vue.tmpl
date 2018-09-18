@@ -20,10 +20,8 @@ export default {
   },
   props: ["rpc", "multiple"],
   created() {
-    this.options = this.$attrs.options;
-    if (this.multiple) {
-      this.selection = this.$attrs.value.map(item => item.getId());
-    }
+    this.options   = this.$attrs.options;
+    this.selection = this.multiple ? this.$attrs.value.map(item => item.getId()) : this.$attrs.value.getId();
   },
   mounted() {
     this.lookup();

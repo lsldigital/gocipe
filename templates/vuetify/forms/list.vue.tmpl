@@ -34,6 +34,26 @@
       <v-data-table :headers="headers" max :items="entities" class="elevation-1" :search="search">
         <template slot="items" slot-scope="props">
           <tr :class="{'highlight': recentlySaved(props.item.id)}">
+            <td class="justify-center layout">
+              <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.id, props.item.Name)">
+                <v-icon>delete</v-icon>
+              </v-btn>
+              <v-btn icon class="mx-0" @click.stop="duplicate(props.item.id)">
+                <v-icon>file_copy</v-icon>
+              </v-btn>
+              <v-tooltip top v-if="nested">
+                <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.id, props.item.Name)">
+                  <v-icon>edit</v-icon>
+                </v-btn>
+                <span>Open Nested Edit</span>
+              </v-tooltip>
+              <v-tooltip top v-else>
+                <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
+                  <v-icon>edit</v-icon>
+                </v-btn>
+                <span>Automatically generated Edit Form</span>
+              </v-tooltip>
+            </td>
             <!-- Check if it should appear in the list -->
             {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
             <!-- Use different rendering for dates -->
@@ -76,26 +96,6 @@
               </v-tooltip>
             </td>
             {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
-            <td class="justify-center layout">
-              <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.id, props.item.Name)">
-                <v-icon>delete</v-icon>
-              </v-btn>
-              <v-btn icon class="mx-0" @click.stop="duplicate(props.item.id)">
-                <v-icon>file_copy</v-icon>
-              </v-btn>
-              <v-tooltip top v-if="nested">
-                <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.id, props.item.Name)">
-                  <v-icon>edit</v-icon>
-                </v-btn>
-                <span>Open Nested Edit</span>
-              </v-tooltip>
-              <v-tooltip top v-else>
-                <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
-                  <v-icon>edit</v-icon>
-                </v-btn>
-                <span>Automatically generated Edit Form</span>
-              </v-tooltip>
-            </td>
           </tr>
         </template>
 
@@ -175,12 +175,12 @@ export default {
       },
       text: "",
       headers: [
+      {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
 		    {{range .Entity.Fields }}
           {{if not .ListWidget.Hide}}
 		      {text: "{{.Label}}", value: "{{.Property.Name}}"},
 		    {{end}}
       {{end}}
-      {'text': 'Action', 'value': null, sortable: false, 'width': '80px'}
       ],
       entities: [],
       loading: false
