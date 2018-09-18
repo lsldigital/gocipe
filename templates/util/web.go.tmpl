@@ -102,12 +102,12 @@ func VueAppRouting(router *mux.Router, prefix string, appName string, mwf ...mux
 		err          error
 	)
 
-	fallbackFile, err = app.Assets.Open("web/" + appName + "/index.html")
+	fallbackFile, err = core.Assets.Open("web/" + appName + "/index.html")
 	if err != nil {
 		return err
 	}
 	
-	fileSystem = util.WebBox{Box: app.Assets, App: "web/" + appName, Path: "/" + appName}
+	fileSystem = util.WebBox{Box: core.Assets, App: "web/" + appName, Path: "/" + appName}
 
 	router.PathPrefix(prefix).Handler(
 		http.StripPrefix(

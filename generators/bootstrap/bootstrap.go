@@ -9,7 +9,7 @@ import (
 // Generate returns bootstrap generated code
 func Generate(work util.GenerationWork, opts util.BootstrapOpts) error {
 	if !opts.Generate {
-		util.DeleteIfExists("app/bootstrap.gocipe.go")
+		util.DeleteIfExists("core/bootstrap.gocipe.go")
 		work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Error: util.ErrorSkip}
 	}
 
@@ -41,7 +41,7 @@ func Generate(work util.GenerationWork, opts util.BootstrapOpts) error {
 		return err
 	}
 
-	work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Filename: "app/bootstrap.gocipe.go", Code: code}
+	work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Filename: "core/bootstrap.gocipe.go", Code: code}
 	work.Done <- util.GeneratedCode{Generator: "GenerateBootstrap", Filename: ".env.dist", Code: env, GeneratedHeaderFormat: "# %s"}
 	return nil
 }
