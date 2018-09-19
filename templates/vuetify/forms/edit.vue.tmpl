@@ -39,7 +39,7 @@
                     {{- $EntityName := .Entity.Name -}} 
                     {{- range .Entity.Fields -}} 
                         {{- if not .EditWidget.Hide }} 
-                        <template>
+                        {{- if not (eq .EditWidget.Type "status") }} 
                             <div class="gocipe-field-container">
                                 <component  :is="'EditWidget{{ucfirst .EditWidget.Type }}'"
                                             :label="'{{ .Label }}'"
@@ -60,7 +60,7 @@
                                             {{- end -}}
                                 ></component>
                             </div>
-                        </template>
+                        {{- end }} 
                         {{- end }} 
                     {{- end -}}
 
@@ -100,6 +100,13 @@
                         {{ end }}
                         </template>
                     {{ end }}
+
+                    <component  :is="'EditWidgetStatus'"
+                        :label="'Status'"
+                        :value="this.entity.getStatus()" 
+                        @gocipe="(e) => this.entity.setStatus(e)" >
+                    </component>
+
                     </div>
                 </v-form>
             </v-card-text>
