@@ -327,6 +327,9 @@ type Entity struct {
 	// TableConstraints represents an array of table constraints for the table definition
 	TableConstraints []string `json:"table_constraints"`
 
+	// Slug indicates the field to be used for entity slug
+	Slug string `json:"slug"`
+
 	// Description is a description of the entity
 	Description string `json:"description"`
 

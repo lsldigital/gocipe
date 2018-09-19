@@ -92,6 +92,20 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 		}
 	}
 
+	// generate admin_helpers.gocipe.go
+	helpers, err := util.ExecuteTemplate("admin/admin_helpers.gocipe.go.tmpl", struct {
+		FileFields []fileField
+	}{
+		FileFields: fileFields,
+	})
+
+	work.Waitgroup.Add(1)
+	if err == nil {
+		work.Done <- util.GeneratedCode{Generator: "GenerateAdmin Helpers", Code: helpers, Filename: "services/admin/admin_helpers.gocipe.go"}
+	} else {
+		work.Done <- util.GeneratedCode{Generator: "GenerateAdmin Helpers", Error: fmt.Errorf("failed to execute template: %s", err)}
+	}
+
 	// generate admin.proto
 	proto, err := util.ExecuteTemplate("admin/service_admin.proto.tmpl", struct {
 		AppImportPath string

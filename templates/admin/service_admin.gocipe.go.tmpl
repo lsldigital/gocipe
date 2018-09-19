@@ -286,6 +286,9 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	{{range $fileField := index $.EntitiesFileFields .Name}}
 	res.{{.Entity}}.{{.Field}} = existing.{{.Field}}
 	{{end}}
+	{{if .Slug}}
+	res.{{.Name}}.Slug = existing.Slug
+	{{end}}
 	tx, err = models.StartTransaction(ctx)
 
 	{{if .Admin.Hooks.PreUpdate -}}
@@ -303,6 +306,10 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+
+	{{if .Slug}}
+	go setSlug(existing.GetID(), req.{{.Name}}.GetSlug(), "{{.Table}}", "slug")
+	{{end}}
 
 	{{if .Admin.Hooks.PostUpdate -}}
 	stop, err = s.{{lower .Name}}PostUpdate(ctx, req, &res, *existing, err)

@@ -53,6 +53,33 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			},
 		})
 
+		if entity.Slug != "" {
+			var slugValid bool
+			for _, field := range entity.Fields {
+				fieldSchemaName := strings.ToLower(field.Schema.Field)
+				propertyType := strings.ToLower(field.Property.Type)
+				if entity.Slug == fieldSchemaName && propertyType == "string" {
+					slugValid = true
+					break
+				}
+			}
+			if slugValid {
+				entity.Fields = append(entity.Fields, util.Field{
+					Label:    "Slug",
+					Property: util.FieldProperty{Name: "Slug", Type: "string"},
+					Schema:   util.FieldSchema{Field: "slug", Type: "VARCHAR(255)"},
+					EditWidget: util.EditWidgetOpts{
+						Hide: true,
+					},
+					ListWidget: util.ListWidgetOpts{
+						Type: util.WidgetTypeTextField,
+					},
+				})
+			} else {
+				entity.Slug = ""
+			}
+		}
+
 		if entity.DefaultSort == "" {
 			entity.DefaultSort = `t."id" DESC`
 		}
