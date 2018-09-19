@@ -43,7 +43,7 @@
                             <div class="gocipe-field-container">
                                 <component  :is="'EditWidget{{ucfirst .EditWidget.Type }}'"
                                             :label="'{{ .Label }}'"
-                                            :hint="'widget: {{ .EditWidget.Type }}'" 
+                                            :hint="'widget: {{ .EditWidget.Description }}'" 
                                             :value="this.entity.get{{ucfirst .Property.Name}}()" 
                                             @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" 
                                             
@@ -291,8 +291,8 @@ export default {
 }
 
 .data-table-responsive-wrapper {
-    max-width:100%;
-    overflow-y:auto;
-    padding:5px;
+  max-width: 100%;
+  overflow-y: auto;
+  padding: 5px;
 }
 </style>
