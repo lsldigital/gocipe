@@ -16,7 +16,7 @@ func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id {{pkeyProper
 		return nil, err
 	}
 
-	rows, err = repo.db.Query(`SELECT {{.SQLFields}} FROM {{.Table}} t WHERE t.id = $1 ORDER BY t.id ASC`, id)
+	rows, err = repo.db.QueryContext(ctx, `SELECT {{.SQLFields}} FROM {{.Table}} t WHERE t.id = $1 ORDER BY t.id ASC`, id)
 	if err != nil {
 		return nil, err
 	}

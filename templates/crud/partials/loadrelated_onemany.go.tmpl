@@ -23,7 +23,7 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 	}
 	placeholder = strings.TrimRight(placeholder, ",")
 
-	rows, err := repo.db.Query(`
+	rows, err := repo.db.QueryContext(ctx, `
 		SELECT t."{{.ThisID}}", {{.SQLFields}} FROM {{.ThatTable}} t WHERE t."{{.ThisID}}" IN (`+placeholder+`)
 	`, values...)
 	if err != nil {
