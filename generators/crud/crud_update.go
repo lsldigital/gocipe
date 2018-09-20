@@ -10,9 +10,10 @@ import (
 // generateUpdate produces code for database update of entity (UPDATE)
 func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var (
-		before, after, related, sqlfields, structFields []string
-		count                                           = 2
+		before, after, sqlfields, structFields []string
+		count                                  = 2
 	)
+	related := make(map[string]string)
 	structFields = append(structFields, fmt.Sprintf("&entity.%s", "ID"))
 
 	for _, field := range entity.Fields {
@@ -36,7 +37,7 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 		// No SaveRelated needed:
 		// RelationshipTypeManyManyOwner, RelationshipTypeOneMany, RelationshipTypeManyOne, RelationshipTypeOneOne
 		if rel.Type == util.RelationshipTypeManyMany || rel.Type == util.RelationshipTypeManyManyOwner {
-			related = append(related, fmt.Sprintf("repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name))
+			related[rel.Name] = fmt.Sprintf("repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name)
 		} else if rel.Type == util.RelationshipTypeManyOne || rel.Type == util.RelationshipTypeOneOne {
 			sqlfields = append(sqlfields, fmt.Sprintf(`"%s" = $%d`, rel.ThisID, count))
 			structFields = append(structFields, fmt.Sprintf("entity.%sID", rel.Name))
@@ -47,7 +48,7 @@ func generateUpdate(entities map[string]util.Entity, entity util.Entity) (string
 	return util.ExecuteTemplate("crud/partials/update.go.tmpl", struct {
 		Before        []string
 		After         []string
-		Related       []string
+		Related       map[string]string
 		EntityName    string
 		HasPostHook   bool
 		HasPreHook    bool

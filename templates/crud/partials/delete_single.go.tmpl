@@ -7,36 +7,45 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity *{{.E
 	)
 	id := entity.ID
 
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.Delete entered")
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Delete context error")
 			return errors.WithStack(err)
 		}
 
 		tx, err = StartTransaction(ctx)
 		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Delete StartTransaction error")
 			return errors.WithStack(err)
 		}
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Delete context error")
 		return errors.WithStack(err)
 	}
 
 	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE id = $1")
 	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "query": `DELETE FROM {{.Table}} WHERE id = $1`, "error": err}).Error("repo.{{.EntityName}}.Delete query error")
 		return errors.WithStack(err)
 	}
 	{{if .HasPreHook}}
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Delete context error")
 		return errors.WithStack(err)
 	}
 
 	if err = repo.preDelete(ctx, tx, id); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Delete hook preDelete error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.Delete hook preDelete executed")
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Delete context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -45,6 +54,7 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity *{{.E
 	if err == nil {
 		entity.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
 	} else {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Delete query exec error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -54,16 +64,20 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity *{{.E
 
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Delete context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	
 	if err = repo.postDelete(ctx, tx, id); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Delete hook postDelete error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.Delete hook postDelete executed")
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Delete context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -71,6 +85,7 @@ func (repo {{.EntityName}}Repositorium) Delete(ctx context.Context, entity *{{.E
 	if autocommit {
 		err = tx.Commit()
 		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Delete commit error")
 			tx.Rollback()
 		}
 	}

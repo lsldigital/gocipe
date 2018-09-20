@@ -6,13 +6,14 @@ func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id {{pkeyProper
 		err    error
 		entity {{.EntityName}}
 	)
-	{{if .HasPreHook}}
+
 	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get entered")
+	{{if .HasPreHook}}
     if err = repo.preGet(ctx, id); err != nil {
 		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.EntityName}}.Get hook preGet error")
 		return nil, err
 	}
-	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get hook hook preGet executed")
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get hook preGet executed")
     {{end}}
 	
 	if err = util.CheckContext(ctx); err != nil {
@@ -62,6 +63,7 @@ func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id {{pkeyProper
 		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.EntityName}}.Get hook postGet error")
 		return nil, err
 	}
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get hook postGet executed")
 	{{end}}
 
 	return &entity, nil
@@ -72,7 +74,7 @@ func (repo {{.EntityName}}Repositorium) GetWithRel(ctx context.Context, id {{pke
 	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.GetWithRel entered")
 	entity, err := repo.Get(ctx, id)
 	if err != nil {
-		log.WithFields(log.Fields{"id": id, "error": err}).Error("repo.{{.EntityName}}.Get get entity error")
+		log.WithFields(log.Fields{"id": id, "error": err}).Error("repo.{{.EntityName}}.GetWithRel get entity error")
 		return nil, err
 	}
 	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.GetWithRel entity loaded")

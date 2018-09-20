@@ -9,7 +9,8 @@ import (
 
 // generateList produces code for database retrieval of list of entities with optional filters
 func generateList(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var sqlfields, structfields, before, after, related, orderfields []string
+	var sqlfields, structfields, before, after, orderfields []string
+	related := make(map[string]string)
 
 	sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, "id"))
 	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
@@ -35,7 +36,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 			util.RelationshipTypeManyManyInverse,
 			util.RelationshipTypeOneMany,
 			util.RelationshipTypeManyOne:
-			related = append(related, fmt.Sprintf("err = repo.Load%s(ctx, entities...)", util.RelFuncName(rel)))
+			related[rel.Name] = fmt.Sprintf("err = repo.Load%s(ctx, entities...)", util.RelFuncName(rel))
 		}
 		if rel.Type == util.RelationshipTypeManyOne {
 			sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, rel.ThisID))
@@ -51,7 +52,7 @@ func generateList(entities map[string]util.Entity, entity util.Entity) (string, 
 		Table        string
 		Before       []string
 		After        []string
-		Related      []string
+		Related      map[string]string
 		HasPreHook   bool
 		HasPostHook  bool
 		DefaultSort  string

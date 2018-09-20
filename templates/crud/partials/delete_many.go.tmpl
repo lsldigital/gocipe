@@ -9,23 +9,29 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, tx *sql.
 		query    string
 	)
 
+	log.WithFields(log.Fields{"filters": filters}).Debug("repo.{{.EntityName}}.DeleteMany entered")
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.EntityName}}.DeleteMany context error")
 			return errors.WithStack(err)
 		}
 		
 		tx, err = StartTransaction(ctx)
 		if err != nil {
+			log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.EntityName}}.DeleteMany StartTransaction error")
 			return errors.WithStack(err)
 		}
 	}
 
 	{{if .HasPreHook}}
     if filters, err = repo.preDeleteMany(ctx, tx, filters); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.EntityName}}.DeleteMany hook preDelete error")
 		return errors.WithStack(err)
 	}
+	log.WithFields(log.Fields{"filters": filters}).Debug("repo.{{.EntityName}}.DeleteMany hook preDelete executed")
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.EntityName}}.DeleteMany context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -42,11 +48,13 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, tx *sql.
 	{{range .Relationships}}{{if eq .Type "many-many"}}
 	stmt, err = tx.Prepare("DELETE FROM {{.JoinTable}} WHERE {{.ThatID}} IN (SELECT id FROM {{$.Table}}"+query+")")
 	if err != nil {
+		log.WithFields(log.Fields{"filters": filters, "query": DELETE FROM {{.JoinTable}} WHERE {{.ThatID}} IN (SELECT id FROM {{$.Table}}"+query+")", "error": err}).Error("repo.{{.EntityName}}.DeleteMany query error")
 		return errors.WithStack(err)
 	}
 
 	_, err = stmt.Exec(values...)
 	if err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.EntityName}}.DeleteMany query exec error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -58,6 +66,7 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, tx *sql.
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.EntityName}}.DeleteMany context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -70,16 +79,20 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, tx *sql.
 
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.EntityName}}.DeleteMany context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
 	if err = repo.postDeleteMany(ctx, tx, filters); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.EntityName}}.DeleteMany hook postDeleteMany error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
+	log.WithFields(log.Fields{"filters": filters}).Debug("repo.{{.EntityName}}.DeleteMany hook postDeleteMany executed")
 	{{end}}
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.EntityName}}.DeleteMany context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -87,6 +100,7 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, tx *sql.
 	if autocommit {
 		err = tx.Commit()
 		if err != nil {
+			log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.EntityName}}.DeleteMany commit error")
 			tx.Rollback()
 		}
 	}

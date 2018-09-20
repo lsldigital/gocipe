@@ -10,9 +10,10 @@ import (
 // generateMerge produces code for database merge of entity (INSERT/ON CONFLICT UPDATE)
 func generateMerge(entities map[string]util.Entity, entity util.Entity) (string, error) {
 	var (
-		before, related, sqlfieldsInsert, sqlfieldsUpdate, sqlPlaceholders, structFields []string
-		count                                                                            = 1
+		before, sqlfieldsInsert, sqlfieldsUpdate, sqlPlaceholders, structFields []string
+		count                                                                   = 1
 	)
+	related := make(map[string]string)
 
 	sqlfieldsInsert = append(sqlfieldsInsert, `"id"`)
 	structFields = append(structFields, "entity.ID")
@@ -44,7 +45,7 @@ func generateMerge(entities map[string]util.Entity, entity util.Entity) (string,
 	for _, rel := range entity.Relationships {
 		if rel.Type == util.RelationshipTypeManyMany ||
 			rel.Type == util.RelationshipTypeManyManyOwner {
-			related = append(related, fmt.Sprintf("repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name))
+			related[rel.Name] = fmt.Sprintf("repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name)
 		} else if rel.Type == util.RelationshipTypeManyOne {
 			sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
 			sqlfieldsUpdate = append(sqlfieldsUpdate, fmt.Sprintf(`"%s" = $%d`, rel.ThisID, count))
@@ -58,7 +59,7 @@ func generateMerge(entities map[string]util.Entity, entity util.Entity) (string,
 		EntityName      string
 		PrimaryKey      string
 		Before          []string
-		Related         []string
+		Related         map[string]string
 		Table           string
 		SQLFieldsInsert string
 		SQLPlaceholders string
