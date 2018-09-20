@@ -7,23 +7,31 @@ func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id {{pkeyProper
 		entity {{.EntityName}}
 	)
 	{{if .HasPreHook}}
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get entered")
     if err = repo.preGet(ctx, id); err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.EntityName}}.Get hook preGet error")
 		return nil, err
 	}
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get hook hook preGet executed")
     {{end}}
 	
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.EntityName}}.Get context error")
 		return nil, err
 	}
 
 	rows, err = repo.db.QueryContext(ctx, `SELECT {{.SQLFields}} FROM {{.Table}} t WHERE t.id = $1 ORDER BY t.id ASC`, id)
 	if err != nil {
+		log.WithFields(log.Fields{"id": id, "query": `SELECT {{.SQLFields}} FROM {{.Table}} t WHERE t.id = $1 ORDER BY t.id ASC`, "error": err}).Error("repo.{{.EntityName}}.Get query error")
 		return nil, err
 	}
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get query done")
 
 	defer rows.Close()
 	if rows.Next() {
+		log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get row found")
 		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.EntityName}}.Get context error")
 			return nil, err
 		}
 
@@ -32,20 +40,26 @@ func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id {{pkeyProper
 
 		err = rows.Scan({{.StructFields}})
 		if err != nil {
+			log.WithFields(log.Fields{"id": id, "query": `SELECT {{.SQLFields}} FROM {{.Table}} t WHERE t.id = $1 ORDER BY t.id ASC`, "fields": "{{.StructFields}}", "error": err}).Error("repo.{{.EntityName}}.Get scan error")
 			return nil, err
 		}
 		
 		{{range .After}}{{.}}
 		{{end}}
+
+		log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get data scan done")
 	} else {
+		log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get data not found")
 		return nil, moderrors.RecordNotFoundError
 	}
 	{{if .HasPostHook}}
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.EntityName}}.Get context error")
 		return nil, err
 	}
 
 	if err = repo.postGet(ctx, &entity); err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.EntityName}}.Get hook postGet error")
 		return nil, err
 	}
 	{{end}}
@@ -55,19 +69,25 @@ func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id {{pkeyProper
 
 // GetWithRel returns a single {{.EntityName}} from database by primary key; loads related entities
 func (repo {{.EntityName}}Repositorium) GetWithRel(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.EntityName}}, error) {
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.GetWithRel entered")
 	entity, err := repo.Get(ctx, id)
 	if err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Error("repo.{{.EntityName}}.Get get entity error")
 		return nil, err
 	}
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.GetWithRel entity loaded")
 
-	{{range .Related}}{{.}}
+	{{range $name, $code := .Related}}{{$code}}
 	if err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Error("repo.{{$.EntityName}}.Get load related {{$name}} error")
 		return nil, err
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{$.EntityName}}.Get context error")
 		return nil, err
 	}
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{$.EntityName}}.GetWithRel related {{$name}} loaded")
 	{{end}}
 
 	return entity, nil
