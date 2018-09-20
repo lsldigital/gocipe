@@ -160,7 +160,7 @@ func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity
 	{{ $i := 0 -}}
 	{{range $name, $code := .Related}}{{$code}}
 	if err != nil {
-		log.WithFields(log.Fields{"id": id, "error": err}).Error("repo.{{$.EntityName}}.MergeWithRel load related {{$name}} error")
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Error("repo.{{$.EntityName}}.MergeWithRel load related {{$name}} error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
