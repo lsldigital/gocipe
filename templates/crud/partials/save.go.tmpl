@@ -5,6 +5,7 @@ func (repo {{.EntityName}}Repositorium) Save(ctx context.Context, entity *{{.Ent
 		return moderrors.SaveEmptyEntityError
 	}
 
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.Save entered")
 	{{if pkeyIsAuto .PrimaryKey -}}
 	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
 		return repo.Insert(ctx, entity, tx, autocommit)
@@ -24,6 +25,7 @@ func (repo {{.EntityName}}Repositorium) SaveWithRel(ctx context.Context, entity 
 		return moderrors.SaveEmptyEntityError
 	}
 
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.SaveWithRel entered")
 	{{if pkeyIsAuto .PrimaryKey -}}
 	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
 		return repo.InsertWithRel(ctx, entity, tx, autocommit)

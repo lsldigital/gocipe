@@ -3,11 +3,11 @@ package core
 import (
 	"bytes"
 	"database/sql"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
 	rice "github.com/GeertJohan/go.rice"
+	log "github.com/sirupsen/logrus"
 	// Load database driver
 	_ "github.com/lib/pq"
 )
@@ -60,6 +60,32 @@ func Bootstrap() *Config {
 	Env = os.Getenv("ENV")
 	if Env == "" {
 		Env = EnvironmentProd
+	}
+
+	logLevel := os.Getenv("LOG_LEVEL")
+	switch logLevel {
+		case "PANIC":
+			log.SetLevel(log.PanicLevel)
+		case "FATAL":
+			log.SetLevel(log.FatalLevel)
+		case "ERROR":
+			log.SetLevel(log.ErrorLevel)
+		case "WARN":
+			log.SetLevel(log.WarnLevel)
+		case "INFO":
+			log.SetLevel(log.InfoLevel)
+		case "DEBUG":
+			log.SetLevel(log.DebugLevel)
+		default:
+			if Env == EnvironmentProd {
+				log.SetLevel(log.ErrorLevel)
+			} else {
+				log.SetLevel(log.DebugLevel)
+			}
+	}
+
+	if logFormat := os.Getenv("LOG_FORMAT"); logFormat == "JSON" {
+		log.SetFormatter(&log.JSONFormatter{})
 	}
 
 	{{if not .Bootstrap.NoDB}}

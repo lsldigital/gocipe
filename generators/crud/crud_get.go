@@ -9,7 +9,8 @@ import (
 
 // generateGet produces code for database retrieval of single entity (SELECT WHERE id)
 func generateGet(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var sqlfields, structfields, before, after, related []string
+	var sqlfields, structfields, before, after []string
+	related := make(map[string]string)
 
 	sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, "id"))
 	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
@@ -35,7 +36,7 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 			sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, strings.ToLower(other.Name)+"_id"))
 			fallthrough
 		case util.RelationshipTypeManyMany, util.RelationshipTypeManyManyOwner, util.RelationshipTypeManyManyInverse, util.RelationshipTypeOneMany:
-			related = append(related, fmt.Sprintf("err = repo.Load%s(ctx, entity)", util.RelFuncName(rel)))
+			related[rel.Name] = fmt.Sprintf("err = repo.Load%s(ctx, entity)", util.RelFuncName(rel))
 		}
 	}
 
@@ -47,7 +48,7 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 		PrimaryKey   string
 		Before       []string
 		After        []string
-		Related      []string
+		Related      map[string]string
 		HasPreHook   bool
 		HasPostHook  bool
 	}{

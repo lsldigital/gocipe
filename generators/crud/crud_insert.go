@@ -9,7 +9,8 @@ import (
 
 // generateInsert produces code for database insertion of entity (INSERT INTO)
 func generateInsert(entities map[string]util.Entity, entity util.Entity) (string, error) {
-	var before, after, related, sqlPlaceholders, sqlfields, structFields []string
+	var before, after, sqlPlaceholders, sqlfields, structFields []string
+	related := make(map[string]string)
 	count := 1
 
 	if entity.PrimaryKey != util.PrimaryKeySerial {
@@ -44,7 +45,7 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 	for _, rel := range entity.Relationships {
 		if rel.Type == util.RelationshipTypeManyMany ||
 			rel.Type == util.RelationshipTypeManyManyOwner {
-			related = append(related, fmt.Sprintf("err = repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name))
+			related[rel.Name] = fmt.Sprintf("err = repo.Save%s(ctx, tx, false, entity.ID, entity.%s...)", util.RelFuncName(rel), rel.Name)
 		} else if rel.Type == util.RelationshipTypeManyOne {
 			sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
 			sqlfields = append(sqlfields, fmt.Sprintf(`"%s"`, rel.ThisID))
@@ -56,7 +57,7 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 	return util.ExecuteTemplate("crud/partials/insert.go.tmpl", struct {
 		Before          []string
 		After           []string
-		Related         []string
+		Related         map[string]string
 		EntityName      string
 		PrimaryKey      string
 		SQLFields       string
