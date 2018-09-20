@@ -157,8 +157,8 @@ func (repo {{.EntityName}}Repositorium) UpdateWithRel(ctx context.Context, entit
 		return errors.WithStack(err)
 	}
 
-	{{range $name, $code := .Related}}{{$code}}
 	{{ $i := 0 -}}
+	{{range $name, $code := .Related}}{{$code}}
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$.EntityName}}.UpdateWithRel save related {{$name}} error")
 		tx.Rollback()

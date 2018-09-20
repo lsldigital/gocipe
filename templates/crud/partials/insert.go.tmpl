@@ -223,8 +223,8 @@ func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entit
 	}
 	{{end}}
 
-	{{range $name, $code := .Related}}{{$code}}
 	{{$i := 0 -}}
+	{{range $name, $code := .Related}}{{$code}}
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$.EntityName}}.InsertWithRel save related {{$name}} error")
 		tx.Rollback()
