@@ -406,7 +406,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 		if fileDiskPath != "" {
 			files.Delete(fileDiskPath)
 		}
-		return &res, nil
+		return &res, err
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
