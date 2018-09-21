@@ -6,13 +6,13 @@ var {{.Entity}}{{.Field}}UploadOpts = files.UploadOptions{
 	Destination:    "{{lower .Entity}}/{{lower .Field}}",
 	MediaPrefixURL: "/media/",
 	FileExt:        "jpg",
-	MaxSize:        files.NoLimit,
 	MinSize:        files.NoLimit,
+	MaxSize:        files.NoLimit,
 	ImgDimensions:  &files.ImageDimensions{
-		MinHeight:  files.NoLimit,
-		MaxHeight:  files.NoLimit,
 		MinWidth:   files.NoLimit,
+		MinHeight:  files.NoLimit,
 		MaxWidth:   files.NoLimit,
+		MaxHeight:  files.NoLimit,
 	},
 }
 {{end}}

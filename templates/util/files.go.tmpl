@@ -39,8 +39,8 @@ type UploadOptions struct {
 	Destination    string
 	MediaPrefixURL string
 	FileExt        string
-	MaxSize        int
 	MinSize        int
+	MaxSize        int
 	ImgDimensions  *ImageDimensions
 }
 
@@ -48,13 +48,13 @@ var (
 	// DefaultUploadOptions holds default upload options
 	DefaultUploadOptions = &UploadOptions{
 		FileExt:     "jpg",
-		MaxSize:     NoLimit,
 		MinSize:     NoLimit,
+		MaxSize:     NoLimit,
 		ImgDimensions: &ImageDimensions{
-			MinHeight: NoLimit,
-			MaxHeight: NoLimit,
 			MinWidth:  NoLimit,
+			MinHeight: NoLimit,
 			MaxWidth:  NoLimit,
+			MaxHeight: NoLimit,
 		},
 	}
 )
