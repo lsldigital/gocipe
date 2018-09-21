@@ -43,7 +43,7 @@
                             <div class="gocipe-field-container">
                                 <component  :is="'EditWidget{{ucfirst .EditWidget.Type }}'"
                                             :label="'{{ .Label }}'"
-                                            :hint="'widget: {{ .EditWidget.Description }}'" 
+                                            :hint="'{{ .EditWidget.Description }}'" 
                                             :value="this.entity.get{{ucfirst .Property.Name}}()" 
                                             @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" 
                                             
