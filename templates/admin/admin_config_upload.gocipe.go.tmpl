@@ -1,6 +1,7 @@
 package admin
 
 {{range .FileFields}}
+// {{.Entity}}{{.Field}}UploadOpts contains upload parameters for the "{{.Field}}" field in Entity "{{.Entity}}"
 var {{.Entity}}{{.Field}}UploadOpts = files.UploadOptions{
 	Dir:			"media",
 	Destination:    "{{lower .Entity}}/{{lower .Field}}",
