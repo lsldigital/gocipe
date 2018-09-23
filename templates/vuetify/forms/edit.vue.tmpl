@@ -134,7 +134,7 @@
             </v-btn>
         </v-toolbar>
 
-        <v-snackbar v-model="snackbar.show" :top="true" auto-height :color="snackbar.color" :timeout="6000">
+        <v-snackbar v-model="snackbar.show" :bottom="true" :right="true" auto-height :color="snackbar.color" :timeout="6000">
             {{ printf `{{ snackbar.text }}` }}
             <v-btn dark flat v-if="snackbar.color !== 'error'" :to="{name: '{{- plural (lower .Entity.Name) -}}_list', params : { track : id}}">
                 <v-icon>arrow_back</v-icon>
