@@ -1,0 +1,40 @@
+<template>
+    <v-footer app fixed dark class="blue-grey darken-4 elevation-2 pa-3">
+
+        <v-spacer></v-spacer>
+        <div>&copy; {{ "{{ new Date().getFullYear() }}" }}</div>
+
+        <v-btn flat :to="{path: '/'}">
+            Admin
+            <v-icon right>web</v-icon>
+        </v-btn>
+
+        <v-btn-toggle flat class="transparent elevation-0" v-model="darkmode">
+            <v-btn flat :value="true">
+                <v-icon>invert_colors</v-icon>
+            </v-btn>
+        </v-btn-toggle>
+        <v-btn icon target="blank" href="/">
+            <v-icon>launch</v-icon>
+        </v-btn>
+    </v-footer>
+</template>
+
+<script>
+import Vue from "vue";
+import { mapGetters, mapActions } from "vuex";
+import { namespaced as auth } from "@/gocipe/store/modules/auth/types.js";
+
+export default {
+  computed: {
+    darkmode: {
+      get: function() {
+        return this.$store.getters["auth/getDarkmode"];
+      },
+      set: function(value) {
+        this.$store.dispatch(auth.DARKMODE_CHANGE, value);
+      }
+    }
+  }
+};
+</script>

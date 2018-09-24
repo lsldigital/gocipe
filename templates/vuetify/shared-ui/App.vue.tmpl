@@ -1,0 +1,87 @@
+<template>
+  <v-app id="inspire" :dark="darkmode">
+
+    <AppNavigation />
+
+    <AppToolbar/>
+
+    <v-content>
+      <v-container class="pa-0">
+        <router-view/>
+      </v-container>
+    </v-content>
+
+    <AppFooter />
+
+  </v-app>
+</template>
+
+<script>
+import { mapGetters, mapActions } from "vuex";
+import AppNavigation from "@/gocipe/shared-ui/AppNavigation.vue";
+import AppToolbar from "@/gocipe/shared-ui/AppToolbar.vue";
+import AppFooter from "@/gocipe/shared-ui/AppFooter.vue";
+import { namespaced as auth } from "@/gocipe/store/modules/auth/types.js";
+
+export default {
+  data: () => ({
+    dialog: false,
+    isActive: true
+  }),
+  computed: {
+    ...mapGetters({
+      darkmode: "auth/getDarkmode"
+    })
+  },
+  created() {},
+  mounted() {
+    this.checkLogin();
+  },
+  methods: {
+    loadPage(item) {
+      this.currentPage = item;
+      console.log(this.currentPage);
+    },
+    setActive() {
+      this.isActive = true;
+    },
+    setMenuItemActive(url) {
+      let currentRoute = this.$route.name;
+
+      if (currentRoute == url.name) {
+        return true;
+      }
+    },
+    checkLogin() {
+      this.$store.dispatch(auth.AUTH_CHECK);
+    }
+  },
+  components: {
+    AppNavigation,
+    AppToolbar,
+    AppFooter
+  },
+  props: {
+    source: String
+  }
+};
+</script>
+
+
+<style lang="scss">
+.data_table_size {
+  width: 100%;
+  height: 100%;
+}
+.nav-container {
+  &.active {
+    background-color: blue;
+  }
+}
+
+.hidden-date {
+  .vdatetime-input {
+    display: none;
+  }
+}
+</style>

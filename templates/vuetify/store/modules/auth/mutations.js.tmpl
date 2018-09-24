@@ -1,0 +1,35 @@
+//@ts-check
+import { types } from "./types.js";
+
+const mutations = {
+  [types.TOGGLE_DRAWER]: function(state) {
+    state.drawer = !state.drawer;
+  },
+  [types.DARKMODE_CHANGE]: function(state, payload) {
+    state.darkmode = payload;
+  },
+  [types.AUTH_LOGIN]: state => {
+    state.status = "loading";
+  },
+  [types.AUTH_SUCCESS]: (state, token) => {
+    state.status = "success";
+    state.token = token;
+    state.isAuthenticated = true;
+  },
+  [types.AUTH_ERROR]: state => {
+    state.isAuthenticated = false;
+    state.status = "error";
+  },
+  [types.AUTH_LOGOUT]: state => {
+    state.isAuthenticated = false;
+    state.status = "logged out";
+  },
+  [types.AUTH_TOKEN_SET]: (state, token) => {
+    state.token = token;
+  },
+  [types.AUTH_TOKEN_DELETE]: state => {
+    state.token = null;
+  }
+};
+
+export default mutations;

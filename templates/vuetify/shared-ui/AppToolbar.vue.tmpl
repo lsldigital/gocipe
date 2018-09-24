@@ -1,0 +1,60 @@
+<template>
+  <v-toolbar :clipped-left="$vuetify.breakpoint.lgAndUp" dense dark app>
+    <v-toolbar-title style="width: 300px">
+      <v-toolbar-side-icon @click.stop="toggleDrawer"></v-toolbar-side-icon>
+      <span class="hidden-sm-and-down">Administration</span>
+    </v-toolbar-title>
+    <v-spacer></v-spacer>
+
+    <v-menu v-if="isAuthenticated" offset-y>
+      <v-btn slot="activator" flat dark>
+        Logged in as {{ "{{ fullName }}" }}
+      </v-btn>
+
+      <v-list>
+        <v-list-tile>
+          <v-list-tile-title>Roles</v-list-tile-title>
+        </v-list-tile>
+        <v-list-tile v-for="role in user.roles" :key="role">
+          <v-list-tile-title>{{ "{{role}}" }}</v-list-tile-title>
+        </v-list-tile>
+      </v-list>
+    </v-menu>
+
+    <v-btn v-if="isAuthenticated" icon @click="logout">
+      <v-icon>exit_to_app</v-icon>
+    </v-btn>
+    <v-btn v-else href="http://localhost:8888/auth/en/login?pid=9b9ed244-850e-4910-85ed-e84f623c5dc1">Login</v-btn>
+
+  </v-toolbar>
+</template>
+
+<script>
+import { mapGetters, mapActions } from "vuex";
+import { namespaced as auth } from "@/gocipe/store/modules/auth/types.js";
+
+export default {
+  computed: {
+    ...mapGetters({
+      isAuthenticated: "auth/isAuthenticated",
+      authStatus: "auth/authStatus",
+      user: "auth/getUser"
+    }),
+    fullName() {
+      return `${this.user.firstName}  ${this.user.lastName}`;
+    }
+  },
+  methods: {
+    toggleDrawer() {
+      this.$store.dispatch(auth.TOGGLE_DRAWER);
+    },
+    login() {
+      console.log(auth.AUTH_LOGIN);
+      this.$store.dispatch(auth.AUTH_LOGIN);
+    },
+    logout() {
+      this.$store.dispatch(auth.AUTH_LOGOUT);
+    }
+  }
+};
+</script>

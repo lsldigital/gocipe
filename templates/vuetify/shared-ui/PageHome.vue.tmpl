@@ -1,0 +1,52 @@
+<template>
+    <v-container>
+
+        <div class="home-menu-grid">
+            <v-card :to="{ name: route.name}" v-for="route in siteRoutes[1].children" v-if="route.meta && route.meta.showInMenu" :key="route.name">
+                <v-card-title primary-title>
+                    <v-layout>
+                        <v-flex xs4>
+                            <v-icon size="70">{{ "{{ route.meta.icon }}" }}</v-icon>
+                        </v-flex>
+                        <v-flex>
+                            <div class="headline">{{ "{{ route.meta.entity }}" }}/</div>
+                            <span class="grey--text">Add a new {{ "{{ route.name }}" }}</span>
+                        </v-flex>
+                    </v-layout>
+                </v-card-title>
+
+                <!-- <v-card-actions>
+                    <v-btn flat color="blue" :to="{path: route.path }">View All</v-btn>
+                </v-card-actions> -->
+            </v-card>
+        </div>
+    </v-container>
+
+</template>
+
+<script>
+export default {
+  computed: {
+    siteRoutes() {
+      return this.$router.options.routes;
+    }
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.home-menu-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-gap: 10px;
+  padding: 10px;
+
+  .v-card {
+    &:hover {
+      box-shadow: 0 1px 8px #777;
+    }
+  }
+}
+</style>
+

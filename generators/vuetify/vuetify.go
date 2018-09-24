@@ -13,7 +13,7 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 		return
 	}
 
-	path := util.WorkingDir + "/web/" + recipe.Vuetify.App + "/src/gocipe"
+	path := util.WorkingDir + "/web/" + recipe.Vuetify.App + "/src/"
 
 	var forms []string
 	for _, entity := range entities {
@@ -32,7 +32,7 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 		data.Entity = entity
 		data.Entities = entities
 
-		filename := path + "/forms/" + inflection.Plural(data.Entity.Name)
+		filename := path + "gocipe/forms/" + inflection.Plural(data.Entity.Name)
 
 		output.GenerateAndSave(
 			"VuetifyList",
@@ -76,7 +76,7 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 	output.GenerateAndSave(
 		"Vuetify",
 		"vuetify/js/routes.js.tmpl",
-		path+"/routes.js",
+		path+"gocipe/routes.js",
 		struct {
 			Entities []util.Entity
 		}{menuEntities},
@@ -100,20 +100,42 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 	}
 
 	for _, file := range widgets {
-		output.GenerateAndSave("Vuetify", "vuetify/widgets/"+file+".tmpl", path+"/widgets/"+file, nil, false)
+		output.GenerateAndSave("Vuetify", "vuetify/widgets/"+file+".tmpl", path+"gocipe/widgets/"+file, nil, false)
 	}
-
 	// components
-	output.GenerateAndSave("Vuetify", "vuetify/js/components-registration.js.tmpl", path+"/components-registration.js", struct {
+	output.GenerateAndSave("Vuetify", "vuetify/js/components-registration.js.tmpl", path+"gocipe/components-registration.js", struct {
 		Widgets map[string]string
 		Forms   []string
 	}{Widgets: widgets, Forms: forms}, false)
 
-	// output.GenerateAndSave("Vuetify", "vuetify/store/index.js.tmpl", path+"/store/index.js", nil, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/actions.js.tmpl", path+"/store/actions.js", nil, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/getters.js.tmpl", path+"/store/getters.js", nil, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/mutations.js.tmpl", path+"/store/mutations.js", nil, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/types.js.tmpl", path+"/store/types.js", nil, false)
+	staticfiles := map[string]string{
+		"shared-ui/AppFooter.vue":         "shared-ui/AppFooter.vue",
+		"shared-ui/AppNavigation.vue":     "shared-ui/AppNavigation.vue",
+		"shared-ui/AppToolbar.vue":        "shared-ui/AppToolbar.vue",
+		"shared-ui/NotFound.vue":          "shared-ui/NotFound.vue",
+		"shared-ui/PageHome.vue":          "shared-ui/PageHome.vue",
+		"shared-ui/Authenticated.vue":     "shared-ui/Authenticated.vue",
+		"shared-ui/Login.vue":             "shared-ui/Login.vue",
+		"store/modules/auth/index.js":     "store/modules/auth/index.js",
+		"store/modules/auth/getters.js":   "store/modules/auth/getters.js",
+		"store/modules/auth/actions.js":   "store/modules/auth/actions.js",
+		"store/modules/auth/mutations.js": "store/modules/auth/mutations.js",
+		"store/modules/auth/types.js":     "store/modules/auth/types.js",
+	}
+
+	for src, target := range staticfiles {
+		output.GenerateAndSave("Vuetify", "vuetify/"+src+".tmpl", path+"gocipe/"+target, nil, false)
+	}
+
+	output.GenerateAndSave("Vuetify", "vuetify/js/router.js.tmpl", path+"router.js", nil, false)
+	output.GenerateAndSave("Vuetify", "vuetify/js/store.js.tmpl", path+"store.js", nil, false)
+	output.GenerateAndSave("Vuetify", "vuetify/shared-ui/App.vue.tmpl", path+"App.vue", nil, false)
+
+	// output.GenerateAndSave("Vuetify", "vuetify/store/index.js.tmpl", path+"gocipe/store/index.js", nil, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/actions.js.tmpl", path+"gocipe/store/actions.js", nil, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/getters.js.tmpl", path+"gocipe/store/getters.js", nil, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/mutations.js.tmpl", path+"gocipe/store/mutations.js", nil, false)
+	// output.GenerateAndSave("Vuetify", "vuetify/store/types.js.tmpl", path+"gocipe/store/types.js", nil, false)
 
 	work.Waitgroup.Done()
 }

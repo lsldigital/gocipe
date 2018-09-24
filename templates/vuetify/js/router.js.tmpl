@@ -1,0 +1,91 @@
+import Vue from "vue";
+import Router from "vue-router";
+import PageHome from "./gocipe/shared-ui/PageHome.vue";
+import NotFound from "./gocipe/shared-ui/NotFound.vue";
+import Authenticated from "./gocipe/shared-ui/Authenticated.vue";
+import Login from "./gocipe/shared-ui/Login.vue";
+
+import gocipe_routes from "./gocipe/routes.js";
+import store from "./store.js"; // your vuex store
+
+const ifNotAuthenticated = (to, from, next) => {
+  if (!store.getters["auth/isAuthenticated"]) {
+    next();
+    return;
+  }
+  next("/");
+};
+
+const ifAuthenticated = (to, from, next) => {
+  // console.log(to);
+  // console.log(from);
+  // console.log(store.getters["auth/isAuthenticated"]);
+  if (store.getters["auth/isAuthenticated"]) {
+    next();
+    return;
+  }
+  next("/login");
+};
+
+let main_routes = [
+  {
+    path: "/",
+    name: "Home",
+    component: PageHome,
+    meta: {
+      entity: "Home",
+      showInMenu: true,
+      icon: "home",
+      isHeader: true
+    }
+  },
+  {
+    path: "/panel",
+    name: "Panel",
+    component: Authenticated,
+    beforeEnter: ifAuthenticated,
+    children: gocipe_routes,
+    meta: {
+      entity: "Panel",
+      showInMenu: true,
+      icon: "lock",
+      isHeader: true
+    }
+  },
+  {
+    path: "/login",
+    name: "Login",
+    component: Login,
+    beforeEnter: ifNotAuthenticated,
+    meta: {
+      entity: "Login",
+      showInMenu: false,
+      icon: "lock",
+      isHeader: true
+    }
+  },
+  {
+    path: "*",
+    name: "NotFound",
+    component: NotFound,
+    props: true,
+    meta: {
+      entity: "NotFound",
+      showInMenu: false,
+      icon: "dashboard"
+    }
+  }
+];
+
+Vue.use(Router);
+
+let router = new Router({
+  mode: "history",
+  base: "admin/",
+  component: {
+    template: "<router-view />"
+  },
+  routes: main_routes
+});
+
+export default router;

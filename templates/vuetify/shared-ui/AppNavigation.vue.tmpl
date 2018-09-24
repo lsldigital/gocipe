@@ -1,0 +1,57 @@
+<template>
+  <v-navigation-drawer :clipped="$vuetify.breakpoint.lgAndUp" :value="drawer" fixed
+    app>
+    <!-- <v-navigation-drawer permanent> -->
+    <v-toolbar flat>
+      <v-list>
+        <v-list-tile>
+          <v-list-tile-title class="title">
+            Menu
+          </v-list-tile-title>
+        </v-list-tile>
+      </v-list>
+    </v-toolbar>
+
+    <v-divider></v-divider>
+
+    <v-list dense class="pt-0">
+      <!-- <v-list-tile v-for="route in siteRoutes" v-if="route.meta && route.meta.showInMenu" :key="route.name" :to="{ 'path': route.path}" :prepend-icon="route.icon"> -->
+      <template v-for="route in siteRoutes" v-if="route.meta && route.meta.showInMenu && route.hasOwnProperty('children')"
+        :to="{ 'name': route.name}" :prepend-icon="route.icon">
+        <v-list-group :prepend-icon="route.icon" value="true" :key="route.name">
+          <v-list-tile slot="activator">
+            <v-list-tile-title>{{ "{{ route.meta.entity }}" }}</v-list-tile-title>
+          </v-list-tile>
+
+          <v-list-tile v-for="child in route.children" v-if="child.meta && child.meta.showInMenu"
+            :to="{ 'name': child.name}" :key="child.name">
+            <v-list-tile-action>
+              <v-icon>{{ "{{ child.meta.icon }}" }}</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-title>{{ "{{ child.meta.entity }}" }}</v-list-tile-title>
+          </v-list-tile>
+          <!-- </v-list-group> -->
+        </v-list-group>
+      </template>
+    </v-list>
+  </v-navigation-drawer>
+</template>
+
+<script lang="ts">
+import { mapGetters } from "vuex";
+import Vue from "vue";
+
+export default Vue.extend({
+  computed: {
+    siteRoutes() {
+      return this.$router.options.routes;
+    },
+    ...mapGetters({ drawer: "auth/getDrawer" })
+  },
+  data: () => ({
+    dialog: false,
+    isActive: true
+  }),
+  methods: {}
+});
+</script>

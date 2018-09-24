@@ -1,0 +1,98 @@
+//@ts-check
+import { types } from "./types.js";
+import { WebApiClient } from "@/services/id/service_webapi_pb_service.js";
+import {
+  IsLoggedRequest,
+  LogoutRequest
+} from "@/services/id/service_webapi_pb.js";
+
+function cookieGet(name) {
+  var value = "; " + document.cookie;
+  var parts = value.split("; " + name + "=");
+  if (parts.length == 2)
+    return parts
+      .pop()
+      .split(";")
+      .shift();
+}
+
+function cookieDelete(name) {
+  document.cookie = name + "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+}
+
+const actions = {
+  [types.TOGGLE_DRAWER]: ({ commit }) => {
+    commit("TOGGLE_DRAWER");
+  },
+  [types.DARKMODE_CHANGE]: ({ commit }, payload) => {
+    commit("DARKMODE_CHANGE", payload);
+  },
+  [types.AUTH_LOGOUT]: ({ state, commit }) => {
+    let cli = new WebApiClient("http://localhost:8888/api"); // send request to ID
+    let req = new LogoutRequest();
+    req.setKey(state.token);
+
+    cli.logout(req, (err, resp) => {
+      if (err) {
+        // FAILED
+        console.log(err);
+        commit(types.AUTH_ERROR);
+        return;
+      }
+
+      cookieDelete("culture");
+      commit("AUTH_LOGOUT");
+    });
+  },
+  [types.AUTH_CHECK]: function({ state, commit, dispatch }) {
+    console.log("Performing Auth Check");
+    commit(types.AUTH_SUCCESS, "token");
+    return;
+    dispatch(types.AUTH_TOKEN_SET);
+
+    let token = state.token;
+
+    let cli = new WebApiClient("http://localhost:8888/api"); // send request to ID
+    let req = new IsLoggedRequest();
+
+    req.setKey(token);
+    cli.isLogged(req, (err, resp) => {
+      if (err) {
+        // FAILED
+        console.log(err);
+        commit(types.AUTH_ERROR);
+        return;
+      }
+
+      let user = resp.getUser();
+
+      user = {
+        firstName: user.getFirstname(),
+        lastName: user.getLastname(),
+        locale: user.getLocale(),
+        username: user.getUsername(),
+        permissions: user.getPermissionsList(),
+        roles: user.getRolesList()
+      };
+
+      console.log(user);
+
+      dispatch(types.AUTH_LOGIN, user);
+
+      // PASSED
+      commit(types.AUTH_SUCCESS, token);
+    });
+  },
+  [types.AUTH_LOGIN]: function({ state, commit }, payload) {
+    state.user = payload;
+  },
+  [types.AUTH_TOKEN_SET]: function({ state, commit }) {
+    let token = cookieGet("culture");
+    commit(types.AUTH_TOKEN_SET, token);
+  },
+  [types.AUTH_TOKEN_DELETE]: function({ commit }) {
+    commit(types.AUTH_TOKEN_DELETE);
+  }
+};
+
+export default actions;
