@@ -95,8 +95,10 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	// generate admin_helpers.gocipe.go
 	helpers, err := util.ExecuteTemplate("admin/admin_helpers.gocipe.go.tmpl", struct {
 		FileFields []fileField
+		ImportPath string
 	}{
 		FileFields: fileFields,
+		ImportPath: util.AppImportPath,
 	})
 
 	work.Waitgroup.Add(1)
