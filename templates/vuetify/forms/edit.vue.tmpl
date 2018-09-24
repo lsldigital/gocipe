@@ -103,6 +103,39 @@
                         {{- end }}
                     {{- end }}
 
+                    {{- range .Entity.References -}}
+                        {{- if not .TypeField.EditWidget.Hide }}
+                        <template v-if="componentLoaded">
+                            <div class="gocipe-field-container">
+                                <component  :is="'EditWidgetSelect'"
+                                    :label="'{{ .TypeField.Label }}'"
+                                    :hint="'{{ .TypeField.EditWidget.Description }}'" 
+                                    :value="this.entity.get{{ucfirst .TypeField.Property.Name}}()" 
+                                    @gocipe="(e) => this.entity.set{{ucfirst .TypeField.Property.Name}}(e)" 
+                                    :options='{{json .TypeField.EditWidget.Options }}'
+                                    :multiple="false"
+                                    {{- /* SELECTBOX */ -}}
+                                ></component>
+                            </div>
+                        </template>
+                        {{- end }}
+                        {{- if not .IDField.EditWidget.Hide }}
+                        <template v-if="componentLoaded">
+                            <div class="gocipe-field-container">
+                                <component  :is="'EditWidgetSelectRel'"
+                                    :label="'{{ .IDField.Label }}'"
+                                    :hint="'{{ .IDField.EditWidget.Description }}'" 
+                                    :value="this.entity.get{{ucfirst .IDField.Property.Name}}()" 
+                                    :rpc="'lookup'+this.entity.get{{ucfirst .TypeField.Property.Name}}()"
+                                    @gocipe="(e) => this.entity.set{{ucfirst .IDField.Property.Name}}(e)"
+                                    :multiple="false"
+                                    {{- /* SELECTREL */ -}}
+                                ></component>
+                            </div>
+                        </template>
+                        {{- end }}
+                    {{- end }}
+
                     <component  :is="'EditWidgetStatus'"
                         :label="'Status'"
                         :value="this.entity.getStatus()" 
@@ -209,7 +242,7 @@ export default {
             );
         },
         {{- end -}}
-        {{- end -}}
+        {{- end }}
         log: function(e) {
             console.log(e)
         },
@@ -266,9 +299,13 @@ export default {
             this.$emit("closeform", true);
         },
         debug: function() {
-            {{ range .Entity.Fields }}
+            {{- range .Entity.Fields }}
             console.log("{{.Property.Name}}", this.entity.get{{ ucfirst .Property.Name }}());
-            {{end}}
+            {{- end}}
+            {{- range .Entity.References }}
+            console.log("{{.IDField.Property.Name}}", this.entity.get{{ ucfirst .IDField.Property.Name }}());
+            console.log("{{.TypeField.Property.Name}}", this.entity.get{{ ucfirst .TypeField.Property.Name }}());
+            {{- end}}
         },
         snackbarShow: function(text, color) {
             this.snackbar.show = true;

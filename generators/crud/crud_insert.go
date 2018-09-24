@@ -54,6 +54,20 @@ func generateInsert(entities map[string]util.Entity, entity util.Entity) (string
 		}
 	}
 
+	for _, ref := range entity.References {
+		// IDField
+		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
+		sqlfields = append(sqlfields, fmt.Sprintf(`"%s"`, ref.IDField.Schema.Field))
+		structFields = append(structFields, fmt.Sprintf("entity.%s", ref.IDField.Property.Name))
+		count++
+
+		// IDType
+		sqlPlaceholders = append(sqlPlaceholders, fmt.Sprintf("$%d", count))
+		sqlfields = append(sqlfields, fmt.Sprintf(`"%s"`, ref.TypeField.Schema.Field))
+		structFields = append(structFields, fmt.Sprintf("entity.%s", ref.TypeField.Property.Name))
+		count++
+	}
+
 	return util.ExecuteTemplate("crud/partials/insert.go.tmpl", struct {
 		Before          []string
 		After           []string

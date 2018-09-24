@@ -9,6 +9,10 @@ CREATE TABLE {{.Entity.Table}} (
 	{{- range .RelatedFields}}
 	"{{.Name}}" {{.Type}} NOT NULL,
 	{{end}}
+	{{- range .ReferencedFields}}
+	"{{.Field}}" {{.Type}} NOT NULL
+	{{- if ne .Default ""}} DEFAULT {{.Default}}{{end}},
+	{{- end}}
 	{{range .Entity.TableConstraints}}{{.}},{{end}}
 	PRIMARY KEY ("id")
 );

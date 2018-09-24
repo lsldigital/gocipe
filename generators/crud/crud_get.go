@@ -40,6 +40,16 @@ func generateGet(entities map[string]util.Entity, entity util.Entity) (string, e
 		}
 	}
 
+	for _, ref := range entity.References {
+		// IDField
+		sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, ref.IDField.Schema.Field))
+		structfields = append(structfields, fmt.Sprintf("&entity.%s", ref.IDField.Property.Name))
+
+		// IDType
+		sqlfields = append(sqlfields, fmt.Sprintf(`t."%s"`, ref.TypeField.Schema.Field))
+		structfields = append(structfields, fmt.Sprintf("&entity.%s", ref.TypeField.Property.Name))
+	}
+
 	return util.ExecuteTemplate("crud/partials/get.go.tmpl", struct {
 		EntityName   string
 		SQLFields    string

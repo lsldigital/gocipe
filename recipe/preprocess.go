@@ -15,6 +15,15 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 	)
 	fieldLabelWhiteList := []string{"name", "title", "description", "summary", "banner_type"}
 
+	// Check reserved fieldname
+	checkReservedField := func(fieldname string) error {
+		switch fieldname {
+		case "status", "id":
+			return fmt.Errorf("%s is a reserved fieldname", fieldname)
+		}
+		return nil
+	}
+
 	entities := make(map[string]util.Entity)
 	for i, entity := range recipe.Entities {
 		if entity.Name == "" {
@@ -28,9 +37,8 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 				field.Schema.Field = strings.ToLower(field.Property.Name)
 			}
 
-			switch field.Schema.Field {
-			case "status", "id":
-				return nil, fmt.Errorf("%s is a reserved fieldname", field.Schema.Field)
+			if err := checkReservedField(field.Schema.Field); err != nil {
+				return nil, err
 			}
 			entity.Fields[i] = field
 		}
@@ -202,6 +210,27 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			}
 			// }
 		}
+
+		for _, ref := range entity.References {
+			// IDField
+			if ref.IDField.Schema.Field == "" {
+				ref.IDField.Schema.Field = strings.ToLower(ref.IDField.Property.Name)
+			}
+
+			if err := checkReservedField(ref.TypeField.Schema.Field); err != nil {
+				return nil, err
+			}
+
+			// TypeField
+			if ref.TypeField.Schema.Field == "" {
+				ref.TypeField.Schema.Field = strings.ToLower(ref.TypeField.Property.Name)
+			}
+
+			if err := checkReservedField(ref.TypeField.Schema.Field); err != nil {
+				return nil, err
+			}
+		}
+
 		entities[entity.Name] = entity
 	}
 

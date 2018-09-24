@@ -71,6 +71,16 @@ func generateProtobuf(entities map[string]util.Entity) (string, error) {
 			count++
 		}
 
+		for _, ref := range entity.References {
+			// IDField
+			ent.Fields = append(ent.Fields, protoField{Index: count, Name: ref.IDField.Property.Name, Type: ref.IDField.Property.Type})
+			count++
+
+			// TypeField
+			ent.Fields = append(ent.Fields, protoField{Index: count, Name: ref.TypeField.Property.Name, Type: ref.TypeField.Property.Type})
+			count++
+		}
+
 		ents = append(ents, ent)
 	}
 
