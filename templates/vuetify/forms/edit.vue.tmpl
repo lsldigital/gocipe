@@ -64,7 +64,8 @@
                         {{- end }} 
                     {{- end -}}
 
-                    {{- range .Entity.Relationships }}
+                    {{- range .Entity.Relationships -}}
+                        {{- if not .EditWidget.Hide }}
                         <template v-if="componentLoaded">
                         {{- if eq .Type "one-many" }}
                             <div class="data-table-responsive-wrapper">
@@ -77,7 +78,7 @@
                                     :nested="true" 
                                 />
                             </div>
-                        {{ else if or (eq .Type "many-many") (eq .Type "many-many-owner")}}
+                        {{- else if or (eq .Type "many-many") (eq .Type "many-many-owner")}}
                                 <component  :is="'EditWidgetSelectRel'"
                                     :label="'{{ .Name }}'"
                                     :hint="'widget: select rel'" 
@@ -87,7 +88,7 @@
                                     @gocipe="(e) => this.setRelated{{.Name}}(e)"
                                     {{- /* SELECTREL */ -}}
                                 ></component>
-                        {{ else if eq .Type "many-one" }}
+                        {{- else if eq .Type "many-one" }}
                                 <component  :is="'EditWidgetSelectRel'"
                                     :label="'{{ .Name }}'"
                                     :hint="'widget: select rel'" 
@@ -97,9 +98,10 @@
                                     @gocipe="(e) => this.entity.set{{ucfirst .Entity}}id(e)"
                                     {{- /* SELECTREL */ -}}
                                 ></component>
-                        {{ end }}
+                        {{- end }}
                         </template>
-                    {{ end }}
+                        {{- end }}
+                    {{- end }}
 
                     <component  :is="'EditWidgetStatus'"
                         :label="'Status'"

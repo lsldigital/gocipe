@@ -405,7 +405,7 @@ type Relationship struct {
 	// Entity is the name of the related entity
 	Entity string `json:"entity"`
 
-	// Type represents the type of relationship
+	// Type represents the type of this relationship
 	Type string `json:"type"`
 
 	// Name represents the property name to be used for this relationship
@@ -414,11 +414,14 @@ type Relationship struct {
 	// JoinTable represents the other table in a many-many relationship
 	JoinTable string `json:"join_table"`
 
-	// ThisID represents the field in this entity used for the relationship
+	// ThisID represents the field in this entity used for this relationship
 	ThisID string `json:"thisid"`
 
-	// ThatID represents the field in the other entity used for the relationship
+	// ThatID represents the field in the other entity used for this relationship
 	ThatID string `json:"thatid"`
+
+	// EditWidget represents widget information for this relationship
+	EditWidget EditWidgetOpts `json:"edit_widget"`
 
 	// Eager indicates whether or not to eager load this relationship
 	Eager bool `json:"eager"`
@@ -432,13 +435,10 @@ type EditWidgetOpts struct {
 	// Options represents options listed by this widget
 	Options []EditWidgetOption `json:"options"`
 
-	// Target represents a target endpoint to pull data for this widget
-	Target EditWidgetTarget `json:"target"`
-
 	// Multiple indicates that the field accepts multiple values
 	Multiple bool `json:"multiple"`
 
-	// Hide indicates whether or not to show field in listing
+	// Hide indicates whether or not to show field in the edit form
 	Hide bool `json:"hide"`
 
 	// Description is the description shown to the user on the edit form
@@ -451,15 +451,6 @@ type EditWidgetOption struct {
 	Value string `json:"value"`
 	// Label represents the displayed of the option
 	Text string `json:"text"`
-}
-
-// EditWidgetTarget represents a target endpoint to pull data for this widget
-type EditWidgetTarget struct {
-	// Endpoint represents an endpoint to pull data from
-	Endpoint string
-
-	// Label which field to use for label on data endpoint
-	Label string
 }
 
 // ListWidgetOpts represents a UI widget for listing tables
