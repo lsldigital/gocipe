@@ -9,6 +9,7 @@
 
 <script>
 import * as google_protobuf_timestamp_pb from "google-protobuf/google/protobuf/timestamp_pb";
+import moment from 'moment';
 
 export default {
   data() {
@@ -23,7 +24,12 @@ export default {
     }
   },
   mounted() {
-    this.time = new Date(this.$attrs.value * 1000).toISOString();
+    let minDate = '1970-01-01T00:00:00.000Z'
+    let dateToday = moment().format("YYYY-MM-DDTHH:mm:ss.SSS");
+    this.time = new Date(this.$attrs.value.toDate()).toISOString();
+    if ((this.time !== null) && (this.time === minDate)) {
+      this.time = dateToday;
+    }
     /// converting the date from 'milliseconds' to this format : 2018-07-28T00:00:00.000Z
     console.log("setting time to : ", this.time);
     this.update();
