@@ -21,16 +21,24 @@ export default {
   props: ["rpc", "multiple"],
   created() {
     this.options   = this.$attrs.options;
-    if (this.$attrs.value) {
-      this.selection = this.multiple ? this.$attrs.value.map(item => item.getId()) : this.$attrs.value.getId();
-    }
+    this.setSelection();
   },
   mounted() {
-    this.lookup();
+    if (this.rpc != null){
+      this.lookup();
+    }
   },
   methods: {
     updateParent() {
       this.$emit("gocipe", this.selection);
+    },
+    setSelection() {
+      let typeOfValue = typeof(this.$attrs.value);
+      if (typeOfValue != "undefined" && typeOfValue == "object") {
+        this.selection = this.multiple ? this.$attrs.value.map(item => item.getId()) : this.$attrs.value.getId();
+      } else if (typeOfValue == "string" && this.$attrs.value.length == 36) {
+        this.selection = this.$attrs.value;
+      }
     },
     lookup() {
       let req = new LookupRequest();
@@ -48,7 +56,16 @@ export default {
             text: result.getLabel()
           };
         });
+
+        this.setSelection();
       });
+    }
+  },
+  watch: {
+    rpc: function (n, o) {
+      if (n != null) {
+        this.lookup(); 
+      }  
     }
   },
   inheritAttrs: false

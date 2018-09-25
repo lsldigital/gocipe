@@ -111,7 +111,7 @@
                                     :label="'{{ .TypeField.Label }}'"
                                     :hint="'{{ .TypeField.EditWidget.Description }}'" 
                                     :value="this.entity.get{{ucfirst .TypeField.Property.Name}}()" 
-                                    @gocipe="(e) => this.entity.set{{ucfirst .TypeField.Property.Name}}(e)" 
+                                    @gocipe="(e) => this.change{{ucfirst .TypeField.Property.Name}}(e)" 
                                     :options='{{json .TypeField.EditWidget.Options }}'
                                     :multiple="false"
                                     {{- /* SELECTBOX */ -}}
@@ -126,7 +126,7 @@
                                     :label="'{{ .IDField.Label }}'"
                                     :hint="'{{ .IDField.EditWidget.Description }}'" 
                                     :value="this.entity.get{{ucfirst .IDField.Property.Name}}()" 
-                                    :rpc="'lookup'+this.entity.get{{ucfirst .TypeField.Property.Name}}()"
+                                    :rpc="lookup{{ucfirst .TypeField.Property.Name}}RPC"
                                     @gocipe="(e) => this.entity.set{{ucfirst .IDField.Property.Name}}(e)"
                                     :multiple="false"
                                     {{- /* SELECTREL */ -}}
@@ -204,8 +204,9 @@ export default {
       loading: false,
       id: null,
       componentLoaded: false,
-      
-
+      {{ range .Entity.References -}}
+      lookup{{ucfirst .TypeField.Property.Name}}RPC: null,
+      {{- end }}
     };
   },
   {{/*
@@ -243,6 +244,12 @@ export default {
         },
         {{- end -}}
         {{- end }}
+        {{ range .Entity.References -}}
+        change{{ucfirst .TypeField.Property.Name}}: function(e){
+            this.entity.setEntitytype(e);
+            this.lookup{{ucfirst .TypeField.Property.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Property.Name}}();
+        },
+        {{- end }}
         log: function(e) {
             console.log(e)
         },
@@ -266,6 +273,10 @@ export default {
                 this.loading = false;
                 this.entity = resp.get{{ucfirst .Entity.Name}}();
                 this.componentLoaded = true;
+
+                {{ range .Entity.References -}}
+                this.lookup{{ucfirst .TypeField.Property.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Property.Name}}();
+                {{- end }}
             });
         },
         update: function() {
