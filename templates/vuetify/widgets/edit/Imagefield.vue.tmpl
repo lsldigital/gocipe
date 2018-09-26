@@ -13,7 +13,9 @@
     >
       {{ "{{ error | capitalize }}" }}
     </v-alert>
-    <h2>{{ "{{ $attrs.hint }}" }}</h2>
+     <v-alert :value="true" color="info" icon="info" outline>
+      {{ "{{ $attrs.hint }}" }}
+    </v-alert>
   </div>
 </template>
 
@@ -55,10 +57,10 @@ export default {
     this.image = this.$attrs.value;
   },
   filters: {
-    capitalize: function (value) {
-      if (!value) return ''
-      value = value.toString()
-      return value.charAt(0).toUpperCase() + value.slice(1)
+    capitalize: function(value) {
+      if (!value) return "";
+      value = value.toString();
+      return value.charAt(0).toUpperCase() + value.slice(1);
     }
   },
   methods: {
@@ -69,7 +71,7 @@ export default {
         return;
       }
 
-      // Resets error 
+      // Resets error
       this.error = null;
 
       // Finds image name
