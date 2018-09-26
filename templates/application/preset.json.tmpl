@@ -1,0 +1,31 @@
+{
+    "useConfigFiles": true,
+    "router": true,
+    "routerHistoryMode": true,
+    "packageManager": "npm",
+    "vuex": true,
+    "cssPreprocessor": "sass",
+    "force": true,
+    "plugins": {
+        "grpc-web-client": {},
+        "vue-mapbox": {},
+        "vue-picture-input": {},
+        "@vue/cli-plugin-babel": {},
+        "@vue/cli-plugin-pwa": {},
+        "vue-cli-plugin-vuetify": {
+            "version": "^0.2.0",
+            "replaceComponents": true,
+            "useTheme": true,
+            "useCustomProperties": true,
+            "iconFont": "md",
+            "installFonts": false,
+            "useAlaCarte": false,
+            "usePolyfill": true,
+            "locale": "en"
+        },
+        "@vue/cli-plugin-eslint": {
+            "config": "prettier",
+            "lintOn": ["save"]
+        }
+    }
+}

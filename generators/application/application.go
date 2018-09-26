@@ -30,4 +30,10 @@ func Generate(recipe *util.Recipe, noSkip bool) {
 		Bootstrap util.BootstrapOpts
 		Admin     util.AdminOpts
 	}{recipe.Bootstrap, recipe.Admin}, !noSkip)
+
+	adminFolder, _ := util.GetAbsPath("web/admin")
+	if !util.FileExists(adminFolder) {
+		output.GenerateAndSave("Scaffold", "application/preset.json.tmpl", "web/preset.json", struct{}{}, !noSkip)
+		output.CreateVue("admin")
+	}
 }

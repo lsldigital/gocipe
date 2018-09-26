@@ -303,6 +303,14 @@ func initToolset() {
 		ok = false
 	}
 
+	cmd := exec.Command("vue", "-V")
+	_, err = cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("Required tool Vue not found: ", err)
+		fmt.Println("Install using: sudo npm install -g @vue/cli")
+		ok = false
+	}
+
 	if !ok {
 		log.Fatalln("Please install above tools before continuing.")
 	}
@@ -453,4 +461,20 @@ func ProcessProto() {
 	// 	fmt.Printf("Error running %s: %s\n", toolset.Protoc, err)
 	// 	return
 	// }
+}
+
+// CreateVue runs "vue create" in web/{subFolder}
+func CreateVue(subFolder string) {
+	cmd := exec.Command("vue", "create", "--preset", "./preset.json", subFolder)
+	cmd.Dir = util.WorkingDir + "/web"
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if err != nil {
+		Log(logError+" Could not create Vue project for admin: %s", err)
+		return
+	}
+
+	util.DeleteIfExists("web/preset.json")
 }
