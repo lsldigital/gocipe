@@ -1,5 +1,5 @@
 <template>
-  <div class="listing--container">
+  <div :class="{ container : !nested }" class="listing--container">
     <v-toolbar color="transparent" class="listing-toolbar" flat ml-0>
       <v-btn icon>
         <v-icon large>{{.Entity.Vuetify.Icon}}</v-icon>
@@ -130,7 +130,7 @@
     </v-dialog>
 
     <!-- Edit In Place -->
-    <v-dialog :lazy="true" v-model="nestedForm.visible" width="auto" class="pa-4" max-width="1000px">
+    <v-dialog :persistent="true" :lazy="true" v-model="nestedForm.visible" width="auto" class="pa-4" max-width="1000px">
       <component :is="'{{plural .Entity.Name}}Edit'" :key="nestedForm.id" @closeform="nestedFormClose" :visible="nestedForm.visible" :filter_id="nestedForm.id" :nested="true" />
     </v-dialog>
     <!-- !# Edit In Place -->
