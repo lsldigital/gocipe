@@ -6,8 +6,22 @@
       </v-btn>
       <v-toolbar-title class="ml-0 pl-0">{{.Entity.Name}} </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-text-field append-icon="search" label="Search" single-line
-        hide-details v-model="search"></v-text-field>
+      <v-text-field class="mb-3" prepend-inner-icon="search" label="Search"
+        single-line hide-details small v-model="search"></v-text-field>
+      <v-btn-toggle flat class="transparent" v-model="toggle_status">
+        <v-btn icon small :color="toggle_status === 0 ? 'success' : ''" flat>
+          <v-icon small dark>check_circle</v-icon>
+        </v-btn>
+        <v-btn icon small :color="toggle_status === 1 ? 'info' : ''" flat>
+          <v-icon small dark>bookmark</v-icon>
+        </v-btn>
+        <v-btn icon small :color="toggle_status === 2 ? 'warning' : ''" flat>
+          <v-icon small dark>rowing</v-icon>
+        </v-btn>
+        <v-btn icon small :color="toggle_status === 3 ? 'error' : ''" flat>
+          <v-icon small dark>visibility_off</v-icon>
+        </v-btn>
+      </v-btn-toggle>
       <v-spacer></v-spacer>
       <v-btn mr-0 class="success" color="white" small flat @click="create">
         <v-icon dark>add</v-icon> Add
@@ -42,7 +56,7 @@
 
     <!-- Table form listing -->
     <v-card v-else>
-        <v-data-table :headers="headers" :total-items="entities.length" :items="entities" class="elevation-0" :search="search">
+        <v-data-table :headers="headers" max :items="entities" class="elevation-0" :search="search">
           <template slot="items" slot-scope="props">
             <tr :class="{'highlight': recentlySaved(props.item.id)}" :key="props.item.id">
               <td class="justify-center layout">
@@ -173,6 +187,7 @@ export default {
       messages: [],
       track: null,
       search: "",
+      toggle_status:null,
       snackbar: {
           show: false, 
           text: ''
