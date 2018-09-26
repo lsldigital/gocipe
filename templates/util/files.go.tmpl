@@ -20,6 +20,8 @@ import (
 
 	"github.com/muesli/smartcrop"
 	"github.com/muesli/smartcrop/nfnt"
+
+	"github.com/gosimple/slug"
 )
 
 // Constants for files package
@@ -91,7 +93,7 @@ func init() {
 // Upload validates and saves create file
 func Upload(fileName string, fileContent []byte, options *UploadOptions) (string, string, error) {
 	dirPath := path.Join(options.Dir, options.Destination)
-	fileName = buildFileName(fileName)
+	fileName = slug.Make(buildFileName(fileName))
 	filePath := path.Join(options.MediaPrefixURL, options.Destination, fileName)
 	fileDiskPath := filepath.Join(dirPath, fileName)
 
