@@ -1,12 +1,24 @@
 <template>
-  <div :class="{ container : !nested }" class="listing--container">
-    <v-toolbar color="transparent" class="listing-toolbar" flat ml-0>
+  <div :class="{ 'px-3' : !nested }" class="listing--container">
+    <v-toolbar color="transparent" class="listing-toolbar blue-grey darken-3 px-3" dark flat ml-0 v-if="!nested">
       <v-btn icon>
-        <v-icon large>{{.Entity.Vuetify.Icon}}</v-icon>
+        <v-icon>{{.Entity.Vuetify.Icon}}</v-icon>
       </v-btn>
-      <v-toolbar-title class="ma-0 pa-0">
-        <h2>{{.Entity.Name}}</h2>
-      </v-toolbar-title>
+      <v-toolbar-title class="ml-0 pl-0">{{.Entity.Name}} </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-text-field append-icon="search" label="Search" single-line
+        hide-details v-model="search"></v-text-field>
+      <v-spacer></v-spacer>
+      <v-btn mr-0 class="success" color="white" small flat @click="create">
+        <v-icon dark>add</v-icon> Add
+      </v-btn>
+    </v-toolbar>
+
+    <v-toolbar color="transparent" class="listing-toolbar" flat ml-0 v-else>
+      <v-btn icon>
+        <v-icon>{{.Entity.Vuetify.Icon}}</v-icon>
+      </v-btn>
+      <v-toolbar-title>{{.Entity.Name}} </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn mr-0 class="success" color="white" small flat @click="create">
         <v-icon dark>add</v-icon> Add
@@ -29,90 +41,89 @@
     </v-alert>
 
     <!-- Table form listing -->
-    <div v-else>
-      <v-text-field mb-4 append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>
-      <v-data-table :headers="headers" max :items="entities" class="elevation-1" :search="search">
-        <template slot="items" slot-scope="props">
-          <tr :class="{'highlight': recentlySaved(props.item.id)}" :key="props.item.id">
-            <td class="justify-center layout">
-              <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.id, props.item.Name)">
-                <v-icon>delete</v-icon>
-              </v-btn>
-              <v-tooltip top v-if="nested">
-                <v-btn icon class="mx-0" @click.stop="duplicate(props.item.id)">
-                  <v-icon>file_copy</v-icon>
+    <v-card v-else>
+        <v-data-table :headers="headers" :total-items="entities.length" :items="entities" class="elevation-0" :search="search">
+          <template slot="items" slot-scope="props">
+            <tr :class="{'highlight': recentlySaved(props.item.id)}" :key="props.item.id">
+              <td class="justify-center layout">
+                <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.id, props.item.Name)">
+                  <v-icon>delete</v-icon>
                 </v-btn>
-                <span>Duplicate</span>
-              </v-tooltip>
-              <v-tooltip top v-if="nested">
-                <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.id, props.item.Name)">
-                  <v-icon>edit</v-icon>
-                </v-btn>
-                <span>Edit</span>
-              </v-tooltip>
-              <v-tooltip top v-else>
-                <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
-                  <v-icon>edit</v-icon>
-                </v-btn>
-                <span>Automatically generated Edit Form</span>
-              </v-tooltip>
-            </td>
-            <!-- Check if it should appear in the list -->
-            {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
-            <!-- Use different rendering for dates -->
-            {{ if eq .ListWidget.Type "time" }}
-            <td>
-              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
-            </td>
-            {{- else -}}
-            <!-- Use different rendering for dates -->
-            {{if eq .ListWidget.Type "image"}}
-            <td>
-              <v-img :src="{{ printf " props.item.%s " (ucfirst .Property.Name) }} " width="50" max-width="50" contain height="40" max-height="40"></v-img>
-            </td>
-            {{- else -}}
-            <!-- Use different rendering for select types -->
-            {{if eq .ListWidget.Type "select"}}
-            <td>
-              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
-            </td>
-            {{- else -}}
-            <!-- Use different rendering for dates -->
-            {{if eq .ListWidget.Type "icon"}}
-            <td>
-              <v-icon>{{ printf "{{ props.item.%s }}" (ucfirst .Property.Name) }}</v-icon>
-            </td>
-            {{else}}
-            <!-- Use different rendering for toggles -->
-            {{if eq .ListWidget.Type "toggle"}}
-            <td>
-              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
-            </td>
-            {{else}}
-            <td>
-              <v-tooltip top>
-                <span slot="activator">
-                  {{ printf "{{ props.item.%s}}" (ucfirst .Property.Name) }}
+                <v-tooltip top v-if="nested">
+                  <v-btn icon class="mx-0" @click.stop="duplicate(props.item.id)">
+                    <v-icon>file_copy</v-icon>
+                  </v-btn>
+                  <span>Duplicate</span>
+                </v-tooltip>
+                <v-tooltip top v-if="nested">
+                  <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.id, props.item.Name)">
+                    <v-icon>edit</v-icon>
+                  </v-btn>
+                  <span>Edit</span>
+                </v-tooltip>
+                <v-tooltip top v-else>
+                  <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
+                    <v-icon>edit</v-icon>
+                  </v-btn>
+                  <span>Automatically generated Edit Form</span>
+                </v-tooltip>
+              </td>
+              <!-- Check if it should appear in the list -->
+              {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
+              <!-- Use different rendering for dates -->
+              {{ if eq .ListWidget.Type "time" }}
+              <td>
+                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+              </td>
+              {{- else -}}
+              <!-- Use different rendering for dates -->
+              {{if eq .ListWidget.Type "image"}}
+              <td>
+                <v-img :src="{{ printf " props.item.%s " (ucfirst .Property.Name) }} " width="50" max-width="50" contain height="40" max-height="40"></v-img>
+              </td>
+              {{- else -}}
+              <!-- Use different rendering for select types -->
+              {{if eq .ListWidget.Type "select"}}
+              <td>
+                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+              </td>
+              {{- else -}}
+              <!-- Use different rendering for dates -->
+              {{if eq .ListWidget.Type "icon"}}
+              <td>
+                <v-icon>{{ printf "{{ props.item.%s }}" (ucfirst .Property.Name) }}</v-icon>
+              </td>
+              {{else}}
+              <!-- Use different rendering for toggles -->
+              {{if eq .ListWidget.Type "toggle"}}
+              <td>
+                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+              </td>
+              {{else}}
+              <td>
+                <v-tooltip top>
+                  <span slot="activator">
+                    {{ printf "{{ props.item.%s}}" (ucfirst .Property.Name) }}
 
-                </span>
-                <span>Widget Type : {{ ucfirst .Property.Type}}</span>
-              </v-tooltip>
-            </td>
-            {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
-          </tr>
-        </template>
+                  </span>
+                  <span>Widget Type : {{ ucfirst .Property.Type}}</span>
+                </v-tooltip>
+              </td>
+              {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
+            </tr>
+          </template>
 
-        <template slot="no-data">
-          <v-flex ma-4>
-            <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-if="search.length> 0"> Your search for "{{ "{{ search }}" }}" found no results.
-            </v-alert>
-            <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-else>
-              No {{.Entity.Name}} found.
-            </v-alert>
-          </v-flex>
-        </template>
-      </v-data-table>
-    </div>
+          <template slot="no-data">
+            <v-flex ma-4>
+              <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-if="search.length> 0"> Your search for "{{ "{{ search }}" }}" found no results.
+              </v-alert>
+              <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-else>
+                No {{.Entity.Name}} found.
+              </v-alert>
+            </v-flex>
+          </template>
+        </v-data-table>
+    </v-card>
 
     <v-dialog v-model="dialog" persistent max-width="300">
       <v-card dark>
