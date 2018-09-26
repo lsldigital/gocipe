@@ -86,7 +86,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 
 		work.Waitgroup.Add(1)
 		if err == nil {
-			work.Done <- util.GeneratedCode{Generator: "GenerateAdmin Upload", Code: code, Filename: "services/admin/service_admin_config_upload.gocipe.go"}
+			work.Done <- util.GeneratedCode{Generator: "GenerateAdmin Upload", Code: code, Filename: "services/admin/service_admin_config_upload.gocipe.go", NoOverwrite: true}
 		} else {
 			work.Done <- util.GeneratedCode{Generator: "GenerateAdmin Upload", Error: fmt.Errorf("failed to execute template: %s", err)}
 		}

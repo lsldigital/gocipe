@@ -1,7 +1,7 @@
 
 <template>
   <div class="pt-3">
-    <v-autocomplete @change="updateParent" v-model="selection" :multiple="multiple" :items="options" :label="$attrs.label"></v-autocomplete>
+    <v-autocomplete :disabled="loadingStatus" :loading="loadingStatus" @change="updateParent" v-model="selection" :multiple="multiple" :items="options" :label="$attrs.label"></v-autocomplete>
   </div>
 </template>
 
@@ -15,16 +15,17 @@ export default {
   data() {
     return {
       options: [],
-      selection: this.multiple ? [] : ""
+      selection: this.multiple ? [] : "",
+      loadingStatus: false
     };
   },
   props: ["rpc", "multiple"],
   created() {
-    this.options   = this.$attrs.options;
+    this.options = this.$attrs.options;
     this.setSelection();
   },
   mounted() {
-    if (this.rpc != null){
+    if (this.rpc != null) {
       this.lookup();
     }
   },
@@ -33,9 +34,11 @@ export default {
       this.$emit("gocipe", this.selection);
     },
     setSelection() {
-      let typeOfValue = typeof(this.$attrs.value);
+      let typeOfValue = typeof this.$attrs.value;
       if (typeOfValue != "undefined" && typeOfValue == "object") {
-        this.selection = this.multiple ? this.$attrs.value.map(item => item.getId()) : this.$attrs.value.getId();
+        this.selection = this.multiple
+          ? this.$attrs.value.map(item => item.getId())
+          : this.$attrs.value.getId();
       } else if (typeOfValue == "string" && this.$attrs.value.length == 36) {
         this.selection = this.$attrs.value;
       }
@@ -43,8 +46,10 @@ export default {
     lookup() {
       let req = new LookupRequest();
       req.setTerm(this.text);
+      this.loadingStatus = true;
 
       cli[this.rpc](req, (err, resp) => {
+        this.loadingStatus = false;
         if (err) {
           console.log(err);
           return;
@@ -62,10 +67,10 @@ export default {
     }
   },
   watch: {
-    rpc: function (n, o) {
+    rpc: function(n, o) {
       if (n != null) {
-        this.lookup(); 
-      }  
+        this.lookup();
+      }
     }
   },
   inheritAttrs: false
