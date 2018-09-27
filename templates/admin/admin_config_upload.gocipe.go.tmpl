@@ -10,10 +10,13 @@ var {{.Entity}}{{.Field}}UploadOpts = files.UploadOptions{
 	MinSize:        files.NoLimit,
 	MaxSize:        files.NoLimit,
 	ImgDimensions:  &files.ImageDimensions{
-		MinWidth:   files.NoLimit,
-		MinHeight:  files.NoLimit,
-		MaxWidth:   files.NoLimit,
-		MaxHeight:  files.NoLimit,
+		ThumbWidth:     400,
+		ThumbHeight:    200,
+		MinWidth:       files.NoLimit,
+		MinHeight:      files.NoLimit,
+		MaxWidth:       files.NoLimit,
+		MaxHeight:      files.NoLimit,
+		GenerateSocial: true,
 	},
 }
 {{end}}

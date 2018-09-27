@@ -34,11 +34,13 @@ const (
 
 // ImageDimensions holds dimensions options
 type ImageDimensions struct {
-	MinWidth  int
-	MinHeight int
-	MaxWidth  int
-	MaxHeight int
-	FullView  bool
+	ThumbWidth     int
+	ThumbHeight    int
+	MinWidth       int
+	MinHeight      int
+	MaxWidth       int
+	MaxHeight      int
+	GenerateSocial bool
 }
 
 // UploadOptions holds file upload options
@@ -217,10 +219,10 @@ func Upload(fileName string, fileContent []byte, options *UploadOptions) (string
 		// fire and forget goroutine
 		go func() {
 			// Create thumbnails
-			imageCropAndResize(fileDiskPath, options.ImgDimensions.MinWidth, options.ImgDimensions.MinHeight, "thumb")
+			imageCropAndResize(fileDiskPath, options.ImgDimensions.ThumbWidth, options.ImgDimensions.ThumbHeight, "thumb")
 
 			// Create og aka full view / social
-			if options.ImgDimensions.FullView {
+			if options.ImgDimensions.GenerateSocial {
 				imageCropAndResize(fileDiskPath, newWidth, newHeight, "social")
 			}
 		}()
