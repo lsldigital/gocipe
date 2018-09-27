@@ -1,24 +1,24 @@
 <template>
   <div class="mt-4 mb-4">
-    <div class="caption desc-span">{{ "{{ $attrs.label }}" }}</div>
-    <picture-input buttonClass ref="pictureInput" :crop="false" :z-index="0" class="image-uploader" :prefill="image" width="400" height="200" margin="16" accept="image/jpeg,image/png" size="10" button-class="btn" :custom-strings="{
-                    upload: '<h1>Image</h1>', drag: 'Click here to upload image' }" @change="onChange">
-    </picture-input>
-     <template v-if="progressStatus">
-      <v-progress-linear :indeterminate="progressStatus"></v-progress-linear>
-    </template>
-    <v-alert
-      :value="error"
-      type="error"
-      dismissible
-      small
-      transition="scale-transition"
-    >
+    <div class="caption v-label v-label--active theme--light pb-2">{{ "{{ $attrs.label }}" }}</div>
+    <div class="uploader-wrapper mt-1">
+      <picture-input buttonClass ref="pictureInput" :crop="false" :z-index="0"
+        class="image-uploader" :prefill="image" width="400" height="200" margin="16"
+        accept="image/jpeg,image/png" size="10" button-class="btn"
+        :custom-strings="{
+                    upload: '<h3>Image</h3>', drag: 'Click here to upload image' }"
+        @change="onChange">
+      </picture-input>
+      <template v-if="progressStatus">
+        <v-progress-linear :indeterminate="progressStatus"></v-progress-linear>
+      </template>
+      <v-alert :value="error" type="error" dismissible small transition="scale-transition">
       {{ "{{ error | capitalize }}" }}
-    </v-alert>
-     <v-alert :value="true" color="info" icon="info" outline>
+      </v-alert>
+      <v-alert :value="true" color="gray lighten-3" dark icon="info" class="pa-2">
       {{ "{{ $attrs.hint }}" }}
-    </v-alert>
+      </v-alert>
+    </div>
   </div>
 </template>
 
@@ -84,10 +84,10 @@ export default {
       req.setField(this.field);
       req.setFilename(this.$refs.pictureInput.file.name);
       req.setContent(convertDataURIToBinary(image));
-      this.progressStatus = true
+      this.progressStatus = true;
 
       cli[this.rpc](req, (err, resp) => {
-        this.progressStatus = false
+        this.progressStatus = false;
         if (err) {
           console.log(err);
           this.error = err.message;
@@ -103,6 +103,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.uploader-wrapper {
+  background: #c9c9c9;
+}
 .image-container {
   height: 200px;
   width: 200px;
