@@ -340,7 +340,7 @@ func init() {
 	}
 	file29 := &embedded.EmbeddedFile{
 		Filename:    "vuetify/widgets/edit/Textarea.vue.tmpl",
-		FileModTime: time.Unix(1538053084, 0),
+		FileModTime: time.Unix(1538053509, 0),
 		Content:     string("<template>\n  <div>\n    <div class=\"caption v-label v-label--active theme--light pb-2\">{{ \"{{ $attrs.label }}\" }}</div>\n\n    <vue-editor id=\"$attrs.label\" v-model=\"text\" :editorToolbar=\"customToolbar\"></vue-editor>\n\n  </div>\n</template>\n\n<script>\nimport { VueEditor } from \"vue2-editor\";\n\nexport default {\n  data() {\n    return {\n      text: \"\",\n      customToolbar: [\n        [\"bold\", \"italic\", \"underline\"],\n        [\"link\", \"blockquote\"],\n        [{ list: \"ordered\" }, { list: \"bullet\" }],\n        [{ header: [1, 2, 3, false] }]\n      ]\n    };\n  },\n  created() {\n    this.text = this.$attrs.value;\n  },\n  components: {\n    VueEditor\n  },\n  inheritAttrs: false\n};\n</script>\n"),
 	}
 	file2a := &embedded.EmbeddedFile{
