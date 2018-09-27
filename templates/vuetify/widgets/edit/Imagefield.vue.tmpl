@@ -4,6 +4,9 @@
     <picture-input buttonClass ref="pictureInput" :crop="false" :z-index="0" class="image-uploader" :prefill="image" width="400" height="200" margin="16" accept="image/jpeg,image/png" size="10" button-class="btn" :custom-strings="{
                     upload: '<h1>Image</h1>', drag: 'Click here to upload image' }" @change="onChange">
     </picture-input>
+     <template v-if="progressStatus">
+      <v-progress-linear :indeterminate="progressStatus"></v-progress-linear>
+    </template>
     <v-alert
       :value="error"
       type="error"
@@ -47,7 +50,8 @@ export default {
   data() {
     return {
       image: "",
-      error: null
+      error: null,
+      progressStatus: false
     };
   },
   components: {
@@ -80,8 +84,10 @@ export default {
       req.setField(this.field);
       req.setFilename(this.$refs.pictureInput.file.name);
       req.setContent(convertDataURIToBinary(image));
+      this.progressStatus = true
 
       cli[this.rpc](req, (err, resp) => {
+        this.progressStatus = false
         if (err) {
           console.log(err);
           this.error = err.message;
