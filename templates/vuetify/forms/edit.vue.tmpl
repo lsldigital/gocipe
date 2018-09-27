@@ -286,7 +286,7 @@ export default {
             // this.loading = true;
 
             this.snackbarShow('{{ucfirst .Entity.Name}} Saved');
-            this.debug();
+            /* this.debug(); */
 
             cli.update{{.Entity.Name}}(req, (err, resp) => {
                 if (err) {

@@ -28,6 +28,11 @@ export default {
   components: {
     VueEditor
   },
+  watch: {
+    text: function(n, o) {
+      this.$emit("gocipe", n);
+    }
+  },
   inheritAttrs: false
 };
 </script>
