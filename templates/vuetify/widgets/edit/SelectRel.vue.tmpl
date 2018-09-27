@@ -1,6 +1,6 @@
 
 <template>
-  <div>
+  <div class="pt-3">
     <v-autocomplete :disabled="loadingStatus" :loading="loadingStatus" @change="updateParent" v-model="selection" :multiple="multiple" :items="options" :label="$attrs.label"></v-autocomplete>
   </div>
 </template>

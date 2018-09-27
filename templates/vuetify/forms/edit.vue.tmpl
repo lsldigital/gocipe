@@ -2,16 +2,16 @@
     <div>
         <div class="listing--container">
             <!-- Normal Toolbar -->
-            <v-toolbar class="transparent listing-toolbar blue-grey darken-4 px-3" dark flat ml-0 v-if="!nested">
+            <v-toolbar class="transparent listing-toolbar blue-grey darken-3 px-3" dark flat ml-0 v-if="!nested">
                 <v-btn icon :to="{name: '{{- plural (lower .Entity.Name) -}}_list'}">
-                    <v-icon large>arrow_back</v-icon>
+                    <v-icon>arrow_back</v-icon>
                 </v-btn>
 
                 <v-toolbar-title>Edit {{.Entity.Name}} </v-toolbar-title>
 
                 <v-spacer></v-spacer>
                 
-                <v-btn color="light-blue"  @click="update">
+                <v-btn color="primary"  @click="update">
                     Save
                     <v-icon right>save</v-icon>
                 </v-btn>
@@ -354,6 +354,6 @@ export default {
 .data-table-responsive-wrapper {
   max-width: 100%;
   overflow-y: auto;
-  padding: 5px;
+  /* padding: 5px; */
 }
 </style>
