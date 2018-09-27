@@ -25,9 +25,7 @@ export default {
     this.setSelection();
   },
   mounted() {
-    if (this.rpc != null) {
-      this.lookup();
-    }
+    this.lookup();
   },
   methods: {
     updateParent() {
@@ -44,10 +42,14 @@ export default {
       }
     },
     lookup() {
+      if (this.rpc == null || this.rpc == "lookup") {
+        return;
+      }
+
       let req = new LookupRequest();
       req.setTerm(this.text);
       this.loadingStatus = true;
-
+      
       cli[this.rpc](req, (err, resp) => {
         this.loadingStatus = false;
         if (err) {
@@ -68,9 +70,7 @@ export default {
   },
   watch: {
     rpc: function(n, o) {
-      if (n != null) {
-        this.lookup();
-      }
+      this.lookup();
     }
   },
   inheritAttrs: false

@@ -93,7 +93,7 @@ func init() {
 // Upload validates and saves create file
 func Upload(fileName string, fileContent []byte, options *UploadOptions) (string, string, error) {
 	dirPath := path.Join(options.Dir, options.Destination)
-	fileName = slug.Make(buildFileName(fileName))
+	fileName = buildFileName(fileName)
 	filePath := path.Join(options.MediaPrefixURL, options.Destination, fileName)
 	fileDiskPath := filepath.Join(dirPath, fileName)
 
@@ -244,7 +244,7 @@ func Delete(fp string) error {
 func buildFileName(oldFilename string) string {
 	oldExt := filepath.Ext(oldFilename)
 	newFilename := strings.TrimSuffix(oldFilename, oldExt)
-	return newFilename + "_" + time.Now().Format("20060102150405") + oldExt
+	return slug.Make(newFilename) + "_" + time.Now().Format("20060102150405") + oldExt
 }
 
 func changeExt(filename string, oldExt string, newExt string) string {
