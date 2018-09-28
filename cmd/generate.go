@@ -7,6 +7,7 @@ import (
 
 	"github.com/fluxynet/gocipe/generators/admin"
 	"github.com/fluxynet/gocipe/generators/application"
+	"github.com/fluxynet/gocipe/generators/auth"
 	"github.com/fluxynet/gocipe/generators/bootstrap"
 	"github.com/fluxynet/gocipe/generators/crud"
 	"github.com/fluxynet/gocipe/generators/schema"
@@ -24,6 +25,7 @@ var (
 	generateSchema    bool
 	generateCrud      bool
 	generateAdmin     bool
+	generateAuth      bool
 	generateUtils     bool
 	generateVuetify   bool
 	verbose           bool
@@ -63,6 +65,10 @@ var generateCmd = &cobra.Command{
 			work.Waitgroup.Add(1)
 		}
 
+		if generateAuth {
+			work.Waitgroup.Add(1)
+		}
+
 		if generateUtils {
 			work.Waitgroup.Add(1)
 		}
@@ -93,6 +99,10 @@ var generateCmd = &cobra.Command{
 
 		if generateAdmin {
 			go admin.Generate(work, entities)
+		}
+
+		if generateAdmin {
+			go auth.Generate(work)
 		}
 
 		if generateUtils {

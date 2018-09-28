@@ -18,7 +18,7 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 	// Check reserved fieldname
 	checkReservedField := func(fieldname string) error {
 		switch fieldname {
-		case "status", "id":
+		case "status", "id", "user_id":
 			return fmt.Errorf("%s is a reserved fieldname", fieldname)
 		}
 		return nil
@@ -60,6 +60,20 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 				Type: util.WidgetTypeSelect,
 			},
 		})
+
+		if recipe.Admin.Auth.Generate {
+			entity.Fields = append(entity.Fields, util.Field{
+				Label:    "UserID",
+				Property: util.FieldProperty{Name: "UserID", Type: "string"},
+				Schema:   util.FieldSchema{Field: "user_id", Type: "CHAR(36)"},
+				EditWidget: util.EditWidgetOpts{
+					Hide: true,
+				},
+				ListWidget: util.ListWidgetOpts{
+					Hide: true,
+				},
+			})
+		}
 
 		if entity.Slug != "" {
 			var slugValid bool
