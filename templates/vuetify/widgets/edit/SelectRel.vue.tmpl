@@ -1,7 +1,26 @@
 
 <template>
   <div class="pt-3">
-    <v-autocomplete :disabled="loadingStatus" :loading="loadingStatus" @change="updateParent" v-model="selection" :multiple="multiple" :items="options" :label="$attrs.label"></v-autocomplete>
+    <v-autocomplete :disabled="loadingStatus" :loading="loadingStatus" @change="updateParent" v-model="selection" :multiple="multiple" :items="options" :label="$attrs.label">
+      <template slot="selection" slot-scope="data">
+        <v-chip :selected="data.selected" close class="chip--select-multi"
+          @input="remove(data.item)">
+         {{ "{{ data.item.text }}" }}
+        </v-chip>
+      </template>
+
+      <template slot="item" slot-scope="data">
+        <v-list-tile>
+          <v-list-tile-action>
+            <v-checkbox v-model="data.tile.props.value"></v-checkbox>
+          </v-list-tile-action>
+          <v-list-tile>
+            {{ "{{ data.item.text }}" }} <v-chip color="warning" v-if="data.item.group === 'D'">
+              draft </v-chip>
+          </v-list-tile>
+        </v-list-tile>
+      </template>
+    </v-autocomplete>
   </div>
 </template>
 
@@ -62,12 +81,18 @@ export default {
         this.options = resp.getResultList().map(result => {
           return {
             value: result.getId(),
-            text: result.getLabel()
+            text: result.getLabel(),
+            group: result.getStatus()
+
           };
         });
 
         this.setSelection();
       });
+    },
+    remove(item) {
+      const index = this.selection.indexOf(item.value);
+      if (index >= 0) this.selection.splice(index, 1);
     }
   },
   watch: {
