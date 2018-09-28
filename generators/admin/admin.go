@@ -78,7 +78,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 
 	hasFileFields := len(fileFields) > 0
 	if hasFileFields {
-		code, err := util.ExecuteTemplate("admin/admin_config_upload.gocipe.go.tmpl", struct {
+		code, err := util.ExecuteTemplate("admin/admin_config_upload.go.tmpl", struct {
 			FileFields []fileField
 		}{
 			FileFields: fileFields,
@@ -93,7 +93,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	}
 
 	// generate admin_helpers.gocipe.go
-	helpers, err := util.ExecuteTemplate("admin/admin_helpers.gocipe.go.tmpl", struct {
+	helpers, err := util.ExecuteTemplate("admin/admin_helpers.go.tmpl", struct {
 		FileFields []fileField
 		ImportPath string
 	}{
@@ -121,7 +121,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 		work.Done <- util.GeneratedCode{Generator: "GenerateAdminProto", Error: err}
 	}
 
-	code, err := util.ExecuteTemplate("admin/service_admin.gocipe.go.tmpl", struct {
+	code, err := util.ExecuteTemplate("admin/service_admin.go.tmpl", struct {
 		Entities           map[string]util.Entity
 		EntitiesFileFields map[string][]fileField
 		EntitiesLabelField map[string]string
