@@ -8,6 +8,17 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
+const (
+	// StatusDraft "D" for status Draft
+	StatusDraft = "draft"
+	// StatusSaved "S" for status Saved
+	StatusSaved = "saved"
+	// StatusUnpublished "U" for status Unpublished
+	StatusUnpublished = "unpublished"
+	// StatusPublished "P" for status Published
+	StatusPublished = "published"
+)
+
 // Preprocess does some preprocessing (checking, etc)
 func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 	var (
@@ -46,14 +57,14 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 		entity.Fields = append(entity.Fields, util.Field{
 			Label:    "Status",
 			Property: util.FieldProperty{Name: "Status", Type: "string"},
-			Schema:   util.FieldSchema{Field: "status", Type: "CHAR(1)", Default: "'D'"},
+			Schema:   util.FieldSchema{Field: "status", Type: "VARCHAR(11)", Default: "'" + StatusDraft + "'"},
 			EditWidget: util.EditWidgetOpts{
 				Type: util.WidgetTypeStatus,
 				Options: []util.EditWidgetOption{
-					util.EditWidgetOption{Text: "Draft", Value: "D"},
-					util.EditWidgetOption{Text: "Saved", Value: "S"},
-					util.EditWidgetOption{Text: "Published", Value: "P"},
-					util.EditWidgetOption{Text: "Unpublished", Value: "U"},
+					util.EditWidgetOption{Text: "Draft", Value: StatusDraft},
+					util.EditWidgetOption{Text: "Saved", Value: StatusSaved},
+					util.EditWidgetOption{Text: "Published", Value: StatusPublished},
+					util.EditWidgetOption{Text: "Unpublished", Value: StatusUnpublished},
 				},
 			},
 			ListWidget: util.ListWidgetOpts{

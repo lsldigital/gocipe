@@ -5,6 +5,17 @@ import (
 	"golang.org/x/net/context"
 )
 
+const (
+	// StatusDraft says status is 'draft'
+	StatusDraft = "draft"
+	// StatusSaved says status is 'saved'
+	StatusSaved = "saved"
+	// StatusUnpublished says status is 'unpublished'
+	StatusUnpublished = "unpublished"
+	// StatusPublished says status is 'published'
+	StatusPublished = "published"
+)
+
 var (
 	// ErrorInvalidOperation indicates an error for an invalid operation
 	ErrorInvalidOperation   = errors.New("invalid filter operation specified")
@@ -23,6 +34,7 @@ type Service struct {}
 /**
  * [BEGIN] {{.Name}}
  */
+
 {{if .Admin.Create -}}
 // Create{{.Name}} allows creation of entity of type {{.Name}}
 func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {
@@ -46,7 +58,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 		res.{{.Name}}.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
 	}
 
-	res.{{.Name}}.Status = "D"
+	res.{{.Name}}.Status = StatusDraft
 
 	tx, err = models.StartTransaction(ctx)
 	{{if .Admin.Hooks.PreCreate}}
@@ -226,7 +238,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	switch req.{{.Name}}.Status {
-		case "D", "S", "P", "U":
+		case StatusDraft, StatusSaved, StatusUnpublished, StatusPublished:
 			//all good
 		default:
 			return &res, ErrorInvalidStatus
@@ -234,8 +246,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 
 	res.{{.Name}} = req.{{.Name}}
 	{{ range $fileField := index $.EntitiesFileFields .Name -}}
-	res.{{.Entity}}.{{.Field}} = existing.{{.Field}}
-	{{- end }}
+	res.{{.Entity}}.{{.Field}} = existing.{{.Field}}{{end }}
 	{{ if .Slug -}}
 	res.{{.Name}}.Slug = existing.Slug
 	{{ end }}
