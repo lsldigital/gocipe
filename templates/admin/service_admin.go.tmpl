@@ -16,56 +16,6 @@ var (
 	ErrorInvalidStatus      = errors.New("invalid status")
 )
 
-// NewBoolFilter returns a new filter for boolean types
-func NewBoolFilter(filter *Filter) (*models.Filter, error) {
-	value, err := strconv.ParseBool(filter.Value); 
-	
-	if err != nil {
-		return nil, err
-	}
-
-	return &models.Filter{Field: filter.Field, Operation: "=", Value: value}, nil
-}
-
-// NewStringFilter returns a new filter for text values
-func NewStringFilter(filter *Filter) (*models.Filter, error) {
-	switch filter.Operation {
-	case "=":
-		return &models.Filter{Field: filter.Field, Operation: "=", Value: filter.Value}, nil
-	case "~":
-		return &models.Filter{Field: filter.Field, Operation: "LIKE", Value: filter.Value}, nil
-	}
-
-	return nil, ErrorInvalidOperation
-}
-
-// NewDateFilter returns a new filter to handle dates
-func NewDateFilter(filter *Filter) (*models.Filter, error) {
-	var (
-		value time.Time
-		err   error
-	)
-
-	if value, err = time.Parse(time.RFC3339, filter.Value); err != nil {
-		return nil, err
-	}
-
-	switch filter.Operation {
-	case "=":
-		return &models.Filter{Field: filter.Field, Operation: "=", Value: value}, nil
-	case ">":
-		return &models.Filter{Field: filter.Field, Operation: ">", Value: value}, nil
-	case ">=":
-		return &models.Filter{Field: filter.Field, Operation: ">=", Value: value}, nil
-	case "<":
-		return &models.Filter{Field: filter.Field, Operation: "<", Value: value}, nil
-	case "<=":
-		return &models.Filter{Field: filter.Field, Operation: "<=", Value: value}, nil
-	}
-
-	return &models.Filter{Field: filter.Field, Operation: "LIKE", Value: value}, nil
-}
-
 // Service represents Admin service implementation
 type Service struct {}
 
@@ -283,12 +233,12 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	res.{{.Name}} = req.{{.Name}}
-	{{range $fileField := index $.EntitiesFileFields .Name}}
+	{{ range $fileField := index $.EntitiesFileFields .Name -}}
 	res.{{.Entity}}.{{.Field}} = existing.{{.Field}}
-	{{end}}
-	{{if .Slug}}
+	{{- end }}
+	{{ if .Slug -}}
 	res.{{.Name}}.Slug = existing.Slug
-	{{end}}
+	{{ end }}
 	tx, err = models.StartTransaction(ctx)
 
 	{{if .Admin.Hooks.PreUpdate -}}
@@ -360,11 +310,17 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	if stop {
 		return &res, nil
 	}
-	{{end}}
+	{{- end}}
+	
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
 	err = models.{{.Name}}Repo.Delete(ctx, existing, tx, true)
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+
 	{{if .Admin.Hooks.PostDelete}}
 	stop, err = s.{{lower .Name}}PostDelete(ctx, req, &res, *existing, err)
 	if stop {
@@ -470,7 +426,7 @@ func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) 
 
 		err = rows.Scan(&id, &label, &status)
 		if err != nil {
-			return &res, err
+			return &res, errors.WithStack(err)
 		}
     
 		res.Result = append(res.Result, &LookupResult{ID: id, Label: label, Status: status})

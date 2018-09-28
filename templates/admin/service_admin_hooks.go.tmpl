@@ -49,7 +49,7 @@ func (s Service) {{lower .Entity.Name}}PostUpdate(ctx context.Context, req *Upda
 }
 {{end}}
 {{if .PreDelete}}
-// {{lower .Entity.Name}}PreDelete is a hook that occurs before the elete operation in Admin service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PreDelete is a hook that occurs before the Delete operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PreDelete(ctx context.Context, tx *sql.Tx, req *DeleteRequest, res *DeleteResponse, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }
