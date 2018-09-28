@@ -256,6 +256,15 @@ type AdminOpts struct {
 
 	// Hooks describes hooks options for Admin generation
 	Hooks ResourceHooks `json:"hooks"`
+
+	// Auth describes auth options for Auth code generation
+	Auth AuthOpts `json:"auth"`
+}
+
+// AuthOpts represents options for auth code generation
+type AuthOpts struct {
+	// Generate indicates whether or not to generate the Auth code
+	Generate bool `json:"generate"`
 }
 
 // ResourceHooks represents which rest hooks should be generated

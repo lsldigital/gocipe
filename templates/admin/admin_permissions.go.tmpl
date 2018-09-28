@@ -1,0 +1,17 @@
+package admin
+
+const (
+    {{range $entityKey, $entity := .Entities}}
+    /**
+    * [BEGIN] {{$entity.Name}}
+    */
+    {{range $actionKey, $action := $.EntitiesActions}}
+    // Perm{{$action}}{{$entity.Name}} is a permission token to {{$action}} {{$entity.Name}}
+    Perm{{$action}}{{$entity.Name}} = ""
+    {{if not (eq $action "Create")}}
+    // Perm{{$action}}{{$entity.Name}}Any is a permission token to {{$action}} any {{$entity.Name}}
+    Perm{{$action}}{{$entity.Name}}Any = ""
+    {{end}}
+    {{end}}
+    {{end}}
+)
