@@ -12,6 +12,9 @@
       <template v-if="progressStatus">
         <v-progress-linear :indeterminate="progressStatus"></v-progress-linear>
       </template>
+      <v-alert :value="uploadedSuccessfully" type="success" dismissible class="pa-2" transition="scale-transition">
+        Image upload successful
+      </v-alert>
       <v-alert :value="error" type="error" dismissible small transition="scale-transition">
       {{ "{{ error | capitalize }}" }}
       </v-alert>
@@ -51,7 +54,9 @@ export default {
     return {
       image: "",
       error: null,
-      progressStatus: false
+      progressStatus: false,
+      uploadedSuccessfully: false
+
     };
   },
   components: {
@@ -94,7 +99,8 @@ export default {
           return;
         }
 
-        console.log(resp.getUri());
+        this.uploadedSuccessfully = true;
+
         this.image = resp.getUri();
       });
     }
