@@ -25,7 +25,9 @@ export default {
     this.setSelection();
   },
   mounted() {
-    this.lookup();
+    if (this.rpc != null) {
+      this.lookup();
+    }
   },
   methods: {
     updateParent() {
@@ -70,7 +72,9 @@ export default {
   },
   watch: {
     rpc: function(n, o) {
-      this.lookup();
+      if (n != null) {
+        this.lookup();
+      }
     }
   },
   inheritAttrs: false
