@@ -15,7 +15,7 @@
             <v-checkbox v-model="data.tile.props.value"></v-checkbox>
           </v-list-tile-action>
           <v-list-tile>
-            {{ "{{ data.item.text }}" }} <v-chip color="warning" v-if="data.item.group === 'D'">
+            {{ "{{ data.item.text }}" }} <v-chip small color="warning" v-if="data.item.group === 'draft'">
               draft </v-chip>
           </v-list-tile>
         </v-list-tile>
