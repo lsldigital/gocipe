@@ -1,6 +1,7 @@
 <template>
   <div>
-    <div class="caption desc-span">Featured Status</div>
+    <div class="caption v-label v-label--active theme--light pt-3 pb-0">{{ "{{ $attrs.label }}" }}</div>
+
     <v-checkbox v-bind="$attrs" :value="$attrs.value" @change="$emit('gocipe', result)" v-model="result"></v-checkbox>
 
   </div>
