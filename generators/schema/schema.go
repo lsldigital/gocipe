@@ -30,9 +30,10 @@ func Generate(work util.GenerationWork, opts util.SchemaOpts, entities map[strin
 		go func(entity util.Entity) {
 			var (
 				data struct {
-					Entity        util.Entity
-					RelatedFields []RelatedField
-					RelatedTables []RelatedTable
+					Entity           util.Entity
+					RelatedFields    []RelatedField
+					RelatedTables    []RelatedTable
+					ReferencedFields []util.FieldSchema
 				}
 			)
 
@@ -71,6 +72,10 @@ func Generate(work util.GenerationWork, opts util.SchemaOpts, entities map[strin
 						RelatedTable{Table: table, ThisID: thisID, ThisType: thisType, ThatID: thatID, ThatType: thatType},
 					)
 				}
+			}
+
+			for _, ref := range entity.References {
+				data.ReferencedFields = append(data.ReferencedFields, ref.IDField.Schema, ref.TypeField.Schema)
 			}
 
 			code, err := util.ExecuteTemplate("schema/schema.sql.tmpl", data)

@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/fluxynet/gocipe/util"
 )
@@ -14,12 +15,20 @@ type fileField struct {
 
 // Generate returns generated code for a Admin service
 func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
-	var fileFields []fileField
+	var (
+		fileFields   []fileField
+		generateAuth bool
+	)
+	entitiesActions := []string{"Create", "Edit", "View", "List", "Delete", "Lookup"}
 	entitiesFileFields := make(map[string][]fileField)
 	entitiesLabelField := make(map[string]string)
 	for key, entity := range entities {
 		if !entity.Admin.Generate {
 			continue
+		}
+
+		if !generateAuth && entity.Admin.Auth.Generate {
+			generateAuth = true
 		}
 
 		for _, field := range entity.Fields {
@@ -45,6 +54,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 				PostUpdate bool
 				PreDelete  bool
 				PostDelete bool
+				ImportPath string
 			}{
 				Entity:     entity,
 				PreRead:    entity.Admin.Hooks.PreRead,
@@ -57,6 +67,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 				PostUpdate: entity.Admin.Hooks.PostUpdate,
 				PreDelete:  entity.Admin.Hooks.PreDelete,
 				PostDelete: entity.Admin.Hooks.PostDelete,
+				ImportPath: util.AppImportPath,
 			})
 
 			work.Waitgroup.Add(1)
@@ -78,7 +89,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 
 	hasFileFields := len(fileFields) > 0
 	if hasFileFields {
-		code, err := util.ExecuteTemplate("admin/admin_config_upload.gocipe.go.tmpl", struct {
+		code, err := util.ExecuteTemplate("admin/admin_config_upload.go.tmpl", struct {
 			FileFields []fileField
 		}{
 			FileFields: fileFields,
@@ -86,14 +97,14 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 
 		work.Waitgroup.Add(1)
 		if err == nil {
-			work.Done <- util.GeneratedCode{Generator: "GenerateAdmin Upload", Code: code, Filename: "services/admin/service_admin_config_upload.gocipe.go"}
+			work.Done <- util.GeneratedCode{Generator: "GenerateAdmin Upload", Code: code, Filename: "services/admin/service_admin_config_upload.gocipe.go", NoOverwrite: true}
 		} else {
 			work.Done <- util.GeneratedCode{Generator: "GenerateAdmin Upload", Error: fmt.Errorf("failed to execute template: %s", err)}
 		}
 	}
 
 	// generate admin_helpers.gocipe.go
-	helpers, err := util.ExecuteTemplate("admin/admin_helpers.gocipe.go.tmpl", struct {
+	helpers, err := util.ExecuteTemplate("admin/admin_helpers.go.tmpl", struct {
 		FileFields []fileField
 		ImportPath string
 	}{
@@ -121,11 +132,43 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 		work.Done <- util.GeneratedCode{Generator: "GenerateAdminProto", Error: err}
 	}
 
-	code, err := util.ExecuteTemplate("admin/service_admin.gocipe.go.tmpl", struct {
+	// generate admin_permissions.go
+	genUTF8List := func() []string {
+		var strList []string
+		a := 'A'
+		for i := 0; i < 500; i++ {
+			r := a + rune(i)
+			if unicode.IsPrint(r) &&
+				!unicode.IsSymbol(r) &&
+				!unicode.IsSpace(r) &&
+				!unicode.IsControl(r) &&
+				r != '\\' {
+				strList = append(strList, string(r))
+			}
+		}
+		return strList
+	}
+	permissions, err := util.ExecuteTemplate("admin/admin_permissions.go.tmpl", struct {
+		ImportPath      string
+		Entities        map[string]util.Entity
+		EntitiesActions []string
+		UTF8List        []string
+	}{util.AppImportPath, entities, entitiesActions, genUTF8List()})
+
+	work.Waitgroup.Add(1)
+	if err == nil {
+		work.Done <- util.GeneratedCode{Generator: "GenerateAdminProto", Code: permissions, Filename: "services/admin/service_admin_permissions.go"}
+	} else {
+		work.Done <- util.GeneratedCode{Generator: "GenerateAdminProto", Error: err}
+	}
+
+	code, err := util.ExecuteTemplate("admin/service_admin.go.tmpl", struct {
 		Entities           map[string]util.Entity
 		EntitiesFileFields map[string][]fileField
 		EntitiesLabelField map[string]string
-	}{entities, entitiesFileFields, entitiesLabelField})
+		GenerateAuth       bool
+		ImportPath         string
+	}{entities, entitiesFileFields, entitiesLabelField, generateAuth, util.AppImportPath})
 	work.Waitgroup.Add(1)
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateAdmin", Code: code, Filename: "services/admin/service_admin.gocipe.go"}

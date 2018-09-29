@@ -16,10 +16,11 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/pkg/errors"
-	"gopkg.in/h2non/filetype.v1"
 
 	"github.com/muesli/smartcrop"
 	"github.com/muesli/smartcrop/nfnt"
+
+	"github.com/gosimple/slug"
 )
 
 // Constants for files package
@@ -137,6 +138,7 @@ func Upload(fileName string, fileContent []byte, options *UploadOptions) (string
 
 	switch options.FileType {
 	case TypeImage:
+		// TODO: Move in a seperate func or pkg
 		if !filetype.IsImage(buf) {
 			return fileDiskPath, filePath, fmt.Errorf("image type invalid")
 		}
@@ -223,9 +225,12 @@ func Upload(fileName string, fileContent []byte, options *UploadOptions) (string
 			}
 		}()
 	case TypeVideo:
-		return fileDiskPath, filePath, fmt.Errorf("not yet implemented")
+		// TODO: Not yet implemented
+		return fileDiskPath, filePath, nil
 	default:
-		return fileDiskPath, filePath, fmt.Errorf("file type invalid")
+		// Invalid file type in config
+		// Do nothing
+		return fileDiskPath, filePath, nil
 	}
 
 	return fileDiskPath, filePath, nil
@@ -242,7 +247,7 @@ func Delete(fp string) error {
 func buildFileName(oldFilename string) string {
 	oldExt := filepath.Ext(oldFilename)
 	newFilename := strings.TrimSuffix(oldFilename, oldExt)
-	return newFilename + "_" + time.Now().Format("20060102150405") + oldExt
+	return slug.Make(newFilename) + "_" + time.Now().Format("20060102150405") + oldExt
 }
 
 func changeExt(filename string, oldExt string, newExt string) string {

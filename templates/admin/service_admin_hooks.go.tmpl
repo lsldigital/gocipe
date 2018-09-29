@@ -1,5 +1,9 @@
 package admin
 
+import (
+	{{ if .Entity.Admin.Auth.Generate }}"{{.ImportPath}}/auth"{{ end }}
+)
+
 {{if .PreRead}}
 // {{lower .Entity.Name}}PreRead is a hook that occurs before the ead operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PreRead(ctx context.Context, req *GetRequest, res *Get{{.Entity.Name}}Response) (bool, error) {
@@ -26,7 +30,7 @@ func (s Service) {{lower .Entity.Name}}PostList(ctx context.Context, req *ListRe
 {{end}}
 {{if .PreCreate}}
 // {{lower .Entity.Name}}PreCreate is a hook that occurs before the reate operation in Admin service. Returns stop (boolean) and error
-func (s Service) {{lower .Entity.Name}}PreCreate(ctx context.Context, tx *sql.Tx, req *Create{{.Entity.Name}}Request, res *Create{{.Entity.Name}}Response, err error) (bool, error) {
+func (s Service) {{lower .Entity.Name}}PreCreate(ctx context.Context, tx *sql.Tx, req *Create{{.Entity.Name}}Request, res *Create{{.Entity.Name}}Response, {{if .Entity.Admin.Auth.Generate}}passport auth.Passport, {{end}}err error) (bool, error) {
 	return false, nil
 }
 {{end}}
@@ -38,7 +42,7 @@ func (s Service) {{lower .Entity.Name}}PostCreate(ctx context.Context, req *Crea
 {{end}}
 {{if .PreUpdate}}
 // {{lower .Entity.Name}}PreUpdate is a hook that occurs before the pdate operation in Admin service. Returns stop (boolean) and error
-func (s Service) {{lower .Entity.Name}}PreUpdate(ctx context.Context, tx *sql.Tx, req *Update{{.Entity.Name}}Request, res *Update{{.Entity.Name}}Response, existing models.{{.Entity.Name}}, err error) (bool, error) {
+func (s Service) {{lower .Entity.Name}}PreUpdate(ctx context.Context, tx *sql.Tx, req *Update{{.Entity.Name}}Request, res *Update{{.Entity.Name}}Response, existing models.{{.Entity.Name}}, {{if .Entity.Admin.Auth.Generate}}passport auth.Passport, {{end}}err error) (bool, error) {
 	return false, nil
 }
 {{end}}
@@ -49,7 +53,7 @@ func (s Service) {{lower .Entity.Name}}PostUpdate(ctx context.Context, req *Upda
 }
 {{end}}
 {{if .PreDelete}}
-// {{lower .Entity.Name}}PreDelete is a hook that occurs before the elete operation in Admin service. Returns stop (boolean) and error
+// {{lower .Entity.Name}}PreDelete is a hook that occurs before the Delete operation in Admin service. Returns stop (boolean) and error
 func (s Service) {{lower .Entity.Name}}PreDelete(ctx context.Context, tx *sql.Tx, req *DeleteRequest, res *DeleteResponse, existing models.{{.Entity.Name}}, err error) (bool, error) {
 	return false, nil
 }

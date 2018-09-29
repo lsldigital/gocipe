@@ -55,8 +55,9 @@ message LookupRequest {
 
 // LookupResult represents one (of many) results for an entity lookup request
 message LookupResult {
-    string ID    = 1;
-    string Label = 2;
+    string ID     = 1;
+    string Label  = 2;
+    string Status = 3;
 }
 
 // LookupResponse represents a series of results to a lookup request

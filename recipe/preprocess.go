@@ -8,12 +8,32 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
+const (
+	// StatusDraft "D" for status Draft
+	StatusDraft = "draft"
+	// StatusSaved "S" for status Saved
+	StatusSaved = "saved"
+	// StatusUnpublished "U" for status Unpublished
+	StatusUnpublished = "unpublished"
+	// StatusPublished "P" for status Published
+	StatusPublished = "published"
+)
+
 // Preprocess does some preprocessing (checking, etc)
 func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 	var (
 		err error
 	)
 	fieldLabelWhiteList := []string{"name", "title", "description", "summary", "banner_type"}
+
+	// Check reserved fieldname
+	checkReservedField := func(fieldname string) error {
+		switch fieldname {
+		case "status", "id", "user_id":
+			return fmt.Errorf("%s is a reserved fieldname", fieldname)
+		}
+		return nil
+	}
 
 	entities := make(map[string]util.Entity)
 	for i, entity := range recipe.Entities {
@@ -28,9 +48,8 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 				field.Schema.Field = strings.ToLower(field.Property.Name)
 			}
 
-			switch field.Schema.Field {
-			case "status", "id":
-				return nil, fmt.Errorf("%s is a reserved fieldname", field.Schema.Field)
+			if err := checkReservedField(field.Schema.Field); err != nil {
+				return nil, err
 			}
 			entity.Fields[i] = field
 		}
@@ -38,20 +57,34 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 		entity.Fields = append(entity.Fields, util.Field{
 			Label:    "Status",
 			Property: util.FieldProperty{Name: "Status", Type: "string"},
-			Schema:   util.FieldSchema{Field: "status", Type: "CHAR(1)", Default: "'D'"},
+			Schema:   util.FieldSchema{Field: "status", Type: "VARCHAR(11)", Default: "'" + StatusDraft + "'"},
 			EditWidget: util.EditWidgetOpts{
 				Type: util.WidgetTypeStatus,
 				Options: []util.EditWidgetOption{
-					util.EditWidgetOption{Text: "Draft", Value: "D"},
-					util.EditWidgetOption{Text: "Saved", Value: "S"},
-					util.EditWidgetOption{Text: "Published", Value: "P"},
-					util.EditWidgetOption{Text: "Unpublished", Value: "U"},
+					util.EditWidgetOption{Text: "Draft", Value: StatusDraft},
+					util.EditWidgetOption{Text: "Saved", Value: StatusSaved},
+					util.EditWidgetOption{Text: "Published", Value: StatusPublished},
+					util.EditWidgetOption{Text: "Unpublished", Value: StatusUnpublished},
 				},
 			},
 			ListWidget: util.ListWidgetOpts{
 				Type: util.WidgetTypeSelect,
 			},
 		})
+
+		if recipe.Admin.Auth.Generate {
+			entity.Fields = append(entity.Fields, util.Field{
+				Label:    "UserID",
+				Property: util.FieldProperty{Name: "UserID", Type: "string"},
+				Schema:   util.FieldSchema{Field: "user_id", Type: "CHAR(36)"},
+				EditWidget: util.EditWidgetOpts{
+					Hide: true,
+				},
+				ListWidget: util.ListWidgetOpts{
+					Hide: true,
+				},
+			})
+		}
 
 		if entity.Slug != "" {
 			var slugValid bool
@@ -202,6 +235,27 @@ func Preprocess(recipe *util.Recipe) (map[string]util.Entity, error) {
 			}
 			// }
 		}
+
+		for _, ref := range entity.References {
+			// IDField
+			if ref.IDField.Schema.Field == "" {
+				ref.IDField.Schema.Field = strings.ToLower(ref.IDField.Property.Name)
+			}
+
+			if err := checkReservedField(ref.TypeField.Schema.Field); err != nil {
+				return nil, err
+			}
+
+			// TypeField
+			if ref.TypeField.Schema.Field == "" {
+				ref.TypeField.Schema.Field = strings.ToLower(ref.TypeField.Property.Name)
+			}
+
+			if err := checkReservedField(ref.TypeField.Schema.Field); err != nil {
+				return nil, err
+			}
+		}
+
 		entities[entity.Name] = entity
 	}
 

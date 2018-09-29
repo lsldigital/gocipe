@@ -3,6 +3,19 @@ package admin
 import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	
+	{{ if .GenerateAuth }}"{{.ImportPath}}/auth"{{ end }}
+)
+
+const (
+	// StatusDraft says status is 'draft'
+	StatusDraft = "draft"
+	// StatusSaved says status is 'saved'
+	StatusSaved = "saved"
+	// StatusUnpublished says status is 'unpublished'
+	StatusUnpublished = "unpublished"
+	// StatusPublished says status is 'published'
+	StatusPublished = "published"
 )
 
 var (
@@ -14,57 +27,21 @@ var (
 	ErrorInvalidUploadField = errors.New("invalid upload field") 
 	// ErrorInvalidStatus indicates an invalid status has been submitted 
 	ErrorInvalidStatus      = errors.New("invalid status")
+
+	{{ if .GenerateAuth }}_guardian auth.Guardian{{ end }}
 )
 
-// NewBoolFilter returns a new filter for boolean types
-func NewBoolFilter(filter *Filter) (*models.Filter, error) {
-	value, err := strconv.ParseBool(filter.Value); 
-	
-	if err != nil {
-		return nil, err
+{{ if .GenerateAuth }}
+// SetGuardian sets a custom guardian for admin service
+// if guardian is nil, a dummyGuardian is used
+func SetGuardian(guardian auth.Guardian) {
+	if guardian == nil {
+		_guardian = auth.DummyGuard
+	} else {
+		_guardian = guardian
 	}
-
-	return &models.Filter{Field: filter.Field, Operation: "=", Value: value}, nil
 }
-
-// NewStringFilter returns a new filter for text values
-func NewStringFilter(filter *Filter) (*models.Filter, error) {
-	switch filter.Operation {
-	case "=":
-		return &models.Filter{Field: filter.Field, Operation: "=", Value: filter.Value}, nil
-	case "~":
-		return &models.Filter{Field: filter.Field, Operation: "LIKE", Value: filter.Value}, nil
-	}
-
-	return nil, ErrorInvalidOperation
-}
-
-// NewDateFilter returns a new filter to handle dates
-func NewDateFilter(filter *Filter) (*models.Filter, error) {
-	var (
-		value time.Time
-		err   error
-	)
-
-	if value, err = time.Parse(time.RFC3339, filter.Value); err != nil {
-		return nil, err
-	}
-
-	switch filter.Operation {
-	case "=":
-		return &models.Filter{Field: filter.Field, Operation: "=", Value: value}, nil
-	case ">":
-		return &models.Filter{Field: filter.Field, Operation: ">", Value: value}, nil
-	case ">=":
-		return &models.Filter{Field: filter.Field, Operation: ">=", Value: value}, nil
-	case "<":
-		return &models.Filter{Field: filter.Field, Operation: "<", Value: value}, nil
-	case "<=":
-		return &models.Filter{Field: filter.Field, Operation: "<=", Value: value}, nil
-	}
-
-	return &models.Filter{Field: filter.Field, Operation: "LIKE", Value: value}, nil
-}
+{{ end }}
 
 // Service represents Admin service implementation
 type Service struct {}
@@ -73,6 +50,7 @@ type Service struct {}
 /**
  * [BEGIN] {{.Name}}
  */
+
 {{if .Admin.Create -}}
 // Create{{.Name}} allows creation of entity of type {{.Name}}
 func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {
@@ -96,11 +74,22 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 		res.{{.Name}}.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
 	}
 
-	res.{{.Name}}.Status = "D"
+	{{ if .Admin.Auth.Generate }}
+	passport, err := _guardian.GetPassport(req.GetKey())
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	if hasPerm := passport.HasPermission(res.{{.Name}}, PermCreate{{.Name}}); !hasPerm {
+		return &res, errors.WithStack(fmt.Errorf("Permission denied")) 
+	}
+	{{ end }}
+
+	res.{{.Name}}.Status = StatusDraft
 
 	tx, err = models.StartTransaction(ctx)
 	{{if .Admin.Hooks.PreCreate}}
-	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, err)
+	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, {{if .Admin.Auth.Generate}}passport, {{end}}err)
 	if stop {
 		return &res, nil
 	}
@@ -263,11 +252,30 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 		return &res, ErrorRequestEmpty
 	}
 
+	{{ if .Admin.Auth.Generate }}
+	passport, err := _guardian.GetPassport(req.GetKey())
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	var permission string
+	isOwned := req.{{.Name}}.UserID == passport.GetID()
+	if isOwned {
+		permission = PermEdit{{.Name}}
+	} else {
+		permission = PermEdit{{.Name}}Any
+	}
+
+	if hasPerm := passport.HasPermission(res.{{.Name}}, permission); !hasPerm {
+		return &res, errors.WithStack(fmt.Errorf("Permission denied")) 
+	}
+	{{ end }}
+
 	// existing records in DB
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)
 	if err != nil {
 		{{if .Admin.Hooks.PreUpdate -}}
-		stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
+		stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, {{if .Admin.Auth.Generate}}passport, {{end}}err)
 		if stop {
 			return &res, nil
 		}
@@ -276,23 +284,22 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	switch req.{{.Name}}.Status {
-		case "D", "S", "P", "U":
+		case StatusDraft, StatusSaved, StatusUnpublished, StatusPublished:
 			//all good
 		default:
 			return &res, ErrorInvalidStatus
 	}
 
 	res.{{.Name}} = req.{{.Name}}
-	{{range $fileField := index $.EntitiesFileFields .Name}}
-	res.{{.Entity}}.{{.Field}} = existing.{{.Field}}
-	{{end}}
-	{{if .Slug}}
+	{{ range $fileField := index $.EntitiesFileFields .Name}}
+	res.{{.Entity}}.{{.Field}} = existing.{{.Field}}{{end }}
+	{{ if .Slug}}
 	res.{{.Name}}.Slug = existing.Slug
-	{{end}}
+	{{ end }}
 	tx, err = models.StartTransaction(ctx)
 
 	{{if .Admin.Hooks.PreUpdate -}}
-	stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, err)
+	stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, {{if .Admin.Auth.Generate}}passport, {{end}}err)
 	if stop {
 		return &res, nil
 	}
@@ -360,11 +367,17 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	if stop {
 		return &res, nil
 	}
-	{{end}}
+	{{- end}}
+	
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
 	err = models.{{.Name}}Repo.Delete(ctx, existing, tx, true)
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+
 	{{if .Admin.Hooks.PostDelete}}
 	stop, err = s.{{lower .Name}}PostDelete(ctx, req, &res, *existing, err)
 	if stop {
@@ -456,24 +469,24 @@ func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) 
 		return &res, err
 	}
     
-	rows, err = tx.Query(`SELECT id, t."{{index $.EntitiesLabelField .Name}}" FROM {{.Table}} t WHERE t."{{index $.EntitiesLabelField .Name}}" LIKE $1`, req.Term+"%")
+	rows, err = tx.Query(`SELECT id, t."{{index $.EntitiesLabelField .Name}}", t."status" FROM {{.Table}} t WHERE t."{{index $.EntitiesLabelField .Name}}" LIKE $1`, req.Term+"%")
 	if err != nil {
 		return &res, err
 	}
     
 	defer rows.Close()
 	for rows.Next() {
-		var id, label string
+		var id, label, status string
 		if err = util.CheckContext(ctx); err != nil {
 			return &res, err
 		}
 
-		err = rows.Scan(&id, &label)
+		err = rows.Scan(&id, &label, &status)
 		if err != nil {
-			return &res, err
+			return &res, errors.WithStack(err)
 		}
     
-		res.Result = append(res.Result, &LookupResult{ID: id, Label: label})
+		res.Result = append(res.Result, &LookupResult{ID: id, Label: label, Status: status})
 	}
 
 	return &res, err

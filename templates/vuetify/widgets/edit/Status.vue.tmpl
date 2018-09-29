@@ -22,7 +22,7 @@ export default {
       stages: {
         labels: ["Unpublished", "Draft", "Saved", "Published"],
         icon: ["visibility_off", "rowing", "bookmark", "check_circle"],
-        colors: ["error", "warning", "primary", "success"]
+        colors: ["error", "warning", "info", "success"]
       }
     };
   },
@@ -48,24 +48,24 @@ export default {
     textTranslation(val) {
       switch (val) {
         case 1:
-          return "D";
+          return "draft";
         case 2:
-          return "S";
+          return "saved";
         case 3:
-          return "P";
+          return "published";
         case 0:
-          return "U";
+          return "unpublished";
       }
     },
     valueTranslation(val) {
       switch (val) {
-        case "D":
+        case "draft":
           return 1;
-        case "S":
+        case "saved":
           return 2;
-        case "P":
+        case "published":
           return 3;
-        case "U":
+        case "unpublished":
           return 0;
       }
     }

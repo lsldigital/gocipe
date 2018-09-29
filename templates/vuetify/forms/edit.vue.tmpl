@@ -2,16 +2,16 @@
     <div>
         <div class="listing--container">
             <!-- Normal Toolbar -->
-            <v-toolbar class="transparent listing-toolbar blue-grey darken-4 px-3" dark flat ml-0 v-if="!nested">
+            <v-toolbar class="transparent listing-toolbar blue-grey darken-3 px-3" dark flat ml-0 v-if="!nested">
                 <v-btn icon :to="{name: '{{- plural (lower .Entity.Name) -}}_list'}">
-                    <v-icon large>arrow_back</v-icon>
+                    <v-icon>arrow_back</v-icon>
                 </v-btn>
 
                 <v-toolbar-title>Edit {{.Entity.Name}} </v-toolbar-title>
 
                 <v-spacer></v-spacer>
                 
-                <v-btn color="light-blue"  @click="update">
+                <v-btn color="primary"  @click="update">
                     Save
                     <v-icon right>save</v-icon>
                 </v-btn>
@@ -43,7 +43,7 @@
                             <div class="gocipe-field-container">
                                 <component  :is="'EditWidget{{ucfirst .EditWidget.Type }}'"
                                             :label="'{{ .Label }}'"
-                                            :hint="'widget: {{ .EditWidget.Description }}'" 
+                                            :hint="'{{ .EditWidget.Description }}'" 
                                             :value="this.entity.get{{ucfirst .Property.Name}}()" 
                                             @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" 
                                             
@@ -99,6 +99,39 @@
                                     {{- /* SELECTREL */ -}}
                                 ></component>
                         {{- end }}
+                        </template>
+                        {{- end }}
+                    {{- end }}
+
+                    {{- range .Entity.References -}}
+                        {{- if not .TypeField.EditWidget.Hide }}
+                        <template v-if="componentLoaded">
+                            <div class="gocipe-field-container">
+                                <component  :is="'EditWidgetSelect'"
+                                    :label="'{{ .TypeField.Label }}'"
+                                    :hint="'{{ .TypeField.EditWidget.Description }}'" 
+                                    :value="this.entity.get{{ucfirst .TypeField.Property.Name}}()" 
+                                    @gocipe="(e) => this.change{{ucfirst .TypeField.Property.Name}}(e)" 
+                                    :options='{{json .TypeField.EditWidget.Options }}'
+                                    :multiple="false"
+                                    {{- /* SELECTBOX */ -}}
+                                ></component>
+                            </div>
+                        </template>
+                        {{- end }}
+                        {{- if not .IDField.EditWidget.Hide }}
+                        <template v-if="componentLoaded">
+                            <div class="gocipe-field-container">
+                                <component  :is="'EditWidgetSelectRel'"
+                                    :label="'{{ .IDField.Label }}'"
+                                    :hint="'{{ .IDField.EditWidget.Description }}'" 
+                                    :value="this.entity.get{{ucfirst .IDField.Property.Name}}()" 
+                                    :rpc="lookup{{ucfirst .TypeField.Property.Name}}RPC"
+                                    @gocipe="(e) => this.entity.set{{ucfirst .IDField.Property.Name}}(e)"
+                                    :multiple="false"
+                                    {{- /* SELECTREL */ -}}
+                                ></component>
+                            </div>
                         </template>
                         {{- end }}
                     {{- end }}
@@ -171,8 +204,9 @@ export default {
       loading: false,
       id: null,
       componentLoaded: false,
-      
-
+      {{ range .Entity.References -}}
+      lookup{{ucfirst .TypeField.Property.Name}}RPC: null,
+      {{- end }}
     };
   },
   {{/*
@@ -209,7 +243,13 @@ export default {
             );
         },
         {{- end -}}
-        {{- end -}}
+        {{- end }}
+        {{ range .Entity.References -}}
+        change{{ucfirst .TypeField.Property.Name}}: function(e){
+            this.entity.setEntitytype(e);
+            this.lookup{{ucfirst .TypeField.Property.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Property.Name}}();
+        },
+        {{- end }}
         log: function(e) {
             console.log(e)
         },
@@ -233,6 +273,10 @@ export default {
                 this.loading = false;
                 this.entity = resp.get{{ucfirst .Entity.Name}}();
                 this.componentLoaded = true;
+
+                {{ range .Entity.References -}}
+                this.lookup{{ucfirst .TypeField.Property.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Property.Name}}();
+                {{- end }}
             });
         },
         update: function() {
@@ -242,7 +286,7 @@ export default {
             // this.loading = true;
 
             this.snackbarShow('{{ucfirst .Entity.Name}} Saved');
-            this.debug();
+            /* this.debug(); */
 
             cli.update{{.Entity.Name}}(req, (err, resp) => {
                 if (err) {
@@ -266,9 +310,13 @@ export default {
             this.$emit("closeform", true);
         },
         debug: function() {
-            {{ range .Entity.Fields }}
+            {{- range .Entity.Fields }}
             console.log("{{.Property.Name}}", this.entity.get{{ ucfirst .Property.Name }}());
-            {{end}}
+            {{- end}}
+            {{- range .Entity.References }}
+            console.log("{{.IDField.Property.Name}}", this.entity.get{{ ucfirst .IDField.Property.Name }}());
+            console.log("{{.TypeField.Property.Name}}", this.entity.get{{ ucfirst .TypeField.Property.Name }}());
+            {{- end}}
         },
         snackbarShow: function(text, color) {
             this.snackbar.show = true;
@@ -306,6 +354,6 @@ export default {
 .data-table-responsive-wrapper {
   max-width: 100%;
   overflow-y: auto;
-  padding: 5px;
+  /* padding: 5px; */
 }
 </style>

@@ -256,6 +256,15 @@ type AdminOpts struct {
 
 	// Hooks describes hooks options for Admin generation
 	Hooks ResourceHooks `json:"hooks"`
+
+	// Auth describes auth options for Auth code generation
+	Auth AuthOpts `json:"auth"`
+}
+
+// AuthOpts represents options for auth code generation
+type AuthOpts struct {
+	// Generate indicates whether or not to generate the Auth code
+	Generate bool `json:"generate"`
 }
 
 // ResourceHooks represents which rest hooks should be generated
@@ -339,8 +348,11 @@ type Entity struct {
 	// LabelField indicates which field is used as label for the entity
 	LabelField string `json:"label_field"`
 
-	// Relationships represent relationship information between this entity and others
+	// Relationships represents relationship information between this entity and others
 	Relationships []Relationship `json:"relationships"`
+
+	// References represents reference information for other entities
+	References []Reference `json:"references"`
 
 	// Schema describes options for Schema generation - overrides recipe level Schema config
 	Schema *SchemaOpts `json:"schema"`
@@ -425,6 +437,15 @@ type Relationship struct {
 
 	// Eager indicates whether or not to eager load this relationship
 	Eager bool `json:"eager"`
+}
+
+// Reference represents a reference to another entity
+type Reference struct {
+	// IDField represents field information for referenced entity ID field
+	IDField Field `json:"id_field"`
+
+	// TypeField represents field information for referenced entity Type field
+	TypeField Field `json:"type_field"`
 }
 
 // EditWidgetOpts represents a UI widget for edit forms
