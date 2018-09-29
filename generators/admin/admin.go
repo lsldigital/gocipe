@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/fluxynet/gocipe/util"
 )
@@ -131,12 +132,28 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 		work.Done <- util.GeneratedCode{Generator: "GenerateAdminProto", Error: err}
 	}
 
-	// generate admin.proto
+	// generate admin_permissions.go
+	genUTF8List := func() []string {
+		var strList []string
+		a := 'A'
+		for i := 0; i < 500; i++ {
+			r := a + rune(i)
+			if unicode.IsPrint(r) &&
+				!unicode.IsSymbol(r) &&
+				!unicode.IsSpace(r) &&
+				!unicode.IsControl(r) &&
+				r != '\\' {
+				strList = append(strList, string(r))
+			}
+		}
+		return strList
+	}
 	permissions, err := util.ExecuteTemplate("admin/admin_permissions.go.tmpl", struct {
 		ImportPath      string
 		Entities        map[string]util.Entity
 		EntitiesActions []string
-	}{util.AppImportPath, entities, entitiesActions})
+		UTF8List        []string
+	}{util.AppImportPath, entities, entitiesActions, genUTF8List()})
 
 	work.Waitgroup.Add(1)
 	if err == nil {
