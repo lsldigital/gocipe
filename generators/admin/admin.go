@@ -134,10 +134,12 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 
 	// generate admin_permissions.go
 	genUTF8List := func() []string {
-		var strList []string
-		a := 'A'
+		var (
+			strList []string
+			r       rune
+		)
 		for i := 0; i < 500; i++ {
-			r := a + rune(i)
+			r = 'A' + rune(i)
 			if unicode.IsPrint(r) &&
 				!unicode.IsSymbol(r) &&
 				!unicode.IsSpace(r) &&
