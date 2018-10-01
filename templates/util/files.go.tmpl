@@ -169,14 +169,14 @@ func (s httpImageDirHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	noPrefix := strings.TrimSuffix(p, suffix)
-	p = path.Join(s.prefix, noPrefix)
+	noSuffix := strings.TrimSuffix(p, suffix)
+	p = path.Join(s.prefix, noSuffix)
 
 	go func() {
 		var buf []byte
 
 		dirPath := path.Join(s.opts.Dir, s.opts.Destination)
-		fileName := strings.TrimPrefix(noPrefix, s.opts.Destination)
+		fileName := strings.TrimPrefix(noSuffix, "/"+s.opts.Destination)
 		fileDiskPath := filepath.Join(dirPath, fileName)
 
 		buf, err := ioutil.ReadFile(fileDiskPath)
