@@ -101,6 +101,10 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 
 	err = models.{{.Name}}Repo.Save(ctx, res.{{.Name}}, tx, true)
 
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
 	{{if .Admin.Hooks.PostCreate -}}
 	stop, err = s.{{lower .Name}}PostCreate(ctx, req, &res, err)
 	if stop {
