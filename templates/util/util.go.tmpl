@@ -4,6 +4,11 @@ import (
 	"context"
 )
 
+const (
+	// NoLimit is used to indicate no restriction (on dimensions or size)
+	NoLimit = -1
+)
+
 // CheckContext returns an error if context is done
 func CheckContext(ctx context.Context) error {
 	select {

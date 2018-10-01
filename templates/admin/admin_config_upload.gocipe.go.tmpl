@@ -7,7 +7,6 @@ var {{.Entity}}{{.Field}}UploadOpts = files.UploadOptions{
 	Destination:    "{{lower .Entity}}/{{lower .Field}}",
 	MediaPrefixURL: "/media/",
 	FileType:       files.TypeImage,
-	MinSize:        files.NoLimit,
 	MaxSize:        files.NoLimit,
 	ImgDimensions:  &files.ImageDimensions{
 		ThumbWidth:     400,
