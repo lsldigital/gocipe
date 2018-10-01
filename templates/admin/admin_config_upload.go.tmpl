@@ -2,7 +2,7 @@ package admin
 
 // UploadPaths is an index of upload options
 var UploadPaths = map[string]*files.UploadOptions{
-	{{range .FileFields}}
+	{{range .FileFields -}}
 	"{{lower .Entity}}/{{lower .Field}}":	&{{.Entity}}{{.Field}}UploadOpts,
 	{{end}}
 }
@@ -14,14 +14,15 @@ var {{.Entity}}{{.Field}}UploadOpts = files.UploadOptions{
 	Destination:    "{{lower .Entity}}/{{lower .Field}}",
 	MediaPrefixURL: "/media/",
 	FileType:       files.TypeImage,
-	MaxSize:        files.NoLimit,
-	ImgDimensions:  &files.ImageDimensions{
+	MaxSize:        util.NoLimit,
+	ConvertTo:      imagist.TypeImageJPG,
+	ImgDimensions:  &imagist.ImageDimensions{
 		ThumbWidth:     400,
 		ThumbHeight:    200,
-		MinWidth:       files.NoLimit,
-		MinHeight:      files.NoLimit,
-		MaxWidth:       files.NoLimit,
-		MaxHeight:      files.NoLimit,
+		MinWidth:       util.NoLimit,
+		MinHeight:      util.NoLimit,
+		MaxWidth:       util.NoLimit,
+		MaxHeight:      util.NoLimit,
 		GenerateSocial: true,
 	},
 }

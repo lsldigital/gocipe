@@ -154,10 +154,11 @@ func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimension
 	}
 
 	job := Job{
-		FileDiskPath: fileDiskPath,
-		Config:       &config,
-		Dimensions:   dimensions,
-		ConvertTo:    convertTo,
+		FileDiskPath:   fileDiskPath,
+		Config:         &config,
+		Dimensions:     dimensions,
+		ConvertTo:      convertTo,
+		GenerateSocial: dimensions.GenerateSocial,
 	}
 	i.jobs <- job
 
