@@ -192,7 +192,7 @@ func (i Imagist) execute(j Job) {
 	imageCropAndResize(j.FileDiskPath, newWidth, newHeight, SuffixImg, j.ConvertTo)
 
 	// Create thumbnails
-	imageCropAndResize(j.FileDiskPath, j.Dimensions.MinWidth, j.Dimensions.MinHeight, SuffixThumb, j.ConvertTo)
+	imageCropAndResize(j.FileDiskPath, j.Dimensions.ThumbWidth, j.Dimensions.ThumbHeight, SuffixThumb, j.ConvertTo)
 
 	// Create og aka full view / social
 	if j.GenerateSocial {
