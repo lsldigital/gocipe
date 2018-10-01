@@ -1,0 +1,242 @@
+package imagist
+
+import (
+	"bytes"
+	"fmt"
+	"image"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
+	"log"
+	"os"
+
+	"github.com/disintegration/imaging"
+	"github.com/muesli/smartcrop"
+	"github.com/muesli/smartcrop/nfnt"
+	"github.com/pkg/errors"
+	filetype "gopkg.in/h2non/filetype.v1"
+	"{{.AppImportPath}}/util"
+)
+
+const (
+	//TypeImageJPG denotes image of file type jpg
+	TypeImageJPG = "jpg"
+	//TypeImageJPEG denotes image of file type jpeg
+	TypeImageJPEG = "jpeg"
+	//TypeImagePNG denotes image of file type png
+	TypeImagePNG = "png"
+
+	//SuffixImg is the suffix used for regular images
+	SuffixImg = ""
+
+	//SuffixThumb is the suffix added to generated file for type Thumb
+	SuffixThumb = ":thumb"
+
+	//SuffixSocial is the suffix added to generated file for type Social
+	SuffixSocial = ":social"
+)
+
+var (
+	//DefaultDimensions represent default dimensions to use, they have no limit (preserve original)
+	DefaultDimensions = ImageDimensions{
+		MinWidth:  util.NoLimit,
+		MinHeight: util.NoLimit,
+		MaxWidth:  util.NoLimit,
+		MaxHeight: util.NoLimit,
+	}
+)
+
+//Imagist is an image processing mechanism
+type Imagist struct {
+	jobs chan Job
+	done chan string
+}
+
+//Job represents an image processing task
+type Job struct {
+	FileDiskPath   string
+	Config         *image.Config
+	Dimensions     *ImageDimensions
+	ConvertTo      string
+	GenerateSocial bool
+}
+
+//ImageDimensions holds dimensions options
+type ImageDimensions struct {
+	ThumbWidth     int
+	ThumbHeight    int
+	MinWidth       int
+	MinHeight      int
+	MaxWidth       int
+	MaxHeight      int
+	GenerateSocial bool
+}
+
+type subImager interface {
+	SubImage(r image.Rectangle) image.Image
+}
+
+func init() {
+	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
+	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
+	image.RegisterFormat("gif", "gif", gif.Decode, gif.DecodeConfig)
+}
+
+//New returns an instance of imagist, with the internal go routine awaiting jobs over the channel
+func New(chansize ...int) *Imagist {
+	var s int
+
+	if len(chansize) == 0 {
+		s = 10
+	} else {
+		s = chansize[0]
+	}
+
+	i := Imagist{
+		jobs: make(chan Job, s),
+		done: make(chan string, s),
+	}
+
+	go i.listen()
+
+	return &i
+}
+
+//listen starts listening for jobs on the internal channel
+func (i Imagist) listen() {
+	jobs := make(map[string]interface{})
+
+	for {
+		select {
+		case done := <-i.done:
+			delete(jobs, done)
+		case job := <-i.jobs:
+			if _, exists := jobs[job.FileDiskPath]; !exists {
+				jobs[job.FileDiskPath] = nil
+				go i.execute(job)
+			}
+		}
+	}
+}
+
+//Add creates a job entry for processing
+func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimensions, convertTo string) error {
+	if !filetype.IsImage(buf) {
+		return fmt.Errorf("image type invalid")
+	}
+
+	if dimensions == nil {
+		dimensions = &DefaultDimensions
+	}
+
+	config, imgType, err := image.DecodeConfig(bytes.NewReader(buf))
+	if err != nil {
+		log.Printf("error decoding image: %v", err)
+		return err
+	}
+
+	switch imgType {
+	case TypeImageJPG, TypeImageJPEG, TypeImagePNG:
+		//all ok
+	default:
+		return fmt.Errorf("image type %s invalid", imgType)
+	}
+
+	// Check min width and height
+	if dimensions.MinWidth != util.NoLimit && config.Width < dimensions.MinWidth {
+		log.Printf("image %v lower than min width: %v\n", fileDiskPath, dimensions.MinWidth)
+		return fmt.Errorf("image width less than %dpx", dimensions.MinWidth)
+	}
+
+	if dimensions.MinHeight != util.NoLimit && config.Height < dimensions.MinHeight {
+		log.Printf("image %v lower than min height: %v\n", fileDiskPath, dimensions.MinHeight)
+		return fmt.Errorf("image height less than %dpx", dimensions.MinHeight)
+	}
+
+	job := Job{
+		FileDiskPath: fileDiskPath,
+		Config:       &config,
+		Dimensions:   dimensions,
+		ConvertTo:    convertTo,
+	}
+	i.jobs <- job
+
+	return nil
+}
+
+func (i Imagist) execute(j Job) {
+	// Check max width and height
+	exceedMaxWidth := j.Dimensions.MaxWidth != util.NoLimit && j.Config.Width >= j.Dimensions.MaxWidth
+	exceedMaxHeight := j.Dimensions.MaxHeight != util.NoLimit && j.Config.Height >= j.Dimensions.MaxHeight
+
+	newWidth := j.Dimensions.MaxWidth
+	newHeight := j.Dimensions.MaxHeight
+
+	// Adjust new width and height accordingly
+	if exceedMaxWidth && exceedMaxHeight {
+		// resize both by width and height
+		// image will be smart cropped :)
+	} else if exceedMaxWidth {
+		// resize proportional to width only
+		newHeight = 0
+	} else if exceedMaxHeight {
+		// resize proportional to height only
+		newWidth = 0
+	} else {
+		// image is never upscaled
+		newWidth = j.Config.Width
+		newHeight = j.Config.Height
+	}
+
+	imageCropAndResize(j.FileDiskPath, newWidth, newHeight, SuffixImg, j.ConvertTo)
+
+	// Create thumbnails
+	imageCropAndResize(j.FileDiskPath, j.Dimensions.MinWidth, j.Dimensions.MinHeight, SuffixThumb, j.ConvertTo)
+
+	// Create og aka full view / social
+	if j.GenerateSocial {
+		imageCropAndResize(j.FileDiskPath, newWidth, newHeight, SuffixSocial, j.ConvertTo)
+	}
+	i.done <- j.FileDiskPath
+}
+
+func imageCropAndResize(imgDiskPath string, newWidth, newHeight int, fileSuffix, convertTo string) error {
+	existingImgFile, err := os.Open(imgDiskPath)
+	if err != nil {
+		return errors.Wrap(err, "image open error")
+	}
+	defer existingImgFile.Close()
+
+	img, _, err := image.Decode(existingImgFile)
+	if err != nil {
+		return errors.Wrap(err, "image decode error")
+	}
+
+	if newWidth != 0 && newHeight != 0 {
+		analyzer := smartcrop.NewAnalyzer(nfnt.NewDefaultResizer())
+		topCrop, err := analyzer.FindBestCrop(img, newWidth, newHeight)
+		if err != nil {
+			return errors.Wrap(err, "image failed to find best crop")
+		}
+
+		img = img.(subImager).SubImage(topCrop)
+	}
+
+	dst := imaging.Resize(img, newWidth, newHeight, imaging.Lanczos)
+	imgDiskPath = imgDiskPath + fileSuffix
+
+	outputFile, err := os.Create(imgDiskPath)
+	if err != nil {
+		return errors.Wrap(err, "image create error")
+	}
+	defer outputFile.Close()
+
+	switch convertTo {
+	case TypeImageJPEG, TypeImageJPG:
+		return jpeg.Encode(outputFile, dst, nil)
+	case TypeImagePNG:
+		return png.Encode(outputFile, dst)
+	}
+
+	return nil
+}
