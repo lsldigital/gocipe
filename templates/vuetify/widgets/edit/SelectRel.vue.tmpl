@@ -91,6 +91,11 @@ export default {
       });
     },
     remove(item) {
+      if (!this.multiple) {
+        this.selection = null;
+        return;
+      }
+      
       const index = this.selection.indexOf(item.value);
       if (index >= 0) this.selection.splice(index, 1);
     }
