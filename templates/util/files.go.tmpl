@@ -11,8 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"{{.AppImportPath}}/util"
-	"{{.AppImportPath}}/util/imagist"
+	"lsl.digital/redac-systems/businessmag/util"
+	"lsl.digital/redac-systems/businessmag/util/imagist"
+	"lsl.digital/redac-systems/businessmag/util/web"
 
 	"github.com/gorilla/mux"
 	"github.com/gosimple/slug"
@@ -175,16 +176,16 @@ func (s httpImageDirHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		var buf []byte
 
 		dirPath := path.Join(s.opts.Dir, s.opts.Destination)
-		fileName := strings.TrimPrefix(noPrefix, "/"+s.opts.Destination)
+		fileName := strings.TrimPrefix(noPrefix, s.opts.Destination)
 		fileDiskPath := filepath.Join(dirPath, fileName)
-		
+
 		buf, err := ioutil.ReadFile(fileDiskPath)
 		if err != nil {
 			log.Printf("error opening %v: %v\n", fileDiskPath, err)
 		}
 
 		_imagist.Add(buf, fileDiskPath, s.opts.ImgDimensions, s.opts.ConvertTo)
-		
+
 	}()
 	http.Redirect(w, r, p, http.StatusTemporaryRedirect)
 }
@@ -193,6 +194,6 @@ func (s httpImageDirHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func HTTPImageDirHandler(router *mux.Router, root http.FileSystem, prefix string, paths map[string]*UploadOptions) {
 	for path, opts := range paths {
 		h := web.FileServerWithNotFoundHandler(root, httpImageDirHandler{root: root, prefix: prefix, opts: opts})
-		router.PathPrefix(prefix+path).Handler(http.StripPrefix(prefix, h))
+		router.PathPrefix(prefix + "/" + path).Handler(http.StripPrefix(prefix, h))
 	}
 }
