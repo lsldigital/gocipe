@@ -25,6 +25,15 @@ const (
 	TypeImageJPEG = "jpeg"
 	//TypeImagePNG denotes image of file type png
 	TypeImagePNG = "png"
+
+	//SuffixImg is the suffix used for regular images
+	SuffixImg = ""
+
+	//SuffixThumb is the suffix added to generated file for type Thumb
+	SuffixThumb = ":thumb"
+
+	//SuffixSocial is the suffix added to generated file for type Social
+	SuffixSocial = ":social"
 )
 
 var (
@@ -111,7 +120,7 @@ func (i Imagist) listen() {
 }
 
 //Add creates a job entry for processing
-func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimensions) error {
+func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimensions, convertTo string) error {
 	if !filetype.IsImage(buf) {
 		return fmt.Errorf("image type invalid")
 	}
@@ -148,6 +157,7 @@ func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimension
 		FileDiskPath: fileDiskPath,
 		Config:       &config,
 		Dimensions:   dimensions,
+		ConvertTo:    convertTo,
 	}
 	i.jobs <- job
 
@@ -178,14 +188,14 @@ func (i Imagist) execute(j Job) {
 		newHeight = j.Config.Height
 	}
 
-	imageCropAndResize(j.FileDiskPath, newWidth, newHeight, "", j.ConvertTo)
+	imageCropAndResize(j.FileDiskPath, newWidth, newHeight, SuffixImg, j.ConvertTo)
 
 	// Create thumbnails
-	imageCropAndResize(j.FileDiskPath, j.Dimensions.MinWidth, j.Dimensions.MinHeight, "thumb", j.ConvertTo)
+	imageCropAndResize(j.FileDiskPath, j.Dimensions.MinWidth, j.Dimensions.MinHeight, SuffixThumb, j.ConvertTo)
 
 	// Create og aka full view / social
 	if j.GenerateSocial {
-		imageCropAndResize(j.FileDiskPath, newWidth, newHeight, "social", j.ConvertTo)
+		imageCropAndResize(j.FileDiskPath, newWidth, newHeight, SuffixSocial, j.ConvertTo)
 	}
 	i.done <- j.FileDiskPath
 }
@@ -213,15 +223,13 @@ func imageCropAndResize(imgDiskPath string, newWidth, newHeight int, fileSuffix,
 	}
 
 	dst := imaging.Resize(img, newWidth, newHeight, imaging.Lanczos)
-
-	if fileSuffix != "" {
-		imgDiskPath = fmt.Sprintf("%s:%s", imgDiskPath, fileSuffix)
-	}
+	imgDiskPath = imgDiskPath + fileSuffix
 
 	outputFile, err := os.Create(imgDiskPath)
 	if err != nil {
 		return errors.Wrap(err, "image create error")
 	}
+	defer outputFile.Close()
 
 	switch convertTo {
 	case TypeImageJPEG, TypeImageJPG:

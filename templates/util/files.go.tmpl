@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"{{.AppImportPath}}/util"
 	"{{.AppImportPath}}/util/imagist"
 
+	"github.com/gorilla/mux"
 	"github.com/gosimple/slug"
 )
 
@@ -57,7 +59,7 @@ func init() {
 // Upload validates and saves create file
 func Upload(fileName string, fileContent []byte, options *UploadOptions) (string, string, error) {
 	dirPath := path.Join(options.Dir, options.Destination)
-	fileName = slug.Make(buildFileName(fileName))
+	fileName = buildFileName(fileName)
 	filePath := path.Join(options.MediaPrefixURL, options.Destination, fileName)
 	fileDiskPath := filepath.Join(dirPath, fileName)
 
@@ -103,11 +105,13 @@ func Upload(fileName string, fileContent []byte, options *UploadOptions) (string
 
 	switch options.FileType {
 	case TypeImage:
-		_imagist.Add(buf, fileDiskPath, options.ImageDimensions)
+		err := _imagist.Add(buf, fileDiskPath, options.ImgDimensions, options.ConvertTo)
+		return fileDiskPath, filePath, err
 	case TypeVideo:
-		return fileDiskPath, filePath, fmt.Errorf("not yet implemented")
+		// TODO: Not yet implemented
 	default:
-		return fileDiskPath, filePath, fmt.Errorf("file type invalid")
+		// Invalid file type in config
+		// Do nothing
 	}
 
 	return fileDiskPath, filePath, nil
@@ -124,25 +128,28 @@ func Delete(fp string) error {
 func buildFileName(oldFilename string) string {
 	oldExt := filepath.Ext(oldFilename)
 	newFilename := strings.TrimSuffix(oldFilename, oldExt)
-	return newFilename + "_" + time.Now().Format("20060102150405") + oldExt
+	return slug.Make(newFilename) + "_" + time.Now().Format("20060102150405") + oldExt
 }
 
 func changeExt(fileDiskPath, filepath string, newExt string) (string, string, error) {
 	oldExt := path.Ext(fileDiskPath)
+	newExt = "." + newExt
 	newfileDiskPath := strings.TrimSuffix(fileDiskPath, oldExt) + newExt
 	newfilePath := strings.TrimSuffix(filepath, oldExt) + newExt
 
 	if err := os.Rename(fileDiskPath, newfileDiskPath); err != nil {
-		return fileDiskPath, filepath, fmt.Errorf("image ext change to jpg failed")
+		return fileDiskPath, filepath, fmt.Errorf("image ext change to %v failed", newExt)
 	}
 
 	return newfileDiskPath, newfilePath, nil
 }
 
-//httpImageDirHandler is an http.Handler that serves a directory.
+// httpImageDirHandler is an http.Handler that serves a directory.
 // If a generated file is missing, it yields a temporary redirect to the original file.
 type httpImageDirHandler struct {
-	root http.FileSystem
+	root   http.FileSystem
+	prefix string
+	opts   *UploadOptions
 }
 
 func (s httpImageDirHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -161,12 +168,31 @@ func (s httpImageDirHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//todo _imagist.Add
+	noPrefix := strings.TrimSuffix(p, suffix)
+	p = path.Join(s.prefix, noPrefix)
+
+	go func() {
+		var buf []byte
+
+		dirPath := path.Join(s.opts.Dir, s.opts.Destination)
+		fileName := strings.TrimPrefix(noPrefix, "/"+s.opts.Destination)
+		fileDiskPath := filepath.Join(dirPath, fileName)
+		
+		buf, err := ioutil.ReadFile(fileDiskPath)
+		if err != nil {
+			log.Printf("error opening %v: %v\n", fileDiskPath, err)
+		}
+
+		_imagist.Add(buf, fileDiskPath, s.opts.ImgDimensions, s.opts.ConvertTo)
+		
+	}()
 	http.Redirect(w, r, p, http.StatusTemporaryRedirect)
 }
 
 //HTTPImageDirHandler serves images from a directory with imagist fallback
-func HTTPImageDirHandler(root http.FileSystem) http.Handler {
-	h := &httpImageDirHandler{root}
-	return web.FileServerWithNotFoundHandler(root, h)
+func HTTPImageDirHandler(router *mux.Router, root http.FileSystem, prefix string, paths map[string]*UploadOptions) {
+	for path, opts := range paths {
+		h := web.FileServerWithNotFoundHandler(root, httpImageDirHandler{root: root, prefix: prefix, opts: opts})
+		router.PathPrefix(prefix+path).Handler(http.StripPrefix(prefix, h))
+	}
 }
