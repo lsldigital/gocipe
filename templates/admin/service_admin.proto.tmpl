@@ -1,0 +1,144 @@
+syntax = "proto3";
+
+package admin;
+
+import "models.proto";
+option go_package = "{{.AppImportPath}}/services/admin";
+
+// Filter represents a filter that can be applied for listing requests
+message Filter {
+    string Field     = 1;
+    string Operation = 2;
+    string Value     = 3;
+}
+
+// GetRequest represents a request to allow getting a single entity
+message GetRequest {
+    string Key = 1;
+    string ID = 2;
+}
+
+// ListRequest represents a request to allow listing of entities
+message ListRequest {
+    string Key = 1;
+    models.ListOpts ListOpts = 2;
+    repeated admin.Filter Filters = 3;
+}
+
+// DeleteRequest represents a request to allow deleting an entity
+message DeleteRequest {
+    string Key = 1;
+    string ID = 2;
+}
+// DeleteResponse represents result to a DeleteRequest
+message DeleteResponse {}
+
+// UploadRequest represents message to allow uploading of files
+message UploadRequest {
+    string Key      = 1;
+    string ID       = 2;
+    string Field    = 3;
+    string Filename = 4;
+    bytes  Content  = 5;
+}
+
+// UploadResponse represents result to an UploadRequest
+message UploadResponse {
+    string URI = 1;
+}
+
+// LookupRequest represents a request to lookup an entity by its label
+message LookupRequest {
+    string Key  = 1;
+    string Term = 2;
+}
+
+// LookupResult represents one (of many) results for an entity lookup request
+message LookupResult {
+    string ID     = 1;
+    string Label  = 2;
+    string Status = 3;
+}
+
+// LookupResponse represents a series of results to a lookup request
+message LookupResponse {
+    repeated LookupResult Result = 1;
+}
+
+service Admin {
+{{- range .Entities}}
+/**
+ * [BEGIN SERVICE] {{.Name}}
+ */
+    {{- if .Admin.Create}}
+    // Create{{.Name}} allows creation of entity of type {{.Name}}
+    rpc Create{{.Name}}(Create{{.Name}}Request) returns (Create{{.Name}}Response);
+    {{- end}}
+    {{if .Admin.Read}}
+    // Get{{.Name}} allows getting a single entity of type {{.Name}}
+    rpc Get{{.Name}}(GetRequest) returns (Get{{.Name}}Response);
+    {{- end}}
+    {{if .Admin.List}}
+    // List{{plural .Name}} allows listing all entity of type {{.Name}}
+    rpc List{{plural .Name}}(ListRequest) returns (List{{plural .Name}}Response);
+    {{- end}}
+    {{if .Admin.Update}}
+    // Update{{.Name}} allows updating one entity of type {{.Name}}
+    rpc Update{{.Name}}(Update{{.Name}}Request) returns (Update{{.Name}}Response);
+    {{- end}}
+    {{if .Admin.Delete}}
+    // Delete{{.Name}} allows deleting an entity of type {{.Name}}
+    rpc Delete{{.Name}}(DeleteRequest) returns (DeleteResponse);
+    {{- end}}
+    {{- if hasFileFields .}}
+    // Upload{{.Name}} allows uploading of files for entity of type {{.Name}}
+    rpc Upload{{.Name}}(UploadRequest) returns (UploadResponse);
+    {{end}}
+    rpc Lookup{{plural .Name}}(LookupRequest) returns (LookupResponse);
+/**
+ * [END SERVICES] {{.Name}}
+ */
+{{end}}
+}
+{{- range .Entities}}
+/**
+ * [BEGIN MESSAGES] {{.Name}}
+ */
+{{if .Admin.Create}}
+// Create{{.Name}}Request represents a request to allow creation of entity of type {{.Name}}
+message Create{{.Name}}Request {
+    string Key = 1;
+    models.{{.Name}} {{.Name}} = 2;
+}
+// Create{{.Name}}Response represents result to a Create{{.Name}}Request
+message Create{{.Name}}Response {
+    models.{{.Name}} {{.Name}} = 1;
+}
+{{- end}}
+{{if .Admin.Read}}
+// Get{{.Name}}Response represents result to a GetRequest
+message Get{{.Name}}Response {
+    models.{{.Name}} {{.Name}} = 1;
+}
+{{- end}}
+{{if .Admin.List}}
+// List{{plural .Name}}Response represents result to a ListRequest
+message List{{plural .Name}}Response {
+    repeated models.{{.Name}} {{plural .Name}} = 1;
+}
+{{- end}}
+{{if .Admin.Update}}
+// Update{{.Name}}Request represents a request to allow updating one entity of type {{.Name}}
+message Update{{.Name}}Request {
+    string Key = 1;
+    models.{{.Name}} {{.Name}} = 2;
+}
+// Update{{.Name}}Response represents result to an Update{{.Name}}Request
+message Update{{.Name}}Response {
+    models.{{.Name}} {{.Name}} = 1;
+}
+{{- end}}
+/**
+ * [END MESSAGES] {{.Name}}
+ */
+{{end}}

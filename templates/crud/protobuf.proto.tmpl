@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package models;
+option go_package = "{{.AppImportPath}}/models";
+
+{{range .Imports -}}
+{{.}}
+{{- end}}
+
+message ListOpts {
+	int64 Offset = 1;
+	int64 Limit = 2;
+	string Sort = 3;
+}
+
+{{ range .Entities -}}
+// {{.Name}} {{.Description}}
+message {{.Name}} { {{ range .Fields }}
+	{{.Type}} {{.Name}} = {{.Index}};
+{{- end}}
+}
+
+{{end}}

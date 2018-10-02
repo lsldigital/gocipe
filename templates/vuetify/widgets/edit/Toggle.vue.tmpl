@@ -1,0 +1,23 @@
+<template>
+  <div>
+    <div class="caption v-label v-label--active theme--light pt-3 pb-0">{{ "{{ $attrs.label }}" }}</div>
+
+    <v-checkbox v-bind="$attrs" :value="$attrs.value" @change="$emit('gocipe', result)" v-model="result"></v-checkbox>
+
+  </div>
+</template>
+
+
+<script>
+export default {
+  data() {
+    return {
+      result: ""
+    };
+  },
+  created() {
+    this.result = this.$attrs.value;
+  },
+  inheritAttrs: false
+};
+</script>

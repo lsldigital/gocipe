@@ -1,0 +1,21 @@
+package models
+
+import (
+	"context"
+	"database/sql"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	{{range .Imports}}{{.}}
+	{{end}}
+)
+{{.Structure}}
+{{.Get}}
+{{.List}}
+{{.DeleteSingle}}
+{{.DeleteMany}}
+{{.Save}}
+{{.Insert}}
+{{.Update}}
+{{.Merge}}
+{{range .LoadRelated}}{{.}}{{end}}
+{{range .SaveRelated}}{{.}}{{end}}

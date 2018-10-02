@@ -1,0 +1,21 @@
+{
+  "bootstrap": {
+    "generate": true,
+    "settings": [
+      {
+        "name": "Name 1",
+        "type": "My Type",
+        "description": "this is my description",
+        "env": false
+      },
+      {
+        "name": "Name 2",
+        "type": "Other type",
+        "description": "other description",
+        "from_env": true
+      }
+    ]
+  },
+  "http": { "generate": true, "prefix": "my prefix", "port": "9999" },
+  "schema": { "create": true, "drop": true, "aggregate": true }
+}

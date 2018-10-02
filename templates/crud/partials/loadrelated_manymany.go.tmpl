@@ -1,0 +1,69 @@
+
+// Load{{.Funcname}} is a helper function to load related {{.PropertyName}} entities
+func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, entities ...*{{.ThisEntity}}) error {
+	var (
+		err error
+		placeholder string
+		values  []interface{}
+		indices = make(map[{{.ThisType}}][]*{{.ThisEntity}})
+	)
+
+	log.WithFields(log.Fields{"entities": entities}).Debug("repo.{{.ThisEntity}}.Load entered")
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{.ThisEntity}}.Load context error")
+		return errors.WithStack(err)
+	} else if len(entities) == 0 {
+		return nil
+	}
+
+	c := 1
+	for _, entity := range entities {
+		placeholder += "$" + strconv.Itoa(c) + ","
+		indices[entity.ID] = append(indices[entity.ID], entity)
+		values = append(values, entity.ID)
+		c++
+	}
+	placeholder = strings.TrimRight(placeholder, ",")
+
+	rows, err := repo.db.QueryContext(ctx, `
+		SELECT j.{{.ThisID}}, {{.SQLFields}} FROM {{.ThatTable}} t 
+		INNER JOIN {{.JoinTable}} j ON t.id = j.{{.ThatID}}
+		WHERE j.{{.ThisID}} IN (`+placeholder+`)
+	`, values...)
+	if err != nil {
+		log.WithFields(log.Fields{"entities": entities, "query": `SELECT j.{{.ThisID}}, {{.SQLFields}} FROM {{.ThatTable}} t INNER JOIN {{.JoinTable}} j ON t.id = j.{{.ThatID}} WHERE j.{{.ThisID}} IN (`+placeholder+`)`, "error": err}).Error("repo.{{.ThisEntity}}.Load query error")
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{.ThisEntity}}.Load context error")
+		return errors.WithStack(err)
+	}
+
+	for rows.Next() {
+		var (
+			thisID {{.ThisType}}
+			entity {{.ThatEntity}}
+		)
+		{{range .Before}}{{.}}
+		{{end}}
+		err = rows.Scan(&thisID, {{.StructFields}})
+		if err != nil {
+			log.WithFields(log.Fields{"entities": entities, "query": `SELECT j.{{.ThisID}}, {{.SQLFields}} FROM {{.ThatTable}} t INNER JOIN {{.JoinTable}} j ON t.id = j.{{.ThatID}} WHERE j.{{.ThisID}} IN (`+placeholder+`)`, "fields": "{{.StructFields}}", "error": err}).Error("repo.{{.ThisEntity}}.Load scan error")
+			return errors.WithStack(err)
+		}
+		{{range .After}}{{.}}
+		{{end}}
+		
+		for i := range indices[thisID] {
+			indices[thisID][i].{{.PropertyName}} = append(indices[thisID][i].{{.PropertyName}}, &entity)
+		}
+		
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{.ThisEntity}}.Load context error")
+			return errors.WithStack(err)
+		}
+	}
+
+	return nil
+}

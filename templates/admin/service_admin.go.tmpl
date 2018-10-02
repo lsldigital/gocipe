@@ -1,0 +1,501 @@
+package admin
+
+import (
+	"github.com/pkg/errors"
+	"golang.org/x/net/context"
+	
+	{{ if .GenerateAuth }}"{{.ImportPath}}/auth"{{ end }}
+)
+
+const (
+	// StatusDraft says status is 'draft'
+	StatusDraft = "draft"
+	// StatusSaved says status is 'saved'
+	StatusSaved = "saved"
+	// StatusUnpublished says status is 'unpublished'
+	StatusUnpublished = "unpublished"
+	// StatusPublished says status is 'published'
+	StatusPublished = "published"
+)
+
+var (
+	// ErrorInvalidOperation indicates an error for an invalid operation
+	ErrorInvalidOperation   = errors.New("invalid filter operation specified")
+	// ErrorRequestEmpty indicates an error when empty request is received
+	ErrorRequestEmpty       = errors.New("request object is malformed")
+	// ErrorInvalidUploadField indicates an error for an unknown upload field
+	ErrorInvalidUploadField = errors.New("invalid upload field") 
+	// ErrorInvalidStatus indicates an invalid status has been submitted 
+	ErrorInvalidStatus      = errors.New("invalid status")
+
+	{{ if .GenerateAuth }}_guardian auth.Guardian{{ end }}
+)
+
+{{ if .GenerateAuth }}
+// SetGuardian sets a custom guardian for admin service
+// if guardian is nil, a dummyGuardian is used
+func SetGuardian(guardian auth.Guardian) {
+	if guardian == nil {
+		_guardian = auth.DummyGuard
+	} else {
+		_guardian = guardian
+	}
+}
+{{ end }}
+
+// Service represents Admin service implementation
+type Service struct {}
+
+{{range .Entities}}
+/**
+ * [BEGIN] {{.Name}}
+ */
+
+{{if .Admin.Create -}}
+// Create{{.Name}} allows creation of entity of type {{.Name}}
+func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request) (*Create{{.Name}}Response, error) {
+	var (
+		err  error
+		tx   *sql.Tx
+		res  Create{{.Name}}Response
+		{{if or .Admin.Hooks.PreCreate .Admin.Hooks.PostCreate -}}
+		stop bool
+		{{- end}}
+	)
+
+	if req == nil {
+		return &res, ErrorRequestEmpty
+	}
+
+	if req.{{.Name}} == nil {
+		res.{{.Name}} = new(models.{{.Name}})
+	} else {
+		res.{{.Name}}    = req.{{.Name}}
+		res.{{.Name}}.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
+	}
+
+	{{ if .Admin.Auth.Generate }}
+	passport, err := _guardian.GetPassport(req.GetKey())
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	if hasPerm := passport.HasPermission(res.{{.Name}}, PermCreate{{.Name}}); !hasPerm {
+		return &res, errors.WithStack(fmt.Errorf("Permission denied")) 
+	}
+	{{ end }}
+
+	res.{{.Name}}.Status = StatusDraft
+
+	tx, err = models.StartTransaction(ctx)
+	{{if .Admin.Hooks.PreCreate}}
+	stop, err = s.{{lower .Name}}PreCreate(ctx, tx, req, &res, {{if .Admin.Auth.Generate}}passport, {{end}}err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	err = models.{{.Name}}Repo.Save(ctx, res.{{.Name}}, tx, true)
+
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	{{if .Admin.Hooks.PostCreate -}}
+	stop, err = s.{{lower .Name}}PostCreate(ctx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	return &res, errors.WithStack(err)
+}
+{{- end}}
+
+{{if .Admin.Read -}}
+// Get{{.Name}} allows getting a single entity of type {{.Name}}
+func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}}Response, error) {
+	var (
+		res  Get{{.Name}}Response
+		err  error
+		{{if or .Admin.Hooks.PreRead .Admin.Hooks.PostRead -}}
+		stop bool
+		{{- end}}
+	)
+
+	if req == nil || req.ID == "" {
+		return &res, ErrorRequestEmpty
+	}
+
+	{{if .Admin.Hooks.PreRead}}
+	stop, err = s.{{lower .Name}}PreRead(ctx, req, &res)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	res.{{.Name}}, err = models.{{.Name}}Repo.GetWithRel(ctx, req.ID)
+
+	{{if .Admin.Hooks.PostRead -}}
+	stop, err = s.{{lower .Name}}PostRead(ctx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	return &res, nil
+}
+{{- end}}
+
+{{if .Admin.List -}}
+// List{{plural .Name}} allows listing all entity of type {{.Name}}
+func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*List{{plural .Name}}Response, error) {
+	var (
+		res  List{{plural .Name}}Response
+		err  error
+		{{if or .Admin.Hooks.PreList .Admin.Hooks.PostList -}}
+		stop bool
+		{{- end}}
+		filters []*models.Filter
+	)
+
+	if req == nil {
+		return &res, ErrorRequestEmpty
+	}
+
+	{{if .Admin.Hooks.PreList -}}
+	stop, err = s.{{lower .Name}}PreList(ctx, req, &res)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if req.ListOpts == nil {
+		req.ListOpts = &models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit}
+	}
+
+	{{$filters := getAdminFilters $.Entities . }}
+	{{if (or $filters.HasBool $filters.HasString $filters.HasDate)}}
+	if req.Filters != nil {
+		for i := range req.Filters {
+			switch req.Filters[i].Field {
+			{{if $filters.HasBool}}
+			case {{$filters.BoolFilters}}:
+				if f, err := NewBoolFilter(req.Filters[i]); err == nil {
+					filters = append(filters, f)
+				} else {
+					return &res, err
+				}
+			{{end}}
+			{{if $filters.HasString}}
+			case {{$filters.StringFilters}}:
+				if f, err := NewStringFilter(req.Filters[i]); err == nil {
+					filters = append(filters, f)
+				} else {
+					return &res, err
+				}
+			{{end}}
+			{{if $filters.HasDate}}
+			case {{$filters.DateFilters}}:
+				if f, err := NewDateFilter(req.Filters[i]); err == nil {
+					filters = append(filters, f)
+				} else {
+					return &res, err
+				}
+			{{end}}
+			}
+		}
+	}
+	{{end}}
+
+	res.{{plural .Name}}, err = models.{{.Name}}Repo.List(ctx, req.ListOpts, filters...)
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	{{if .Admin.Hooks.PostList -}}
+	stop, err = s.{{lower .Name}}PostList(ctx, req, &res, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+	
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	return &res, nil
+}
+{{- end}}
+
+{{if .Admin.Update -}}
+// Update{{.Name}} allows updating one entity of type {{.Name}}
+func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request) (*Update{{.Name}}Response, error) {
+	var (
+		err  error
+		tx   *sql.Tx
+		res  Update{{.Name}}Response
+		{{if or .Admin.Hooks.PreUpdate .Admin.Hooks.PostUpdate -}}
+		stop bool
+		{{- end}}
+	)
+
+	if req == nil || req.{{.Name}} == nil {
+		return &res, ErrorRequestEmpty
+	}
+
+	{{ if .Admin.Auth.Generate }}
+	passport, err := _guardian.GetPassport(req.GetKey())
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	var permission string
+	isOwned := req.{{.Name}}.UserID == passport.GetID()
+	if isOwned {
+		permission = PermEdit{{.Name}}
+	} else {
+		permission = PermEdit{{.Name}}Any
+	}
+
+	if hasPerm := passport.HasPermission(res.{{.Name}}, permission); !hasPerm {
+		return &res, errors.WithStack(fmt.Errorf("Permission denied")) 
+	}
+	{{ end }}
+
+	// existing records in DB
+	existing, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)
+	if err != nil {
+		{{if .Admin.Hooks.PreUpdate -}}
+		stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, {{if .Admin.Auth.Generate}}passport, {{end}}err)
+		if stop {
+			return &res, nil
+		}
+		{{end}}
+		return &res, errors.WithStack(err)
+	}
+
+	switch req.{{.Name}}.Status {
+		case StatusDraft, StatusSaved, StatusUnpublished, StatusPublished:
+			//all good
+		default:
+			return &res, ErrorInvalidStatus
+	}
+
+	res.{{.Name}} = req.{{.Name}}
+	{{ range $fileField := index $.EntitiesFileFields .Name}}
+	res.{{.Entity}}.{{.Field}} = existing.{{.Field}}{{end }}
+	{{ if .Slug}}
+	res.{{.Name}}.Slug = existing.Slug
+	{{ end }}
+	tx, err = models.StartTransaction(ctx)
+
+	{{if .Admin.Hooks.PreUpdate -}}
+	stop, err = s.{{lower .Name}}PreUpdate(ctx, tx, req, &res, *existing, {{if .Admin.Auth.Generate}}passport, {{end}}err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	err = models.{{.Name}}Repo.SaveWithRel(ctx, res.{{.Name}}, tx, true)
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	{{if .Slug}}
+	go setSlug(existing.GetID(), req.{{.Name}}.Get{{ucfirst .Slug}}(), "{{.Table}}", "slug")
+	{{end}}
+
+	{{if .Admin.Hooks.PostUpdate -}}
+	stop, err = s.{{lower .Name}}PostUpdate(ctx, req, &res, *existing, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	return &res, nil
+}
+{{- end}}
+
+{{if .Admin.Delete -}}
+// Delete{{.Name}} allows deleting an entity of type {{.Name}}
+func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*DeleteResponse, error) {
+	var (
+		err  error
+		tx   *sql.Tx
+		res  DeleteResponse
+		{{if or .Admin.Hooks.PreDelete .Admin.Hooks.PostDelete -}}
+		stop bool
+		{{- end}}
+	)
+
+	if req == nil || req.ID == "" {
+		return &res, ErrorRequestEmpty
+	}
+
+	// existing records in DB
+	existing, err := models.{{.Name}}Repo.Get(ctx, req.ID)
+	if err != nil {
+		{{if .Admin.Hooks.PreDelete -}}
+		stop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
+		if stop {
+			return &res, nil
+		}
+		{{end}}
+		return &res, errors.WithStack(err)
+	}
+
+	tx, err = models.StartTransaction(ctx)
+	{{if .Admin.Hooks.PreDelete}}
+	stop, err = s.{{lower .Name}}PreDelete(ctx, tx, req, &res, *existing, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+	
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	err = models.{{.Name}}Repo.Delete(ctx, existing, tx, true)
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	{{if .Admin.Hooks.PostDelete}}
+	stop, err = s.{{lower .Name}}PostDelete(ctx, req, &res, *existing, err)
+	if stop {
+		return &res, nil
+	}
+	{{- end}}
+	
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	return &res, nil
+}
+{{- end}}
+{{if hasFileFields .}}
+// Upload{{.Name}} allows uploading of files for entity of type {{.Name}}
+func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*UploadResponse, error) {
+	var (
+		res       UploadResponse
+		options   *files.UploadOptions
+		fieldname string
+	)
+
+	if req == nil {
+		return &res, ErrorRequestEmpty
+	}
+
+	switch req.Field {
+		{{$EntityName := .Name}}
+		{{- range (getFileFields .)}}
+		{{.}}
+		{{- end}}
+		default:
+			return &res, ErrorInvalidUploadField
+	}
+
+	fileDiskPath, filePath, err := files.Upload(req.Filename, req.Content, options)
+	if err != nil {
+		if fileDiskPath != "" {
+			files.Delete(fileDiskPath)
+		}
+		return &res, err
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		files.Delete(fileDiskPath)
+		return &res, errors.WithStack(err)
+	}
+
+	tx, err := models.StartTransaction(ctx)
+	if err != nil {
+		files.Delete(fileDiskPath)
+		return &res, err
+	}
+	
+	stmt, err := tx.Prepare(`UPDATE {{.Table}} SET `+fieldname+` = $1 WHERE id = $2`)
+	if err != nil {
+		files.Delete(fileDiskPath)
+		return &res, errors.WithStack(err)
+	}
+
+	_, err = stmt.Exec(filePath, req.ID)
+	if err != nil {
+		tx.Rollback()
+		files.Delete(fileDiskPath)
+		return &res, errors.WithStack(err)
+	}
+
+	err = tx.Commit()
+	res.URI = filePath
+	return &res, err
+}
+{{- end}}
+
+// Lookup{{plural .Name}} lookup allows looking up an entity by its label for entity of type {{.Name}}
+func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) (*LookupResponse, error) {
+	var (
+		err  error
+		rows *sql.Rows
+		res  LookupResponse
+	)
+
+	if req == nil {
+		return &res, ErrorRequestEmpty
+	}
+
+	tx, err := models.StartTransaction(ctx)
+	if err != nil {
+		return &res, err
+	}
+    
+	rows, err = tx.Query(`SELECT id, t."{{index $.EntitiesLabelField .Name}}", t."status" FROM {{.Table}} t WHERE t."{{index $.EntitiesLabelField .Name}}" LIKE $1`, req.Term+"%")
+	if err != nil {
+		return &res, err
+	}
+    
+	defer rows.Close()
+	for rows.Next() {
+		var id, label, status string
+		if err = util.CheckContext(ctx); err != nil {
+			return &res, err
+		}
+
+		err = rows.Scan(&id, &label, &status)
+		if err != nil {
+			return &res, errors.WithStack(err)
+		}
+    
+		res.Result = append(res.Result, &LookupResult{ID: id, Label: label, Status: status})
+	}
+
+	return &res, err
+}
+/**
+ * [END] {{.Name}}
+ */
+{{end}}

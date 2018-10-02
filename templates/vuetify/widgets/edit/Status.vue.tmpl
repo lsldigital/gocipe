@@ -1,0 +1,81 @@
+<template>
+  <div>
+    <v-slider class="py-3" :label="$attrs.label" v-model="statusValue" :value="valueTranslation(textValue)"
+      @change="onChange" :tick-labels="stages.labels" :thumb-size="30" thumb-label="always"
+      :color="thumbColor" :track-color="thumbColor" :thumb-color="thumbColor"
+      :max="3" :step="1" :validate-on-blur="true" :prepend-icon="thumbLabel"
+      :always-dirty="true" ticks="always" tick-size="5">
+      <template slot="thumb-label" slot-scope="props">
+        <v-icon flat>{{ "{{ thumbLabel }}" }}</v-icon>
+      </template>
+    </v-slider>
+
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      statusValue: "",
+      textValue: "",
+      stages: {
+        labels: ["Unpublished", "Draft", "Saved", "Published"],
+        icon: ["visibility_off", "rowing", "bookmark", "check_circle"],
+        colors: ["error", "warning", "info", "success"]
+      }
+    };
+  },
+  computed: {
+    thumbColor: function() {
+      // console.log(this.statusValue);
+      if (typeof this.statusValue === "NaN") {
+        return "warning";
+      }
+      return this.stages.colors[this.statusValue];
+    },
+    thumbLabel: function() {
+      return this.stages.icon[this.statusValue];
+    }
+  },
+  methods: {
+    onChange() {
+      this.statusText = this.textTranslation(this.statusValue);
+      console.log(this.statusText);
+      console.log(this.statusValue);
+      this.$emit("gocipe", this.statusText);
+    },
+    textTranslation(val) {
+      switch (val) {
+        case 1:
+          return "draft";
+        case 2:
+          return "saved";
+        case 3:
+          return "published";
+        case 0:
+          return "unpublished";
+      }
+    },
+    valueTranslation(val) {
+      switch (val) {
+        case "draft":
+          return 1;
+        case "saved":
+          return 2;
+        case "published":
+          return 3;
+        case "unpublished":
+          return 0;
+      }
+    }
+  },
+  created() {
+    this.textValue = this.$attrs.value;
+    this.statusValue = this.valueTranslation(this.textValue);
+    // console.log(this.textValue);
+  },
+  mounted() {},
+  inheritAttrs: false
+};
+</script>

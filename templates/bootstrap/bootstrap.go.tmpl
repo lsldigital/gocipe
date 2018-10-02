@@ -1,0 +1,172 @@
+package core
+
+import (
+	"bytes"
+	"database/sql"
+	"os"
+
+	"github.com/joho/godotenv"
+	rice "github.com/GeertJohan/go.rice"
+	log "github.com/sirupsen/logrus"
+	// Load database driver
+	_ "github.com/lib/pq"
+)
+
+const (
+	//EnvironmentProd represents production environment
+	EnvironmentProd = "PROD"
+
+	//EnvironmentDev represents development environment
+	EnvironmentDev  = "DEV"
+)
+
+var (
+	// bootstrapped is a flag to prevent multiple bootstrapping
+	bootstrapped = false
+
+	// Env indicates in which environment (prod / dev) the application is running
+	Env string
+	{{range .Bootstrap.Settings}}{{if .Public}}
+	// {{.Name}} {{.Description}}
+	{{.Name}} string
+	{{end}}{{end}}
+	{{if .Bootstrap.Assets}}
+	// Assets is a rice box to assets directory
+	Assets *rice.Box
+	{{end}}
+)
+
+// Config represents application configuration loaded during bootstrap
+type Config struct {
+	{{if not .Bootstrap.NoDB}}DB  *sql.DB{{end}}
+	HTTPPort string
+	{{if not .Bootstrap.NoGRPCWire}}GRPCPort string{{end}}
+	{{range .Bootstrap.Settings}}{{if not .Public}}
+	// {{.Name}} {{.Description}}
+	{{.Name}} string
+	{{end}}{{end}}
+}
+
+// Bootstrap loads environment variables and initializes the application
+func Bootstrap() *Config {
+	var config Config
+
+	if bootstrapped {
+		return nil
+	}
+
+	godotenv.Load()
+
+	Env = os.Getenv("ENV")
+	if Env == "" {
+		Env = EnvironmentProd
+	}
+
+	logLevel := os.Getenv("LOG_LEVEL")
+	switch logLevel {
+		case "PANIC":
+			log.SetLevel(log.PanicLevel)
+		case "FATAL":
+			log.SetLevel(log.FatalLevel)
+		case "ERROR":
+			log.SetLevel(log.ErrorLevel)
+		case "WARN":
+			log.SetLevel(log.WarnLevel)
+		case "INFO":
+			log.SetLevel(log.InfoLevel)
+		case "DEBUG":
+			log.SetLevel(log.DebugLevel)
+		default:
+			if Env == EnvironmentProd {
+				log.SetLevel(log.ErrorLevel)
+			} else {
+				log.SetLevel(log.DebugLevel)
+			}
+	}
+
+	if logFormat := os.Getenv("LOG_FORMAT"); logFormat == "JSON" {
+		log.SetFormatter(&log.JSONFormatter{})
+	}
+
+	{{if not .Bootstrap.NoDB}}
+	dsn := os.Getenv("DSN")
+	if dsn == "" {
+		log.Fatal("Environment variable DSN must be defined. Example: postgres://user:pass@host/db?sslmode=disable")
+	}
+
+	var err error
+	config.DB, err = sql.Open("postgres", dsn)
+	if err == nil {
+		log.Println("Connected to database successfully.")
+	} else if (Env == EnvironmentDev) {
+		log.Println("Database connection failed: ", err)
+	} else {
+		log.Fatal("Database connection failed: ", err)
+	}
+
+	err = config.DB.Ping()
+	if err == nil {
+		log.Println("Pinged database successfully.")
+	} else if (Env == EnvironmentDev) {
+		log.Println("Database ping failed: ", err)
+	} else {
+		log.Fatal("Database ping failed: ", err)
+	}
+	{{end}}
+
+	config.HTTPPort = os.Getenv("HTTP_PORT")
+	if config.HTTPPort == "" {
+		config.HTTPPort = "{{.Bootstrap.HTTPPort}}"
+	}
+
+	{{if not .Bootstrap.NoGRPCWire}}
+	config.GRPCPort = os.Getenv("GRPC_PORT")
+	if config.GRPCPort == "" {
+		config.GRPCPort = "{{.Bootstrap.GRPCPort}}"
+	}
+	{{end}}
+
+	{{range .Bootstrap.Settings}}{{if not .Public}}
+	config.{{.Name}} = os.Getenv("{{upper (snake .Name)}}")
+	if config.{{.Name}} == "" {
+		log.Fatal("Environment variable {{upper (snake .Name)}} ({{.Description}}) must be defined.")
+	}
+	{{end}}{{end}}
+
+	{{range .Bootstrap.Settings}}{{if .Public}}
+	{{.Name}} = os.Getenv("{{upper (snake .Name)}}")
+	if {{.Name}} == "" {
+		log.Fatal("Environment variable {{upper (snake .Name)}} ({{.Description}}) must be defined.")
+	}
+	{{end}}{{end}}
+
+	os.Clearenv() //prevent non-authorized access
+
+	return &config
+}
+
+
+{{if .Bootstrap.Assets}}
+// ExecuteTemplate applies templating a text/template template given data and returns the string output
+func ExecuteTemplate(name string, data interface{}) (string, error) {
+	var output bytes.Buffer
+
+	raw, err := Assets.String("templates/"+name)
+
+	if err != nil {
+		return "", err
+	}
+
+	tpl, err := template.New(name).Funcs(template.FuncMap{}).Parse(raw)
+	if err != nil {
+		return "", err
+	}
+
+	err = tpl.Execute(&output, data)
+	if err != nil {
+		return "", err
+	}
+
+	return output.String(), nil
+}
+{{end}}

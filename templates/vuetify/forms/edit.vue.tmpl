@@ -1,0 +1,359 @@
+<template>
+    <div>
+        <div class="listing--container">
+            <!-- Normal Toolbar -->
+            <v-toolbar class="transparent listing-toolbar blue-grey darken-3 px-3" dark flat ml-0 v-if="!nested">
+                <v-btn icon :to="{name: '{{- plural (lower .Entity.Name) -}}_list'}">
+                    <v-icon>arrow_back</v-icon>
+                </v-btn>
+
+                <v-toolbar-title>Edit {{.Entity.Name}} </v-toolbar-title>
+
+                <v-spacer></v-spacer>
+                
+                <v-btn color="primary"  @click="update">
+                    Save
+                    <v-icon right>save</v-icon>
+                </v-btn>
+            </v-toolbar>
+            <!-- Nested Form Toolbar -->
+            <v-toolbar class="primary listing-toolbar px-3" dense dark v-else>
+                <v-toolbar-title>
+                    <h3>Edit {{.Entity.Name}} </h3>
+                </v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn flat @click.stop="emitCloseForm">
+                    <v-icon dark>close</v-icon> Close
+                </v-btn>
+            </v-toolbar>
+        </div>
+        <div v-if="loading" centered>
+            <v-progress-linear :indeterminate="true"></v-progress-linear>
+            <p class="text-xs-center">contacting server...</p>
+        </div>
+
+        <v-card v-else>
+            <v-card-text>
+                <v-form>
+                    <div class="gocipe-form-grid" v-if="entity">
+                    {{- $EntityName := .Entity.Name -}} 
+                    {{- range .Entity.Fields -}} 
+                        {{- if not .EditWidget.Hide }} 
+                        {{- if not (eq .EditWidget.Type "status") }} 
+                            <div class="gocipe-field-container">
+                                <component  :is="'EditWidget{{ucfirst .EditWidget.Type }}'"
+                                            :label="'{{ .Label }}'"
+                                            :hint="'{{ .EditWidget.Description }}'" 
+                                            :value="this.entity.get{{ucfirst .Property.Name}}()" 
+                                            @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" 
+                                            
+                                            {{- /* SELECTBOX */ -}}
+                                            {{- if eq .EditWidget.Type "select" }} 
+                                            :options='{{json .EditWidget.Options }}' 
+                                            {{- end -}}
+                                            
+                                            {{- /* IMAGEFIELD */ -}}
+                                            {{- if eq .EditWidget.Type "imagefield" }}
+                                            :field="'{{ .Property.Name}}'" 
+                                            :rpc="'upload{{ $EntityName }}'" 
+                                            :entityid="id"
+                                            {{- end -}}
+                                ></component>
+                            </div>
+                        {{- end }} 
+                        {{- end }} 
+                    {{- end -}}
+
+                    {{- range .Entity.Relationships -}}
+                        {{- if not .EditWidget.Hide }}
+                        <template v-if="componentLoaded">
+                        {{- if eq .Type "one-many" }}
+                            <div class="data-table-responsive-wrapper">
+                                <component
+                                    :is="'{{plural .Entity }}List'"
+                                    :key="'{{plural .Entity }}_key'"
+                                    :filter_id="id" 
+                                    :filter_field="'{{lower $.Entity.Name}}_id'"
+                                    :rpc="'set{{$.Entity.Name }}id'"
+                                    :nested="true" 
+                                />
+                            </div>
+                        {{- else if or (eq .Type "many-many") (eq .Type "many-many-owner")}}
+                                <component  :is="'EditWidgetSelectRel'"
+                                    :label="'{{ .Name }}'"
+                                    :hint="'widget: select rel'" 
+                                    :value="this.entity.get{{ucfirst .Name}}List()" 
+                                    :rpc="'lookup{{plural .Entity}}'"
+                                    :multiple="true"
+                                    @gocipe="(e) => this.setRelated{{.Name}}(e)"
+                                    {{- /* SELECTREL */ -}}
+                                ></component>
+                        {{- else if eq .Type "many-one" }}
+                                <component  :is="'EditWidgetSelectRel'"
+                                    :label="'{{ .Name }}'"
+                                    :hint="'widget: select rel'" 
+                                    :value="this.entity.get{{ucfirst .Name}}()" 
+                                    :rpc="'lookup{{plural .Entity}}'"
+                                    :multiple="false"
+                                    @gocipe="(e) => this.entity.set{{ucfirst .Entity}}id(e)"
+                                    {{- /* SELECTREL */ -}}
+                                ></component>
+                        {{- end }}
+                        </template>
+                        {{- end }}
+                    {{- end }}
+
+                    {{- range .Entity.References -}}
+                        {{- if not .TypeField.EditWidget.Hide }}
+                        <template v-if="componentLoaded">
+                            <div class="gocipe-field-container">
+                                <component  :is="'EditWidgetSelect'"
+                                    :label="'{{ .TypeField.Label }}'"
+                                    :hint="'{{ .TypeField.EditWidget.Description }}'" 
+                                    :value="this.entity.get{{ucfirst .TypeField.Property.Name}}()" 
+                                    @gocipe="(e) => this.change{{ucfirst .TypeField.Property.Name}}(e)" 
+                                    :options='{{json .TypeField.EditWidget.Options }}'
+                                    :multiple="false"
+                                    {{- /* SELECTBOX */ -}}
+                                ></component>
+                            </div>
+                        </template>
+                        {{- end }}
+                        {{- if not .IDField.EditWidget.Hide }}
+                        <template v-if="componentLoaded">
+                            <div class="gocipe-field-container">
+                                <component  :is="'EditWidgetSelectRel'"
+                                    :label="'{{ .IDField.Label }}'"
+                                    :hint="'{{ .IDField.EditWidget.Description }}'" 
+                                    :value="this.entity.get{{ucfirst .IDField.Property.Name}}()" 
+                                    :rpc="lookup{{ucfirst .TypeField.Property.Name}}RPC"
+                                    @gocipe="(e) => this.entity.set{{ucfirst .IDField.Property.Name}}(e)"
+                                    :multiple="false"
+                                    {{- /* SELECTREL */ -}}
+                                ></component>
+                            </div>
+                        </template>
+                        {{- end }}
+                    {{- end }}
+
+                    <component  :is="'EditWidgetStatus'"
+                        :label="'Status'"
+                        :value="this.entity.getStatus()" 
+                        @gocipe="(e) => this.entity.setStatus(e)" >
+                    </component>
+
+                    </div>
+                </v-form>
+            </v-card-text>
+        </v-card>
+        
+
+        
+         
+        <v-toolbar class="transparent listing-toolbar blue-grey darken-4 px-3" dark flat ml-0  v-if="!nested">
+            <v-spacer></v-spacer>
+            <v-btn color="primary" @click="update">
+                Save
+                <v-icon right>save</v-icon>
+            </v-btn>
+        </v-toolbar>
+        <v-toolbar class="transparent listing-toolbar blue-grey darken-4 px-3" dark flat ml-0  v-else>
+            <v-btn color="gray" @click="emitCloseForm">
+                Cancel
+                <v-icon right>close</v-icon>
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" @click="emitSaveAndCloseForm">
+                Save &amp; Close
+                <v-icon right>assignment_return</v-icon>
+            </v-btn>
+        </v-toolbar>
+
+        <v-snackbar v-model="snackbar.show" :bottom="true" :right="true" auto-height :color="snackbar.color" :timeout="6000">
+            {{ printf `{{ snackbar.text }}` }}
+            <v-btn dark flat v-if="snackbar.color !== 'error'" :to="{name: '{{- plural (lower .Entity.Name) -}}_list', params : { track : id}}">
+                <v-icon>arrow_back</v-icon>
+            </v-btn>
+            <v-btn dark flat @click="snackbarHide">
+                <v-icon>close</v-icon>
+            </v-btn>
+        </v-snackbar>
+    </div>
+</template>
+
+
+<script>
+import { AdminClient } from "@/services/service_admin_pb_service";
+import { GetRequest } from "@/services/service_admin_pb";
+import { Update{{ .Entity.Name}}Request } from "@/services/service_admin_pb";
+
+{{range .Entity.Relationships -}}{{- if or (eq .Type "many-many") (eq .Type "many-many-owner") }}
+import { {{.Entity}} } from "@/services/models_pb"
+{{end}}{{end}}
+
+let cli = new AdminClient("/api");
+export default {
+  data() {
+    return {
+      messages: [],   
+      snackbar: {
+          show: false, 
+          text: ''
+      },
+      entity: null,
+      loading: false,
+      id: null,
+      componentLoaded: false,
+      {{ range .Entity.References -}}
+      lookup{{ucfirst .TypeField.Property.Name}}RPC: null,
+      {{- end }}
+    };
+  },
+  {{/*
+    The Code below tranforms into something like this. A computed property with custom getter and setters
+    computed: {
+        name: {
+        get: function() {
+            return this.entity.getName();
+        },
+        set: function(value) {
+            this.entity.setName(value);
+        }
+        }
+    },
+  */}}
+
+  components: {
+  },
+  props: ["filter_id", "nested", "visible"],
+  mounted() {
+    this.request()
+    
+  },
+  methods: {
+        {{- range .Entity.Relationships -}}
+        {{- if or (eq .Type "many-many") (eq .Type "many-many-owner") }}
+        setRelated{{.Name}}: function(values) {
+            this.entity.set{{ucfirst (plural .Entity)}}List(
+                values.map((value) => { 
+                    let related = new {{.Entity}}();
+                    related.setId(value);
+                    return related; 
+                })
+            );
+        },
+        {{- end -}}
+        {{- end }}
+        {{ range .Entity.References -}}
+        change{{ucfirst .TypeField.Property.Name}}: function(e){
+            this.entity.setEntitytype(e);
+            this.lookup{{ucfirst .TypeField.Property.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Property.Name}}();
+        },
+        {{- end }}
+        log: function(e) {
+            console.log(e)
+        },
+        request: function() {
+            if (this.filter_id) {
+                this.id = this.filter_id
+            } else {
+                this.id = this.$route.params.id;
+            }
+            let req = new GetRequest();
+            req.setId(this.id);
+
+            this.loading = true;
+
+            cli.get{{ .Entity.Name}}(req, (err, resp) => {
+                if (err) {
+                    console.log(err);
+                    this.snackbarShow(err.message, "error");
+                    return;
+                }
+                this.loading = false;
+                this.entity = resp.get{{ucfirst .Entity.Name}}();
+                this.componentLoaded = true;
+
+                {{ range .Entity.References -}}
+                this.lookup{{ucfirst .TypeField.Property.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Property.Name}}();
+                {{- end }}
+            });
+        },
+        update: function() {
+    
+            let req = new Update{{.Entity.Name}}Request();
+            req.set{{ ucfirst .Entity.Name}}(this.entity);
+            // this.loading = true;
+
+            this.snackbarShow('{{ucfirst .Entity.Name}} Saved');
+            /* this.debug(); */
+
+            cli.update{{.Entity.Name}}(req, (err, resp) => {
+                if (err) {
+                    console.log(err);
+                    this.snackbarShow(err.message, "error");
+                    return;
+                }
+
+                // this.loading = false;
+                if (this.nested) {
+                    this.$emit("closeform", true);
+                }
+            });
+        },
+        emitSaveAndCloseForm: function() {
+            /* console.log("emitting close form to parent"); */
+            this.update();
+        },
+        emitCloseForm: function() {
+            /* console.log("emitting close form to parent"); */
+            this.$emit("closeform", true);
+        },
+        debug: function() {
+            {{- range .Entity.Fields }}
+            console.log("{{.Property.Name}}", this.entity.get{{ ucfirst .Property.Name }}());
+            {{- end}}
+            {{- range .Entity.References }}
+            console.log("{{.IDField.Property.Name}}", this.entity.get{{ ucfirst .IDField.Property.Name }}());
+            console.log("{{.TypeField.Property.Name}}", this.entity.get{{ ucfirst .TypeField.Property.Name }}());
+            {{- end}}
+        },
+        snackbarShow: function(text, color) {
+            this.snackbar.show = true;
+            this.snackbar.color = color || 'info';
+            this.snackbar.text = text || 'something happened';
+        },
+        snackbarHide: function() {
+            this.snackbar.show = false
+        }
+  }
+  /* watch: {
+    visible: function(val) {
+      if (val) {
+        console.log("watching");
+        this.request();
+      }
+    }
+  } */
+};
+</script>
+
+<style lang="scss" scoped>
+.gocipe-form-grid {
+  width: 100%;
+  //   max-width: 800px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(650px, 1fr));
+  grid-column-gap: var(--gutter, 60px);
+  .gocipe-field-container {
+    // grid-column: 1/2;
+  }
+}
+
+.data-table-responsive-wrapper {
+  max-width: 100%;
+  overflow-y: auto;
+  /* padding: 5px; */
+}
+</style>

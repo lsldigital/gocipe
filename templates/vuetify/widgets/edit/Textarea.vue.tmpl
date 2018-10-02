@@ -1,0 +1,38 @@
+<template>
+  <div>
+    <div class="caption v-label v-label--active theme--light pb-2">{{ "{{ $attrs.label }}" }}</div>
+
+    <vue-editor id="$attrs.label" v-model="text" :editorToolbar="customToolbar"></vue-editor>
+
+  </div>
+</template>
+
+<script>
+import { VueEditor } from "vue2-editor";
+
+export default {
+  data() {
+    return {
+      text: "",
+      customToolbar: [
+        ["bold", "italic", "underline"],
+        ["link", "blockquote"],
+        [{ list: "ordered" }, { list: "bullet" }],
+        [{ header: [1, 2, 3, false] }]
+      ]
+    };
+  },
+  created() {
+    this.text = this.$attrs.value;
+  },
+  components: {
+    VueEditor
+  },
+  watch: {
+    text: function(n, o) {
+      this.$emit("gocipe", n);
+    }
+  },
+  inheritAttrs: false
+};
+</script>

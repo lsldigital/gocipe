@@ -1,0 +1,50 @@
+package models
+import (
+	"database/sql"
+)
+
+{{if .Hooks.PreRead}}
+func crudPreGet(id {{pkeyPropertyType .Entity.PrimaryKey}}) error {
+	return nil
+}
+{{end}}
+{{if .Hooks.PostRead}}
+func crudPostGet(entity *{{.Entity.Name}}) error {
+	return nil
+}
+{{end}}
+
+{{if .Hooks.PreList}}
+func crudPreList(filters []models.ListFilter) ([]ListFilter, error) {
+	return filters, nil
+}
+{{end}}
+{{if .Hooks.PostList}}
+func crudPostList(list []*{{.Entity.Name}}) ([]*{{.Entity.Name}}, error) {
+	return list, nil
+}
+{{end}}
+
+{{if .Hooks.PreDelete}}
+func crudPreDelete(id {{pkeyPropertyType .Entity.PrimaryKey}}, tx *sql.Tx) error {
+	return nil
+}
+{{end}}
+{{if .Hooks.PostDelete}}
+func crudPostDelete(id {{pkeyPropertyType .Entity.PrimaryKey}}, tx *sql.Tx) error {
+	return nil
+}
+{{end}}
+
+
+{{if .Hooks.PreSave }}
+func crudPreSave(op string, entity *{{.Entity.Name}}, tx *sql.Tx) error {
+	return nil
+}
+{{end}}
+{{if .Hooks.PreSave }}
+func crudPostSave(op string, entity *{{.Entity.Name}}, tx *sql.Tx) error {
+	return nil
+}
+{{end}}
+

@@ -1,0 +1,32 @@
+{{range .Entities}}
+// {{.Name}} {{.Description}}
+import {{.Name}}List from "./forms/{{plural .Name}}List.vue";
+import {{.Name}}Edit from "./forms/{{plural .Name}}Edit.vue";
+{{end}}
+
+let routes = [
+  {{range $i, $v := .Entities}}
+  {
+    path: "{{lower (plural .Name)}}",
+    name: "{{lower (plural .Name)}}_list",
+    component: {{.Name}}List,
+    meta: {
+      icon: "{{.Vuetify.Icon}}",
+      entity: "{{plural .Name}}",
+      showInMenu: {{if .Vuetify.NotInMenu}}false{{else}}true{{end}}
+    }
+  },
+  {
+    path: "{{lower (plural .Name)}}/edit/:id",
+    name: "{{lower (plural .Name)}}_edit",
+    component: {{.Name}}Edit,
+    meta: {
+      icon: "{{.Vuetify.Icon}}",
+      entity: "{{plural .Name}}",
+      showInMenu: false
+    }
+  }{{if ne (plus1 $i) (len $.Entities)}},{{end}}
+  {{end}}
+];
+
+export default routes;

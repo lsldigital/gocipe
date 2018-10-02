@@ -1,0 +1,27 @@
+package util
+
+import (
+	"net/http"
+	"strings"
+
+	rice "github.com/GeertJohan/go.rice"
+)
+
+// WebBox implements http.FileSystem which allows the use of Box with a http.FileServer.
+//   e.g.: http.Handle("/", http.FileServer(rice.MustFindBox("http-files").HTTPBox()))
+type WebBox struct {
+	Box  *rice.Box
+	App  string
+	Path string
+}
+
+// NewWebBoxHandler returns a new WebBox File Server Handler
+func NewWebBoxHandler(box *rice.Box, app, path string) http.Handler {
+	return http.FileServer(WebBox{Box: box, App: app, Path: "/" + path})
+}
+
+// Open returns a File using the http.File interface
+func (b WebBox) Open(name string) (http.File, error) {
+	name = strings.TrimPrefix(name, b.Path)
+	return b.Box.Open(b.App + name)
+}

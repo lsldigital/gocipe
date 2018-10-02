@@ -1,0 +1,55 @@
+package auth
+
+const (
+	// DummyKey is used by GetPassport
+	DummyKey = "justasampledummykey"
+
+	// Unexported dummy values for passport
+	dummyID   = "00000000-0000-0000-0000-0000414E4F4D"
+	dummyName = "Anonymous"
+)
+
+var (
+	// DummyGuard implements the Guardian interface
+	DummyGuard = dummyGuard{}
+)
+
+// Guardian regroups method to return new Passport
+type Guardian interface {
+	// GetPassport returns a type implementing the Passport interface
+	GetPassport(key string) (Passport, error)
+}
+
+// dummyGuard implements the Guardian interface
+type dummyGuard struct{}
+
+func (d dummyGuard) GetPassport(key string) (Passport, error) {
+	return dummyPassport{}, nil
+}
+
+// Passport regroups passport methods
+type Passport interface {
+	// GetID returns a user ID
+	GetID() string
+
+	// GetName returns a user friendly identifier for user (e.g firstname, lastname, username)
+	GetName() string
+
+	// HasPermission returns whether user has permission for an entity
+	HasPermission(entity interface{}, permission string) bool
+}
+
+// dummyPassport implements the Passport interface
+type dummyPassport struct{}
+
+func (p dummyPassport) GetID() string {
+	return dummyID
+}
+
+func (p dummyPassport) GetName() string {
+	return dummyName
+}
+
+func (p dummyPassport) HasPermission(entity interface{}, permission string) bool {
+	return true
+}

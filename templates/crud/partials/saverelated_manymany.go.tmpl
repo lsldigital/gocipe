@@ -1,0 +1,144 @@
+
+// Save{{.Funcname}} is a helper function to save related {{.PropertyName}} in a pivot table (many-many relationship)
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{.ThatType}}) error {
+	var (
+		stmt *sql.Stmt
+		err  error
+	)
+
+	log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Debug("repo.{{.EntityName}}.Save entered")
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{.EntityName}}.Save context error")
+			return errors.WithStack(err)
+		}
+
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{.EntityName}}.Save StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+
+	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1")
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1", "error": err}).Error("repo.{{.EntityName}}.Save query error")
+		return errors.WithStack(err)
+	}
+
+	_, err = stmt.Exec(idthis)
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{.EntityName}}.Save query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{.EntityName}}.Save context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)")
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)", "error": err}).Error("repo.{{.EntityName}}.Save query error")
+		return errors.WithStack(err)
+	}
+
+	for _, rel := range relatives {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{.EntityName}}.Save context error")
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+
+		_, err = stmt.Exec(idthis, rel.ID)
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{.EntityName}}.Save query exec " + rel.Name + " error")
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{.EntityName}}.Save commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+// Save{{.Funcname}}IDs is a helper function to save related {{.PropertyName}} IDs in a pivot table (many-many relationship)
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{pkeyPropertyType .ThatPrimaryKey}}) error {
+	var (
+		stmt *sql.Stmt
+		err  error
+	)
+
+	log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Debug("repo.{{.EntityName}}.Save{{.Funcname}}IDs entered")
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{.EntityName}}.Save{{.Funcname}}IDs context error")
+			return errors.WithStack(err)
+		}
+
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{.EntityName}}.Save{{.Funcname}}IDs StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+	
+	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1")
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1", "error": err}).Error("repo.{{.EntityName}}.Save{{.Funcname}}IDs query error")
+		return errors.WithStack(err)
+	}
+
+	_, err = stmt.Exec(idthis)
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{.EntityName}}.Save{{.Funcname}}IDs query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{.EntityName}}.Save{{.Funcname}}IDs context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)")
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)", "error": err}).Error("repo.{{.EntityName}}.Save{{.Funcname}}IDs query error")
+		return errors.WithStack(err)
+	}
+
+	for _, relid := range relatives {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{.EntityName}}.Save{{.Funcname}}IDs context error")
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+
+		_, err = stmt.Exec(idthis, relid)
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{.EntityName}}.Save{{.Funcname}}IDs query exec " + relid + " error")
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{.EntityName}}.Save{{.Funcname}}IDs commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}

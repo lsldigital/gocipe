@@ -1,14 +1,25 @@
 package main
 
 import (
-	"github.com/fluxynet/gocipe/generators"
-	_ "github.com/fluxynet/gocipe/generators/crud"
-	_ "github.com/fluxynet/gocipe/generators/db"
-	_ "github.com/fluxynet/gocipe/generators/http"
-	_ "github.com/fluxynet/gocipe/generators/rest"
-	_ "github.com/fluxynet/gocipe/generators/vuetify"
+	rice "github.com/GeertJohan/go.rice"
+	"github.com/fluxynet/gocipe/cmd"
+	"github.com/fluxynet/gocipe/util"
 )
 
+//go:generate rice embed-go
+
+// Versioning info
+var (
+	appVersion = "n/a"
+	appCommit  = "n/a"
+	appBuilt   = "n/a"
+)
+
+func init() {
+	util.SetTemplates(rice.MustFindBox("templates"))
+	cmd.SetVersionInfo(appVersion, appCommit, appBuilt)
+}
+
 func main() {
-	generators.Execute()
+	cmd.Execute()
 }

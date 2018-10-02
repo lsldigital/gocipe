@@ -1,0 +1,437 @@
+<template>
+  <div :class="{ 'px-3' : !nested }" class="listing--container">
+    <v-toolbar color="transparent" class="listing-toolbar blue-grey darken-3 px-3" dark flat ml-0 v-if="!nested">
+      <v-btn icon>
+        <v-icon>{{.Entity.Vuetify.Icon}}</v-icon>
+      </v-btn>
+      <v-toolbar-title class="ml-0 pl-0">{{.Entity.Name}} </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-text-field class="mb-3" prepend-inner-icon="search" label="Search"
+        single-line hide-details small v-model="search"></v-text-field>
+      <v-btn-toggle flat class="transparent" v-model="toggle_status">
+        <v-btn icon small :color="toggle_status === 0 ? 'success' : ''" flat>
+          <v-icon small dark>check_circle</v-icon>
+        </v-btn>
+        <v-btn icon small :color="toggle_status === 1 ? 'info' : ''" flat>
+          <v-icon small dark>bookmark</v-icon>
+        </v-btn>
+        <v-btn icon small :color="toggle_status === 2 ? 'warning' : ''" flat>
+          <v-icon small dark>rowing</v-icon>
+        </v-btn>
+        <v-btn icon small :color="toggle_status === 3 ? 'error' : ''" flat>
+          <v-icon small dark>visibility_off</v-icon>
+        </v-btn>
+      </v-btn-toggle>
+      <v-spacer></v-spacer>
+      <v-btn mr-0 class="success" color="white" small flat @click="create">
+        <v-icon dark>add</v-icon> Add
+      </v-btn>
+    </v-toolbar>
+
+    <v-toolbar color="transparent" class="listing-toolbar" flat ml-0 v-else>
+      <v-btn icon>
+        <v-icon>{{.Entity.Vuetify.Icon}}</v-icon>
+      </v-btn>
+      <v-toolbar-title>{{.Entity.Name}} </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn mr-0 class="success" color="white" small flat @click="create">
+        <v-icon dark>add</v-icon> Add
+      </v-btn>
+    </v-toolbar>
+
+    <!-- Error Messages -->
+    <v-alert :type="message.type==='E' ? 'error' : message.type" :value="true" v-for="(message, index) in messages" :key="index">
+      {{ "{{ message.text }}" }}
+    </v-alert>
+
+    <!-- Empty Check -->
+    <div v-if="loading" centered>
+      <v-progress-linear :indeterminate="true"></v-progress-linear>
+      <p class="text-xs-center">contacting server...</p>
+    </div>
+    <v-alert type="info" value="true" color="primary" outline icon="info" v-else-if="entities.length===0 && !loading">
+      No {{.Entity.Name}} exist. Would you like to create one now?
+      <v-btn color="primary" @click="create">create new</v-btn>
+    </v-alert>
+
+    <!-- Table form listing -->
+    <v-card v-else>
+        <v-data-table :headers="headers" max :items="entities" class="elevation-0" :search="search">
+          <template slot="items" slot-scope="props">
+            <tr :class="{'highlight': recentlySaved(props.item.id)}" :key="props.item.id">
+              <td class="justify-center layout">
+                <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.id, props.item.Name)">
+                  <v-icon>delete</v-icon>
+                </v-btn>
+                <v-tooltip top v-if="nested">
+                  <v-btn icon class="mx-0" @click.stop="duplicate(props.item.id)">
+                    <v-icon>file_copy</v-icon>
+                  </v-btn>
+                  <span>Duplicate</span>
+                </v-tooltip>
+                <v-tooltip top v-if="nested">
+                  <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.id, props.item.Name)">
+                    <v-icon>edit</v-icon>
+                  </v-btn>
+                  <span>Edit</span>
+                </v-tooltip>
+                <v-tooltip top v-else>
+                  <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
+                    <v-icon>edit</v-icon>
+                  </v-btn>
+                  <span>Automatically generated Edit Form</span>
+                </v-tooltip>
+              </td>
+              <!-- Check if it should appear in the list -->
+              {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
+              <!-- Use different rendering for dates -->
+              {{ if eq .ListWidget.Type "time" }}
+              <td>
+                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+              </td>
+              {{- else -}}
+              <!-- Use different rendering for dates -->
+              {{if eq .ListWidget.Type "image"}}
+              <td>
+                <v-img :src="{{ printf " props.item.%s+':thumb' " (ucfirst .Property.Name) }}" width="50" max-width="50" contain height="40" max-height="40"></v-img>
+              </td>
+              {{- else -}}
+              <!-- Use different rendering for select types -->
+              {{if eq .ListWidget.Type "select"}}
+              <td>
+                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+              </td>
+              {{- else -}}
+              <!-- Use different rendering for dates -->
+              {{if eq .ListWidget.Type "icon"}}
+              <td>
+                <v-icon>{{ printf "{{ props.item.%s }}" (ucfirst .Property.Name) }}</v-icon>
+              </td>
+              {{else}}
+              <!-- Use different rendering for toggles -->
+              {{if eq .ListWidget.Type "toggle"}}
+              <td>
+                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+              </td>
+              {{else}}
+              <td>
+                <v-tooltip top>
+                  <span slot="activator">
+                    {{ printf "{{ props.item.%s}}" (ucfirst .Property.Name) }}
+
+                  </span>
+                  <span>Widget Type : {{ ucfirst .Property.Type}}</span>
+                </v-tooltip>
+              </td>
+              {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
+            </tr>
+          </template>
+
+          <template slot="no-data">
+            <v-flex ma-4>
+              <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-if="search.length> 0"> Your search for "{{ "{{ search }}" }}" found no results.
+              </v-alert>
+              <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-else>
+                No {{.Entity.Name}} found.
+              </v-alert>
+            </v-flex>
+          </template>
+        </v-data-table>
+    </v-card>
+
+    <v-dialog v-model="dialog" persistent max-width="300">
+      <v-card dark>
+        <v-card-title class="headline">Confirm Delete</v-card-title>
+        <v-card-text>
+          You are about to delete
+          <strong>"{{ printf "{{deleteItemId.label}}" }}"</strong>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn flat @click.native="dialog = false;">Cancel</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="error" dark @click.native="deleteConfirm">Yes, Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Edit In Place -->
+    <v-dialog :persistent="true" :lazy="true" v-model="nestedForm.visible" width="auto" class="pa-4" max-width="1000px">
+      <component :is="'{{plural .Entity.Name}}Edit'" :key="nestedForm.id" @closeform="nestedFormClose" :visible="nestedForm.visible" :filter_id="nestedForm.id" :nested="true" />
+    </v-dialog>
+    <!-- !# Edit In Place -->
+
+
+    <v-snackbar v-model="snackbar.show"  :bottom="true"  color="primary" auto-height :timeout="2000">
+      {{ printf `{{ snackbar.text }}` }}
+      <v-btn dark flat @click="snackbarHide">
+        <v-icon>close</v-icon>
+      </v-btn>
+    </v-snackbar>
+  </div>
+</template>
+
+<script>
+import { AdminClient } from "@/services/service_admin_pb_service";
+import { ListRequest, GetRequest, Filter} from "@/services/service_admin_pb";
+import { Create{{ .Entity.Name}}Request } from "@/services/service_admin_pb";
+import { DeleteRequest } from "@/services/service_admin_pb";
+import { mapGetters } from 'vuex';
+
+import { {{ .Entity.Name }} } from "@/services/models_pb.js";
+
+let cli = new AdminClient("/api");
+
+export default {
+  data() {
+    return {
+      messages: [],
+      track: null,
+      search: "",
+      toggle_status:null,
+      snackbar: {
+          show: false, 
+          text: ''
+      },
+      dialog: null,
+      deleteItemId: {
+        id: null,
+        label: null
+      },
+      nestedForm: {
+        visible: null,
+        id: null,
+        label: null
+      },
+      text: "",
+      headers: [
+      {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
+		    {{range .Entity.Fields }}
+          {{if not .ListWidget.Hide}}
+		      {text: "{{.Label}}", value: "{{.Property.Name}}"},
+		    {{end}}
+      {{end}}
+      ],
+      entities: [],
+      loading: false
+    };
+  },
+  components: {
+  },
+  computed: {
+    ...mapGetters({
+      'token': 'auth/getToken'
+    })
+  },
+  props: ["filter_id", "filter_field", "nested", "rpc"],
+  mounted() {
+    this.loading = true;
+    this.getList();
+    this.track = this.$route.params.track;
+
+  },
+  methods: {    
+      recentlySaved(id) {
+          if (this.track === id) {
+              return true;
+          }
+          return false;
+      },
+      nestedFormEdit(editid, name) {
+        this.nestedForm = {
+          visible: true,
+          id: editid,
+          label: name
+        };
+      },
+      nestedFormClose() {
+        // clear and reset nested form
+        this.getList();
+        this.nestedForm = {
+          visible: false,
+          id: "",
+          label: ""
+        };
+      },
+      getList: function(){
+        let req = new ListRequest();
+
+        if (this.filter_id) {
+          let filter = new Filter();
+          filter.setField(this.filter_field);
+          filter.setOperation("=");
+          filter.setValue(this.filter_id);
+
+          req.addFilters(filter);
+        }
+
+        req.setKey(this.token);
+
+        cli.list{{plural .Entity.Name}}(req, (err, resp) => {
+          if (err) {
+            console.log(err);
+            this.snackbarShow(err.message, "error");
+            return;
+          }
+          this.loading = false;
+          this.snackbarShow('{{ucfirst (plural .Entity.Name)}} Loaded');
+
+          this.entities = resp.get{{ucfirst (plural .Entity.Name)}}List().map(entity => {
+            return {
+              {{ range .Entity.Fields -}}
+                {{- if eq .ListWidget.Type "time" -}}
+                  {{ucfirst .Property.Name}}: {{- printf " entity.get%s().toDate() " (ucfirst .Property.Name)}},
+                {{- else -}}
+                  {{ucfirst .Property.Name}}: {{- printf " entity.get%s() " (ucfirst .Property.Name)}},
+                {{- end }}
+              {{ end }}
+              id: entity.getId()
+            }
+          })
+          
+        });
+       },
+      duplicate(id) {
+        let toBeDuplicatedId = id;
+        let toBeDuplicatedEntity = null;
+        // Get the entity
+        let req = new GetRequest();
+        req.setId(toBeDuplicatedId);
+
+        this.loading = true;
+
+        cli.get{{.Entity.Name}}(req, (err, resp) => {
+          if (err) {
+            console.log(err);
+            this.snackbarShow(err.message, "error");
+            return;
+          }
+          this.loading = false;
+          ///
+          toBeDuplicatedEntity = resp.get{{ucfirst .Entity.Name}}();
+          this.create("existing", toBeDuplicatedEntity);
+        });
+      },
+      create: function(from, existingEntity) {
+        let req = new Create{{.Entity.Name}}Request();
+        req.setKey(this.token);
+
+        if (from === "existing" && existingEntity) {
+          req.set{{ucfirst .Entity.Name}}(existingEntity);
+        } else if (this.nested) {
+          let entity = new {{.Entity.Name}}();
+          entity[this.rpc](this.filter_id);
+          req.set{{ucfirst .Entity.Name}}(entity);
+        }
+
+        this.snackbarShow('Loading {{ucfirst (plural .Entity.Name)}}');
+        this.loading = true;
+
+        cli.create{{.Entity.Name}}(req, (err, resp) => {
+          if (err) {
+            console.log(err);
+
+            this.snackbarShow("Create Error " + err.message, "error");
+
+            this.loading = false;
+            return;
+          }
+          this.loading = false;
+          if (this.nested) {
+            this.nestedForm = {
+              visible: true,
+              id: resp.get{{ucfirst .Entity.Name}}().getId(),
+              label: ""
+            };
+          } else {
+            this.$router.push({
+              name: "{{lower (plural .Entity.Name)}}_edit",
+              params: { id: resp.get{{ucfirst .Entity.Name}}().getId() }
+            });
+          }
+        });
+      },
+      deleteTry: function(id, label) {
+          this.deleteItemId = { id: id, label, label };
+          this.dialog = true;
+      },
+      deleteConfirm: function() {
+
+          let req = new DeleteRequest();
+          req.setKey(this.token);
+          req.setId(this.deleteItemId.id)
+
+          cli.delete{{.Entity.Name}}(req, (err, resp) => {
+            if (err) {
+                console.log(err);
+                this.snackbarShow("Delete error: " + err.message, "error");
+
+                this.loading = false;
+                return;
+            } else {
+              this.snackbarShow('Deleted', this.deleteItemId.label);
+              this.getList();
+            }
+          })
+
+          this.dialog = false;
+
+      },
+      snackbarShow: function(text, color) {
+          this.snackbar.show = true;
+          this.snackbar.color = color || 'info';
+          this.snackbar.text = text || 'something happened';
+      },
+      snackbarHide: function() {
+          this.snackbar.show = false
+      }
+  }
+};
+</script>
+
+<style lang="scss">
+.listing-toolbar .v-toolbar__content {
+  padding: 0;
+}
+
+.listing--container td {
+  img {
+    display: block !important;
+    height: 48px;
+    width: auto;
+  }
+}
+</style>
+
+
+<style lang="scss" scoped>
+.bounce-enter-active {
+  animation: bounce-in 0.5s;
+}
+.bounce-leave-active {
+  animation: bounce-in 0.5s reverse;
+}
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.highlight {
+  animation: highlight 10s 1 ease-in-out;
+}
+
+@keyframes highlight {
+  0% {
+    background: #b9f6ca;
+  }
+  100% {
+    background: transparent;
+  }
+}
+</style>

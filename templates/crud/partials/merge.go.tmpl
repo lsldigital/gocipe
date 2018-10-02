@@ -1,0 +1,204 @@
+
+// Merge performs an SQL merge for {{.EntityName}} record.
+func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity *{{.EntityName}}, tx *sql.Tx, autocommit bool) error {
+	var (
+		err error
+		stmt *sql.Stmt
+	)
+
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.Merge entered")
+	if entity == nil {
+		log.WithFields(log.Fields{"entity": entity}).Info("repo.{{.EntityName}}.Merge Entity empty error")
+		return moderrors.SaveEmptyEntityError
+	}
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge context error")
+			return errors.WithStack(err)
+		}
+		
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return {{.EntityName}}Repo.Insert(ctx, entity, tx, autocommit)
+	}
+
+	{{range .Before}}{{.}}
+	{{end}}
+
+	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
+	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`)
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "query": `INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`, "error": err}).Error("repo.{{.EntityName}}.Merge query error")
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.Merge query done")
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge context error")
+		return errors.WithStack(err)
+	}
+	{{if .HasPreHook}}
+    if err = repo.preSave(ctx, tx, models.Merge, entity); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge hook preSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.Merge hook preSave executed")
+	{{end}}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge context error")
+		return errors.WithStack(err)
+	}
+	_, err = stmt.Exec({{.StructFields}})
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{if .HasPostHook}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	if err = repo.postSave(ctx, "MERGE", entity, tx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge hook postSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.Merge hook postSave executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge context error")
+		return errors.WithStack(err)
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+// MergeWithRel performs an SQL merge for {{.EntityName}} record.
+func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity *{{.EntityName}}, tx *sql.Tx, autocommit bool) error {
+	var (
+		err error
+		stmt *sql.Stmt
+	)
+
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.MergeWithRel entered")
+	if entity == nil {
+		log.WithFields(log.Fields{"entity": entity}).Info("repo.{{.EntityName}}.MergeWithRel Entity empty error")
+		return moderrors.SaveEmptyEntityError
+	}
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge context error")
+			return errors.WithStack(err)
+		}
+		
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.MergeWithRel StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return {{.EntityName}}Repo.Insert(ctx, entity, tx, autocommit)
+	}
+
+	{{range .Before}}{{.}}
+	{{end}}
+
+	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
+	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`)
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "query": `INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`, "error": err}).Error("repo.{{.EntityName}}.MergeWithRel query error")
+		return errors.WithStack(err)
+	}
+
+	{{if .HasPreHook}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.MergeWithRel context error")
+		return errors.WithStack(err)
+	}
+
+    if err = repo.preSave(ctx, tx, models.Merge, entity); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.MergeWithRel hook preSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	{{end}}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.MergeWithRel context error")
+		return errors.WithStack(err)
+	}
+	_, err = stmt.Exec({{.StructFields}})
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.MergeWithRel query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{ $i := 0 -}}
+	{{range $name, $code := .Related}}{{$code}}
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Error("repo.{{$.EntityName}}.MergeWithRel load related {{$name}} error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	{{if ne (plus1 $i) (len $.Related)}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$.EntityName}}.MergeWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	{{end}}
+	{{- $i = plus1 $i }}
+	{{end}}
+
+	{{if .HasPostHook}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.MergeWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	if err = repo.postSave(ctx, "MERGE", entity, tx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.MergeWithRel hook postSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.MergeWithRel hook postSave executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.MergeWithRel context error")
+		return errors.WithStack(err)
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.MergeWithRel commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}

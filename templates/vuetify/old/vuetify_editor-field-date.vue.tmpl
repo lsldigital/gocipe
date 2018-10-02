@@ -1,0 +1,25 @@
+<v-menu
+	ref="menu_{{.Serialized}}"
+	lazy
+	:close-on-content-click="false"
+	v-model="dates.{{.Serialized}}.menuAppear"
+	transition="scale-transition"
+	offset-y
+	full-width
+	:nudge-right="40"
+	min-width="290px"
+	:return-value.sync="dates.{{.Serialized}}.value"
+	>
+	<v-text-field
+		slot="activator"
+		label="{{.Label}}"
+		v-model="dates.{{.Serialized}}.value"
+		prepend-icon="event"
+		readonly
+		></v-text-field>
+		<v-date-picker v-model="dates.{{.Serialized}}.value" @change="entity.{{.Serialized}} = dates.{{.Serialized}}.value + 'T00:00:00Z'" no-title scrollable>
+		<v-spacer></v-spacer>
+		<v-btn flat color="primary" @click="menu_{{.Serialized}} = false">Cancel</v-btn>
+		<v-btn flat color="primary" @click="$refs.menu_{{.Serialized}}.save(dates.{{.Serialized}}.value)">OK</v-btn>
+		</v-date-picker>
+</v-menu>

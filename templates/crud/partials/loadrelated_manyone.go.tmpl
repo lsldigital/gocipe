@@ -1,0 +1,66 @@
+
+// Load{{.Funcname}} is a helper function to load related {{.PropertyName}} entities
+func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, entities ...*{{.ThisEntity}}) error {
+	var (
+		err error
+		placeholder string
+		values  []interface{}
+		indices = make(map[{{.ThatType}}][]*{{.ThisEntity}})
+	)
+
+	log.WithFields(log.Fields{"entities": entities}).Debug("repo.{{.ThisEntity}}.Load entered")
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{.ThisEntity}}.Load context error")
+		return errors.WithStack(err)
+	} else if len(entities) == 0 {
+		return nil
+	}
+
+	c := 1
+	for _, entity := range entities {
+		placeholder += "$" + strconv.Itoa(c) + ","
+		indices[entity.{{.ThisID}}] = append(indices[entity.{{.ThisID}}], entity)
+		values = append(values, entity.{{.ThisID}})
+		c++
+	}
+	placeholder = strings.TrimRight(placeholder, ",")
+	rows, err := repo.db.QueryContext(ctx, `
+		SELECT t."id", {{.SQLFields}} FROM {{.ThatTable}} t WHERE t."id" IN (`+placeholder+`)
+	`, values...)
+	if err != nil {
+		log.WithFields(log.Fields{"entities": entities, "query": `SELECT t."id", {{.SQLFields}} FROM {{.ThatTable}} t WHERE t."id" IN (`+placeholder+`)`, "error": err}).Error("repo.{{.ThisEntity}}.Load query error")
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{.ThisEntity}}.Load context error")
+		return errors.WithStack(err)
+	}
+
+	for rows.Next() {
+		var (
+			thatID {{.ThatType}}
+			thatEntity {{.ThatEntity}}
+		)
+		{{range .Before}}{{.}}
+		{{end}}
+		err = rows.Scan(&thatID, {{.StructFields}})
+		if err != nil {
+			log.WithFields(log.Fields{"entities": entities, "query": `SELECT t."id", {{.SQLFields}} FROM {{.ThatTable}} t WHERE t."id" IN (`+placeholder+`)`, "fields": "{{.StructFields}}", "error": err}).Error("repo.{{.ThisEntity}}.Load scan error")
+			return errors.WithStack(err)
+		}
+		{{range .After}}{{.}}
+		{{end}}
+
+		for i := range indices[thatID] {
+			indices[thatID][i].{{.PropertyName}} = &thatEntity
+		}
+		
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{.ThisEntity}}.Load context error")
+			return errors.WithStack(err)
+		}
+	}
+
+	return nil
+}

@@ -1,0 +1,232 @@
+
+// List returns a slice containing {{.EntityName}} records
+func (repo {{.EntityName}}Repositorium) List(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.EntityName}}, error) {
+	var (
+		list	 []*{{.EntityName}}
+		segments []string
+		values	 []interface{}
+		err		 error
+		rows	 *sql.Rows
+		index	 int = 0
+	)
+
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.EntityName}}.List entered")
+	query := `SELECT {{.SQLFields}} FROM {{.Table}} t`
+	{{if .HasPreHook}}
+    if filters, err = repo.preList(ctx, filters); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.EntityName}}.List hook preList error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.EntityName}}.List hook preGet executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.EntityName}}.List context error")
+		return nil, err
+	}
+
+	for _, filter := range filters {
+		if filter.Operation == "IN" || filter.Operation == "NOT IN" {
+			seg, val, err := QueryAddIN(segments, values, &index, filter.Field, filter.Value, "NOT IN" == filter.Operation)
+			if err != nil {
+				log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{.EntityName}}.List QueryAddIN error")
+				continue
+			}
+			segments = seg
+			values = val
+		} else {
+			index += 1
+			segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(index))
+			values = append(values, filter.Value)
+		}
+	}
+
+	if len(segments) != 0 {
+		query += " WHERE " + strings.Join(segments, " AND ")
+	}
+
+	if opts != nil && opts.Sort != "" {
+		query += " ORDER BY " + opts.Sort
+	}{{if .DefaultSort}} else {
+		query += ` ORDER BY {{.DefaultSort}}`
+	}
+	{{- end}}
+
+	if opts != nil && opts.Offset > 0 {
+		query += " OFFSET " + strconv.FormatInt(opts.Offset, 10)
+	}
+
+	if opts != nil && opts.Limit > 0 {
+		query += " LIMIT " + strconv.FormatInt(opts.Limit, 10)
+	}
+
+	rows, err = repo.db.QueryContext(ctx, query, values...)
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "error": err}).Error("repo.{{.EntityName}}.List query error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.EntityName}}.List query done")
+
+	defer rows.Close()
+	for rows.Next() {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.EntityName}}.List row found")
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.EntityName}}.List context error")
+			return nil, err
+		}
+
+		var entity {{.EntityName}}
+		{{range .Before}}{{.}}
+		{{end}}
+
+		err = rows.Scan({{.StructFields}})
+		if err != nil {
+			log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "fields": "{{.StructFields}}", "error": err}).Error("repo.{{.EntityName}}.List scan error")
+			return nil, err
+		}
+		
+		{{range .After}}{{.}}
+		{{end}}
+
+		log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.EntityName}}.List data scan done")
+		list = append(list, &entity)
+		
+	}
+	{{if .HasPostHook}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.EntityName}}.List context error")
+		return nil, err
+	}
+
+	if list, err = repo.postList(ctx, list); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.EntityName}}.List hook postList error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.EntityName}}.List hook postList executed")
+	{{end}}
+
+	return list, nil
+}
+
+// ListWithRel returns a slice containing {{.EntityName}} records; will also load related entities.
+func (repo {{.EntityName}}Repositorium) ListWithRel(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.EntityName}}, error) {
+	var (
+		err error
+		entities []*{{.EntityName}}
+	)
+
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.EntityName}}.ListWithRel entered")
+	entities, err = repo.List(ctx, opts, filters...)
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{.EntityName}}.ListWithRel get entity error")
+		return nil, err
+	}
+
+	{{range $name, $code := .Related}}{{$code}}
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{$.EntityName}}.ListWithRel list related {{$name}} error")
+		return nil, err
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{$.EntityName}}.ListWithRel context error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{$.EntityName}}.ListWithRel related {{$name}} listed")
+	{{end}}
+
+	return entities, nil
+}
+
+// Select returns a slice containing {{.EntityName}} records according to a custom SQL condition
+func (repo {{.EntityName}}Repositorium) Select(ctx context.Context, opts *ListOpts, condition string, values ...interface{}) ([]*{{.EntityName}}, error) {
+	var (
+		list     []*{{.EntityName}}
+		err      error
+		rows     *sql.Rows
+	)
+
+	log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{.EntityName}}.Select entered")
+	query := `SELECT {{.SQLFields}} FROM {{.Table}} t ` + condition
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Info("repo.{{.EntityName}}.Select context error")
+		return nil, err
+	}
+
+	if opts != nil {
+		switch opts.Sort {
+		case {{.OrderFields}}:
+			query += ` ORDER BY t."` + opts.Sort + `"`
+		}
+	}
+
+	if opts != nil && opts.Offset > 0 {
+		query += " OFFSET " + strconv.FormatInt(opts.Offset, 10)
+	}
+
+	if opts != nil && opts.Limit > 0 {
+		query += " LIMIT " + strconv.FormatInt(opts.Limit, 10)
+	}
+
+	rows, err = repo.db.QueryContext(ctx, query, values...)
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "query": query, "error": err}).Error("repo.{{.EntityName}}.Select query error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{.EntityName}}.Select query done")
+
+	defer rows.Close()
+	for rows.Next() {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Info("repo.{{.EntityName}}.Select context error")
+			return nil, err
+		}
+
+		var entity {{.EntityName}}
+		{{range .Before}}{{.}}
+		{{end}}
+
+		err = rows.Scan({{.StructFields}})
+		if err != nil {
+			log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "query": query, "fields": "{{.StructFields}}", "error": err}).Error("repo.{{.EntityName}}.Select scan error")
+			return nil, err
+		}
+		
+		{{range .After}}{{.}}
+		{{end}}
+
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{.EntityName}}.Select data scan done")
+		list = append(list, &entity)
+	}
+
+	return list, nil
+}
+
+// SelectWithRel returns a slice containing {{.EntityName}} records according to a custom SQL condition; will also load related entities.
+func (repo {{.EntityName}}Repositorium) SelectWithRel(ctx context.Context, opts *ListOpts, condition string, values ...interface{}) ([]*{{.EntityName}}, error) {
+	var (
+		err error
+		entities []*{{.EntityName}}
+	)
+
+	log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{.EntityName}}.SelectWithRel entered")
+	entities, err = repo.Select(ctx, opts, condition, values...)
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Error("repo.{{.EntityName}}.SelectWithRel get entity error")
+		return nil, err
+	}
+
+	{{range $name, $code := .Related}}{{$code}}
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Error("repo.{{$.EntityName}}.SelectWithRel list related {{$name}} error")
+		return nil, err
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Info("repo.{{$.EntityName}}.SelectWithRel context error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{$.EntityName}}.SelectWithRel related {{$name}} listed")
+	{{end}}
+
+	return entities, nil
+}
