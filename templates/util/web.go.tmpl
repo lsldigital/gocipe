@@ -1,10 +1,16 @@
 package web
 
 import (
+	"bytes"
+	"html/template"
+	"io"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -76,6 +82,24 @@ func (f *fileHandlerWithFallback) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+type fileHandlerWithFallbackContent struct {
+	root        http.FileSystem
+	fallback    io.ReadSeeker
+	filename    string
+	contentType string
+	modtime     time.Time
+}
+
+// FileServerWithFallbackContent returns an HTTP static fileserver with a default content fallback if requested url was not found
+func FileServerWithFallbackContent(root http.FileSystem, fallback io.ReadSeeker, filename, contentType string, modtime time.Time) http.Handler {
+	return &fileHandlerWithFallbackContent{root: root, fallback: fallback, filename: filename, contentType: contentType, modtime: modtime}
+}
+
+func (f *fileHandlerWithFallbackContent) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", f.contentType)
+	http.ServeContent(w, r, f.filename, f.modtime, f.fallback)
+}
+
 type fileHandlerWithNotFoundHandler struct {
 	root    http.FileSystem
 	handler http.Handler
@@ -95,24 +119,47 @@ func (f *fileHandlerWithNotFoundHandler) ServeHTTP(w http.ResponseWriter, r *htt
 }
 
 // VueAppRouting returns a new subrouter
-func VueAppRouting(router *mux.Router, prefix string, appName string, mwf ...mux.MiddlewareFunc) error {
-	var (
-		fileSystem   http.FileSystem
-		fallbackFile http.File
-		err          error
+func VueAppRouting(router *mux.Router, prefix string, appName string, fallbackParams interface{}, mwf ...mux.MiddlewareFunc) error {
+	fileSystem := util.WebBox{Box: core.Assets, App: "web/" + appName, Path: "/" + appName}
+
+	if fallbackParams == nil {
+		fallbackFile, err := core.Assets.Open("web/" + appName + "/index.html")
+		if err != nil {
+			return err
+		}
+
+		router.PathPrefix(prefix).Handler(
+			http.StripPrefix(
+				prefix,
+				FileServerWithFallback(fileSystem, fallbackFile),
+			),
 	)
 
-	fallbackFile, err = core.Assets.Open("web/" + appName + "/index.html")
+		return nil
+	}
+
+	raw, err := core.Assets.String("web/" + appName + "/index.html")
+
+	if err != nil {
+		return err
+	}
+
+	tpl, err := template.New(appName).Parse(raw)
 	if err != nil {
 		return err
 	}
 	
-	fileSystem = util.WebBox{Box: core.Assets, App: "web/" + appName, Path: "/" + appName}
+	b := bytes.NewBuffer([]byte{})
+	err = tpl.Execute(b, fallbackParams)
+
+	if err != nil {
+		return err
+	}
 
 	router.PathPrefix(prefix).Handler(
 		http.StripPrefix(
 			prefix,
-			FileServerWithFallback(fileSystem, fallbackFile),
+			FileServerWithNotFoundHandler(fileSystem, FileServerWithFallbackContent(fileSystem, bytes.NewReader(b.Bytes()), "index.html", "text/html", time.Now())),
 		),
 	)
 
@@ -122,9 +169,9 @@ func VueAppRouting(router *mux.Router, prefix string, appName string, mwf ...mux
 // DevRouting returns a new subrouter
 func DevRouting(router *mux.Router, prefix string, app string, port string, mwf ...mux.MiddlewareFunc) error {
 	var (
-		url		  = &url.URL{Scheme: "http", Host: "localhost:" + port}
-		wsprox    = NewWSReverseProxy(url)
-		htprox    = httputil.NewSingleHostReverseProxy(url)
+		url    = &url.URL{Scheme: "http", Host: "localhost:" + port}
+		wsprox = NewWSReverseProxy(url)
+		htprox = httputil.NewSingleHostReverseProxy(url)
 	)
 
 	router.PathPrefix(prefix).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
