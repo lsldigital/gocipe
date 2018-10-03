@@ -111,7 +111,7 @@ func (i Imagist) listen() {
 }
 
 //Add creates a job entry for processing
-func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimensions, convertTo string) error {
+func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimensions, convertTo string, validate bool) error {
 	if !filetype.IsImage(buf) {
 		return fmt.Errorf("image type invalid")
 	}
@@ -133,15 +133,17 @@ func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimension
 		return fmt.Errorf("image type %s invalid", imgType)
 	}
 
-	// Check min width and height
-	if dimensions.MinWidth != util.NoLimit && config.Width < dimensions.MinWidth {
-		log.Printf("image %v lower than min width: %v\n", fileDiskPath, dimensions.MinWidth)
-		return fmt.Errorf("image width less than %dpx", dimensions.MinWidth)
-	}
+	if validate {
+		// Check min width and height
+		if dimensions.MinWidth != util.NoLimit && config.Width < dimensions.MinWidth {
+			log.Printf("image %v lower than min width: %v\n", fileDiskPath, dimensions.MinWidth)
+			return fmt.Errorf("image width less than %dpx", dimensions.MinWidth)
+		}
 
-	if dimensions.MinHeight != util.NoLimit && config.Height < dimensions.MinHeight {
-		log.Printf("image %v lower than min height: %v\n", fileDiskPath, dimensions.MinHeight)
-		return fmt.Errorf("image height less than %dpx", dimensions.MinHeight)
+		if dimensions.MinHeight != util.NoLimit && config.Height < dimensions.MinHeight {
+			log.Printf("image %v lower than min height: %v\n", fileDiskPath, dimensions.MinHeight)
+			return fmt.Errorf("image height less than %dpx", dimensions.MinHeight)
+		}
 	}
 
 	job := Job{
