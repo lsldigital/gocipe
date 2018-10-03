@@ -15,9 +15,6 @@ type Recipe struct {
 	// HTTP indicates whether http server code should be generated
 	HTTP HTTPOpts `json:"http"`
 
-	// Schema describes options for Schema generation
-	Schema SchemaOpts `json:"schema"`
-
 	// Crud describes options for Crud generation
 	Crud CrudOpts `json:"crud"`
 

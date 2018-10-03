@@ -2,6 +2,8 @@ package util
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 )
 
 const (
@@ -19,6 +21,15 @@ var (
 	ErrorFieldNameEmpty = errors.New("field name is empty")
 )
 
+// FieldSchema represents schema generation information for the field
+type FieldSchema struct {
+	// Field is the name of the field in database
+	Field string `json:"field"`
+
+	// Type is the data type for the field in database
+	Type string `json:"type"`
+}
+
 // Field describes a field contained in an entity
 type Field struct {
 	// Name is the name of the property
@@ -29,6 +40,9 @@ type Field struct {
 
 	// Type is the data type of the property
 	Type string `json:"type"`
+
+	// Default provides the default value for this field in database
+	Default string `json:"default"`
 
 	// EditWidget represents widget information for the field
 	EditWidget EditWidgetOpts `json:"edit_widget"`
@@ -67,4 +81,13 @@ func (f *Field) Validate() error {
 	}
 
 	return nil
+}
+
+//SchemaDefinition returns schema definition for this field as part of a table definition
+func (f *Field) SchemaDefinition() string {
+	var def string
+	if f.Default != "" {
+		def = fmt.Sprintf(` DEFAULT "%s"`, strings.Replace(f.Default, `"`, `""`, -1)) //TODO SQL-dialect sensitive
+	}
+	return fmt.Sprintf(`"%s" %s NOT NULL%s`, f.schema.Field, f.schema.Type, def)
 }

@@ -251,18 +251,6 @@ type VuetifyEntityOpts struct {
 	Icon string `json:"icon"`
 }
 
-// FieldSchema represents schema generation information for the field
-type FieldSchema struct {
-	// Field is the name of the field in database
-	Field string `json:"field"`
-
-	// Type is the data type for the field in database
-	Type string `json:"type"`
-
-	// Default provides the default value for this field in database
-	Default string `json:"default"`
-}
-
 // EditWidgetOpts represents a UI widget for edit forms
 type EditWidgetOpts struct {
 	// Type indicates which widget type is represented

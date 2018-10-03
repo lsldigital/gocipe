@@ -1,33 +1,27 @@
-DROP TABLE IF EXISTS {{.Entity.Table}};
+{{range .Entities}}
+DROP TABLE IF EXISTS {{.Table}};
 
-CREATE TABLE {{.Entity.Table}} (
-	"id" {{pkeyFieldType .Entity.PrimaryKey}},
-	{{- range $i, $e := .Entity.Fields}}{{if ne .Schema.Field ""}}
-	"{{.Schema.Field}}" {{$e.Schema.Type}} NOT NULL
-	{{- if ne .Schema.Default ""}} DEFAULT {{.Schema.Default}}{{end}},
-	{{- end}}{{- end}}
-	{{- range .RelatedFields}}
-	"{{.Name}}" {{.Type}} NOT NULL,
-	{{end}}
-	{{- range .ReferencedFields}}
-	"{{.Field}}" {{.Type}} NOT NULL
-	{{- if ne .Default ""}} DEFAULT {{.Default}}{{end}},
-	{{- end}}
+CREATE TABLE {{.Table}} (
+	"id" TEXT,
+	{{range .Fields}}{{.SchemaDefinition}},{{end}}
+	{{range .GetForeignKeyFields}}{{.}},{{end}}
 	{{range .Entity.TableConstraints}}{{.}},{{end}}
 	PRIMARY KEY ("id")
 );
 
-{{range .RelatedTables}}
-DROP TABLE IF EXISTS {{.Table}};
+{{range .GetRelatedTables}}
+DROP TABLE IF EXISTS {{.JoinTable}};
 
-CREATE TABLE {{.Table}} (
-	"{{.ThisID}}" {{.ThisType}} NOT NULL,
-	"{{.ThatID}}" {{.ThatType}} NOT NULL
+CREATE TABLE {{.JoinTable}} (
+	"{{.ThisID}}" TEXT NOT NULL,
+	"{{.ThatID}}" TEXT NOT NULL
 );
 
-DROP INDEX IF EXISTS {{.Table}}_{{.ThisID}};
-DROP INDEX IF EXISTS {{.Table}}_{{.ThatID}};
+DROP INDEX IF EXISTS {{.JoinTable}}_{{.ThisID}};
+DROP INDEX IF EXISTS {{.JoinTable}}_{{.ThatID}};
 
-CREATE INDEX {{.Table}}_{{.ThisID}} ON {{.Table}} ({{.ThisID}});
-CREATE INDEX {{.Table}}_{{.ThatID}} ON {{.Table}} ({{.ThatID}});
+CREATE INDEX {{.JoinTable}}_{{.ThisID}} ON {{.JoinTable}} ({{.ThisID}});
+CREATE INDEX {{.JoinTable}}_{{.ThatID}} ON {{.JoinTable}} ({{.ThatID}});
+{{end}}
+
 {{end}}

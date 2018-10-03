@@ -252,3 +252,40 @@ func (e *Entity) GetFileFieldsDefinition() []string {
 
 	return fileFields
 }
+
+//GetForeignKeyFields returns definition of related foreign key fields (used by schema)
+func (e *Entity) GetForeignKeyFields() []string {
+	var related []string
+
+	for _, p := range e.Relationships {
+		if p.Type == RelationshipTypeManyOne {
+			related = append(related, fmt.Sprintf(`"%s" TEXT NOT NULL`, p.ThisID))
+		}
+	}
+
+	for _, n := range e.References { //referenced fields come in pairs
+		related = append(related, fmt.Sprintf(`"%s" TEXT NOT NULL`, n.IDField.schema.Field))
+		related = append(related, fmt.Sprintf(`"%s" TEXT NOT NULL`, n.TypeField.schema.Field))
+	}
+
+	return related
+}
+
+//GetRelatedTables returns definition of related tables; typically due to many-many relationships (used by schema)
+func (e *Entity) GetRelatedTables() []Relationship {
+	var related []Relationship
+	for _, p := range e.Relationships {
+		switch p.Type {
+		default:
+			continue
+		case RelationshipTypeManyManyInverse, RelationshipTypeManyManyOwner:
+			if p.related == nil || strings.Compare(e.Name, p.related.Name) < 0 {
+				continue
+			}
+		}
+
+		related = append(related, p)
+	}
+
+	return related
+}

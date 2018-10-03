@@ -55,12 +55,18 @@ type Relationship struct {
 	// ThatID represents the field in the other entity used for this relationship
 	ThatID string `json:"-"`
 
-	// Eager indicates whether or not to eager load this relationship
-	// Eager bool `json:"eager"`
+	//related is a pointer to the related entity
+	related *Entity
 }
 
 func (p *Relationship) init(r *Recipe, e *Entity) {
 	var isMany bool
+
+	if rel, err := r.GetEntity(p.Entity); err == nil {
+		p.related = rel
+	} else {
+		return
+	}
 
 	switch p.Type {
 	case RelationshipTypeOneOne:
@@ -70,9 +76,7 @@ func (p *Relationship) init(r *Recipe, e *Entity) {
 
 	case RelationshipTypeOneMany:
 		isMany = true
-		if rel, err := r.GetEntity(p.Entity); err == nil {
-			p.JoinTable = rel.Table
-		}
+		p.JoinTable = p.related.Table
 		p.ThisID = "id"
 		p.ThatID = strings.ToLower(e.Name) + "_id"
 
@@ -83,10 +87,10 @@ func (p *Relationship) init(r *Recipe, e *Entity) {
 
 	case RelationshipTypeManyManyOwner, RelationshipTypeManyManyInverse:
 		isMany = true
-		if rel, err := r.GetEntity(p.Entity); err == nil {
-			if strings.Compare(e.Table, rel.Table) == -1 { //ascending order
-				p.JoinTable = e.Table + "_" + rel.Table
-			}
+		if strings.Compare(e.Table, p.related.Table) == -1 { //ascending order
+			p.JoinTable = e.Table + "_" + p.related.Table
+		} else {
+			p.JoinTable = p.related.Table + "_" + e.Table
 		}
 		p.ThisID = strings.ToLower(p.Name) + "_id"
 		p.ThatID = strings.ToLower(e.Name) + "_id"
