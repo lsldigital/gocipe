@@ -186,7 +186,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 		req.ListOpts = &models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit}
 	}
 
-	{{$filters := getAdminFilters $.Entities . }}
+	{{$filters := .GetAdminFilters }}
 	{{if (or $filters.HasBool $filters.HasString $filters.HasDate)}}
 	if req.Filters != nil {
 		for i := range req.Filters {
@@ -411,7 +411,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 
 	switch req.Field {
 		{{$EntityName := .Name}}
-		{{- range (getFileFields .)}}
+		{{- range (.GetFileFieldsDefinition)}}
 		{{.}}
 		{{- end}}
 		default:

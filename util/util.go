@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"path"
 	"regexp"
@@ -92,52 +91,6 @@ func init() {
 		"fkeyPropertyType": func(entities map[string]Entity, rel Relationship) (string, error) {
 			return GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
 		},
-		// getAdminFilters returns possible filters from fields in an entity
-		"getAdminFilters": func(entities map[string]Entity, entity Entity) AdminFilters {
-			var (
-				filters                                 AdminFilters
-				filtersBool, filtersString, filtersDate []string
-			)
-
-			for _, field := range entity.Fields {
-				switch field.Property.Type {
-				case "bool":
-					filtersBool = append(filtersBool, field.Schema.Field)
-					filters.HasBool = true
-				case "string":
-					filtersString = append(filtersString, field.Schema.Field)
-					filters.HasString = true
-				case "date":
-					filtersDate = append(filtersDate, field.Schema.Field)
-					filters.HasDate = true
-				}
-			}
-
-			for _, rel := range entity.Relationships {
-				switch rel.Type {
-				case RelationshipTypeOneOne, RelationshipTypeManyOne:
-					switch entities[entity.Name].PrimaryKey {
-					case PrimaryKeyUUID, PrimaryKeyString:
-						filtersString = append(filtersString, rel.ThisID)
-						filters.HasString = true
-					}
-				}
-			}
-
-			if len(filtersBool) != 0 {
-				filters.BoolFilters = `"` + strings.Join(filtersBool, `","`) + `"`
-			}
-
-			if len(filtersString) != 0 {
-				filters.StringFilters = `"` + strings.Join(filtersString, `","`) + `"`
-			}
-
-			if len(filtersDate) != 0 {
-				filters.DateFilters = `"` + strings.Join(filtersDate, `","`) + `"`
-			}
-
-			return filters
-		},
 		"json": func(item interface{}) (string, error) {
 			jsob, err := json.Marshal(item)
 			if err == nil {
@@ -153,22 +106,6 @@ func init() {
 				}
 			}
 			return false
-		},
-		"getFileFields": func(entity Entity) []string {
-			var fileFields []string
-			for _, field := range entity.Fields {
-				switch field.EditWidget.Type {
-				case WidgetTypeFile, WidgetTypeImage:
-					tpl := strings.Join([]string{
-						`case "%s":`,
-						"options = &%s%sUploadOpts",
-						`fieldname = "%s"`,
-					}, "\n")
-					fileFields = append(fileFields, fmt.Sprintf(tpl, field.Property.Name, entity.Name, field.Property.Name, field.Schema.Field))
-				}
-			}
-
-			return fileFields
 		},
 		"getEntityLabelField": func(entities map[string]Entity, name string) (string, error) {
 			if entity, ok := entities[name]; ok {
@@ -208,12 +145,6 @@ type GeneratedCode struct {
 
 	// GeneratedHeaderFormat is used to prepend generated warning header on non-overwritable files. default: // %s
 	GeneratedHeaderFormat string
-}
-
-// AdminFilters used for List
-type AdminFilters struct {
-	HasBool, HasString, HasDate             bool
-	BoolFilters, StringFilters, DateFilters string
 }
 
 // SetTemplates injects template box
