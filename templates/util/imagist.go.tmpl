@@ -32,8 +32,6 @@ var (
 	DefaultDimensions = ImageDimensions{
 		MinWidth:  util.NoLimit,
 		MinHeight: util.NoLimit,
-		MaxWidth:  util.NoLimit,
-		MaxHeight: util.NoLimit,
 	}
 )
 
@@ -55,8 +53,6 @@ type Job struct {
 type ImageDimensions struct {
 	MinWidth  int
 	MinHeight int
-	MaxWidth  int
-	MaxHeight int
 	Formats   []FormatDimensions
 }
 
@@ -160,40 +156,9 @@ func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimension
 }
 
 func (i Imagist) execute(j Job) {
-	// Check max width and height
-	exceedMaxWidth := j.Dimensions.MaxWidth != util.NoLimit && j.Config.Width >= j.Dimensions.MaxWidth
-	exceedMaxHeight := j.Dimensions.MaxHeight != util.NoLimit && j.Config.Height >= j.Dimensions.MaxHeight
-
-	newWidth := j.Dimensions.MaxWidth
-	newHeight := j.Dimensions.MaxHeight
-
-	// Adjust new width and height accordingly
-	if exceedMaxWidth && exceedMaxHeight {
-		// resize both by width and height
-		// image will be smart cropped :)
-	} else if exceedMaxWidth {
-		// resize proportional to width only
-		newHeight = 0
-	} else if exceedMaxHeight {
-		// resize proportional to height only
-		newWidth = 0
-	} else {
-		// image is never upscaled
-		newWidth = j.Config.Width
-		newHeight = j.Config.Height
-	}
-
-	imageCropAndResize(j.FileDiskPath, newWidth, newHeight, "", j.ConvertTo)
-
 	for _, format := range j.Dimensions.Formats {
-		if format.Name == "" {
+		if format.Name == "" || format.Width <= 0 || format.Height <= 0 {
 			continue
-		}
-		if format.Width <= 0 {
-			format.Width = j.Dimensions.MaxWidth
-		}
-		if format.Height <= 0 {
-			format.Height = j.Dimensions.MaxHeight
 		}
 
 		imageCropAndResize(j.FileDiskPath, format.Width, format.Height, ":"+format.Name, j.ConvertTo)
