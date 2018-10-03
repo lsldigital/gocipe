@@ -17,13 +17,13 @@ var {{.Entity}}{{.Field}}UploadOpts = files.UploadOptions{
 	MaxSize:        util.NoLimit,
 	ConvertTo:      imagist.TypeImageJPG,
 	ImgDimensions:  &imagist.ImageDimensions{
-		ThumbWidth:     400,
-		ThumbHeight:    200,
 		MinWidth:       util.NoLimit,
 		MinHeight:      util.NoLimit,
 		MaxWidth:       util.NoLimit,
 		MaxHeight:      util.NoLimit,
-		GenerateSocial: true,
+		Formats: []imagist.FormatDimensions{
+			{Name: "thumb", Width: 400, Height: 200},
+		},
 	},
 }
 {{end}}

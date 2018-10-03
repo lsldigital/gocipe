@@ -157,11 +157,14 @@ func (s httpImageDirHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p := r.URL.Path
 
 	var suffix string
-	if strings.HasSuffix(p, imagist.SuffixSocial) {
-		suffix = imagist.SuffixSocial
-	} else if strings.HasSuffix(p, imagist.SuffixThumb) {
-		suffix = imagist.SuffixThumb
-	} else {
+	for _, format := range s.opts.ImgDimensions.Formats {
+		formatSuffix := ":" + format.Name
+		if strings.HasSuffix(p, formatSuffix) {
+			suffix = formatSuffix
+		}
+	}
+
+	if suffix == "" {
 		//a previous attempt to lookup the file resulted into a call to this function
 		//do not attempt to look up again
 		w.WriteHeader(http.StatusNotFound)

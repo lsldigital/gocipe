@@ -25,15 +25,6 @@ const (
 	TypeImageJPEG = "jpeg"
 	//TypeImagePNG denotes image of file type png
 	TypeImagePNG = "png"
-
-	//SuffixImg is the suffix used for regular images
-	SuffixImg = ""
-
-	//SuffixThumb is the suffix added to generated file for type Thumb
-	SuffixThumb = ":thumb"
-
-	//SuffixSocial is the suffix added to generated file for type Social
-	SuffixSocial = ":social"
 )
 
 var (
@@ -54,22 +45,26 @@ type Imagist struct {
 
 //Job represents an image processing task
 type Job struct {
-	FileDiskPath   string
-	Config         *image.Config
-	Dimensions     *ImageDimensions
-	ConvertTo      string
-	GenerateSocial bool
+	FileDiskPath string
+	Config       *image.Config
+	Dimensions   *ImageDimensions
+	ConvertTo    string
 }
 
 //ImageDimensions holds dimensions options
 type ImageDimensions struct {
-	ThumbWidth     int
-	ThumbHeight    int
-	MinWidth       int
-	MinHeight      int
-	MaxWidth       int
-	MaxHeight      int
-	GenerateSocial bool
+	MinWidth  int
+	MinHeight int
+	MaxWidth  int
+	MaxHeight int
+	Formats   []FormatDimensions
+}
+
+//FormatDimensions holds dimensions options for format
+type FormatDimensions struct {
+	Name   string
+	Width  int
+	Height int
 }
 
 type subImager interface {
@@ -154,11 +149,10 @@ func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimension
 	}
 
 	job := Job{
-		FileDiskPath:   fileDiskPath,
-		Config:         &config,
-		Dimensions:     dimensions,
-		ConvertTo:      convertTo,
-		GenerateSocial: dimensions.GenerateSocial,
+		FileDiskPath: fileDiskPath,
+		Config:       &config,
+		Dimensions:   dimensions,
+		ConvertTo:    convertTo,
 	}
 	i.jobs <- job
 
@@ -189,15 +183,22 @@ func (i Imagist) execute(j Job) {
 		newHeight = j.Config.Height
 	}
 
-	imageCropAndResize(j.FileDiskPath, newWidth, newHeight, SuffixImg, j.ConvertTo)
+	imageCropAndResize(j.FileDiskPath, newWidth, newHeight, "", j.ConvertTo)
 
-	// Create thumbnails
-	imageCropAndResize(j.FileDiskPath, j.Dimensions.ThumbWidth, j.Dimensions.ThumbHeight, SuffixThumb, j.ConvertTo)
+	for _, format := range j.Dimensions.Formats {
+		if format.Name == "" {
+			continue
+		}
+		if format.Width <= 0 {
+			format.Width = j.Dimensions.MaxWidth
+		}
+		if format.Height <= 0 {
+			format.Height = j.Dimensions.MaxHeight
+		}
 
-	// Create og aka full view / social
-	if j.GenerateSocial {
-		imageCropAndResize(j.FileDiskPath, newWidth, newHeight, SuffixSocial, j.ConvertTo)
+		imageCropAndResize(j.FileDiskPath, format.Width, format.Height, ":"+format.Name, j.ConvertTo)
 	}
+
 	i.done <- j.FileDiskPath
 }
 
