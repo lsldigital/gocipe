@@ -46,11 +46,6 @@ func (r *Recipe) init() {
 			p := &e.Relationships[j]
 			p.init(r, e)
 		}
-
-		for j := range e.References {
-			c := &e.References[j]
-			c.init()
-		}
 	}
 }
 

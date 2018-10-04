@@ -1,6 +1,6 @@
 
 // Get returns a single {{.EntityName}} from database by primary key
-func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id string) (*{{.EntityName}}, error) {
 	var (
 		rows   *sql.Rows
 		err    error
@@ -70,7 +70,7 @@ func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id {{pkeyProper
 }
 
 // GetWithRel returns a single {{.EntityName}} from database by primary key; loads related entities
-func (repo {{.EntityName}}Repositorium) GetWithRel(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.EntityName}}, error) {
+func (repo {{.EntityName}}Repositorium) GetWithRel(ctx context.Context, id string) (*{{.EntityName}}, error) {
 	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.GetWithRel entered")
 	entity, err := repo.Get(ctx, id)
 	if err != nil {

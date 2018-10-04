@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/jinzhu/inflection"
@@ -110,9 +111,42 @@ func (p *Relationship) Validate(r *Recipe) error {
 	}
 
 	switch p.Type {
+	case RelationshipTypeManyManyOwner,
+		RelationshipTypeManyManyInverse,
+		RelationshipTypeOneOne,
+		RelationshipTypeOneMany,
+		RelationshipTypeManyOne:
+		//ok
 	default:
 		return ErrorInvalidRelationshipType
 	}
 
 	return nil
+}
+
+//ProtoDefinitions returns proto definition for this relationship
+func (p *Relationship) ProtoDefinitions(index *int) []string {
+	var definitions []string
+
+	switch p.Type {
+	case RelationshipTypeManyManyOwner,
+		RelationshipTypeManyManyInverse,
+		RelationshipTypeOneMany:
+
+		definitions = append(definitions, fmt.Sprintf(`repeated %s %s = %d;`, p.related.Name, p.Name, index))
+		*index++
+
+	case RelationshipTypeOneOne:
+		definitions = append(definitions, fmt.Sprintf(`%s %s = %d;`, p.related.Name, p.Name, index))
+		*index++
+
+	case RelationshipTypeManyOne:
+		definitions = append(definitions, fmt.Sprintf(`string %sID = %d;`, p.Name, index))
+		*index++
+
+		definitions = append(definitions, fmt.Sprintf(`%s %s = %d;`, p.related.Name, p.Name, index))
+		*index++
+	}
+
+	return definitions
 }

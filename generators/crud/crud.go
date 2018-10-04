@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fluxynet/gocipe/output"
 	"github.com/fluxynet/gocipe/util"
 )
 
@@ -42,9 +43,30 @@ type relationship struct {
 }
 
 // Generate returns generated code to run an http server
-func Generate(work util.GenerationWork, crud util.CrudOpts, entities map[string]util.Entity) {
+func Generate(work util.GenerationWork, crud util.CrudOpts, entities map[string]util.Entity, r *util.Recipe) {
 	generateAny := false
 	work.Waitgroup.Add(len(entities) * 2) //2 threads per entities. for models and models_hooks
+
+	for _, e := range r.Entities {
+		if e.HasCrudHooks() {
+			output.GenerateAndSave(
+				"crud:hooks",
+				"crud/hooks.go.tmpl",
+				fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(e.Name)),
+				e,
+				true,
+			)
+		}
+	}
+
+	output.GenerateAndSave("crud:proto", "crud/models.proto.tmpl", "proto/models.proto", struct {
+		Entities      []util.Entity
+		AppImportPath string
+	}{Entities: r.Entities, AppImportPath: util.AppImportPath}, false)
+
+	output.GenerateAndSave("crud:moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", struct{}{}, false)
+
+	//old:
 
 	for _, entity := range entities {
 		generateAny = generateAny || crud.Generate
@@ -77,32 +99,6 @@ func Generate(work util.GenerationWork, crud util.CrudOpts, entities map[string]
 			} else {
 				work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUD[%s]", entity.Name), Error: fmt.Errorf("failed to execute template: %s", err)}
 			}
-
-			hasHooks := entity.CrudHooks.PreSave ||
-				entity.CrudHooks.PostSave ||
-				entity.CrudHooks.PreRead ||
-				entity.CrudHooks.PostRead ||
-				entity.CrudHooks.PreList ||
-				entity.CrudHooks.PostList ||
-				entity.CrudHooks.PreDeleteSingle ||
-				entity.CrudHooks.PostDeleteSingle ||
-				entity.CrudHooks.PreDeleteMany ||
-				entity.CrudHooks.PostDeleteMany
-
-			if hasHooks {
-				hooks, err := util.ExecuteTemplate("crud/hooks.go.tmpl", struct {
-					Hooks  util.CrudHooks
-					Entity util.Entity
-				}{*entity.CrudHooks, entity})
-
-				if err == nil {
-					work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUDHooks[%s]", entity.Name), Code: hooks, Filename: fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(entity.Name)), NoOverwrite: true}
-				} else {
-					work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUDHooks[%s]", entity.Name), Error: err}
-				}
-			} else {
-				work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUDHooks[%s]", entity.Name), Error: util.ErrorSkip}
-			}
 		}(entity)
 	}
 
@@ -122,23 +118,6 @@ func Generate(work util.GenerationWork, crud util.CrudOpts, entities map[string]
 		}
 	} else {
 		work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Error: util.ErrorSkip}
-	}
-
-	work.Waitgroup.Add(1)
-	models, err := util.ExecuteTemplate("crud/moderrors.go.tmpl", struct {
-		Entities map[string]util.Entity
-	}{entities})
-	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModelErrors", Code: models, Filename: "models/moderrors/errors.gocipe.go"}
-	} else {
-		work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModelErrors", Error: fmt.Errorf("failed to load execute template: %s", err)}
-	}
-
-	proto, err := generateProtobuf(entities)
-	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Code: proto, Filename: "proto/models.proto"}
-	} else {
-		work.Done <- util.GeneratedCode{Generator: "GenerateProto", Error: fmt.Errorf("failed to load execute template: %s", err)}
 	}
 }
 

@@ -1,6 +1,6 @@
 
 // Save{{.Funcname}} is a helper function to save related {{.PropertyName}} in a pivot table (many-many relationship)
-func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{.ThatType}}) error {
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...{{.ThatType}}) error {
 	var (
 		stmt *sql.Stmt
 		err  error
@@ -72,7 +72,7 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 }
 
 // Save{{.Funcname}}IDs is a helper function to save related {{.PropertyName}} IDs in a pivot table (many-many relationship)
-func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{pkeyPropertyType .ThatPrimaryKey}}) error {
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...string) error {
 	var (
 		stmt *sql.Stmt
 		err  error

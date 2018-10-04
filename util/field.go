@@ -19,6 +19,9 @@ var (
 
 	//ErrorFieldNameEmpty indicates a fieldname being empty
 	ErrorFieldNameEmpty = errors.New("field name is empty")
+
+	//ErrorFieldTypeInvalid indicates field type is not supported
+	ErrorFieldTypeInvalid = errors.New("field type is not valid")
 )
 
 // FieldSchema represents schema generation information for the field
@@ -55,7 +58,7 @@ type Field struct {
 }
 
 func (f *Field) init() {
-	switch f.Type {
+	switch f.Type { //TODO SQL-dialect sensitive
 	case fieldTypeBool:
 		f.schema.Type = "BOOL"
 	case fieldTypeInt:
@@ -80,6 +83,13 @@ func (f *Field) Validate() error {
 		return ErrorFieldNameReserved
 	}
 
+	switch f.Type {
+	default:
+		return ErrorFieldTypeInvalid
+	case fieldTypeBool, fieldTypeInt, fieldTypeStr, fieldTypeTime:
+		//all good
+	}
+
 	return nil
 }
 
@@ -90,4 +100,25 @@ func (f *Field) SchemaDefinition() string {
 		def = fmt.Sprintf(` DEFAULT "%s"`, strings.Replace(f.Default, `"`, `""`, -1)) //TODO SQL-dialect sensitive
 	}
 	return fmt.Sprintf(`"%s" %s NOT NULL%s`, f.schema.Field, f.schema.Type, def)
+}
+
+//ProtoDefinition returns proto definition for this field
+func (f *Field) ProtoDefinition(index *int) string {
+	var protoType string
+
+	switch f.Type {
+	case fieldTypeBool:
+		protoType = "bool"
+	case fieldTypeInt:
+		protoType = "int64"
+	case fieldTypeStr:
+		protoType = "string"
+	case fieldTypeTime:
+		protoType = "google.protobuf.Timestamp"
+	}
+
+	definition := fmt.Sprintf(`%s %s = %d;`, f.Name, protoType, index)
+	*index++
+
+	return definition
 }

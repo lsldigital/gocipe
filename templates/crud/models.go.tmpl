@@ -53,9 +53,9 @@ type {{.Name}}Repository interface {
 	InsertWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
 	
 	// Get returns a single {{.Name}} from database by primary key
-	Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.Name}}, error)
+	Get(ctx context.Context, id string) (*{{.Name}}, error)
 	// GetWithRel returns a single {{.Name}} from database by primary key; loads related entities
-	GetWithRel(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.Name}}, error)
+	GetWithRel(ctx context.Context, id string) (*{{.Name}}, error)
 	
 	// List returns a slice containing {{.Name}} records
 	List(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.Name}}, error)
@@ -94,9 +94,9 @@ type {{.Name}}Repository interface {
 	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
 	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 	// Save{{RelFuncName .}} is a helper function to save related {{.Name}} in a pivot table (many-many relationship)
-	Save{{RelFuncName .}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType $ThisEntity.PrimaryKey}}, relatives ...*{{fkeyPropertyTypeName $Entities .}}) error
+	Save{{RelFuncName .}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{fkeyPropertyTypeName $Entities .}}) error
 	// Save{{RelFuncName .}}IDs is a helper function to save related {{.Name}} IDs in a pivot table (many-many relationship)
-	Save{{RelFuncName .}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType $ThisEntity.PrimaryKey}}, relatives ...{{fkeyPropertyType $Entities .}}) error
+	Save{{RelFuncName .}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...) error
 {{end -}}
 {{if eq .Type "one-many" -}}
 	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities

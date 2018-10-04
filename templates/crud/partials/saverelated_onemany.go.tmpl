@@ -1,6 +1,6 @@
 
 // Save{{.Funcname}} is a helper function to save related {{.PropertyName}} (one-many relationship)
-func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType .PrimaryKey}}, relatives ...{{.ThatType}}) error {
+func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...{{.ThatType}}) error {
 	var (
 		stmt *sql.Stmt
 		err  error

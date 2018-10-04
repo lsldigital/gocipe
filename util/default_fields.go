@@ -41,3 +41,31 @@ var fieldSlug = Field{
 		Type: WidgetTypeTextField,
 	},
 }
+
+func fieldReferenceMakeFields(name string) (Field, Field) {
+	var idField = Field{
+		Label: name + "ID",
+		Name:  name + "ID",
+		Type:  "string",
+		EditWidget: EditWidgetOpts{
+			Hide: true,
+		},
+		ListWidget: ListWidgetOpts{
+			Hide: true,
+		},
+	}
+
+	var typeField = Field{
+		Label: name + "Type",
+		Name:  name + "Type",
+		Type:  name + "string",
+		EditWidget: EditWidgetOpts{
+			Hide: true,
+		},
+		ListWidget: ListWidgetOpts{
+			Hide: true,
+		},
+	}
+
+	return idField, typeField
+}

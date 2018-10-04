@@ -3,7 +3,7 @@
 func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.EntityName}}, tx *sql.Tx, autocommit bool) error {
 	var (
 		{{- if pkeyIsAuto .PrimaryKey -}}
-		id  {{pkeyPropertyType .PrimaryKey}}
+		id string
 		{{- end}}
 		err  error
 		stmt *sql.Stmt
@@ -131,7 +131,7 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.E
 func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entity *{{.EntityName}}, tx *sql.Tx, autocommit bool) error{
 	var (
 		{{- if pkeyIsAuto .PrimaryKey -}}
-		id  {{pkeyPropertyType .PrimaryKey}}
+		id  string
 		{{- end}}
 		err  error
 		stmt *sql.Stmt

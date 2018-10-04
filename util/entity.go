@@ -124,6 +124,14 @@ func (e *Entity) init(r *Recipe) {
 		e.DefaultSort = `t."id" DESC`
 	}
 
+	for i := range e.References {
+		c := &e.References[i]
+		c.init()
+
+		e.Fields = append(e.Fields, c.idField)
+		e.Fields = append(e.Fields, c.typeField)
+	}
+
 	for i := range e.Fields {
 		f := &e.Fields[i]
 		f.init()
@@ -259,13 +267,8 @@ func (e *Entity) GetForeignKeyFields() []string {
 
 	for _, p := range e.Relationships {
 		if p.Type == RelationshipTypeManyOne {
-			related = append(related, fmt.Sprintf(`"%s" TEXT NOT NULL`, p.ThisID))
+			related = append(related, fmt.Sprintf(`"%s" TEXT NOT NULL`, p.ThisID)) //TODO SQL-dialect sensitive
 		}
-	}
-
-	for _, n := range e.References { //referenced fields come in pairs
-		related = append(related, fmt.Sprintf(`"%s" TEXT NOT NULL`, n.IDField.schema.Field))
-		related = append(related, fmt.Sprintf(`"%s" TEXT NOT NULL`, n.TypeField.schema.Field))
 	}
 
 	return related
@@ -288,4 +291,42 @@ func (e *Entity) GetRelatedTables() []Relationship {
 	}
 
 	return related
+}
+
+//HasCrudHooks returns true if any of crud hooks is enabled
+func (e *Entity) HasCrudHooks() bool {
+	switch true {
+	case e.CrudHooks.PreSave,
+		e.CrudHooks.PostSave,
+		e.CrudHooks.PreRead,
+		e.CrudHooks.PostRead,
+		e.CrudHooks.PreList,
+		e.CrudHooks.PostList,
+		e.CrudHooks.PreDeleteSingle,
+		e.CrudHooks.PostDeleteSingle,
+		e.CrudHooks.PreDeleteMany,
+		e.CrudHooks.PostDeleteMany:
+		return true
+
+	}
+	return false
+}
+
+//GetProtoFields returns list of protobuf field definitions for this entity
+func (e *Entity) GetProtoFields() []string {
+	var (
+		fields []string
+		index  = 1
+	)
+
+	for _, f := range e.Fields {
+		fields = append(fields, f.ProtoDefinition(&index))
+		index++
+	}
+
+	for _, p := range e.Relationships {
+		fields = append(fields, p.ProtoDefinitions(&index)...)
+	}
+
+	return fields
 }

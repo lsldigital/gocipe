@@ -24,14 +24,9 @@ func generateProtobuf(entities map[string]util.Entity) (string, error) {
 
 	for _, entity := range entities {
 		var ent = protoEntity{Name: entity.Name, Description: entity.Description}
-		pkey, err := util.GetPrimaryKeyDataType(entity.PrimaryKey)
 		count := 1
 
-		if err != nil {
-			return "", err
-		}
-
-		ent.Fields = append(ent.Fields, protoField{Index: count, Name: "ID", Type: pkey})
+		ent.Fields = append(ent.Fields, protoField{Index: count, Name: "ID", Type: "string"})
 		count++
 
 		for _, field := range entity.Fields {
@@ -58,10 +53,6 @@ func generateProtobuf(entities map[string]util.Entity) (string, error) {
 			case util.RelationshipTypeOneMany:
 				ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name, Type: "repeated " + t})
 			case util.RelationshipTypeManyOne:
-				f, err := util.GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
-				if err != nil {
-					return "", err
-				}
 				ent.Fields = append(ent.Fields, protoField{Index: count, Name: rel.Name + "ID", Type: f})
 				count++
 

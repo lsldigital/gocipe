@@ -14,8 +14,8 @@ func generateLoadRelatedManyMany(entities map[string]util.Entity, entity util.En
 	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 	related := entities[rel.Entity]
 
-	thisType, _ := util.GetPrimaryKeyDataType(entity.PrimaryKey)
-	thatType, _ := util.GetPrimaryKeyDataType(related.PrimaryKey)
+	thisType := "string"
+	thatType := "string"
 
 	for _, field := range related.Fields {
 		if field.Property.Type == "time" {
@@ -73,8 +73,8 @@ func generateLoadRelatedOneMany(entities map[string]util.Entity, entity util.Ent
 	structfields = append(structfields, fmt.Sprintf("&entity.%s", "ID"))
 	related := entities[rel.Entity]
 
-	thisType, _ := util.GetPrimaryKeyDataType(entity.PrimaryKey)
-	thatType, _ := util.GetPrimaryKeyDataType(related.PrimaryKey)
+	thisType := "string"
+	thatType := "string"
 
 	for _, field := range related.Fields {
 		if field.Property.Type == "time" {
@@ -137,8 +137,8 @@ func generateLoadRelatedManyOne(entities map[string]util.Entity, entity util.Ent
 	structfields = append(structfields, fmt.Sprintf("&thatEntity.%s", "ID"))
 	related := entities[rel.Entity]
 
-	thisType, _ := util.GetPrimaryKeyDataType(entity.PrimaryKey)
-	thatType, _ := util.GetPrimaryKeyDataType(related.PrimaryKey)
+	thisType := "string"
+	thatType := "string"
 
 	for _, field := range related.Fields {
 		if field.Property.Type == "time" {

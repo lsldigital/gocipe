@@ -3,47 +3,47 @@ import (
 	"database/sql"
 )
 
-{{if .Hooks.PreRead}}
-func crudPreGet(id {{pkeyPropertyType .Entity.PrimaryKey}}) error {
+{{if .CrudHooks.PreRead}}
+func crudPreGet(id string) error {
 	return nil
 }
 {{end}}
-{{if .Hooks.PostRead}}
-func crudPostGet(entity *{{.Entity.Name}}) error {
+{{if .CrudHooks.PostRead}}
+func crudPostGet(entity *{{.Name}}) error {
 	return nil
 }
 {{end}}
 
-{{if .Hooks.PreList}}
+{{if .CrudHooks.PreList}}
 func crudPreList(filters []models.ListFilter) ([]ListFilter, error) {
 	return filters, nil
 }
 {{end}}
-{{if .Hooks.PostList}}
-func crudPostList(list []*{{.Entity.Name}}) ([]*{{.Entity.Name}}, error) {
+{{if .CrudHooks.PostList}}
+func crudPostList(list []*{{.Name}}) ([]*{{.Name}}, error) {
 	return list, nil
 }
 {{end}}
 
-{{if .Hooks.PreDelete}}
-func crudPreDelete(id {{pkeyPropertyType .Entity.PrimaryKey}}, tx *sql.Tx) error {
+{{if .CrudHooks.PreDelete}}
+func crudPreDelete(id string, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
-{{if .Hooks.PostDelete}}
-func crudPostDelete(id {{pkeyPropertyType .Entity.PrimaryKey}}, tx *sql.Tx) error {
+{{if .CrudHooks.PostDelete}}
+func crudPostDelete(id string, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
 
 
-{{if .Hooks.PreSave }}
-func crudPreSave(op string, entity *{{.Entity.Name}}, tx *sql.Tx) error {
+{{if .CrudHooks.PreSave }}
+func crudPreSave(op string, entity *{{.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}
-{{if .Hooks.PreSave }}
-func crudPostSave(op string, entity *{{.Entity.Name}}, tx *sql.Tx) error {
+{{if .CrudHooks.PreSave }}
+func crudPostSave(op string, entity *{{.Name}}, tx *sql.Tx) error {
 	return nil
 }
 {{end}}

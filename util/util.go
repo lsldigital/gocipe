@@ -80,16 +80,12 @@ func init() {
 		},
 		"RelFuncName":          RelFuncName,
 		"snake":                ToSnakeCase,
-		"pkeyPropertyType":     GetPrimaryKeyDataType,
 		"pkeyPropertyEmptyVal": GetPrimaryKeyEmptyVal,
 		"pkeyIsAuto":           GetPrimaryKeyDataIsAuto,
 		"pkeyIsInt":            GetPrimaryKeyDataIsInt,
 		"pkeyFieldType":        GetPrimaryKeyFieldType,
 		"fkeyPropertyTypeName": func(entities map[string]Entity, rel Relationship) string {
 			return entities[rel.Entity].Name
-		},
-		"fkeyPropertyType": func(entities map[string]Entity, rel Relationship) (string, error) {
-			return GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
 		},
 		"json": func(item interface{}) (string, error) {
 			jsob, err := json.Marshal(item)
@@ -214,21 +210,6 @@ func ToSnakeCase(str string) string {
 	snake := reMatchFirstCap.ReplaceAllString(str, "${1}_${2}")
 	snake = reMatchAllCap.ReplaceAllString(snake, "${1}_${2}")
 	return strings.ToLower(snake)
-}
-
-// GetPrimaryKeyDataType returns golang data type for a given PrimaryKey type
-func GetPrimaryKeyDataType(str string) (string, error) {
-	switch str {
-	case PrimaryKeySerial:
-		return "int64", nil
-	case PrimaryKeyInt:
-		return "int64", nil
-	case PrimaryKeyUUID:
-		return "string", nil
-	case PrimaryKeyString:
-		return "string", nil
-	}
-	return "", errors.New("invalid primary key type: " + str)
 }
 
 // GetPrimaryKeyEmptyVal returns empty value for primary key
