@@ -185,7 +185,7 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 				if err != nil {
 					return code, err
 				}
-				code.SaveRelated = append(code.SaveRelated, c)
+				code.SaveRelated = append(code.SaveRelated, c) // }
 			case util.RelationshipTypeManyMany:
 				c, err := generateLoadRelatedManyMany(entities, entity, rel)
 				if err != nil {
