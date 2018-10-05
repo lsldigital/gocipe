@@ -21,7 +21,7 @@ var {{.Entity}}{{.Field}}UploadOpts = files.UploadOptions{
 		MinHeight:      util.NoLimit,
 		Formats: []imagist.FormatDimensions{
 			{Name: "thumb", Width: 400, Height: 200},
-			{Name: "full", Width: util.NoLimit, Height: util.NoLimit},
+			{Name: "full", Width: util.NoLimit, Height: util.NoLimit, Watermark: imagist.BottomRight},
 		},
 	},
 }
