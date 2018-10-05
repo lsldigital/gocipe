@@ -26,10 +26,6 @@ const (
 	TypeImageJPEG = "jpeg"
 	//TypeImagePNG denotes image of file type png
 	TypeImagePNG = "png"
-
-	// Disk paths to static assets
-	diskPathWatermark = "static/watermarks/watermark-lexpress.png"
-	diskPathBackdrop  = "static/backdrops/backdrop-lexpressmu.png"
 )
 
 // Anchor points for X,Y
@@ -47,6 +43,10 @@ var (
 		MinWidth:  util.NoLimit,
 		MinHeight: util.NoLimit,
 	}
+
+	// Disk paths to static assets
+	_diskPathWatermark string
+	_diskPathBackdrop  string
 
 	// TopLeft is the top-left position for watermark
 	TopLeft = &WatermarkPosition{Horizontal: Left, Vertical: Top}
@@ -110,6 +110,16 @@ func init() {
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 	image.RegisterFormat("gif", "gif", gif.Decode, gif.DecodeConfig)
+}
+
+// SetBackdropImage sets the disk path for backdrop images
+func SetBackdropImage(path string) {
+	_diskPathBackdrop = path
+}
+
+// SetWatermarkImage sets the disk path for watermark images
+func SetWatermarkImage(path string) {
+	_diskPathWatermark = path
 }
 
 //New returns an instance of imagist, with the internal go routine awaiting jobs over the channel
@@ -237,10 +247,10 @@ func imageProcess(imgDiskPath string, newWidth, newHeight int, format FormatDime
 		// Open a new image to use as backdrop layer
 		var back image.Image
 		if core.Env == core.EnvironmentDev {
-			back, err = imaging.Open("../assets/" + diskPathBackdrop)
+			back, err = imaging.Open("../assets/" + _diskPathBackdrop)
 		} else {
 			var staticAsset *rice.File
-			staticAsset, err = core.Assets.Open(diskPathBackdrop)
+			staticAsset, err = core.Assets.Open(_diskPathBackdrop)
 			if err != nil {
 				// if err, fall back to a blue background backdrop
 				back = imaging.New(format.Width, format.Height, color.NRGBA{0, 29, 56, 0})
@@ -267,10 +277,10 @@ func imageProcess(imgDiskPath string, newWidth, newHeight int, format FormatDime
 	if format.Watermark != nil {
 		var watermark image.Image
 		if core.Env == core.EnvironmentDev {
-			watermark, err = imaging.Open("../assets/" + diskPathWatermark + ":" + format.Name)
+			watermark, err = imaging.Open("../assets/" + _diskPathWatermark + ":" + format.Name)
 		} else {
 			var staticAsset *rice.File
-			staticAsset, err = core.Assets.Open(diskPathWatermark + ":" + format.Name)
+			staticAsset, err = core.Assets.Open(_diskPathWatermark + ":" + format.Name)
 			if err != nil {
 				return errors.Wrap(err, "watermark not found")
 			}
