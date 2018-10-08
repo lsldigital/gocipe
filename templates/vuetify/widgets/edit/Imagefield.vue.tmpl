@@ -10,11 +10,10 @@
         @change="onChange">
       </picture-input>
       <div class="px-2">
-        Options: 
         <v-checkbox
-          label="Watermark"
+          label="Apply watermark"
           v-model="watermark"
-          class="mt-1"
+          class="mb-0"
         ></v-checkbox>
       </div>
       <template v-if="uploadStatus.uploading">
