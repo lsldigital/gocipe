@@ -9,14 +9,22 @@
                     upload: '<h3>Image</h3>', drag: 'Click here to upload image' }"
         @change="onChange">
       </picture-input>
-      <template v-if="progressStatus">
-        <v-progress-linear :indeterminate="progressStatus"></v-progress-linear>
+      <div class="px-2">
+        Options: 
+        <v-checkbox
+          label="Watermark"
+          v-model="watermark"
+          class="mt-1"
+        ></v-checkbox>
+      </div>
+      <template v-if="uploadStatus.uploading">
+        <v-progress-linear :indeterminate="uploadStatus.uploading"></v-progress-linear>
       </template>
-      <v-alert :value="uploadedSuccessfully" type="success" dismissible class="pa-2" transition="scale-transition">
+      <v-alert :value="uploadStatus.success" type="success" dismissible class="pa-2" transition="scale-transition">
         Image upload successful
       </v-alert>
-      <v-alert :value="error" type="error" dismissible small transition="scale-transition">
-      {{ "{{ error | capitalize }}" }}
+      <v-alert :value="uploadStatus.error" type="error" dismissible small transition="scale-transition">
+      {{ "{{ uploadStatus.error | capitalize }}" }}
       </v-alert>
       <v-alert :value="true" color="gray lighten-3" dark icon="info" class="pa-2">
       {{ "{{ $attrs.hint }}" }}
@@ -27,7 +35,7 @@
 
 <script>
 import { AdminClient } from "@/services/service_admin_pb_service";
-import { UploadRequest } from "@/services/service_admin_pb";
+import { UploadRequest, UploadOpts } from "@/services/service_admin_pb";
 import { File } from "@/services/service_admin_pb";
 import PictureInput from "vue-picture-input";
 
@@ -53,10 +61,12 @@ export default {
   data() {
     return {
       image: "",
-      error: null,
-      progressStatus: false,
-      uploadedSuccessfully: false
-
+      uploadStatus: {
+        success: false,
+        error: null,
+        uploading: false
+      },
+      uploadOptions: null
     };
   },
   components: {
@@ -64,12 +74,25 @@ export default {
   },
   created() {
     this.image = this.$attrs.value;
+
+    this.uploadOptions = new UploadOpts();
+    this.uploadOptions.setWatermark(true);
   },
   filters: {
     capitalize: function(value) {
       if (!value) return "";
       value = value.toString();
       return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+  },
+  computed: {
+    watermark: {
+      set(status) {
+        this.uploadOptions.setWatermark(status);
+      },
+      get() {
+        return this.uploadOptions.getWatermark();
+      }
     }
   },
   methods: {
@@ -80,8 +103,9 @@ export default {
         return;
       }
 
-      // Resets error
-      this.error = null;
+      // Resets alerts
+      this.uploadStatus.error = null;
+      this.uploadStatus.success = false;
 
       // Finds image name
       let req = new UploadRequest();
@@ -89,17 +113,18 @@ export default {
       req.setField(this.field);
       req.setFilename(this.$refs.pictureInput.file.name);
       req.setContent(convertDataURIToBinary(image));
-      this.progressStatus = true;
+      req.setUploadoptions(this.uploadOptions);
+      this.uploadStatus.uploading = true;
 
       cli[this.rpc](req, (err, resp) => {
-        this.progressStatus = false;
+        this.uploadStatus.uploading = false;
         if (err) {
           console.log(err);
-          this.error = err.message;
+          this.uploadStatus.error = err.message;
           return;
         }
 
-        this.uploadedSuccessfully = true;
+        this.uploadStatus.success = true;
 
         this.image = resp.getUri();
       });

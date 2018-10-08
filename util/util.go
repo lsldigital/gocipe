@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"path"
 	"regexp"
@@ -154,17 +153,12 @@ func init() {
 			}
 			return false
 		},
-		"getFileFields": func(entity Entity) []string {
-			var fileFields []string
+		"getFileFields": func(entity Entity) []FileField {
+			var fileFields []FileField
 			for _, field := range entity.Fields {
 				switch field.EditWidget.Type {
 				case WidgetTypeFile, WidgetTypeImage:
-					tpl := strings.Join([]string{
-						`case "%s":`,
-						"options = &%s%sUploadOpts",
-						`fieldname = "%s"`,
-					}, "\n")
-					fileFields = append(fileFields, fmt.Sprintf(tpl, field.Property.Name, entity.Name, field.Property.Name, field.Schema.Field))
+					fileFields = append(fileFields, FileField{EntityName: entity.Name, PropertyName: field.Property.Name, FieldName: field.Schema.Field})
 				}
 			}
 
@@ -208,6 +202,13 @@ type GeneratedCode struct {
 
 	// GeneratedHeaderFormat is used to prepend generated warning header on non-overwritable files. default: // %s
 	GeneratedHeaderFormat string
+}
+
+// FileField used for getFileFields
+type FileField struct {
+	EntityName string
+	PropertyName string
+	FieldName string
 }
 
 // AdminFilters used for List

@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"github.com/mitchellh/copystructure"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	
@@ -410,12 +411,22 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 	}
 
 	switch req.Field {
-		{{$EntityName := .Name}}
+		{{$EntityName := .Name -}}
 		{{- range (getFileFields .)}}
-		{{.}}
+		case "{{.PropertyName}}":
+			// Deep copy needed to prevent unwanted changes to global options "{{.EntityName}}{{.PropertyName}}UploadOpts"
+			opts, _ := copystructure.Copy(&{{.EntityName}}{{.PropertyName}}UploadOpts)
+			options = opts.(*files.UploadOptions)
+			fieldname = "{{.FieldName}}"
 		{{- end}}
 		default:
 			return &res, ErrorInvalidUploadField
+	}
+
+	if !req.UploadOptions.GetWatermark() {
+		for i := range options.ImgDimensions.Formats {
+			options.ImgDimensions.Formats[i].Watermark = nil
+		}
 	}
 
 	fileDiskPath, filePath, err := files.Upload(req.Filename, req.Content, options)
