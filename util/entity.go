@@ -96,13 +96,18 @@ type Entity struct {
 }
 
 func (e *Entity) init(r *Recipe) {
+	var defaultFields = []Field{fieldID, fieldStatus}
 	e.Table = inflection.Plural(strings.ToLower(e.Name))
 
-	e.Fields = append(e.Fields, fieldStatus)
+	if e.Slug != "" {
+		defaultFields = append(defaultFields, fieldSlug)
+	}
 
 	if r.Admin.Auth.Generate {
-		e.Fields = append(e.Fields, fieldUserID)
+		defaultFields = append(defaultFields, fieldUserID)
 	}
+
+	e.Fields = append(defaultFields, e.Fields...)
 
 	if e.CrudHooks == nil {
 		e.CrudHooks = &r.Crud.Hooks
@@ -136,10 +141,6 @@ func (e *Entity) init(r *Recipe) {
 		f := &e.Fields[i]
 		f.init()
 		e.fields[f.Name] = f
-	}
-
-	if e.Slug != "" {
-		e.Fields = append(e.Fields, fieldSlug)
 	}
 
 	if e.LabelField == "" {

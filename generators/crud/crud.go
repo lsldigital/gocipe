@@ -74,32 +74,21 @@ func Generate(work util.GenerationWork, crud util.CrudOpts, entities map[string]
 		if !crud.Generate {
 			util.DeleteIfExists(fmt.Sprintf("models/%s_repo.gocipe.go", strings.ToLower(entity.Name)))
 			util.DeleteIfExists(fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(entity.Name)))
-			work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUD[%s]", entity.Name), Error: util.ErrorSkip}
-			work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUDHooks[%s]", entity.Name), Error: util.ErrorSkip}
+			// work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUD[%s]", entity.Name), Error: util.ErrorSkip}
+			// work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUDHooks[%s]", entity.Name), Error: util.ErrorSkip}
+			//TODO cater for skip
 			continue
 		}
 
-		go func(entity util.Entity) {
-			var (
-				code        entityCrud
-				crudContent string
-				err         error
-			)
+		var (
+			code entityCrud
+			err  error
+		)
 
-			if crud.Generate {
-				code, err = generateCrud(entity, entities)
-				if err == nil {
-					crudContent, err = util.ExecuteTemplate("crud/crud.go.tmpl", code)
-				}
-			}
-
-			if err == nil {
-				fname := fmt.Sprintf("models/%s_repo.gocipe.go", strings.ToLower(entity.Name))
-				work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUD[%s]", entity.Name), Code: crudContent, Filename: fname}
-			} else {
-				work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUD[%s]", entity.Name), Error: fmt.Errorf("failed to execute template: %s", err)}
-			}
-		}(entity)
+		if code, err = generateCrud(entity, entities); err == nil {
+			name := strings.ToLower(entity.Name)
+			output.GenerateAndSave("crud:entity:"+name, "crud/crud.go.tmpl", fmt.Sprintf("models/%s_repo.gocipe.go", name), code, false)
+		} //TODO cater for error
 	}
 
 	work.Waitgroup.Add(1)

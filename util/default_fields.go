@@ -1,5 +1,17 @@
 package util
 
+var fieldID = Field{
+	Label: "ID",
+	Name:  "ID",
+	Type:  "string",
+	EditWidget: EditWidgetOpts{
+		Hide: true,
+	},
+	ListWidget: ListWidgetOpts{
+		Hide: true,
+	},
+}
+
 var fieldStatus = Field{
 	Label: "Status",
 	Name:  "Status",
