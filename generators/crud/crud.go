@@ -117,7 +117,7 @@ func generateCrud2(r *util.Recipe) (string, error) {
 		entities = append(entities, util.Postgres{e})
 	}
 
-	return util.ExecuteTemplate("crud/partials/insert.go.tmpl", struct {
+	return util.ExecuteTemplate("crud/crud.go.tmpl", struct {
 		Entities []util.Postgres
 	}{Entities: entities})
 }
@@ -128,33 +128,6 @@ func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCr
 		importUUID bool
 		err        error
 	)
-
-	if err == nil {
-		code.Get, err = generateGet(entities, entity)
-	}
-
-	if err == nil {
-		code.List, err = generateList(entities, entity)
-	}
-
-	if err == nil {
-		code.Update, err = generateUpdate(entities, entity)
-	}
-
-	if err == nil {
-		code.DeleteMany, err = generateDeleteMany(entities, entity)
-		if err == nil {
-			code.DeleteSingle, err = generateDeleteSingle(entities, entity)
-		}
-	}
-
-	if err == nil {
-		code.Merge, err = generateMerge(entities, entity)
-	}
-
-	if err == nil {
-		code.Save, err = generateSave(entities, entity)
-	}
 
 	if err == nil {
 		for _, rel := range entity.Relationships {
