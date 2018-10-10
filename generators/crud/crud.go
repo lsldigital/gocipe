@@ -110,20 +110,24 @@ func Generate(work util.GenerationWork, crud util.CrudOpts, entities map[string]
 	}
 }
 
+func generateCrud2(r *util.Recipe) (string, error) {
+	var entities []util.Postgres
+
+	for _, e := range r.Entities {
+		entities = append(entities, util.Postgres{e})
+	}
+
+	return util.ExecuteTemplate("crud/partials/insert.go.tmpl", struct {
+		Entities []util.Postgres
+	}{Entities: entities})
+}
+
 func generateCrud(entity util.Entity, entities map[string]util.Entity) (entityCrud, error) {
 	var (
 		code       entityCrud
 		importUUID bool
 		err        error
 	)
-
-	if err == nil {
-		code.Insert, err = generateInsert(entities, entity)
-
-		if entity.PrimaryKey == util.PrimaryKeyUUID {
-			importUUID = true
-		}
-	}
 
 	if err == nil {
 		code.Get, err = generateGet(entities, entity)

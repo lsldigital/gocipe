@@ -6,10 +6,12 @@ import (
 	"strings"
 )
 
+//Postgres provides postgres compliant implementation of generated CRUD code
 type Postgres struct {
 	Entity
 }
 
+//SQLInsert returns SQL query for SQL Insert
 func (s Postgres) SQLInsert() string {
 	var (
 		fields, placeholders []string
@@ -38,6 +40,7 @@ func (s Postgres) SQLInsert() string {
 	)
 }
 
+//BeforeInsert returns code executed before SQL statement is executed
 func (s Postgres) BeforeInsert() []string {
 	var before []string
 
@@ -51,7 +54,7 @@ func (s Postgres) BeforeInsert() []string {
 		//they will be assigned to a variable, use that instead of the property name
 		switch f.Type {
 		case "time":
-			before = append(before, fmt.Sprintf(`%s, + := pytpes.Timestamp(entity.%s)`, strings.ToLower(f.Name), f.Name))
+			before = append(before, fmt.Sprintf(`%s, _ := pytpes.Timestamp(entity.%s)`, strings.ToLower(f.Name), f.Name))
 		}
 
 	}
@@ -59,6 +62,7 @@ func (s Postgres) BeforeInsert() []string {
 	return before
 }
 
+//StructInsert returns list of fields to be used for insert statement
 func (s Postgres) StructInsert() string {
 	var (
 		fields []string
@@ -69,15 +73,16 @@ func (s Postgres) StructInsert() string {
 		//they will be assigned to a variable, use that instead of the property name
 		switch f.Type {
 		default:
-			fields = append(fields, fmt.Sprintf(`"%s"`, f.schema.Field))
+			fields = append(fields, fmt.Sprintf(`entity.%s`, f.Name))
 		case "time":
-			fields = append(fields, fmt.Sprintf(`"%s"`, strings.ToLower(f.Name)))
+			fields = append(fields, strings.ToLower(f.Name))
 		}
 
 	}
-	return ""
+	return strings.Join(fields, ", ")
 }
 
-func (s Postgres) AfterInsert() string {
-	return ""
+//AfterInsert returns code executed after SQL statement is executed
+func (s Postgres) AfterInsert() []string {
+	return []string{}
 }
