@@ -77,11 +77,6 @@ var generateCmd = &cobra.Command{
 			work.Waitgroup.Add(1)
 		}
 
-		entities, err := recipe.Preprocess(rcp)
-		if err != nil {
-			log.Fatalln("preprocessRecipe", err)
-		}
-
 		//scaffold application layout - synchronously before launching generators
 		application.Generate(rcp, noSkip)
 
@@ -90,15 +85,15 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateSchema {
-			go schema.Generate(work, rcp.Schema, entities)
+			go schema.Generate(work, rcp)
 		}
 
 		if generateCrud {
-			go crud.Generate(work, rcp.Crud, entities)
+			go crud.Generate(work, rcp)
 		}
 
 		if generateAdmin {
-			go admin.Generate(work, entities)
+			go admin.Generate(work, rcp)
 		}
 
 		if generateAdmin {
@@ -110,7 +105,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateVuetify {
-			go vuetify.Generate(work, rcp, entities)
+			go vuetify.Generate(work, rcp)
 		}
 		// go generators.GenerateHTTP(work, recipe.HTTP)
 		// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)

@@ -7,16 +7,16 @@ import (
 )
 
 // Generate returns generated vuetify components
-func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string]util.Entity) {
-	if !recipe.Vuetify.Generate {
+func Generate(work util.GenerationWork, r *util.Recipe) {
+	if !r.Vuetify.Generate {
 		work.Waitgroup.Done()
 		return
 	}
 
-	path := util.WorkingDir + "/web/" + recipe.Vuetify.App + "/src/gocipe"
+	path := util.WorkingDir + "/web/" + r.Vuetify.App + "/src/gocipe"
 
 	var forms []string
-	for _, entity := range entities {
+	for _, entity := range r.Entities {
 		if entity.Vuetify.NoGenerate {
 			continue
 		}
@@ -25,12 +25,12 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 		var (
 			data struct {
 				Entity   util.Entity
-				Entities map[string]util.Entity
+				Entities []util.Entity
 			}
 		)
 
 		data.Entity = entity
-		data.Entities = entities
+		data.Entities = r.Entities
 
 		filename := path + "/forms/" + inflection.Plural(data.Entity.Name)
 
@@ -64,9 +64,9 @@ func Generate(work util.GenerationWork, recipe *util.Recipe, entities map[string
 	menuEntities := func() []util.Entity {
 		var items []util.Entity
 
-		for i := range entities {
-			if !entities[i].Vuetify.NoGenerate {
-				items = append(items, entities[i])
+		for _, entity := range r.Entities {
+			if !entity.Vuetify.NoGenerate {
+				items = append(items, entity)
 			}
 		}
 

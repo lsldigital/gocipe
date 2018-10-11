@@ -41,59 +41,6 @@ func (s Postgres) SQLInsert() string {
 	)
 }
 
-//BeforeInsert returns code executed before SQL statement is executed
-func (s Postgres) BeforeInsert() []string {
-	var before []string
-
-	for _, f := range s.Fields {
-		switch f.Name {
-		case "CreatedAt", "UpdatedAt":
-			before = append(before, fmt.Sprintf(`entity.%s = ptypes.TimestampNow()`, f.Name))
-		}
-
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		case "time":
-			before = append(before, fmt.Sprintf(`%s, _ := pytpes.Timestamp(entity.%s)`, strings.ToLower(f.Name), f.Name))
-		}
-
-	}
-
-	return before
-}
-
-//StructInsert returns list of fields to be used for insert statement
-func (s Postgres) StructInsert() string {
-	var fields []string
-
-	for _, f := range s.Fields {
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		default:
-			fields = append(fields, fmt.Sprintf(`entity.%s`, f.Name))
-		case "time":
-			fields = append(fields, strings.ToLower(f.Name))
-		}
-
-	}
-
-	for _, p := range s.Relationships {
-		switch p.Type {
-		case RelationshipTypeManyOne:
-			fields = append(fields, fmt.Sprintf("entity.%sID", p.Name))
-		}
-	}
-
-	return strings.Join(fields, ", ")
-}
-
-//AfterInsert returns code executed after SQL statement is executed
-func (s Postgres) AfterInsert() []string {
-	return []string{}
-}
-
 //SQLGet returns SQL query for SQL Get
 func (s Postgres) SQLGet() string {
 	var fields []string
@@ -114,66 +61,6 @@ func (s Postgres) SQLGet() string {
 		strings.Join(fields, ", "),
 		s.Table,
 	)
-}
-
-//BeforeGet returns code executed before SQL statement is executed
-func (s Postgres) BeforeGet() []string {
-	var before []string
-
-	for _, f := range s.Fields {
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		case "time":
-			before = append(before, fmt.Sprintf(`var %s time.Time`, strings.ToLower(f.Name)))
-		}
-
-	}
-
-	return before
-}
-
-//StructGet returns list of fields to be used for get statement
-func (s Postgres) StructGet() string {
-	var fields []string
-
-	for _, f := range s.Fields {
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		default:
-			fields = append(fields, fmt.Sprintf(`&entity.%s`, f.Name))
-		case "time":
-			fields = append(fields, fmt.Sprintf("&%s", strings.ToLower(f.Name)))
-		}
-
-	}
-
-	for _, p := range s.Relationships {
-		switch p.Type {
-		case RelationshipTypeManyOne:
-			fields = append(fields, fmt.Sprintf("&entity.%sID", p.Name))
-		}
-	}
-
-	return strings.Join(fields, ", ")
-}
-
-//AfterGet returns code executed after SQL statement is executed
-func (s Postgres) AfterGet() []string {
-	var after []string
-
-	for _, f := range s.Fields {
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		case "time":
-			after = append(after, fmt.Sprintf(`entity.%s, _ = ptypes.TimestampProto(%s)`, strings.ToLower(f.Name), f.Name))
-		}
-
-	}
-
-	return after
 }
 
 //SQLList returns SQL query for SQL List
@@ -198,23 +85,6 @@ func (s Postgres) SQLList() string {
 	)
 }
 
-//BeforeList returns code executed before SQL statement is executed
-func (s Postgres) BeforeList() []string {
-	var before []string
-
-	for _, f := range s.Fields {
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		case "time":
-			before = append(before, fmt.Sprintf(`var %s time.Time`, strings.ToLower(f.Name)))
-		}
-
-	}
-
-	return before
-}
-
 //OrderList returns list of fields to be used for list statement
 func (s Postgres) OrderList() string {
 	var fields []string
@@ -224,49 +94,6 @@ func (s Postgres) OrderList() string {
 	}
 
 	return `"` + strings.Join(fields, `","`) + `"`
-}
-
-//StructList returns list of fields to be used for list statement
-func (s Postgres) StructList() string {
-	var fields []string
-
-	for _, f := range s.Fields {
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		default:
-			fields = append(fields, fmt.Sprintf(`&entity.%s`, f.Name))
-		case "time":
-			fields = append(fields, fmt.Sprintf("&%s", strings.ToLower(f.Name)))
-		}
-
-	}
-
-	for _, p := range s.Relationships {
-		switch p.Type {
-		case RelationshipTypeManyOne:
-			fields = append(fields, fmt.Sprintf("&entity.%sID", p.Name))
-		}
-	}
-
-	return strings.Join(fields, ", ")
-}
-
-//AfterList returns code executed after SQL statement is executed
-func (s Postgres) AfterList() []string {
-	var after []string
-
-	for _, f := range s.Fields {
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		case "time":
-			after = append(after, fmt.Sprintf(`entity.%s, _ = ptypes.TimestampProto(%s)`, strings.ToLower(f.Name), f.Name))
-		}
-
-	}
-
-	return after
 }
 
 //SQLDeleteSingle returns SQL query for SQL Delete Single
@@ -326,59 +153,6 @@ func (s Postgres) SQLUpdate() string {
 	)
 }
 
-//BeforeUpdate returns code executed before SQL statement is executed
-func (s Postgres) BeforeUpdate() []string {
-	var before []string
-
-	for _, f := range s.Fields {
-		switch f.Name {
-		case "UpdatedAt":
-			before = append(before, fmt.Sprintf(`entity.%s = ptypes.TimestampNow()`, f.Name))
-		}
-
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		case "time":
-			before = append(before, fmt.Sprintf(`%s, _ := pytpes.Timestamp(entity.%s)`, strings.ToLower(f.Name), f.Name))
-		}
-
-	}
-
-	return before
-}
-
-//StructUpdate returns list of fields to be used for update statement
-func (s Postgres) StructUpdate() string {
-	var fields []string
-
-	for _, f := range s.Fields {
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		default:
-			fields = append(fields, fmt.Sprintf(`entity.%s`, f.Name))
-		case "time":
-			fields = append(fields, strings.ToLower(f.Name))
-		}
-
-	}
-
-	for _, p := range s.Relationships {
-		switch p.Type {
-		case RelationshipTypeManyOne, RelationshipTypeOneOne:
-			fields = append(fields, fmt.Sprintf("entity.%sID", p.Name))
-		}
-	}
-
-	return strings.Join(fields, ", ")
-}
-
-//AfterUpdate returns code executed after SQL statement is executed
-func (s Postgres) AfterUpdate() []string {
-	return []string{}
-}
-
 //SQLMerge returns SQL query for SQL Merge
 func (s Postgres) SQLMerge() string {
 	var (
@@ -413,55 +187,92 @@ func (s Postgres) SQLMerge() string {
 	)
 }
 
-//BeforeMerge returns code executed before SQL statement is executed
-func (s Postgres) BeforeMerge() []string {
-	var before []string
-
-	for _, f := range s.Fields {
-		switch f.Name {
-		case "CreatedAt", "UpdatedAt":
-			before = append(before, fmt.Sprintf(`entity.%s = ptypes.TimestampNow()`, f.Name))
-		}
-
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		case "time":
-			before = append(before, fmt.Sprintf(`%s, _ := pytpes.Timestamp(entity.%s)`, strings.ToLower(f.Name), f.Name))
-		}
-
-	}
-
-	return before
-}
-
-//StructMerge returns list of fields to be used for merge statement
-func (s Postgres) StructMerge() string {
+//SQLLoadManyMany returns SQL query for SQL Load many many
+func (s Postgres) SQLLoadManyMany(rel Relationship) string {
 	var fields []string
 
-	for _, f := range s.Fields {
-		//some fields require preprocessing
-		//they will be assigned to a variable, use that instead of the property name
-		switch f.Type {
-		default:
-			fields = append(fields, fmt.Sprintf(`entity.%s`, f.Name))
-		case "time":
-			fields = append(fields, strings.ToLower(f.Name))
-		}
+	related := rel.related
 
+	for _, f := range related.Fields {
+		fields = append(fields, fmt.Sprintf(`t."%s"`, f.schema.Field))
 	}
 
-	for _, p := range s.Relationships {
-		switch p.Type {
-		case RelationshipTypeManyOne:
-			fields = append(fields, fmt.Sprintf("entity.%sID", p.Name))
-		}
-	}
-
-	return strings.Join(fields, ", ")
+	return fmt.Sprintf(
+		`SELECT j.%s, %s FROM %s t 
+		INNER JOIN %s j ON t.id = j.%s
+		WHERE j.%s IN`,
+		rel.ThisID,
+		strings.Join(fields, ", "),
+		related.Table,
+		rel.JoinTable,
+		rel.ThatID,
+		rel.ThisID,
+	)
 }
 
-//AfterMerge returns code executed after SQL statement is executed
-func (s Postgres) AfterMerge() []string {
-	return []string{}
+//SQLLoadManyOne returns SQL query for SQL Load many one
+func (s Postgres) SQLLoadManyOne(rel Relationship) string {
+	var fields []string
+
+	related := rel.related
+
+	for _, f := range related.Fields {
+		fields = append(fields, fmt.Sprintf(`t."%s"`, f.schema.Field))
+	}
+
+	for _, rel := range related.Relationships {
+		if rel.Type == RelationshipTypeManyOne {
+			fields = append(fields, fmt.Sprintf(`t."%s"`, rel.ThisID))
+		}
+	}
+
+	return fmt.Sprintf(
+		`SELECT t."id", %s FROM %s t WHERE t."id" IN`,
+		strings.Join(fields, ", "),
+		related.Table,
+	)
+}
+
+//SQLLoadOneMany returns SQL query for SQL Load one many
+func (s Postgres) SQLLoadOneMany(rel Relationship) string {
+	var fields []string
+
+	related := rel.related
+
+	for _, f := range related.Fields {
+		fields = append(fields, fmt.Sprintf(`t."%s"`, f.schema.Field))
+	}
+
+	for _, rel := range related.Relationships {
+		if rel.Type == RelationshipTypeManyOne {
+			fields = append(fields, fmt.Sprintf(`t."%s"`, rel.ThisID))
+		}
+	}
+
+	return fmt.Sprintf(
+		`SELECT t."%s", %s FROM %s t WHERE t."%s" IN`,
+		rel.ThisID,
+		strings.Join(fields, ", "),
+		related.Table,
+		rel.ThisID,
+	)
+}
+
+//SQLSaveManyManyOwnerDelete returns SQL query for SQL Save many many owner
+func (s Postgres) SQLSaveManyManyOwnerDelete(rel Relationship) string {
+	return fmt.Sprintf(
+		`DELETE FROM %s WHERE %s = $1`,
+		rel.JoinTable,
+		rel.ThatID,
+	)
+}
+
+//SQLSaveManyManyOwnerInsert returns SQL query for SQL Save many many owner
+func (s Postgres) SQLSaveManyManyOwnerInsert(rel Relationship) string {
+	return fmt.Sprintf(
+		`INSERT INTO %s (%s, %s) VALUES ($1, $2)`,
+		rel.JoinTable,
+		rel.ThatID,
+		rel.ThisID,
+	)
 }

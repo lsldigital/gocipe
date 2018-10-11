@@ -331,3 +331,42 @@ func (e *Entity) GetProtoFields() []string {
 
 	return fields
 }
+
+//GetStruct returns list of fields to be used for 'op' statement
+func (e *Entity) GetStruct(op string) string {
+	var fields []string
+
+	for _, f := range e.Fields {
+		//some fields require preprocessing
+		//they will be assigned to a variable, use that instead of the property name
+		if f.Type == "time" {
+			switch op {
+			case "get", "list":
+				fields = append(fields, fmt.Sprintf("&%s", strings.ToLower(f.Name)))
+			case "create", "merge", "update":
+				fields = append(fields, strings.ToLower(f.Name))
+			}
+		} else {
+			switch op {
+			case "get", "list":
+				fields = append(fields, fmt.Sprintf(`&entity.%s`, f.Name))
+			case "create", "merge", "update":
+				fields = append(fields, fmt.Sprintf(`entity.%s`, f.Name))
+			}
+		}
+
+	}
+
+	for _, p := range e.Relationships {
+		if p.Type == RelationshipTypeManyOne {
+			switch op {
+			case "get", "list":
+				fields = append(fields, fmt.Sprintf("&entity.%sID", p.Name))
+			case "create", "merge", "update":
+				fields = append(fields, fmt.Sprintf("entity.%sID", p.Name))
+			}
+		}
+	}
+
+	return strings.Join(fields, ", ")
+}

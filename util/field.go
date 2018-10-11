@@ -122,3 +122,45 @@ func (f *Field) ProtoDefinition(index *int) string {
 
 	return definition
 }
+
+//GetBefore returns code executed before a statement is executed (used in crud)
+func (f *Field) GetBefore(op string) []string {
+	var before []string
+
+	if f.Name == "CreatedAt" {
+		if op == "create" {
+			before = append(before, fmt.Sprintf(`entity.%s = ptypes.TimestampNow()`, f.Name))
+		}
+	} else if f.Name == "UpdatedAt" {
+		before = append(before, fmt.Sprintf(`entity.%s = ptypes.TimestampNow()`, f.Name))
+	}
+
+	//some fields require preprocessing
+	//they will be assigned to a variable, use that instead of the property name
+	if f.Type == "time" {
+		switch op {
+		case "get", "list":
+			before = append(before, fmt.Sprintf(`var %s time.Time`, strings.ToLower(f.Name)))
+		case "create", "merge", "update":
+			before = append(before, fmt.Sprintf(`%s, _ := pytpes.Timestamp(entity.%s)`, strings.ToLower(f.Name), f.Name))
+		}
+	}
+
+	return before
+}
+
+//GetAfter returns code executed after a statement is executed (used in crud)
+func (f *Field) GetAfter(op string) []string {
+	var after []string
+
+	//some fields require preprocessing
+	//they will be assigned to a variable, use that instead of the property name
+	if f.Type == "time" {
+		switch op {
+		case "get", "list":
+			after = append(after, fmt.Sprintf(`entity.%s, _ = ptypes.TimestampProto(%s)`, strings.ToLower(f.Name), f.Name))
+		}
+	}
+
+	return after
+}

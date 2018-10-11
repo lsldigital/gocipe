@@ -14,7 +14,7 @@ type fileField struct {
 }
 
 // Generate returns generated code for a Admin service
-func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
+func Generate(work util.GenerationWork, r *util.Recipe) error {
 	var (
 		fileFields   []fileField
 		generateAuth bool
@@ -22,7 +22,7 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	entitiesActions := []string{"Create", "Edit", "View", "List", "Delete", "Lookup"}
 	entitiesFileFields := make(map[string][]fileField)
 	entitiesLabelField := make(map[string]string)
-	for key, entity := range entities {
+	for _, entity := range r.Entities {
 		if !entity.Admin.Generate {
 			continue
 		}
@@ -34,12 +34,12 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 		for _, field := range entity.Fields {
 			switch field.EditWidget.Type {
 			case util.WidgetTypeFile, util.WidgetTypeImage:
-				fileFields = append(fileFields, fileField{Entity: entity.Name, Field: field.Property.Name})
-				entitiesFileFields[key] = append(entitiesFileFields[key], fileField{Entity: entity.Name, Field: field.Property.Name})
+				fileFields = append(fileFields, fileField{Entity: entity.Name, Field: field.Name})
+				entitiesFileFields[entity.Name] = append(entitiesFileFields[entity.Name], fileField{Entity: entity.Name, Field: field.Name})
 			}
 		}
 
-		entitiesLabelField[key] = entity.LabelField
+		entitiesLabelField[entity.Name] = entity.LabelField
 
 		if hasHook(entity) {
 			hooks, err := util.ExecuteTemplate("admin/service_admin_hooks.go.tmpl", struct {
@@ -122,8 +122,8 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	// generate admin.proto
 	proto, err := util.ExecuteTemplate("admin/service_admin.proto.tmpl", struct {
 		AppImportPath string
-		Entities      map[string]util.Entity
-	}{util.AppImportPath, entities})
+		Entities      []util.Entity
+	}{util.AppImportPath, r.Entities})
 
 	work.Waitgroup.Add(1)
 	if err == nil {
@@ -152,10 +152,10 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	}
 	permissions, err := util.ExecuteTemplate("admin/admin_permissions.go.tmpl", struct {
 		ImportPath      string
-		Entities        map[string]util.Entity
+		Entities        []util.Entity
 		EntitiesActions []string
 		UTF8List        []string
-	}{util.AppImportPath, entities, entitiesActions, genUTF8List()})
+	}{util.AppImportPath, r.Entities, entitiesActions, genUTF8List()})
 
 	work.Waitgroup.Add(1)
 	if err == nil {
@@ -165,12 +165,12 @@ func Generate(work util.GenerationWork, entities map[string]util.Entity) error {
 	}
 
 	code, err := util.ExecuteTemplate("admin/service_admin.go.tmpl", struct {
-		Entities           map[string]util.Entity
+		Entities           []util.Entity
 		EntitiesFileFields map[string][]fileField
 		EntitiesLabelField map[string]string
 		GenerateAuth       bool
 		ImportPath         string
-	}{entities, entitiesFileFields, entitiesLabelField, generateAuth, util.AppImportPath})
+	}{r.Entities, entitiesFileFields, entitiesLabelField, generateAuth, util.AppImportPath})
 	work.Waitgroup.Add(1)
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateAdmin", Code: code, Filename: "services/admin/service_admin.gocipe.go"}
