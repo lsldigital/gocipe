@@ -240,7 +240,7 @@ func imageProcess(imgDiskPath string, newWidth, newHeight int, format FormatDime
 	}
 
 	// Do not crop and resize when using backdrop but downscale
-	if format.Backdrop {
+	if format.Backdrop && format.Height > format.Width {{
 		// Scale down srcImage to fit the bounding box
 		img = imaging.Fit(img, newWidth, newHeight, imaging.Lanczos)
 
