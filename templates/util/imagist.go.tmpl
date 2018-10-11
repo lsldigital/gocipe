@@ -222,13 +222,15 @@ func (i Imagist) execute(j Job) {
 			newHeight = j.Config.Height
 		}
 
-		imageProcess(j.FileDiskPath, newWidth, newHeight, format)
+		landscape := j.Config.Height < j.Config.Width
+
+		imageProcess(j.FileDiskPath, newWidth, newHeight, landscape, format)
 	}
 
 	i.done <- j.FileDiskPath
 }
 
-func imageProcess(imgDiskPath string, newWidth, newHeight int, format FormatDimensions) error {
+func imageProcess(imgDiskPath string, newWidth, newHeight int, landscape bool, format FormatDimensions) error {
 	var (
 		img image.Image
 		err error
@@ -240,7 +242,7 @@ func imageProcess(imgDiskPath string, newWidth, newHeight int, format FormatDime
 	}
 
 	// Do not crop and resize when using backdrop but downscale
-	if format.Backdrop && format.Height > format.Width {{
+	if format.Backdrop && !landscape {
 		// Scale down srcImage to fit the bounding box
 		img = imaging.Fit(img, newWidth, newHeight, imaging.Lanczos)
 
