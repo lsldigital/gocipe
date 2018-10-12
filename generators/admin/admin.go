@@ -20,8 +20,6 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 		generateAuth bool
 	)
 	entitiesActions := []string{"Create", "Edit", "View", "List", "Delete", "Lookup"}
-	entitiesFileFields := make(map[string][]fileField)
-	entitiesLabelField := make(map[string]string)
 	for _, entity := range r.Entities {
 		if !entity.Admin.Generate {
 			continue
@@ -31,42 +29,12 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 			generateAuth = true
 		}
 
-		for _, field := range entity.Fields {
-			switch field.EditWidget.Type {
-			case util.WidgetTypeFile, util.WidgetTypeImage:
-				fileFields = append(fileFields, fileField{Entity: entity.Name, Field: field.Name})
-				entitiesFileFields[entity.Name] = append(entitiesFileFields[entity.Name], fileField{Entity: entity.Name, Field: field.Name})
-			}
-		}
-
-		entitiesLabelField[entity.Name] = entity.LabelField
-
 		if hasHook(entity) {
 			hooks, err := util.ExecuteTemplate("admin/service_admin_hooks.go.tmpl", struct {
 				Entity     util.Entity
-				PreRead    bool
-				PostRead   bool
-				PreList    bool
-				PostList   bool
-				PreCreate  bool
-				PostCreate bool
-				PreUpdate  bool
-				PostUpdate bool
-				PreDelete  bool
-				PostDelete bool
 				ImportPath string
 			}{
 				Entity:     entity,
-				PreRead:    entity.Admin.Hooks.PreRead,
-				PostRead:   entity.Admin.Hooks.PostRead,
-				PreList:    entity.Admin.Hooks.PreList,
-				PostList:   entity.Admin.Hooks.PostList,
-				PreCreate:  entity.Admin.Hooks.PreCreate,
-				PostCreate: entity.Admin.Hooks.PostCreate,
-				PreUpdate:  entity.Admin.Hooks.PreUpdate,
-				PostUpdate: entity.Admin.Hooks.PostUpdate,
-				PreDelete:  entity.Admin.Hooks.PreDelete,
-				PostDelete: entity.Admin.Hooks.PostDelete,
 				ImportPath: util.AppImportPath,
 			})
 
@@ -90,10 +58,8 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 	hasFileFields := len(fileFields) > 0
 	if hasFileFields {
 		code, err := util.ExecuteTemplate("admin/admin_config_upload.go.tmpl", struct {
-			FileFields []fileField
-		}{
-			FileFields: fileFields,
-		})
+			Entities []util.Entity
+		}{r.Entities})
 
 		work.Waitgroup.Add(1)
 		if err == nil {
@@ -133,23 +99,6 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 	}
 
 	// generate admin_permissions.go
-	genUTF8List := func() []string {
-		var (
-			strList []string
-			r       rune
-		)
-		for i := 0; i < 500; i++ {
-			r = 'A' + rune(i)
-			if unicode.IsPrint(r) &&
-				!unicode.IsSymbol(r) &&
-				!unicode.IsSpace(r) &&
-				!unicode.IsControl(r) &&
-				r != '\\' {
-				strList = append(strList, string(r))
-			}
-		}
-		return strList
-	}
 	permissions, err := util.ExecuteTemplate("admin/admin_permissions.go.tmpl", struct {
 		ImportPath      string
 		Entities        []util.Entity
@@ -165,12 +114,10 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 	}
 
 	code, err := util.ExecuteTemplate("admin/service_admin.go.tmpl", struct {
-		Entities           []util.Entity
-		EntitiesFileFields map[string][]fileField
-		EntitiesLabelField map[string]string
-		GenerateAuth       bool
-		ImportPath         string
-	}{r.Entities, entitiesFileFields, entitiesLabelField, generateAuth, util.AppImportPath})
+		Entities     []util.Entity
+		GenerateAuth bool
+		ImportPath   string
+	}{r.Entities, generateAuth, util.AppImportPath})
 	work.Waitgroup.Add(1)
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateAdmin", Code: code, Filename: "services/admin/service_admin.gocipe.go"}
@@ -198,4 +145,22 @@ func hasHook(entity util.Entity) bool {
 		return true
 	}
 	return false
+}
+
+func genUTF8List() []string {
+	var (
+		strList []string
+		r       rune
+	)
+	for i := 0; i < 500; i++ {
+		r = 'A' + rune(i)
+		if unicode.IsPrint(r) &&
+			!unicode.IsSymbol(r) &&
+			!unicode.IsSpace(r) &&
+			!unicode.IsControl(r) &&
+			r != '\\' {
+			strList = append(strList, string(r))
+		}
+	}
+	return strList
 }

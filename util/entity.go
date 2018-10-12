@@ -370,3 +370,17 @@ func (e *Entity) GetStruct(op string) string {
 
 	return strings.Join(fields, ", ")
 }
+
+//GetFileFields returns list of file fields
+func (e *Entity) GetFileFields() []Field {
+	var fields []Field
+
+	for _, f := range e.Fields {
+		switch f.EditWidget.Type {
+		case WidgetTypeFile, WidgetTypeImage:
+			fields = append(fields, f)
+		}
+	}
+
+	return fields
+}

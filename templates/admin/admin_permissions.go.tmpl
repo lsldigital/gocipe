@@ -1,19 +1,16 @@
 package admin
 
 const (
-    {{ $i :=0 }}
-    {{range $entityKey, $entity := .Entities}}
+    {{range $i, $entity := .Entities}}
     /**
     * [BEGIN] {{$entity.Name}}
     */
     {{range $actionKey, $action := $.EntitiesActions}}
     // Perm{{$action}}{{$entity.Name}} is a permission token to {{$action}} {{$entity.Name}}
     Perm{{$action}}{{$entity.Name}} = "{{index $.UTF8List $i}}"
-    {{- $i = plus1 $i}}
     {{if not (eq $action "Create")}}
     // Perm{{$action}}{{$entity.Name}}Any is a permission token to {{$action}} any {{$entity.Name}}
     Perm{{$action}}{{$entity.Name}}Any = "{{index $.UTF8List $i}}"
-    {{- $i = plus1 $i}}
     {{end}}
     {{- end}}
     {{end}}

@@ -295,8 +295,9 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	res.{{.Name}} = req.{{.Name}}
-	{{ range $fileField := index $.EntitiesFileFields .Name}}
-	res.{{.Entity}}.{{.Field}} = existing.{{.Field}}{{end }}
+	{{ range .GetFileFields }}
+	res.{{$.Entity}}.{{.}} = existing.{{.}}
+	{{end }}
 	{{ if .Slug}}
 	res.{{.Name}}.Slug = existing.Slug
 	{{ end }}
@@ -473,7 +474,7 @@ func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) 
 		return &res, err
 	}
     
-	rows, err = tx.Query(`SELECT id, t."{{index $.EntitiesLabelField .Name}}", t."status" FROM {{.Table}} t WHERE t."{{index $.EntitiesLabelField .Name}}" LIKE $1`, req.Term+"%")
+	rows, err = tx.Query(`SELECT id, t."{{.LabelField}}", t."status" FROM {{.Table}} t WHERE t."{{.LabelField}}" LIKE $1`, req.Term+"%")
 	if err != nil {
 		return &res, err
 	}
