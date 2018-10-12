@@ -8,12 +8,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func newProdRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
+func newProdRouter(g *grpc.Server) *mux.Router {
 	router := mux.NewRouter()
 	{{if not .Bootstrap.NoGRPCWeb}}
-	if ws != nil {
-		router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
-	}
+	ws := grpcweb.WrapServer(g)
+	router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
 	{{end}}
 
 	{{if .Admin.Generate}}
@@ -33,12 +32,11 @@ func newProdRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	return router
 }
 
-func newDevRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
+func newDevRouter(g *grpc.Server) *mux.Router {
 	router := mux.NewRouter()
 	{{if not .Bootstrap.NoGRPCWeb}}
-	if ws != nil {
-		router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
-	}
+	ws := grpcweb.WrapServer(g)
+	router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
 	{{end}}
 
 	{{if .Admin.Generate}}
