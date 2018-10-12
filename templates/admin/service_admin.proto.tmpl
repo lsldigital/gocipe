@@ -33,6 +33,11 @@ message DeleteRequest {
 // DeleteResponse represents result to a DeleteRequest
 message DeleteResponse {}
 
+// UploadOpts represents message to define upload options of files
+message UploadOpts {
+    bool Watermark = 1;
+}
+
 // UploadRequest represents message to allow uploading of files
 message UploadRequest {
     string Key      = 1;
@@ -40,6 +45,7 @@ message UploadRequest {
     string Field    = 3;
     string Filename = 4;
     bytes  Content  = 5;
+    UploadOpts UploadOptions = 6;
 }
 
 // UploadResponse represents result to an UploadRequest
