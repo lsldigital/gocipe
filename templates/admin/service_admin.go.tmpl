@@ -296,7 +296,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 
 	res.{{.Name}} = req.{{.Name}}
 	{{ range .GetFileFields }}
-	res.{{$.Entity}}.{{.}} = existing.{{.}}
+	res.{{$.Name}}.{{.}} = existing.{{.}}
 	{{end }}
 	{{ if .Slug}}
 	res.{{.Name}}.Slug = existing.Slug
@@ -397,7 +397,7 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	return &res, nil
 }
 {{- end}}
-{{if hasFileFields .}}
+{{if .GetFileFields}}
 // Upload{{.Name}} allows uploading of files for entity of type {{.Name}}
 func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*UploadResponse, error) {
 	var (
@@ -411,7 +411,6 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 	}
 
 	switch req.Field {
-		{{$EntityName := .Name}}
 		{{- range (.GetFileFieldsDefinition)}}
 		{{.}}
 		{{- end}}

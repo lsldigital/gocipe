@@ -4,17 +4,17 @@ package admin
 var UploadPaths = map[string]*files.UploadOptions{
 	{{range .Entities -}}
 	{{range .GetFileFields }}
-	"{{lower $.Name}}/{{lower .}}":	&{{$.Entity}}{{.}}UploadOpts,
+	"{{lower $.Name}}/{{lower .}}":	&{{$.Name}}{{.}}UploadOpts,
 	{{end}}
 	{{end}}
 }
 
 {{range .Entities -}}
 {{range .GetFileFields }}
-// {{$.Entity}}{{.}}UploadOpts contains upload parameters for the "{{.}}" field in Entity "{{$.Entity}}"
-var {{$.Entity}}{{.}}UploadOpts = files.UploadOptions{
+// {{$.Name}}{{.}}UploadOpts contains upload parameters for the "{{.}}" field in Entity "{{$.Name}}"
+var {{$.Name}}{{.}}UploadOpts = files.UploadOptions{
 	Dir:			"media",
-	Destination:    "{{lower $.Entity}}/{{lower .}}",
+	Destination:    "{{lower $.Name}}/{{lower .}}",
 	MediaPrefixURL: "/media/",
 	FileType:       files.TypeImage,
 	MaxSize:        util.NoLimit,

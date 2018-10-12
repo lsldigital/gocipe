@@ -3,7 +3,6 @@ package admin
 import (
 	"fmt"
 	"strings"
-	"unicode"
 
 	"github.com/fluxynet/gocipe/util"
 )
@@ -19,7 +18,6 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 		fileFields   []fileField
 		generateAuth bool
 	)
-	entitiesActions := []string{"Create", "Edit", "View", "List", "Delete", "Lookup"}
 	for _, entity := range r.Entities {
 		if !entity.Admin.Generate {
 			continue
@@ -71,12 +69,8 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 
 	// generate admin_helpers.gocipe.go
 	helpers, err := util.ExecuteTemplate("admin/admin_helpers.go.tmpl", struct {
-		FileFields []fileField
 		ImportPath string
-	}{
-		FileFields: fileFields,
-		ImportPath: util.AppImportPath,
-	})
+	}{util.AppImportPath})
 
 	work.Waitgroup.Add(1)
 	if err == nil {
@@ -87,8 +81,8 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 
 	// generate admin.proto
 	proto, err := util.ExecuteTemplate("admin/service_admin.proto.tmpl", struct {
-		AppImportPath string
-		Entities      []util.Entity
+		ImportPath string
+		Entities   []util.Entity
 	}{util.AppImportPath, r.Entities})
 
 	work.Waitgroup.Add(1)
@@ -100,11 +94,9 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 
 	// generate admin_permissions.go
 	permissions, err := util.ExecuteTemplate("admin/admin_permissions.go.tmpl", struct {
-		ImportPath      string
-		Entities        []util.Entity
-		EntitiesActions []string
-		UTF8List        []string
-	}{util.AppImportPath, r.Entities, entitiesActions, genUTF8List()})
+		ImportPath  string
+		Permissions []r.Permission
+	}{util.AppImportPath, r.GetPermissions()})
 
 	work.Waitgroup.Add(1)
 	if err == nil {
@@ -145,22 +137,4 @@ func hasHook(entity util.Entity) bool {
 		return true
 	}
 	return false
-}
-
-func genUTF8List() []string {
-	var (
-		strList []string
-		r       rune
-	)
-	for i := 0; i < 500; i++ {
-		r = 'A' + rune(i)
-		if unicode.IsPrint(r) &&
-			!unicode.IsSymbol(r) &&
-			!unicode.IsSpace(r) &&
-			!unicode.IsControl(r) &&
-			r != '\\' {
-			strList = append(strList, string(r))
-		}
-	}
-	return strList
 }
