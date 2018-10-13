@@ -26,7 +26,7 @@ generate_files() {
             cd "${d}"
             npm init --quiet --yes >> $LOG_FILE
         fi
-
+        
         if [ ! -d "${d}node_modules/@types/google-protobuf" ]; then
             echo "- npm install --save @types/google-protobuf: protobuf was not found"
             cd "${d}"
