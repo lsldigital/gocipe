@@ -2,6 +2,7 @@ package admin
 
 const (
     {{range $i, $entity := .Entities}}
+    {{if $entity.Admin.Generate}}
     /**
     * [BEGIN] {{$entity.Name}}
     */
@@ -12,6 +13,7 @@ const (
     // Perm{{$action}}{{$entity.Name}}Any is a permission token to {{$action}} any {{$entity.Name}}
     Perm{{$action}}{{$entity.Name}}Any = "{{index $.UTF8List $i}}"
     {{end}}
-    {{- end}}
+    {{end}}
+    {{end}}
     {{end}}
 )

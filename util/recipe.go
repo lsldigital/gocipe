@@ -98,6 +98,26 @@ func (r *Recipe) GetPermissions() []Permission {
 	return permissions
 }
 
+//HasFileFields returns true if at least an entity has file fields
+func (r *Recipe) HasFileFields() bool {
+	for _, e := range r.Entities {
+		if e.HasFileFields() {
+			return true
+		}
+	}
+	return false
+}
+
+//HasAuth returns true if at least an entity requires Auth
+func (r *Recipe) HasAuth() bool {
+	for _, e := range r.Entities {
+		if e.Admin.Auth.Generate {
+			return true
+		}
+	}
+	return false
+}
+
 func genUTF8List(limit int) []string {
 	var (
 		strList []string

@@ -14,16 +14,13 @@ type fileField struct {
 
 // Generate returns generated code for a Admin service
 func Generate(work util.GenerationWork, r *util.Recipe) error {
-	var (
-		generateAuth bool
-	)
+	if !r.Admin.Generate {
+		return nil
+	}
+
 	for _, entity := range r.Entities {
 		if !entity.Admin.Generate {
 			continue
-		}
-
-		if !generateAuth && entity.Admin.Auth.Generate {
-			generateAuth = true
 		}
 
 		if entity.HasCrudHooks() {
@@ -52,8 +49,7 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 		}
 	}
 
-	hasFileFields := len(fileFields) > 0
-	if hasFileFields {
+	if r.HasFileFields() {
 		code, err := util.ExecuteTemplate("admin/admin_config_upload.go.tmpl", struct {
 			Entities []util.Entity
 		}{r.Entities})
@@ -108,7 +104,7 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 		Entities     []util.Entity
 		GenerateAuth bool
 		ImportPath   string
-	}{r.Entities, generateAuth, util.AppImportPath})
+	}{r.Entities, r.HasAuth(), util.AppImportPath})
 	work.Waitgroup.Add(1)
 	if err == nil {
 		work.Done <- util.GeneratedCode{Generator: "GenerateAdmin", Code: code, Filename: "services/admin/service_admin.gocipe.go"}
