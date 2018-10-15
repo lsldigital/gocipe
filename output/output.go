@@ -3,7 +3,6 @@ package output
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -11,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/fluxynet/gocipe/util"
+	log "github.com/sirupsen/logrus"
 )
 
 // toolset represents go tools used by the generators
