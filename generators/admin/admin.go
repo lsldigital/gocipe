@@ -15,7 +15,6 @@ type fileField struct {
 // Generate returns generated code for a Admin service
 func Generate(work util.GenerationWork, r *util.Recipe) error {
 	var (
-		fileFields   []fileField
 		generateAuth bool
 	)
 	for _, entity := range r.Entities {
@@ -27,7 +26,7 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 			generateAuth = true
 		}
 
-		if hasHook(entity) {
+		if entity.HasCrudHooks() {
 			hooks, err := util.ExecuteTemplate("admin/service_admin_hooks.go.tmpl", struct {
 				Entity     util.Entity
 				ImportPath string
@@ -95,7 +94,7 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 	// generate admin_permissions.go
 	permissions, err := util.ExecuteTemplate("admin/admin_permissions.go.tmpl", struct {
 		ImportPath  string
-		Permissions []r.Permission
+		Permissions []util.Permission
 	}{util.AppImportPath, r.GetPermissions()})
 
 	work.Waitgroup.Add(1)
@@ -119,22 +118,4 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 
 	work.Waitgroup.Done()
 	return nil
-}
-
-func hasHook(entity util.Entity) bool {
-	switch true {
-	case
-		entity.Admin.Hooks.PreCreate,
-		entity.Admin.Hooks.PostCreate,
-		entity.Admin.Hooks.PreRead,
-		entity.Admin.Hooks.PostRead,
-		entity.Admin.Hooks.PreList,
-		entity.Admin.Hooks.PostList,
-		entity.Admin.Hooks.PreUpdate,
-		entity.Admin.Hooks.PostUpdate,
-		entity.Admin.Hooks.PreDelete,
-		entity.Admin.Hooks.PostDelete:
-		return true
-	}
-	return false
 }
