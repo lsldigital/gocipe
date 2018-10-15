@@ -16,4 +16,4 @@
 .idea/
 gocipe
 gocipe.json
-.vscode/launch.json
+.vscode/*
