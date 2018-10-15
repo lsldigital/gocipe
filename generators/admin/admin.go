@@ -15,6 +15,7 @@ type fileField struct {
 // Generate returns generated code for a Admin service
 func Generate(work util.GenerationWork, r *util.Recipe) error {
 	if !r.Admin.Generate {
+		work.Waitgroup.Done()
 		return nil
 	}
 
