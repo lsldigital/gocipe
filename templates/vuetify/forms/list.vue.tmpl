@@ -63,12 +63,9 @@
                 <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.id, props.item.Name)">
                   <v-icon>delete</v-icon>
                 </v-btn>
-                <v-tooltip top v-if="nested">
-                  <v-btn icon class="mx-0" @click.stop="duplicate(props.item.id)">
-                    <v-icon>file_copy</v-icon>
-                  </v-btn>
-                  <span>Duplicate</span>
-                </v-tooltip>
+                <v-btn icon class="mx-0" @click.stop="duplicate(props.item.id)">
+                  <v-icon>file_copy</v-icon>
+                </v-btn>
                 <v-tooltip top v-if="nested">
                   <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.id, props.item.Name)">
                     <v-icon>edit</v-icon>
@@ -79,7 +76,7 @@
                   <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
                     <v-icon>edit</v-icon>
                   </v-btn>
-                  <span>Automatically generated Edit Form</span>
+                  <span>Edit</span>
                 </v-tooltip>
               </td>
               <!-- Check if it should appear in the list -->
