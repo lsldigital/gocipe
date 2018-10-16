@@ -43,28 +43,25 @@ type relationship struct {
 }
 
 // Generate returns generated code to run an http server
-func Generate(work util.GenerationWork, r *util.Recipe) {
+func Generate(out output.Output, r *util.Recipe) {
 	generateAny := false
 	// work.Waitgroup.Add(len(entities) * 2) //2 threads per entities. for models and models_hooks
 
 	for _, e := range r.Entities {
 		if e.HasCrudHooks() {
-			output.GenerateAndSave(
-				"crud:hooks",
-				"crud/hooks.go.tmpl",
-				fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(e.Name)),
-				e,
-				true,
-			)
+			out.GenerateAndSave("crud:proto", "crud/models.proto.tmpl", "proto/models.proto", struct {
+				Entities      []util.Entity
+				AppImportPath string
+			}{Entities: r.Entities, AppImportPath: util.AppImportPath})
 		}
 	}
 
-	output.GenerateAndSave("crud:proto", "crud/models.proto.tmpl", "proto/models.proto", struct {
+	out.GenerateAndOverwrite("crud:proto", "crud/models.proto.tmpl", "proto/models.proto", struct {
 		Entities      []util.Entity
 		AppImportPath string
-	}{Entities: r.Entities, AppImportPath: util.AppImportPath}, false)
+	}{Entities: r.Entities, AppImportPath: util.AppImportPath})
 
-	output.GenerateAndSave("crud:moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", struct{}{}, false)
+	// output.GenerateAndSave("crud:moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", struct{}{}, false)
 
 	//old:
 
@@ -82,7 +79,7 @@ func Generate(work util.GenerationWork, r *util.Recipe) {
 
 		if code, err := generateCrud2(r); err == nil {
 			name := strings.ToLower(entity.Name)
-			output.GenerateAndSave("crud:entity:"+name, "crud/crud.go.tmpl", fmt.Sprintf("models/%s_repo.gocipe.go", name), code, false)
+			out.GenerateAndOverwrite("crud:entity:"+name, "crud/crud.go.tmpl", fmt.Sprintf("models/%s_repo.gocipe.go", name), code)
 		} //TODO cater for error
 	}
 

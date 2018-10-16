@@ -10,55 +10,16 @@ import (
 	"sync"
 
 	"github.com/fluxynet/gocipe/util"
-	log "github.com/sirupsen/logrus"
 )
-
-// toolset represents go tools used by the generators
-type toolset struct {
-	GoImports string
-	GoFmt     string
-	Protoc    string
-	Dep       string
-}
-
-const (
-	logSuccess = "✅ [Ok]"
-	logSkipped = "👻 [Skipped]"
-	logError   = "❗️ [Error]"
-	logInfo    = "🦋 [Info]"
-)
-
-var (
-	_recipePath                 string
-	_log, _gofiles              []string
-	_tools                      toolset
-	_written, _skipped, _failed int
-	_verbose                    bool
-)
-
-func init() {
-	initToolset()
-}
 
 // Inject gets path injected into this package
 func Inject(path string) {
 	_recipePath = path
 }
 
-// SetVerbose can be used to toggle verbosity
-func SetVerbose(verbose bool) {
-	_verbose = verbose
-}
-
 // Log outputs to log file
 func Log(message string, a ...interface{}) {
 	_log = append(_log, fmt.Sprintf(message, a...))
-}
-
-// AddGoFile adds a file in the queue to be gofmt'ed and goimport'ed
-func AddGoFile(filename string) {
-	filename, _ = util.GetAbsPath(filename)
-	_gofiles = append(_gofiles, filename)
 }
 
 // WriteLog write logs in log-file
@@ -96,61 +57,61 @@ func WriteLog() {
 }
 
 // Process listens to generators and processes generated files
-func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
-	aggregates := make(map[string][]util.GeneratedCode)
+// func Process(waitgroup *sync.WaitGroup, work util.GenerationWork, noSkip bool) {
+// 	aggregates := make(map[string][]util.GeneratedCode)
 
-	for generated := range work.Done {
-		if generated.Error == util.ErrorSkip {
-			Log(logSkipped+" Generation skipped [%s]", generated.Generator)
-			_skipped++
-		} else if generated.Error != nil {
-			Log(logError+" Generation failed [%s]: %s", generated.Generator, generated.Error)
-			_failed++
-		} else if generated.Aggregate {
-			a := aggregates[generated.Filename]
-			aggregates[generated.Filename] = append(a, generated)
-		} else {
-			fname, l, err := saveGenerated(generated, noSkip)
-			Log(l)
+// 	for generated := range work.Done {
+// 		if generated.Error == util.ErrorSkip {
+// 			Log(logSkipped+" Generation skipped [%s]", generated.Generator)
+// 			_skipped++
+// 		} else if generated.Error != nil {
+// 			Log(logError+" Generation failed [%s]: %s", generated.Generator, generated.Error)
+// 			_failed++
+// 		} else if generated.Aggregate {
+// 			a := aggregates[generated.Filename]
+// 			aggregates[generated.Filename] = append(a, generated)
+// 		} else {
+// 			fname, l, err := saveGenerated(generated, noSkip)
+// 			Log(l)
 
-			if err == nil {
-				if strings.HasSuffix(fname, ".go") {
-					AddGoFile(fname)
-				} else if strings.HasSuffix(fname, ".sh") {
-					os.Chmod(fname, 0755)
-				}
+// 			if err == nil {
+// 				if strings.HasSuffix(fname, ".go") {
+// 					AddGoFile(fname)
+// 				} else if strings.HasSuffix(fname, ".sh") {
+// 					os.Chmod(fname, 0755)
+// 				}
 
-				_written++
-			} else if err == util.ErrorSkip {
-				_skipped++
-			} else {
-				_failed++
-			}
-		}
+// 				_written++
+// 			} else if err == util.ErrorSkip {
+// 				_skipped++
+// 			} else {
+// 				_failed++
+// 			}
+// 		}
 
-		work.Waitgroup.Done()
-	}
+// 		work.Waitgroup.Done()
+// 	}
 
-	for _, generated := range aggregates {
-		fname, l, err := saveAggregate(generated, noSkip)
-		Log(l)
+// 	for _, generated := range aggregates {
+// 		fname, l, err := saveAggregate(generated, noSkip)
+// 		Log(l)
 
-		if err == nil {
-			if strings.HasSuffix(fname, ".go") {
-				AddGoFile(fname)
-			}
+// 		if err == nil {
+// 			if strings.HasSuffix(fname, ".go") {
+// 				AddGoFile(fname)
+// 			}
 
-			_written++
-		} else if err == util.ErrorSkip {
-			_skipped++
-		} else {
-			_failed++
-		}
-	}
+// 			_written++
+// 		} else if err == util.ErrorSkip {
+// 			_skipped++
+// 		} else {
+// 			_failed++
+// 		}
+// 	}
 
-	// WriteLog()
-	waitgroup.Done()
-}
+// 	// WriteLog()
+// 	waitgroup.Done()
+// }
 
 // saveGenerated saves a generated file and returns absolute filename, log entry and error
 func saveGenerated(generated util.GeneratedCode, noSkip bool) (string, string, error) {
@@ -193,60 +154,60 @@ func saveGenerated(generated util.GeneratedCode, noSkip bool) (string, string, e
 }
 
 // GenerateAndSave saves a generated file and returns error
-func GenerateAndSave(component string, template string, filename string, data interface{}, noOverwrite bool) error {
-	var (
-		code     string
-		err      error
-		isString bool
-		mode     os.FileMode = 0755
-	)
+// func GenerateAndSave(component string, template string, filename string, data interface{}, noOverwrite bool) error {
+// 	var (
+// 		code     string
+// 		err      error
+// 		isString bool
+// 		mode     os.FileMode = 0755
+// 	)
 
-	filename, err = util.GetAbsPath(filename)
-	if err != nil {
-		Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
-		_failed++
-		return err
-	}
+// 	filename, err = util.GetAbsPath(filename)
+// 	if err != nil {
+// 		Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
+// 		_failed++
+// 		return err
+// 	}
 
-	if noOverwrite && util.FileExists(filename) {
-		Log(logSkipped+" %s (%s)", filename, component)
-		_skipped++
-		return util.ErrorSkip
-	}
+// 	if noOverwrite && util.FileExists(filename) {
+// 		Log(logSkipped+" %s (%s)", filename, component)
+// 		_skipped++
+// 		return util.ErrorSkip
+// 	}
 
-	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
-		Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
-		_failed++
-		return err
-	}
+// 	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
+// 		Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
+// 		_failed++
+// 		return err
+// 	}
 
-	if code, isString = data.(string); !isString {
-		code, err = util.ExecuteTemplate(template, data)
-		if err != nil {
-			Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
-			_failed++
-			return err
-		}
-	}
+// 	if code, isString = data.(string); !isString {
+// 		code, err = util.ExecuteTemplate(template, data)
+// 		if err != nil {
+// 			Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
+// 			_failed++
+// 			return err
+// 		}
+// 	}
 
-	err = ioutil.WriteFile(filename, []byte(code), mode)
-	if err != nil {
-		Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
-		_failed++
-		return err
-	}
+// 	err = ioutil.WriteFile(filename, []byte(code), mode)
+// 	if err != nil {
+// 		Log(logError+" Generate (%s) %s failed: %s", component, filename, err)
+// 		_failed++
+// 		return err
+// 	}
 
-	Log(logSuccess+" %s", filename)
-	_written++
+// 	Log(logSuccess+" %s", filename)
+// 	_written++
 
-	if strings.HasSuffix(filename, ".go") {
-		AddGoFile(filename)
-	} else if strings.HasSuffix(filename, ".sh") {
-		os.Chmod(filename, 0755)
-	}
+// 	if strings.HasSuffix(filename, ".go") {
+// 		// AddGoFile(filename)
+// 	} else if strings.HasSuffix(filename, ".sh") {
+// 		os.Chmod(filename, 0755)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 // saveAggregate saves aggregated files and returns absolute filename, log entry and Error
 func saveAggregate(aggregate []util.GeneratedCode, noSkip bool) (string, string, error) {
@@ -262,50 +223,6 @@ func saveAggregate(aggregate []util.GeneratedCode, noSkip bool) (string, string,
 	}
 
 	return saveGenerated(generated, noSkip)
-}
-
-// initToolset check if all required tools are present
-func initToolset() {
-	var (
-		err error
-		ok  = true
-	)
-
-	_tools.GoImports, err = exec.LookPath("goimports")
-	if err != nil {
-		fmt.Println("Required tool goimports not found: ", err)
-		ok = false
-	}
-
-	_tools.GoFmt, err = exec.LookPath("gofmt")
-	if err != nil {
-		fmt.Println("Required tool gofmt not found: ", err)
-		ok = false
-	}
-
-	_tools.Protoc, err = exec.LookPath("protoc")
-	if err != nil {
-		fmt.Println("Required tool protoc not found: ", err)
-		ok = false
-	}
-
-	_, err = exec.LookPath("protoc-gen-go")
-	if err != nil {
-		fmt.Println("Required tool protoc-gen-go not found: ", err)
-		fmt.Println("Install using go get -u github.com/golang/protobuf/protoc-gen-go")
-		ok = false
-	}
-
-	_tools.Dep, err = exec.LookPath("dep")
-	if err != nil {
-		fmt.Println("Required tool dep not found: ", err)
-		fmt.Println("Install using go get -u github.com/golang/dep/cmd/dep")
-		ok = false
-	}
-
-	if !ok {
-		log.Fatalln("Please install above tools before continuing.")
-	}
 }
 
 // PostProcessGoFiles executes goimports and gofmt on go files that have been generated

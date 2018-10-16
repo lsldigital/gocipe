@@ -49,63 +49,68 @@ var generateCmd = &cobra.Command{
 			log.Fatalln("[loadRecipe]", err)
 		}
 
-		if generateBootstrap {
-			work.Waitgroup.Add(1)
-		}
+		// if generateBootstrap {
+		// 	work.Waitgroup.Add(1)
+		// }
 
-		if generateSchema {
-			work.Waitgroup.Add(1)
-		}
+		// if generateSchema {
+		// 	work.Waitgroup.Add(1)
+		// }
 
-		if generateCrud {
-			work.Waitgroup.Add(1)
-		}
+		// if generateCrud {
+		// 	work.Waitgroup.Add(1)
+		// }
 
-		if generateAdmin {
-			work.Waitgroup.Add(1)
-		}
+		// if generateAdmin {
+		// 	work.Waitgroup.Add(1)
+		// }
 
-		if generateAuth {
-			work.Waitgroup.Add(1)
-		}
+		// if generateAuth {
+		// 	work.Waitgroup.Add(1)
+		// }
 
-		if generateUtils {
-			work.Waitgroup.Add(1)
-		}
+		// if generateUtils {
+		// 	work.Waitgroup.Add(1)
+		// }
 
-		if generateVuetify {
-			work.Waitgroup.Add(1)
-		}
+		// if generateVuetify {
+		// 	work.Waitgroup.Add(1)
+		// }
+
+		var outpt output.Output
 
 		//scaffold application layout - synchronously before launching generators
-		application.Generate(rcp, noSkip)
+		application.Generate(outpt, rcp, noSkip)
+
+		
+
 
 		if generateBootstrap {
-			go bootstrap.Generate(work, rcp.Bootstrap)
+			bootstrap.Generate(outpt, rcp.Bootstrap)
 		}
 
 		if generateSchema {
-			go schema.Generate(work, rcp)
+		   schema.Generate(outpt, rcp)
 		}
 
 		if generateCrud {
-			go crud.Generate(work, rcp)
+			crud.Generate(outpt, rcp)
 		}
 
 		if generateAdmin {
-			go admin.Generate(work, rcp)
+			go admin.Generate(outpt, rcp)
 		}
 
 		if generateAdmin {
-			go auth.Generate(work)
+			go auth.Generate(outpt)
 		}
 
 		if generateUtils {
-			go utils.Generate(work)
+			go utils.Generate(outpt)
 		}
 
 		if generateVuetify {
-			go vuetify.Generate(work, rcp)
+			go vuetify.Generate(outpt, rcp)
 		}
 		// go generators.GenerateHTTP(work, recipe.HTTP)
 		// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
@@ -113,7 +118,8 @@ var generateCmd = &cobra.Command{
 		var wg sync.WaitGroup
 		wg.Add(1)
 
-		go output.Process(&wg, work, noSkip)
+		// go output.Process(work, noSkip)
+		go outpt.ProcessGoFiles(work, noSkip)
 
 		work.Waitgroup.Wait()
 		close(work.Done)
