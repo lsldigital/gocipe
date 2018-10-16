@@ -1,6 +1,9 @@
 package vuetify
 
 import (
+	"path"
+	"path/filepath"
+
 	"github.com/fluxynet/gocipe/output"
 	"github.com/fluxynet/gocipe/util"
 	"github.com/jinzhu/inflection"
@@ -13,55 +16,44 @@ func Generate(out output.Output, r *util.Recipe) {
 		return
 	}
 
-	path := util.WorkingDir + "/web/" + r.Vuetify.App + "/src/gocipe"
+	var (
+		forms        []string
+		menuEntities []util.Entity
+	)
+	dstPath := path.Join(util.WorkingDir, "/web/", r.Vuetify.App, "/src/gocipe")
 
-	var forms []string
 	for _, entity := range r.Entities {
 		if entity.Vuetify.NoGenerate {
 			continue
 		}
 
+		if !entity.Vuetify.NoGenerate {
+			menuEntities = append(menuEntities, entity)
+		}
+
 		// go func(entity util.Entity) {
-		var (
-			data struct {
-				Entity   util.Entity
-				Entities []util.Entity
-			}
-		)
+		data := struct {
+			Entity util.Entity
+		}{entity}
 
-		data.Entity = entity
-		data.Entities = r.Entities
+		filePath := path.Join(dstPath, "/forms/", inflection.Plural(entity.Name))
 
-		filename := path + "/forms/" + inflection.Plural(data.Entity.Name)
-
-		out.GenerateAndOverwrite("VuetifyList", "vuetify/forms/list.vue.tmpl", filename+"List.vue", data)
+		out.GenerateAndOverwrite("VuetifyList", "vuetify/forms/list.vue.tmpl", filepath.Join(filePath, "List.vue"), data)
 		forms = append(forms, inflection.Plural(data.Entity.Name)+"List")
 
-		out.GenerateAndOverwrite("VuetifyEdit", "vuetify/forms/edit.vue.tmpl", filename+"Edit.vue", data)
+		out.GenerateAndOverwrite("VuetifyEdit", "vuetify/forms/edit.vue.tmpl", filepath.Join(filePath, "Edit.vue"), data)
 		forms = append(forms, inflection.Plural(data.Entity.Name)+"Edit")
 
 		// edit, err := util.ExecuteTemplate("vuetify_edit.vue.tmpl", data)
 		// if err == nil {
-		// 	work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyEdit", Code: edit, Filename: filename + "Edit.vue"}
+		// 	work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyEdit", Code: edit, filePath: filePath + "Edit.vue"}
 		// } else {
 		// 	work.Done <- util.GeneratedCode{Generator: "GenerateVuetifyEdit", Error: err, GeneratedHeaderFormat: "<-- %s -->"}
 		// }
 		// }(entity)
 	}
 
-	menuEntities := func() []util.Entity {
-		var items []util.Entity
-
-		for _, entity := range r.Entities {
-			if !entity.Vuetify.NoGenerate {
-				items = append(items, entity)
-			}
-		}
-
-		return items
-	}()
-
-	out.GenerateAndOverwrite("Vuetify", "vuetify/js/routes.js.tmpl", path+"/routes.js", struct {
+	out.GenerateAndOverwrite("Vuetify", "vuetify/js/routes.js.tmpl", filepath.Join(dstPath, "/routes.js"), struct {
 		Entities []util.Entity
 	}{menuEntities})
 
@@ -82,11 +74,11 @@ func Generate(out output.Output, r *util.Recipe) {
 	}
 
 	for _, file := range widgets {
-		out.GenerateAndOverwrite("Vuetify", "vuetify/widgets/"+file+".tmpl", path+"/widgets/"+file, nil)
+		out.GenerateAndOverwrite("Vuetify", filepath.Join("vuetify/widgets/", file+".tmpl"), filepath.Join(dstPath, "/widgets/", file), nil)
 	}
 
 	// components
-	out.GenerateAndOverwrite("Vuetify", "vuetify/js/components-registration.js.tmpl", path+"/components-registration.js", struct {
+	out.GenerateAndOverwrite("Vuetify", "vuetify/js/components-registration.js.tmpl", filepath.Join(dstPath, "/components-registration.js"), struct {
 		Widgets map[string]string
 		Forms   []string
 	}{Widgets: widgets, Forms: forms})
