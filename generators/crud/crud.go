@@ -44,7 +44,7 @@ type relationship struct {
 
 // Generate returns generated code to run an http server
 func Generate(out output.Output, r *util.Recipe) {
-	generateAny := false
+	var generateAny bool
 	// work.Waitgroup.Add(len(entities) * 2) //2 threads per entities. for models and models_hooks
 
 	for _, e := range r.Entities {
@@ -61,7 +61,7 @@ func Generate(out output.Output, r *util.Recipe) {
 		AppImportPath string
 	}{Entities: r.Entities, AppImportPath: util.AppImportPath})
 
-	// output.GenerateAndSave("crud:moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", struct{}{}, false)
+	out.GenerateAndOverwrite("crud:moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", struct{}{})
 
 	//old:
 
@@ -83,23 +83,6 @@ func Generate(out output.Output, r *util.Recipe) {
 		} //TODO cater for error
 	}
 
-	// work.Waitgroup.Add(1)
-	// if generateAny {
-	// 	models, err := util.ExecuteTemplate("crud/models.go.tmpl", struct {
-	// 		Crud     bool
-	// 		Entities map[string]util.Entity
-	// 	}{
-	// 		Crud:     r.Crud.Generate,
-	// 		Entities: r.Entities,
-	// 	})
-	// 	if err == nil {
-	// 		work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Code: models, Filename: "models/models.gocipe.go"}
-	// 	} else {
-	// 		work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Error: fmt.Errorf("failed to load execute template: %s", err)}
-	// 	}
-	// } else {
-	// 	work.Done <- util.GeneratedCode{Generator: "GenerateCRUDModels", Error: util.ErrorSkip}
-	// }
 }
 
 func generateCrud2(r *util.Recipe) (string, error) {

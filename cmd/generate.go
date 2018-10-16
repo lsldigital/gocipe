@@ -46,7 +46,7 @@ var generateCmd = &cobra.Command{
 		application.Generate(outpt, rcp, noSkip)
 
 		if generateBootstrap {
-			bootstrap.Generate(outpt, rcp.Bootstrap)
+			bootstrap.Generate(outpt, rcp)
 		}
 
 		if generateSchema {
@@ -58,19 +58,19 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateAdmin {
-			 admin.Generate(outpt, rcp)
+			admin.Generate(outpt, rcp)
 		}
 
 		if generateAdmin {
-			 auth.Generate(outpt)
+			auth.Generate(outpt)
 		}
 
 		if generateUtils {
-			 utils.Generate(outpt)
+			utils.Generate(outpt)
 		}
 
 		if generateVuetify {
-			 vuetify.Generate(outpt, rcp)
+			vuetify.Generate(outpt, rcp)
 		}
 
 		outpt.ProcessProto()

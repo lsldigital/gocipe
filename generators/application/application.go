@@ -17,17 +17,34 @@ func Generate(out output.Output, recipe *util.Recipe, noSkip bool) {
 	out.GenerateAndOverwrite("Scaffold", "", "assets/templates/.gitkeep", "Place templates in this folder.")
 	out.GenerateAndOverwrite("Scaffold", "", "assets/web/app/.gitkeep", "Place web assets in this folder.")
 	out.GenerateAndOverwrite("Scaffold", "application/gen-service.sh.tmpl", "gen-service.sh", struct{ GeneratePath string }{GeneratePath: "$GOPATH" + strings.TrimPrefix(util.WorkingDir, os.Getenv("GOPATH")) + "/services"})
-	out.GenerateAndOverwrite("Scaffold", "application/makefile.tmpl", "Makefile", struct{ AppName string }{util.AppName})
-	out.GenerateAndOverwrite("Scaffold", "application/main.go.tmpl", "main.go",
-		struct {
-			Recipe     *util.Recipe
-			ImportPath string
-		}{
-			Recipe:     recipe,
-			ImportPath: util.AppImportPath,
-		})
-	out.GenerateAndOverwrite("Scaffold", "application/route.go.tmpl", "route.go", struct {
-		Bootstrap util.BootstrapOpts
-		Admin     util.AdminOpts
-	}{recipe.Bootstrap, recipe.Admin})
+
+	if noSkip {
+		out.GenerateAndOverwrite("Scaffold", "application/makefile.tmpl", "Makefile", struct{ AppName string }{util.AppName})
+		out.GenerateAndOverwrite("Scaffold", "application/main.go.tmpl", "main.go",
+			struct {
+				Recipe     *util.Recipe
+				ImportPath string
+			}{
+				Recipe:     recipe,
+				ImportPath: util.AppImportPath,
+			})
+		out.GenerateAndOverwrite("Scaffold", "application/route.go.tmpl", "route.go", struct {
+			Bootstrap util.BootstrapOpts
+			Admin     util.AdminOpts
+		}{recipe.Bootstrap, recipe.Admin})
+	} else {
+		out.GenerateAndSave("Scaffold", "application/makefile.tmpl", "Makefile", struct{ AppName string }{util.AppName})
+		out.GenerateAndSave("Scaffold", "application/main.go.tmpl", "main.go",
+			struct {
+				Recipe     *util.Recipe
+				ImportPath string
+			}{
+				Recipe:     recipe,
+				ImportPath: util.AppImportPath,
+			})
+		out.GenerateAndSave("Scaffold", "application/route.go.tmpl", "route.go", struct {
+			Bootstrap util.BootstrapOpts
+			Admin     util.AdminOpts
+		}{recipe.Bootstrap, recipe.Admin})
+	}
 }

@@ -6,7 +6,6 @@ import (
 )
 
 // Generate returns generated database schema creation code
-func Generate(out output.Output, r *util.Recipe) error {
+func Generate(out output.Output, r *util.Recipe) {
 	out.GenerateAndOverwrite("schema", "schema/schema.sql.tmpl", "schema/schema.gocipe.sql", r)
-	return nil
 }
