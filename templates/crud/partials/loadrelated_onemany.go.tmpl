@@ -28,6 +28,7 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 	rows, err := repo.db.QueryContext(ctx, `
 		SELECT t."{{.ThisID}}", {{.SQLFields}} FROM {{.ThatTable}} t WHERE t."{{.ThisID}}" IN (`+placeholder+`)
 	`, values...)
+	defer rows.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entities": entities, "query": `SELECT t."{{.ThisID}}", {{.SQLFields}} FROM {{.ThatTable}} t WHERE t."{{.ThisID}}" IN (`+placeholder+`)`, "error": err}).Error("repo.{{.ThisEntity}}.Load query error")
 		return errors.WithStack(err)

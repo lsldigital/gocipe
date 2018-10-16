@@ -30,6 +30,7 @@ func (repo {{.ThisEntity}}Repositorium) Load{{.Funcname}}(ctx context.Context, e
 		INNER JOIN {{.JoinTable}} j ON t.id = j.{{.ThatID}}
 		WHERE j.{{.ThisID}} IN (`+placeholder+`)
 	`, values...)
+	defer rows.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entities": entities, "query": `SELECT j.{{.ThisID}}, {{.SQLFields}} FROM {{.ThatTable}} t INNER JOIN {{.JoinTable}} j ON t.id = j.{{.ThatID}} WHERE j.{{.ThisID}} IN (`+placeholder+`)`, "error": err}).Error("repo.{{.ThisEntity}}.Load query error")
 		return errors.WithStack(err)

@@ -22,13 +22,13 @@ func (repo {{.EntityName}}Repositorium) Get(ctx context.Context, id {{pkeyProper
 	}
 
 	rows, err = repo.db.QueryContext(ctx, `SELECT {{.SQLFields}} FROM {{.Table}} t WHERE t.id = $1 ORDER BY t.id ASC`, id)
+	defer rows.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"id": id, "query": `SELECT {{.SQLFields}} FROM {{.Table}} t WHERE t.id = $1 ORDER BY t.id ASC`, "error": err}).Error("repo.{{.EntityName}}.Get query error")
 		return nil, err
 	}
 	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get query done")
 
-	defer rows.Close()
 	if rows.Next() {
 		log.WithFields(log.Fields{"id": id}).Debug("repo.{{.EntityName}}.Get row found")
 		if err = util.CheckContext(ctx); err != nil {

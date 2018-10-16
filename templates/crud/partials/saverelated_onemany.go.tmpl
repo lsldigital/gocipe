@@ -21,7 +21,9 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 	}
 
 	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.ThatColumn}} = $1 WHERE {{.ThatColumn}} = $2")
+	defer stmt.Close()
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "UPDATE {{.Table}} SET {{.ThatColumn}} = $1 WHERE {{.ThatColumn}} = $2", "error": err}).Error("repo.{{.EntityName}}.Save query error")
 		return errors.WithStack(err)
 	}
@@ -40,7 +42,9 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 	}
 
 	stmt, err = tx.Prepare("UPDATE {{.Table}} SET {{.ThatColumn}} = $1 WHERE {{.ThisColumn}} = $2")
+	defer stmt.Close()
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "UPDATE {{.Table}} SET {{.ThatColumn}} = $1 WHERE {{.ThisColumn}} = $2", "error": err}).Error("repo.{{.EntityName}}.Save query error")
 		return errors.WithStack(err)
 	}

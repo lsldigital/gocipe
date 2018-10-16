@@ -21,7 +21,9 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 	}
 
 	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1")
+	defer stmt.Close()
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1", "error": err}).Error("repo.{{.EntityName}}.Save query error")
 		return errors.WithStack(err)
 	}
@@ -40,7 +42,9 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}(ctx context.Context, t
 	}
 
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)")
+	defer stmt.Close()
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)", "error": err}).Error("repo.{{.EntityName}}.Save query error")
 		return errors.WithStack(err)
 	}
@@ -93,7 +97,9 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context
 	}
 	
 	stmt, err = tx.Prepare("DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1")
+	defer stmt.Close()
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "DELETE FROM {{.Table}} WHERE {{.ThatColumn}} = $1", "error": err}).Error("repo.{{.EntityName}}.Save{{.Funcname}}IDs query error")
 		return errors.WithStack(err)
 	}
@@ -112,7 +118,9 @@ func (repo {{.EntityName}}Repositorium) Save{{.Funcname}}IDs(ctx context.Context
 	}
 
 	stmt, err = tx.Prepare("INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)")
+	defer stmt.Close()
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "INSERT INTO {{.Table}} ({{.ThatColumn}}, {{.ThisColumn}}) VALUES ($1, $2)", "error": err}).Error("repo.{{.EntityName}}.Save{{.Funcname}}IDs query error")
 		return errors.WithStack(err)
 	}

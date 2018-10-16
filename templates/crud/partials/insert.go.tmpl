@@ -32,14 +32,18 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.E
 
 	{{if eq .PrimaryKey "serial" -}}
 	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id`)
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "query": `INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id`, "error": err}).Error("repo.{{.EntityName}}.Insert serial query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	{{else}}
 	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})`)
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "query": `INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})`, "error": err}).Error("repo.{{.EntityName}}.Insert query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	{{- end}}
@@ -51,6 +55,7 @@ func (repo {{.EntityName}}Repositorium) Insert(ctx context.Context, entity *{{.E
 	{{if .HasPreHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Insert context error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	
@@ -160,13 +165,17 @@ func (repo {{.EntityName}}Repositorium) InsertWithRel(ctx context.Context, entit
 
 	{{if eq .PrimaryKey "serial" -}}
 	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id`)
+	defer stmt.Close()
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{"entity": entity, "query": `INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}}) RETURNING id`, "error": err}).Error("repo.{{.EntityName}}.InsertWithRel serial query error")
 		return errors.WithStack(err)
 	}
 	{{else}}
 	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})`)
+	defer stmt.Close()
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{"entity": entity, "query": `INSERT INTO {{.Table}} ({{.SQLFields}}) VALUES ({{.SQLPlaceholders}})`, "error": err}).Error("repo.{{.EntityName}}.InsertWithRel query error")
 		return errors.WithStack(err)
 	}

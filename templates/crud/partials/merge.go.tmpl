@@ -34,14 +34,17 @@ func (repo {{.EntityName}}Repositorium) Merge(ctx context.Context, entity *{{.En
 
 	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
 	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`)
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "query": `INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`, "error": err}).Error("repo.{{.EntityName}}.Merge query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.EntityName}}.Merge query done")
 
 	if err = util.CheckContext(ctx); err != nil {
 		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.Merge context error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	{{if .HasPreHook}}
@@ -128,14 +131,17 @@ func (repo {{.EntityName}}Repositorium) MergeWithRel(ctx context.Context, entity
 
 	stmt, err = tx.Prepare(`INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) 
 	ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`)
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "query": `INSERT INTO {{.Table}} ({{.SQLFieldsInsert}}) VALUES ({{.SQLPlaceholders}}) ON CONFLICT (id) DO UPDATE SET {{.SQLFieldsUpdate}}`, "error": err}).Error("repo.{{.EntityName}}.MergeWithRel query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
 	{{if .HasPreHook}}
 	if err = util.CheckContext(ctx); err != nil {
 		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.EntityName}}.MergeWithRel context error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 

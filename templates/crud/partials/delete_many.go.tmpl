@@ -47,7 +47,9 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, tx *sql.
 
 	{{range .Relationships}}{{if eq .Type "many-many"}}
 	stmt, err = tx.Prepare("DELETE FROM {{.JoinTable}} WHERE {{.ThatID}} IN (SELECT id FROM {{$.Table}}"+query+")")
+	defer stmt.Close()
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{"filters": filters, "query": DELETE FROM {{.JoinTable}} WHERE {{.ThatID}} IN (SELECT id FROM {{$.Table}}"+query+")", "error": err}).Error("repo.{{.EntityName}}.DeleteMany query error")
 		return errors.WithStack(err)
 	}
@@ -61,7 +63,9 @@ func (repo {{.EntityName}}Repositorium) DeleteMany(ctx context.Context, tx *sql.
 	{{end}}{{end}}
 
 	stmt, err = tx.Prepare("DELETE FROM {{.Table}}"+query)
+	defer stmt.Close()
 	if err != nil {
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
