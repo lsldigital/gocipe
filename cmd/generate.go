@@ -3,7 +3,7 @@ package cmd
 import (
 	"log"
 	"runtime"
-	"sync"
+	// "sync"
 
 	"github.com/fluxynet/gocipe/generators/admin"
 	"github.com/fluxynet/gocipe/generators/application"
@@ -15,7 +15,7 @@ import (
 	"github.com/fluxynet/gocipe/generators/vuetify"
 	"github.com/fluxynet/gocipe/output"
 	"github.com/fluxynet/gocipe/recipe"
-	"github.com/fluxynet/gocipe/util"
+	// "github.com/fluxynet/gocipe/util"
 	"github.com/spf13/cobra"
 )
 
@@ -36,10 +36,10 @@ var generateCmd = &cobra.Command{
 	Aliases: []string{"init"},
 	Run: func(cmd *cobra.Command, args []string) {
 		runtime.GOMAXPROCS(runtime.NumCPU())
-		work := util.GenerationWork{
-			Waitgroup: new(sync.WaitGroup),
-			Done:      make(chan util.GeneratedCode),
-		}
+		// work := util.GenerationWork{
+		// 	Waitgroup: new(sync.WaitGroup),
+		// 	Done:      make(chan util.GeneratedCode),
+		// }
 
 		output.SetVerbose(verbose)
 
@@ -98,35 +98,37 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateAdmin {
-			go admin.Generate(outpt, rcp)
+			 admin.Generate(outpt, rcp)
 		}
 
 		if generateAdmin {
-			go auth.Generate(outpt)
+			 auth.Generate(outpt)
 		}
 
 		if generateUtils {
-			go utils.Generate(outpt)
+			 utils.Generate(outpt)
 		}
 
 		if generateVuetify {
-			go vuetify.Generate(outpt, rcp)
+			 vuetify.Generate(outpt, rcp)
 		}
 		// go generators.GenerateHTTP(work, recipe.HTTP)
 		// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 
-		var wg sync.WaitGroup
-		wg.Add(1)
+		// var wg sync.WaitGroup
+		// wg.Add(1)
 
 		// go output.Process(work, noSkip)
-		go outpt.ProcessGoFiles(work, noSkip)
+		
+		//ask yousuf for this one 
+		//  outpt.ProcessGoFiles(noSkip)
 
-		work.Waitgroup.Wait()
-		close(work.Done)
-		wg.Wait()
+		// work.Waitgroup.Wait()
+		// close(work.Done)
+		// wg.Wait()
 
 		output.ProcessProto()
-		output.PostProcessGoFiles()
+		outpt.PostProcessGoFiles()
 		output.WriteLog()
 	},
 }

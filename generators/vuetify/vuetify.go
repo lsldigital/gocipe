@@ -82,11 +82,11 @@ func Generate(out output.Output, r *util.Recipe) {
 	}
 
 	for _, file := range widgets {
-		out.GenerateAndSave("Vuetify", "vuetify/widgets/"+file+".tmpl", path+"/widgets/"+file, nil)
+		out.GenerateAndOverwrite("Vuetify", "vuetify/widgets/"+file+".tmpl", path+"/widgets/"+file, nil)
 	}
 
 	// components
-	out.GenerateAndSave("Vuetify", "vuetify/js/components-registration.js.tmpl", path+"/components-registration.js", struct {
+	out.GenerateAndOverwrite("Vuetify", "vuetify/js/components-registration.js.tmpl", path+"/components-registration.js", struct {
 		Widgets map[string]string
 		Forms   []string
 	}{Widgets: widgets, Forms: forms})
