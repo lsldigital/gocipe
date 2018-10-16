@@ -96,9 +96,9 @@ func Generate(work util.GenerationWork, r *util.Recipe) error {
 
 	work.Waitgroup.Add(1)
 	if err == nil {
-		work.Done <- util.GeneratedCode{Generator: "GenerateAdminProto", Code: permissions, Filename: "services/admin/service_admin_permissions.go"}
+		work.Done <- util.GeneratedCode{Generator: "GenerateAdmin Permissions", Code: permissions, Filename: "services/admin/service_admin_permissions.go"}
 	} else {
-		work.Done <- util.GeneratedCode{Generator: "GenerateAdminProto", Error: err}
+		work.Done <- util.GeneratedCode{Generator: "GenerateAdmin Permissions", Error: err}
 	}
 
 	code, err := util.ExecuteTemplate("admin/service_admin.go.tmpl", struct {
