@@ -1,7 +1,6 @@
 package recipe
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -32,7 +31,7 @@ func Load() (*util.Recipe, error) {
 		return nil, err
 	}
 
-	output.Log("%x", sha256.Sum256([]byte(recipeContent)))
+	// output.Log("%x", sha256.Sum256([]byte(recipeContent)))
 
 	output.Inject(
 		recipePath,

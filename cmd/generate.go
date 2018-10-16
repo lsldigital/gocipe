@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"log"
-	"runtime"
-	// "sync"
 
 	"github.com/fluxynet/gocipe/generators/admin"
 	"github.com/fluxynet/gocipe/generators/application"
@@ -15,7 +13,6 @@ import (
 	"github.com/fluxynet/gocipe/generators/vuetify"
 	"github.com/fluxynet/gocipe/output"
 	"github.com/fluxynet/gocipe/recipe"
-	// "github.com/fluxynet/gocipe/util"
 	"github.com/spf13/cobra"
 )
 
@@ -35,12 +32,6 @@ var generateCmd = &cobra.Command{
 	Use:     "generate",
 	Aliases: []string{"init"},
 	Run: func(cmd *cobra.Command, args []string) {
-		runtime.GOMAXPROCS(runtime.NumCPU())
-		// work := util.GenerationWork{
-		// 	Waitgroup: new(sync.WaitGroup),
-		// 	Done:      make(chan util.GeneratedCode),
-		// }
-
 		output.SetVerbose(verbose)
 
 		rcp, err := recipe.Load()
@@ -49,41 +40,10 @@ var generateCmd = &cobra.Command{
 			log.Fatalln("[loadRecipe]", err)
 		}
 
-		// if generateBootstrap {
-		// 	work.Waitgroup.Add(1)
-		// }
-
-		// if generateSchema {
-		// 	work.Waitgroup.Add(1)
-		// }
-
-		// if generateCrud {
-		// 	work.Waitgroup.Add(1)
-		// }
-
-		// if generateAdmin {
-		// 	work.Waitgroup.Add(1)
-		// }
-
-		// if generateAuth {
-		// 	work.Waitgroup.Add(1)
-		// }
-
-		// if generateUtils {
-		// 	work.Waitgroup.Add(1)
-		// }
-
-		// if generateVuetify {
-		// 	work.Waitgroup.Add(1)
-		// }
-
 		var outpt output.Output
 
 		//scaffold application layout - synchronously before launching generators
 		application.Generate(outpt, rcp, noSkip)
-
-		
-
 
 		if generateBootstrap {
 			bootstrap.Generate(outpt, rcp.Bootstrap)
@@ -112,23 +72,8 @@ var generateCmd = &cobra.Command{
 		if generateVuetify {
 			 vuetify.Generate(outpt, rcp)
 		}
-		// go generators.GenerateHTTP(work, recipe.HTTP)
-		// go generators.GenerateREST(work, recipe.Rest, recipe.Entities)
 
-		// var wg sync.WaitGroup
-		// wg.Add(1)
-
-		// go output.Process(work, noSkip)
-		
-		//ask yousuf for this one 
-		//  outpt.ProcessGoFiles(noSkip)
-
-		// work.Waitgroup.Wait()
-		// close(work.Done)
-		// wg.Wait()
-
-		output.ProcessProto()
+		outpt.ProcessProto()
 		outpt.PostProcessGoFiles()
-		output.WriteLog()
 	},
 }
