@@ -174,7 +174,7 @@ func initToolset() {
 
 // PostProcessGoFiles executes goimports and gofmt on go files that have been generated
 func (l *Output) PostProcessGoFiles() {
-	if len(_gofiles) == 0 {
+	if len(l.gofiles) == 0 {
 		return
 	}
 
