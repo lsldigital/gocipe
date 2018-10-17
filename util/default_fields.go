@@ -70,7 +70,7 @@ func fieldReferenceMakeFields(name string) (Field, Field) {
 	var typeField = Field{
 		Label: name + "Type",
 		Name:  name + "Type",
-		Type:  name + "string",
+		Type:  "string",
 		EditWidget: EditWidgetOpts{
 			Hide: true,
 		},
