@@ -10,7 +10,7 @@ var (
 // Reference represents a reference to another entity
 type Reference struct {
 	//Name is the reference field name
-	Name string
+	Name string `json:"name"`
 
 	// iDField represents field information for referenced entity ID field
 	idField Field
