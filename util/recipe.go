@@ -20,9 +20,6 @@ type Recipe struct {
 	// Container indicates whether or not container should be generated
 	Bootstrap BootstrapOpts `json:"bootstrap"`
 
-	// HTTP indicates whether http server code should be generated
-	HTTP HTTPOpts `json:"http"`
-
 	// Crud describes options for Crud generation
 	Crud CrudOpts `json:"crud"`
 
