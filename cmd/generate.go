@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	noSkip            bool
+	overwrite         bool
 	generateBootstrap bool
 	generateSchema    bool
 	generateCrud      bool
@@ -43,7 +43,7 @@ var generateCmd = &cobra.Command{
 		var outpt output.Output
 
 		//scaffold application layout - synchronously before launching generators
-		application.Generate(outpt, rcp, noSkip)
+		application.Generate(outpt, rcp, overwrite)
 
 		if generateBootstrap {
 			bootstrap.Generate(outpt, rcp)

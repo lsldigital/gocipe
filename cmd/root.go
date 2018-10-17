@@ -14,7 +14,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	generateCmd.Flags().BoolVarP(&noSkip, "overwrite", "o", false, "Overwrite.")
+	generateCmd.Flags().BoolVarP(&overwrite, "overwrite", "o", false, "Overwrite.")
 	generateCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Verbose.")
 	generateCmd.Flags().BoolVarP(&generateBootstrap, "Bootstrap", "", true, "")
 	generateCmd.Flags().BoolVarP(&generateSchema, "Schema", "", true, "")
