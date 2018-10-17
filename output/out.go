@@ -14,11 +14,9 @@ import (
 )
 
 var (
-	_recipePath                 string
-	_log, _gofiles              []string
-	_tools                      toolset
-	_written, _skipped, _failed int
-	_verbose                    bool
+	_recipePath string
+	_tools      toolset
+	_verbose    bool
 )
 
 const (
