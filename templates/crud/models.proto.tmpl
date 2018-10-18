@@ -15,7 +15,7 @@ message ListOpts {
 {{ range .Entities -}}
 // {{.Name}} {{.Description}}
 message {{.Name}} { {{ range .GetProtoFields }}
-	{{.}};
+	{{.}}
 {{- end}}
 }
 

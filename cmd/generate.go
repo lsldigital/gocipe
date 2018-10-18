@@ -41,11 +41,7 @@ var generateCmd = &cobra.Command{
 			log.Fatalln("[loadRecipe]", err)
 		}
 
-		//need to complete
-		var out *output.Output
-		out = &output.Output{}
-	
-		
+		out := new(output.Output)
 
 		//scaffold application layout - synchronously before launching generators
 		application.Generate(out, rcp, overwrite)

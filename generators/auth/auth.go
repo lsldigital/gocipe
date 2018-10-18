@@ -5,6 +5,6 @@ import (
 )
 
 // Generate auth code
-func Generate(out output.Output) {
+func Generate(out *output.Output) {
 	out.GenerateAndOverwrite("Auth", "auth/auth.go.tmpl", "auth/auth.gocipe.go", nil)
 }

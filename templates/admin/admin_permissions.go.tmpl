@@ -1,19 +1,8 @@
 package admin
 
 const (
-    {{range $i, $entity := .Entities}}
-    {{if $entity.Admin.Generate}}
-    /**
-    * [BEGIN] {{$entity.Name}}
-    */
-    {{range $actionKey, $action := $.EntitiesActions}}
-    // Perm{{$action}}{{$entity.Name}} is a permission token to {{$action}} {{$entity.Name}}
-    Perm{{$action}}{{$entity.Name}} = "{{index $.UTF8List $i}}"
-    {{if not (eq $action "Create")}}
-    // Perm{{$action}}{{$entity.Name}}Any is a permission token to {{$action}} any {{$entity.Name}}
-    Perm{{$action}}{{$entity.Name}}Any = "{{index $.UTF8List $i}}"
-    {{end}}
-    {{end}}
-    {{end}}
+    {{range .Permissions}}
+    // {{.Name}} is a permission token to {{.Name}}
+    {{.Name}} = "{{.Code}}"
     {{end}}
 )

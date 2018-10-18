@@ -124,24 +124,29 @@ func (r *Recipe) Validate() error {
 
 //GetPermissions returns a map of permissions
 func (r *Recipe) GetPermissions() []Permission {
-	var permissions []Permission
+	var (
+		permissions []Permission
+		index       int
+	)
 
 	ops := []string{"Create", "Edit", "View", "List", "Delete", "Lookup"}
-	utf8list := genUTF8List(len(r.Entities) * len(ops) * 2)
+	utf8list := genUTF8List(len(r.Entities) * len(ops) * 3)
 	for _, e := range r.Entities {
+		if !e.Admin.Generate {
+			continue
+		}
 		for _, o := range ops {
-			for y := 0; y < len(utf8list); y++ {
+			permissions = append(permissions, Permission{
+				Name: "Perm" + o + e.Name,
+				Code: utf8list[index],
+			})
+			index++
+			if o != "Create" {
 				permissions = append(permissions, Permission{
-					Name: "Perm" + o + e.Name,
-					Code: utf8list[y],
+					Name: "Perm" + o + e.Name + "Any",
+					Code: utf8list[index],
 				})
-				if o != "Create" {
-					y++
-					permissions = append(permissions, Permission{
-						Name: "Perm" + o + e.Name + "Any",
-						Code: utf8list[y],
-					})
-				}
+				index++
 			}
 		}
 	}

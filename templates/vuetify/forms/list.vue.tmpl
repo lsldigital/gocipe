@@ -87,40 +87,40 @@
               <!-- Use different rendering for dates -->
               {{ if eq .ListWidget.Type "time" }}
               <td>
-                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Name) }}" />
               </td>
               {{- else -}}
               <!-- Use different rendering for dates -->
               {{if eq .ListWidget.Type "image"}}
               <td>
-                <v-img :src="{{ printf " props.item.%s+':thumb' " (ucfirst .Property.Name) }}" width="50" max-width="50" contain height="40" max-height="40"></v-img>
+                <v-img :src="{{ printf " props.item.%s+':thumb' " (ucfirst .Name) }}" width="50" max-width="50" contain height="40" max-height="40"></v-img>
               </td>
               {{- else -}}
               <!-- Use different rendering for select types -->
               {{if eq .ListWidget.Type "select"}}
               <td>
-                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :field="'{{ .Property.Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :field="'{{ .Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Name) }}" />
               </td>
               {{- else -}}
               <!-- Use different rendering for dates -->
               {{if eq .ListWidget.Type "icon"}}
               <td>
-                <v-icon>{{ printf "{{ props.item.%s }}" (ucfirst .Property.Name) }}</v-icon>
+                <v-icon>{{ printf "{{ props.item.%s }}" (ucfirst .Name) }}</v-icon>
               </td>
               {{else}}
               <!-- Use different rendering for toggles -->
               {{if eq .ListWidget.Type "toggle"}}
               <td>
-                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Property.Name) }}" />
+                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Name) }}" />
               </td>
               {{else}}
               <td>
                 <v-tooltip top>
                   <span slot="activator">
-                    {{ printf "{{ props.item.%s}}" (ucfirst .Property.Name) }}
+                    {{ printf "{{ props.item.%s}}" (ucfirst .Name) }}
 
                   </span>
-                  <span>Widget Type : {{ ucfirst .Property.Type}}</span>
+                  <span>Widget Type : {{ ucfirst .Type}}</span>
                 </v-tooltip>
               </td>
               {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
@@ -207,7 +207,7 @@ export default {
       {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
 		    {{range .Entity.Fields }}
           {{if not .ListWidget.Hide}}
-		      {text: "{{.Label}}", value: "{{.Property.Name}}"},
+		      {text: "{{.Label}}", value: "{{.Name}}"},
 		    {{end}}
       {{end}}
       ],
@@ -279,9 +279,9 @@ export default {
             return {
               {{ range .Entity.Fields -}}
                 {{- if eq .ListWidget.Type "time" -}}
-                  {{ucfirst .Property.Name}}: {{- printf " entity.get%s().toDate() " (ucfirst .Property.Name)}},
+                  {{ucfirst .Name}}: {{- printf " entity.get%s().toDate() " (ucfirst .Name)}},
                 {{- else -}}
-                  {{ucfirst .Property.Name}}: {{- printf " entity.get%s() " (ucfirst .Property.Name)}},
+                  {{ucfirst .Name}}: {{- printf " entity.get%s() " (ucfirst .Name)}},
                 {{- end }}
               {{ end }}
               id: entity.getId()

@@ -117,7 +117,7 @@ func (f *Field) ProtoDefinition(index *int) string {
 		protoType = "google.protobuf.Timestamp"
 	}
 
-	definition := fmt.Sprintf(`%s %s = %d;`, f.Name, protoType, index)
+	definition := fmt.Sprintf(`%s %s = %d;`, protoType, f.Name, *index)
 	*index++
 
 	return definition

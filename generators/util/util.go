@@ -6,7 +6,7 @@ import (
 )
 
 // Generate common utility functions
-func Generate(out output.Output) {
+func Generate(out *output.Output) {
 	data := struct{ AppImportPath string }{utils.AppImportPath}
 
 	out.GenerateAndOverwrite("Util Rice", "util/rice.go.tmpl", "util/rice.gocipe.go", nil)

@@ -44,8 +44,8 @@
                                 <component  :is="'EditWidget{{ucfirst .EditWidget.Type }}'"
                                             :label="'{{ .Label }}'"
                                             :hint="'{{ .EditWidget.Description }}'" 
-                                            :value="this.entity.get{{ucfirst .Property.Name}}()" 
-                                            @gocipe="(e) => this.entity.set{{ucfirst .Property.Name}}(e)" 
+                                            :value="this.entity.get{{ucfirst .Name}}()" 
+                                            @gocipe="(e) => this.entity.set{{ucfirst .Name}}(e)" 
                                             
                                             {{- /* SELECTBOX */ -}}
                                             {{- if eq .EditWidget.Type "select" }} 
@@ -54,7 +54,7 @@
                                             
                                             {{- /* IMAGEFIELD */ -}}
                                             {{- if eq .EditWidget.Type "imagefield" }}
-                                            :field="'{{ .Property.Name}}'" 
+                                            :field="'{{ .Name}}'" 
                                             :rpc="'upload{{ $EntityName }}'" 
                                             :entityid="id"
                                             {{- end -}}
@@ -110,8 +110,8 @@
                                 <component  :is="'EditWidgetSelect'"
                                     :label="'{{ .TypeField.Label }}'"
                                     :hint="'{{ .TypeField.EditWidget.Description }}'" 
-                                    :value="this.entity.get{{ucfirst .TypeField.Property.Name}}()" 
-                                    @gocipe="(e) => this.change{{ucfirst .TypeField.Property.Name}}(e)" 
+                                    :value="this.entity.get{{ucfirst .TypeField.Name}}()" 
+                                    @gocipe="(e) => this.change{{ucfirst .TypeField.Name}}(e)" 
                                     :options='{{json .TypeField.EditWidget.Options }}'
                                     :multiple="false"
                                     {{- /* SELECTBOX */ -}}
@@ -125,9 +125,9 @@
                                 <component  :is="'EditWidgetSelectRel'"
                                     :label="'{{ .IDField.Label }}'"
                                     :hint="'{{ .IDField.EditWidget.Description }}'" 
-                                    :value="this.entity.get{{ucfirst .IDField.Property.Name}}()" 
-                                    :rpc="lookup{{ucfirst .TypeField.Property.Name}}RPC"
-                                    @gocipe="(e) => this.entity.set{{ucfirst .IDField.Property.Name}}(e)"
+                                    :value="this.entity.get{{ucfirst .IDField.Name}}()" 
+                                    :rpc="lookup{{ucfirst .TypeField.Name}}RPC"
+                                    @gocipe="(e) => this.entity.set{{ucfirst .IDField.Name}}(e)"
                                     :multiple="false"
                                     {{- /* SELECTREL */ -}}
                                 ></component>
@@ -205,7 +205,7 @@ export default {
       id: null,
       componentLoaded: false,
       {{ range .Entity.References -}}
-      lookup{{ucfirst .TypeField.Property.Name}}RPC: null,
+      lookup{{ucfirst .TypeField.Name}}RPC: null,
       {{- end }}
     };
   },
@@ -245,9 +245,9 @@ export default {
         {{- end -}}
         {{- end }}
         {{ range .Entity.References -}}
-        change{{ucfirst .TypeField.Property.Name}}: function(e){
+        change{{ucfirst .TypeField.Name}}: function(e){
             this.entity.setEntitytype(e);
-            this.lookup{{ucfirst .TypeField.Property.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Property.Name}}();
+            this.lookup{{ucfirst .TypeField.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Name}}();
         },
         {{- end }}
         log: function(e) {
@@ -275,7 +275,7 @@ export default {
                 this.componentLoaded = true;
 
                 {{ range .Entity.References -}}
-                this.lookup{{ucfirst .TypeField.Property.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Property.Name}}();
+                this.lookup{{ucfirst .TypeField.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Name}}();
                 {{- end }}
             });
         },
@@ -311,11 +311,11 @@ export default {
         },
         debug: function() {
             {{- range .Entity.Fields }}
-            console.log("{{.Property.Name}}", this.entity.get{{ ucfirst .Property.Name }}());
+            console.log("{{.Name}}", this.entity.get{{ ucfirst .Name }}());
             {{- end}}
             {{- range .Entity.References }}
-            console.log("{{.IDField.Property.Name}}", this.entity.get{{ ucfirst .IDField.Property.Name }}());
-            console.log("{{.TypeField.Property.Name}}", this.entity.get{{ ucfirst .TypeField.Property.Name }}());
+            console.log("{{.IDField.Name}}", this.entity.get{{ ucfirst .IDField.Name }}());
+            console.log("{{.TypeField.Name}}", this.entity.get{{ ucfirst .TypeField.Name }}());
             {{- end}}
         },
         snackbarShow: function(text, color) {

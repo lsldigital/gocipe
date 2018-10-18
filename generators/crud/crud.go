@@ -43,7 +43,7 @@ type relationship struct {
 }
 
 // Generate returns generated code to run an http server
-func Generate(out output.Output, r *util.Recipe) {
+func Generate(out *output.Output, r *util.Recipe) {
 	var generateAny bool
 	// work.Waitgroup.Add(len(entities) * 2) //2 threads per entities. for models and models_hooks
 

@@ -6,7 +6,7 @@ import (
 )
 
 // Generate returns bootstrap generated code
-func Generate(out output.Output, r *util.Recipe) error {
+func Generate(out *output.Output, r *util.Recipe) error {
 
 	if !r.Bootstrap.Generate {
 		util.DeleteIfExists("core/bootstrap.gocipe.go")

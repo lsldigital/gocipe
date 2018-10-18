@@ -133,8 +133,8 @@ func (e *Entity) init(r *Recipe) {
 		c := &e.References[i]
 		c.init()
 
-		e.Fields = append(e.Fields, c.idField)
-		e.Fields = append(e.Fields, c.typeField)
+		e.Fields = append(e.Fields, c.IDField)
+		e.Fields = append(e.Fields, c.TypeField)
 	}
 
 	e.fields = make(map[string]*Field)
@@ -341,7 +341,6 @@ func (e *Entity) GetProtoFields() []string {
 
 	for _, f := range e.Fields {
 		fields = append(fields, f.ProtoDefinition(&index))
-		index++
 	}
 
 	for _, p := range e.Relationships {

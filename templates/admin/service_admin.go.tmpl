@@ -46,7 +46,7 @@ func SetGuardian(guardian auth.Guardian) {
 // Service represents Admin service implementation
 type Service struct {}
 
-{{range .Entities}}
+{{range $i, $entity := .Entities}}
 /**
  * [BEGIN] {{.Name}}
  */
@@ -296,7 +296,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 
 	res.{{.Name}} = req.{{.Name}}
 	{{ range .GetFileFields }}
-	res.{{$.Name}}.{{.}} = existing.{{.}}
+	res.{{$entity.Name}}.{{.Name}} = existing.{{.Name}}
 	{{end }}
 	{{ if .Slug}}
 	res.{{.Name}}.Slug = existing.Slug

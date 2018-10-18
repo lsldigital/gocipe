@@ -12,17 +12,17 @@ type Reference struct {
 	//Name is the reference field name
 	Name string `json:"name"`
 
-	// iDField represents field information for referenced entity ID field
-	idField Field
+	// IDField represents field information for referenced entity ID field
+	IDField Field `json:"-"`
 
-	// typeField represents field information for referenced entity Type field
-	typeField Field
+	// TypeField represents field information for referenced entity Type field
+	TypeField Field `json:"-"`
 }
 
 func (c *Reference) init() {
-	c.idField, c.typeField = fieldReferenceMakeFields(c.Name)
-	c.idField.init()
-	c.typeField.init()
+	c.IDField, c.TypeField = fieldReferenceMakeFields(c.Name)
+	c.IDField.init()
+	c.TypeField.init()
 }
 
 //Validate checks the reference definition for errors
@@ -31,11 +31,11 @@ func (c *Reference) Validate() error {
 		return ErrorReferenceNameEmpty
 	}
 
-	if err := c.idField.Validate(); err != nil {
+	if err := c.IDField.Validate(); err != nil {
 		return err
 	}
 
-	if err := c.typeField.Validate(); err != nil {
+	if err := c.TypeField.Validate(); err != nil {
 		return err
 	}
 

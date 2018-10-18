@@ -9,7 +9,7 @@ import (
 )
 
 // Generate common utility functions
-func Generate(out output.Output, recipe *util.Recipe, noSkip bool) {
+func Generate(out *output.Output, recipe *util.Recipe, noSkip bool) {
 	out.GenerateAndOverwrite("Scaffold Folder", "", "web/app/dist/.gitkeep", "Front-end production files must compile or be placed here. Delete this file when done.")
 	out.GenerateAndOverwrite("Scaffold Folder", "", "web/app/src/services/.gitkeep", "Generated client code will be here.")
 	out.GenerateAndOverwrite("Scaffold Folder", "", "services/.gitkeep", "Generated server code and implementation will be here.")

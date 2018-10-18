@@ -64,12 +64,14 @@ func (l *Output) AddGoFile(name string) {
 func (l *Output) GenerateAndOverwrite(component string, template string, filename string, data interface{}) {
 	var err error
 	filename, err = util.GetAbsPath(filename)
-	log.Println(l)
+	// log.Printf("%+v\n\n", l)
+	// log.Println(err, filename)
 	if err != nil {
 		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 		l.failure++
 	} else if util.FileExists(filename) {
 		l.WithFields(log.Fields{"filename": filename}).Warn("Deleting existing file.")
+		util.DeleteIfExists(filename)
 	}
 
 	l.GenerateAndSave(component, template, filename, data)
@@ -91,12 +93,14 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 	}
 
 	if util.FileExists(filename) {
+		log.Println(filename + " skipping..")
 		l.WithFields(log.Fields{"filename": filename}).Warn("Skipping existing file.")
 		l.skipped++
 		return
 	}
 
 	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
+		log.Println(filename + " mkdir error..")
 		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 		l.failure++
 		return
@@ -104,6 +108,8 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 
 	code, err = util.ExecuteTemplate(template, data)
 	if err != nil {
+		log.Println(filename)
+		log.Println(err)
 		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 		l.failure++
 		return
@@ -111,6 +117,7 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 
 	err = ioutil.WriteFile(filename, []byte(code), mode)
 	if err != nil {
+		log.Println(filename + " writefile error..")
 		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 		l.failure++
 		return

@@ -10,7 +10,7 @@ import (
 )
 
 // Generate returns generated vuetify components
-func Generate(out output.Output, r *util.Recipe) {
+func Generate(out *output.Output, r *util.Recipe) {
 	if !r.Vuetify.Generate {
 		// work.Waitgroup.Done()
 		return
@@ -36,12 +36,13 @@ func Generate(out output.Output, r *util.Recipe) {
 			Entity util.Entity
 		}{entity}
 
-		filePath := path.Join(dstPath, "/forms/", inflection.Plural(entity.Name))
+		filePath := path.Join(dstPath, "/forms/")
+		fileName := inflection.Plural(entity.Name)
 
-		out.GenerateAndOverwrite("Vuetify List", "vuetify/forms/list.vue.tmpl", filepath.Join(filePath, "List.vue"), data)
+		out.GenerateAndOverwrite("Vuetify List", "vuetify/forms/list.vue.tmpl", filepath.Join(filePath, fileName+"List.vue"), data)
 		forms = append(forms, inflection.Plural(data.Entity.Name)+"List")
 
-		out.GenerateAndOverwrite("Vuetify Edit", "vuetify/forms/edit.vue.tmpl", filepath.Join(filePath, "Edit.vue"), data)
+		out.GenerateAndOverwrite("Vuetify Edit", "vuetify/forms/edit.vue.tmpl", filepath.Join(filePath, fileName+"Edit.vue"), data)
 		forms = append(forms, inflection.Plural(data.Entity.Name)+"Edit")
 
 		// edit, err := util.ExecuteTemplate("vuetify_edit.vue.tmpl", data)

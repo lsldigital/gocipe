@@ -15,7 +15,7 @@ type fileField struct {
 }
 
 // Generate returns generated code for a Admin service
-func Generate(out output.Output, r *util.Recipe) {
+func Generate(out *output.Output, r *util.Recipe) {
 	if !r.Admin.Generate {
 		return
 	}
@@ -50,7 +50,8 @@ func Generate(out output.Output, r *util.Recipe) {
 
 	out.GenerateAndOverwrite("GenerateAdmin Proto", "admin/service_admin.proto.tmpl", "proto/service_admin.proto", struct {
 		ImportPath string
-	}{util.AppImportPath})
+		Entities   []util.Entity
+	}{util.AppImportPath, r.Entities})
 
 	out.GenerateAndOverwrite("GenerateAdmin Permissions", "admin/admin_permissions.go.tmpl", "services/admin/service_admin_permissions.go", struct {
 		ImportPath  string

@@ -133,18 +133,15 @@ func (p *Relationship) ProtoDefinitions(index *int) []string {
 		RelationshipTypeManyManyInverse,
 		RelationshipTypeOneMany:
 
-		definitions = append(definitions, fmt.Sprintf(`repeated %s %s = %d;`, p.related.Name, p.Name, index))
+		definitions = append(definitions, fmt.Sprintf(`repeated %s %s = %d;`, p.related.Name, p.Name, *index))
 		*index++
-
 	case RelationshipTypeOneOne:
-		definitions = append(definitions, fmt.Sprintf(`%s %s = %d;`, p.related.Name, p.Name, index))
+		definitions = append(definitions, fmt.Sprintf(`%s %s = %d;`, p.related.Name, p.Name, *index))
 		*index++
-
 	case RelationshipTypeManyOne:
-		definitions = append(definitions, fmt.Sprintf(`string %sID = %d;`, p.Name, index))
+		definitions = append(definitions, fmt.Sprintf(`string %sID = %d;`, p.Name, *index))
 		*index++
-
-		definitions = append(definitions, fmt.Sprintf(`%s %s = %d;`, p.related.Name, p.Name, index))
+		definitions = append(definitions, fmt.Sprintf(`%s %s = %d;`, p.related.Name, p.Name, *index))
 		*index++
 	}
 

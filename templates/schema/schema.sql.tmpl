@@ -5,7 +5,7 @@ CREATE TABLE {{.Table}} (
 	"id" TEXT,
 	{{range .Fields}}{{.SchemaDefinition}},{{end}}
 	{{range .GetForeignKeyFields}}{{.}},{{end}}
-	{{range .Entity.TableConstraints}}{{.}},{{end}}
+	{{range .TableConstraints}}{{.}},{{end}}
 	PRIMARY KEY ("id")
 );
 
