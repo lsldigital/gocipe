@@ -94,14 +94,12 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 	}
 
 	if util.FileExists(filename) {
-		log.Println(filename + " skipping..")
 		l.WithFields(log.Fields{"filename": filename}).Warn("Skipping existing file.")
 		l.skipped++
 		return
 	}
 
 	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
-		log.Println(filename + " mkdir error..")
 		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 		l.failure++
 		return
@@ -110,8 +108,6 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 	if code, isString = data.(string); !isString {
 		code, err = util.ExecuteTemplate(template, data)
 		if err != nil {
-			log.Println(filename)
-			log.Println(err)
 			l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 			l.failure++
 			return
@@ -120,7 +116,6 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 
 	err = ioutil.WriteFile(filename, []byte(code), mode)
 	if err != nil {
-		log.Println(filename + " writefile error..")
 		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 		l.failure++
 		return
