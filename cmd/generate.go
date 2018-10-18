@@ -10,9 +10,10 @@ import (
 	"github.com/fluxynet/gocipe/generators/crud"
 	"github.com/fluxynet/gocipe/generators/schema"
 	utils "github.com/fluxynet/gocipe/generators/util"
+	"github.com/fluxynet/gocipe/util"
 	"github.com/fluxynet/gocipe/generators/vuetify"
 	"github.com/fluxynet/gocipe/output"
-	"github.com/fluxynet/gocipe/recipe"
+
 	"github.com/spf13/cobra"
 )
 
@@ -34,46 +35,50 @@ var generateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		output.SetVerbose(verbose)
 
-		rcp, err := recipe.Load()
-
+		rcp, err := util.LoadRecipe()
+		
 		if err != nil {
 			log.Fatalln("[loadRecipe]", err)
 		}
 
-		var outpt output.Output
+		//need to complete
+		var out *output.Output
+		out = &output.Output{}
+	
+		
 
 		//scaffold application layout - synchronously before launching generators
-		application.Generate(outpt, rcp, overwrite)
+		application.Generate(out, rcp, overwrite)
 
 		if generateBootstrap {
-			bootstrap.Generate(outpt, rcp)
+			bootstrap.Generate(out, rcp)
 		}
 
 		if generateSchema {
-		   schema.Generate(outpt, rcp)
+		   schema.Generate(out, rcp)
 		}
 
 		if generateCrud {
-			crud.Generate(outpt, rcp)
+			crud.Generate(out, rcp)
 		}
 
 		if generateAdmin {
-			admin.Generate(outpt, rcp)
+			admin.Generate(out, rcp)
 		}
 
 		if generateAdmin {
-			auth.Generate(outpt)
+			auth.Generate(out)
 		}
 
 		if generateUtils {
-			utils.Generate(outpt)
+			utils.Generate(out)
 		}
 
 		if generateVuetify {
-			vuetify.Generate(outpt, rcp)
+			vuetify.Generate(out, rcp)
 		}
 
-		outpt.ProcessProto()
-		outpt.PostProcessGoFiles()
+		out.ProcessProto()
+		out.PostProcessGoFiles()
 	},
 }

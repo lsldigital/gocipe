@@ -48,6 +48,7 @@ func Generate(out output.Output, r *util.Recipe) {
 	// work.Waitgroup.Add(len(entities) * 2) //2 threads per entities. for models and models_hooks
 
 	for _, e := range r.Entities {
+
 		if e.HasCrudHooks() {
 			out.GenerateAndSave("Crud Proto", "crud/models.proto.tmpl", "proto/models.proto", struct {
 				Entities      []util.Entity

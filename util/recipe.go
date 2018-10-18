@@ -1,7 +1,13 @@
 package util
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"strings"
 	"unicode"
 )
 
@@ -34,6 +40,54 @@ type Recipe struct {
 
 	//entities is a map for random access of entities contained in entity
 	entities map[string]*Entity
+}
+
+// LoadRecipe loads gocipe config file and returns it as Recipe
+func LoadRecipe() (*Recipe, error) {
+	var recipe Recipe
+
+	recipePath, err := GetAbsPath("gocipe.json")
+	if err != nil {
+		return nil, err
+	}
+
+	if !FileExists(recipePath) {
+		return nil, fmt.Errorf("file not found: %s", recipePath)
+	}
+
+	recipeContent, err := ioutil.ReadFile(recipePath)
+
+	if err != nil {
+		return nil, err
+	}
+	//ToDo
+	// output.Log("%x", sha256.Sum256([]byte(recipeContent)))
+
+	// output.Inject(
+	// 	recipePath,
+	// )
+
+	err = json.Unmarshal(recipeContent, &recipe)
+	if err != nil {
+		return nil, fmt.Errorf("recipe decoding failed: %s", err)
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	WorkingDir = wd
+	AppImportPath = strings.TrimPrefix(wd, os.Getenv("GOPATH")+"/src/")
+	AppName = path.Base(AppImportPath)
+	if AppName == "." {
+		AppName = "app"
+	}
+	os.Getenv("GOPATH")
+
+	recipe.init()
+
+	return &recipe, nil
 }
 
 func (r *Recipe) init() {

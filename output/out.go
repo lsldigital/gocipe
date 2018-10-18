@@ -28,7 +28,7 @@ const (
 
 // Output is the implementation
 type Output struct {
-	*log.Logger
+	log.Logger
 	gofiles                   []string
 	success, failure, skipped int
 }
@@ -64,7 +64,7 @@ func (l *Output) AddGoFile(name string) {
 func (l *Output) GenerateAndOverwrite(component string, template string, filename string, data interface{}) {
 	var err error
 	filename, err = util.GetAbsPath(filename)
-
+	log.Println(l)
 	if err != nil {
 		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 		l.failure++

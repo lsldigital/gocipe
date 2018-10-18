@@ -137,6 +137,7 @@ func (e *Entity) init(r *Recipe) {
 		e.Fields = append(e.Fields, c.typeField)
 	}
 
+	e.fields = make(map[string]*Field)
 	for i := range e.Fields {
 		f := &e.Fields[i]
 		f.init()
@@ -307,6 +308,24 @@ func (e *Entity) HasCrudHooks() bool {
 		e.CrudHooks.PostDeleteSingle,
 		e.CrudHooks.PreDeleteMany,
 		e.CrudHooks.PostDeleteMany:
+		return true
+
+	}
+	return false
+}
+
+//HasAdminHooks returns true if any of admin hooks is enabled
+func (e *Entity) HasAdminHooks() bool {
+	switch true {
+	case e.Admin.Hooks.PreCreate,
+		e.Admin.Hooks.PostCreate,
+		e.Admin.Hooks.PreRead,
+		e.Admin.Hooks.PostRead,
+		e.Admin.Hooks.PreList,
+		e.Admin.Hooks.PostList,
+		e.Admin.Hooks.PreUpdate,
+		e.Admin.Hooks.PostUpdate,
+		e.Admin.Hooks.PreDelete:
 		return true
 
 	}

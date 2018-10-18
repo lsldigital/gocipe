@@ -25,7 +25,7 @@ func Generate(out output.Output, r *util.Recipe) {
 			continue
 		}
 
-		if entity.HasCrudHooks() {
+		if entity.HasAdminHooks() {
 			out.GenerateAndOverwrite("GenerateAdmin Hooks"+entity.Name, "admin/service_admin_hooks.go.tmpl", fmt.Sprintf(
 				"services/admin/%s_hooks.gocipe.go", strings.ToLower(entity.Name)), struct {
 				Entity     util.Entity

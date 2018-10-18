@@ -2,13 +2,12 @@ package util
 
 import (
 	"github.com/fluxynet/gocipe/output"
-
-	"github.com/fluxynet/gocipe/util"
+	utils "github.com/fluxynet/gocipe/util"
 )
 
 // Generate common utility functions
 func Generate(out output.Output) {
-	data := struct{ AppImportPath string }{util.AppImportPath}
+	data := struct{ AppImportPath string }{utils.AppImportPath}
 
 	out.GenerateAndOverwrite("Util Rice", "util/rice.go.tmpl", "util/rice.gocipe.go", nil)
 	out.GenerateAndOverwrite("Util Credentials", "util/credentials.go.tmpl", "util/credentials/credentials.gocipe.go", nil)
