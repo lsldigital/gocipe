@@ -2,11 +2,11 @@ package admin
 
 // UploadPaths is an index of upload options
 var UploadPaths = map[string]*files.UploadOptions{
-	{{range $i, $entity := .Entities -}}
-	{{range $entity.GetFileFields }}
+	{{- range $i, $entity := .Entities}}
+	{{- range $entity.GetFileFields}}
 	"{{lower $entity.Name}}/{{lower .Name}}":	&{{$entity.Name}}{{.Name}}UploadOpts,
-	{{end}}
-	{{end}}
+	{{- end}}
+	{{- end}}
 }
 
 {{range $i, $entity := .Entities -}}
@@ -20,13 +20,12 @@ var {{$entity.Name}}{{.Name}}UploadOpts = files.UploadOptions{
 	MaxSize:        util.NoLimit,
 	ConvertTo:      imagist.TypeImageJPG,
 	ImgDimensions:  &imagist.ImageDimensions{
-		ThumbWidth:     400,
-		ThumbHeight:    200,
 		MinWidth:       util.NoLimit,
 		MinHeight:      util.NoLimit,
-		MaxWidth:       util.NoLimit,
-		MaxHeight:      util.NoLimit,
-		GenerateSocial: true,
+		Formats: []imagist.FormatDimensions{
+			{Name: "thumb", Width: 400, Height: 200},
+			{Name: "full", Width: util.NoLimit, Height: util.NoLimit, Watermark: imagist.BottomRight},
+		},
 	},
 }
 {{end}}

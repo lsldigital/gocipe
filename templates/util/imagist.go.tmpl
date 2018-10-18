@@ -4,17 +4,18 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/color"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"log"
 	"os"
 
+	rice "github.com/GeertJohan/go.rice"
 	"github.com/disintegration/imaging"
-	"github.com/muesli/smartcrop"
-	"github.com/muesli/smartcrop/nfnt"
 	"github.com/pkg/errors"
 	filetype "gopkg.in/h2non/filetype.v1"
+	"{{.AppImportPath}}/core"
 	"{{.AppImportPath}}/util"
 )
 
@@ -25,15 +26,15 @@ const (
 	TypeImageJPEG = "jpeg"
 	//TypeImagePNG denotes image of file type png
 	TypeImagePNG = "png"
+)
 
-	//SuffixImg is the suffix used for regular images
-	SuffixImg = ""
-
-	//SuffixThumb is the suffix added to generated file for type Thumb
-	SuffixThumb = ":thumb"
-
-	//SuffixSocial is the suffix added to generated file for type Social
-	SuffixSocial = ":social"
+// Anchor points for X,Y
+const (
+	Left = iota
+	Right
+	Top
+	Bottom
+	Center
 )
 
 var (
@@ -41,9 +42,28 @@ var (
 	DefaultDimensions = ImageDimensions{
 		MinWidth:  util.NoLimit,
 		MinHeight: util.NoLimit,
-		MaxWidth:  util.NoLimit,
-		MaxHeight: util.NoLimit,
 	}
+
+	// Disk paths to static assets
+	_diskPathWatermark string
+	_diskPathBackdrop  string
+
+	// TopLeft is the top-left position for watermark
+	TopLeft = &WatermarkPosition{Horizontal: Left, Vertical: Top}
+	// TopCenter is the top-center position for watermark
+	TopCenter = &WatermarkPosition{Horizontal: Center, Vertical: Top}
+	// TopRight is the top-right position for watermark
+	TopRight = &WatermarkPosition{Horizontal: Right, Vertical: Top}
+	// CenterRight is the center-right position for watermark
+	CenterRight = &WatermarkPosition{Horizontal: Right, Vertical: Center}
+	// BottomRight is the bottom-right position for watermark
+	BottomRight = &WatermarkPosition{Horizontal: Right, Vertical: Bottom}
+	// BottomCenter is the bottom-center position for watermark
+	BottomCenter = &WatermarkPosition{Horizontal: Center, Vertical: Bottom}
+	// BottomLeft is the bottom-left position for watermark
+	BottomLeft = &WatermarkPosition{Horizontal: Left, Vertical: Bottom}
+	// CenterLeft is the center-left position for watermark
+	CenterLeft = &WatermarkPosition{Horizontal: Left, Vertical: Center}
 )
 
 //Imagist is an image processing mechanism
@@ -54,24 +74,34 @@ type Imagist struct {
 
 //Job represents an image processing task
 type Job struct {
-	FileDiskPath   string
-	Config         *image.Config
-	Dimensions     *ImageDimensions
-	ConvertTo      string
-	GenerateSocial bool
+	FileDiskPath string
+	Config       *image.Config
+	Dimensions   *ImageDimensions
 }
 
 //ImageDimensions holds dimensions options
 type ImageDimensions struct {
-	ThumbWidth     int
-	ThumbHeight    int
-	MinWidth       int
-	MinHeight      int
-	MaxWidth       int
-	MaxHeight      int
-	GenerateSocial bool
+	MinWidth  int
+	MinHeight int
+	Formats   []FormatDimensions
 }
 
+//FormatDimensions holds dimensions options for format
+type FormatDimensions struct {
+	Name      string
+	Width     int
+	Height    int
+	Backdrop  bool               // (default: false) If true, will add a backdrop
+	Watermark *WatermarkPosition // (default: nil) If not nil, will overlay an image as watermark at X,Y pos +-OffsetX,OffsetY
+}
+
+// WatermarkPosition holds the watermark position
+type WatermarkPosition struct {
+	Horizontal int
+	Vertical   int
+	OffsetX    int
+	OffsetY    int
+}
 type subImager interface {
 	SubImage(r image.Rectangle) image.Image
 }
@@ -80,6 +110,16 @@ func init() {
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 	image.RegisterFormat("gif", "gif", gif.Decode, gif.DecodeConfig)
+}
+
+// SetBackdropImage sets the disk path for backdrop images
+func SetBackdropImage(path string) {
+	_diskPathBackdrop = path
+}
+
+// SetWatermarkImage sets the disk path for watermark images
+func SetWatermarkImage(path string) {
+	_diskPathWatermark = path
 }
 
 //New returns an instance of imagist, with the internal go routine awaiting jobs over the channel
@@ -120,7 +160,7 @@ func (i Imagist) listen() {
 }
 
 //Add creates a job entry for processing
-func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimensions, convertTo string) error {
+func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimensions, validate bool) error {
 	if !filetype.IsImage(buf) {
 		return fmt.Errorf("image type invalid")
 	}
@@ -142,23 +182,23 @@ func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimension
 		return fmt.Errorf("image type %s invalid", imgType)
 	}
 
-	// Check min width and height
-	if dimensions.MinWidth != util.NoLimit && config.Width < dimensions.MinWidth {
-		log.Printf("image %v lower than min width: %v\n", fileDiskPath, dimensions.MinWidth)
-		return fmt.Errorf("image width less than %dpx", dimensions.MinWidth)
-	}
+	if validate {
+		// Check min width and height
+		if dimensions.MinWidth != util.NoLimit && config.Width < dimensions.MinWidth {
+			log.Printf("image %v lower than min width: %v\n", fileDiskPath, dimensions.MinWidth)
+			return fmt.Errorf("image width less than %dpx", dimensions.MinWidth)
+		}
 
-	if dimensions.MinHeight != util.NoLimit && config.Height < dimensions.MinHeight {
-		log.Printf("image %v lower than min height: %v\n", fileDiskPath, dimensions.MinHeight)
-		return fmt.Errorf("image height less than %dpx", dimensions.MinHeight)
+		if dimensions.MinHeight != util.NoLimit && config.Height < dimensions.MinHeight {
+			log.Printf("image %v lower than min height: %v\n", fileDiskPath, dimensions.MinHeight)
+			return fmt.Errorf("image height less than %dpx", dimensions.MinHeight)
+		}
 	}
 
 	job := Job{
-		FileDiskPath:   fileDiskPath,
-		Config:         &config,
-		Dimensions:     dimensions,
-		ConvertTo:      convertTo,
-		GenerateSocial: dimensions.GenerateSocial,
+		FileDiskPath: fileDiskPath,
+		Config:       &config,
+		Dimensions:   dimensions,
 	}
 	i.jobs <- job
 
@@ -166,78 +206,144 @@ func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimension
 }
 
 func (i Imagist) execute(j Job) {
-	// Check max width and height
-	exceedMaxWidth := j.Dimensions.MaxWidth != util.NoLimit && j.Config.Width >= j.Dimensions.MaxWidth
-	exceedMaxHeight := j.Dimensions.MaxHeight != util.NoLimit && j.Config.Height >= j.Dimensions.MaxHeight
+	for _, format := range j.Dimensions.Formats {
+		if format.Name == "" || format.Width <= 0 || format.Height <= 0 {
+			continue
+		}
 
-	newWidth := j.Dimensions.MaxWidth
-	newHeight := j.Dimensions.MaxHeight
+		newWidth := format.Width
+		newHeight := format.Height
 
-	// Adjust new width and height accordingly
-	if exceedMaxWidth && exceedMaxHeight {
-		// resize both by width and height
-		// image will be smart cropped :)
-	} else if exceedMaxWidth {
-		// resize proportional to width only
-		newHeight = 0
-	} else if exceedMaxHeight {
-		// resize proportional to height only
-		newWidth = 0
-	} else {
-		// image is never upscaled
-		newWidth = j.Config.Width
-		newHeight = j.Config.Height
+		// Do not upscale
+		if j.Config.Width < format.Width {
+			newWidth = j.Config.Width
+		}
+		if j.Config.Height < j.Config.Height {
+			newHeight = j.Config.Height
+		}
+
+		landscape := j.Config.Height < j.Config.Width
+
+		imageProcess(j.FileDiskPath, newWidth, newHeight, landscape, format)
 	}
 
-	imageCropAndResize(j.FileDiskPath, newWidth, newHeight, SuffixImg, j.ConvertTo)
-
-	// Create thumbnails
-	imageCropAndResize(j.FileDiskPath, j.Dimensions.ThumbWidth, j.Dimensions.ThumbHeight, SuffixThumb, j.ConvertTo)
-
-	// Create og aka full view / social
-	if j.GenerateSocial {
-		imageCropAndResize(j.FileDiskPath, newWidth, newHeight, SuffixSocial, j.ConvertTo)
-	}
 	i.done <- j.FileDiskPath
 }
 
-func imageCropAndResize(imgDiskPath string, newWidth, newHeight int, fileSuffix, convertTo string) error {
-	existingImgFile, err := os.Open(imgDiskPath)
+func imageProcess(imgDiskPath string, newWidth, newHeight int, landscape bool, format FormatDimensions) error {
+	var (
+		img image.Image
+		err error
+	)
+
+	img, err = imaging.Open(imgDiskPath)
 	if err != nil {
 		return errors.Wrap(err, "image open error")
 	}
-	defer existingImgFile.Close()
 
-	img, _, err := image.Decode(existingImgFile)
-	if err != nil {
-		return errors.Wrap(err, "image decode error")
-	}
+	// Do not crop and resize when using backdrop but downscale
+	if format.Backdrop && !landscape {
+		// Scale down srcImage to fit the bounding box
+		img = imaging.Fit(img, newWidth, newHeight, imaging.Lanczos)
 
-	if newWidth != 0 && newHeight != 0 {
-		analyzer := smartcrop.NewAnalyzer(nfnt.NewDefaultResizer())
-		topCrop, err := analyzer.FindBestCrop(img, newWidth, newHeight)
-		if err != nil {
-			return errors.Wrap(err, "image failed to find best crop")
+		// Open a new image to use as backdrop layer
+		var back image.Image
+		if core.Env == core.EnvironmentDev {
+			back, err = imaging.Open("../assets/" + _diskPathBackdrop)
+		} else {
+			var staticAsset *rice.File
+			staticAsset, err = core.Assets.Open(_diskPathBackdrop)
+			if err != nil {
+				// if err, fall back to a blue background backdrop
+				back = imaging.New(format.Width, format.Height, color.NRGBA{0, 29, 56, 0})
+			}
+			defer staticAsset.Close()
+			back, _, err = image.Decode(staticAsset)
 		}
 
-		img = img.(subImager).SubImage(topCrop)
+		if err != nil {
+			// if err, fall back to a blue background backdrop
+			back = imaging.New(format.Width, format.Height, color.NRGBA{0, 29, 56, 0})
+		} else {
+			// Resize and crop backdrop accordingly
+			back = imaging.Fill(back, format.Width, format.Height, imaging.Center, imaging.Lanczos)
+		}
+
+		// Overlay image in center on backdrop layer
+		img = imaging.OverlayCenter(back, img, 1.0)
+	} else {
+		// Resize and crop the image to fill the [newWidth x newHeight] area
+		img = imaging.Fill(img, newWidth, newHeight, imaging.Center, imaging.Lanczos)
 	}
 
-	dst := imaging.Resize(img, newWidth, newHeight, imaging.Lanczos)
-	imgDiskPath = imgDiskPath + fileSuffix
+	if format.Watermark != nil {
+		var watermark image.Image
+		if core.Env == core.EnvironmentDev {
+			watermark, err = imaging.Open("../assets/" + _diskPathWatermark + ":" + format.Name)
+		} else {
+			var staticAsset *rice.File
+			staticAsset, err = core.Assets.Open(_diskPathWatermark + ":" + format.Name)
+			if err != nil {
+				return errors.Wrap(err, "watermark not found")
+			}
+			defer staticAsset.Close()
+			watermark, _, err = image.Decode(staticAsset)
+		}
+		if err == nil {
+			bgBounds := img.Bounds()
+			bgW := bgBounds.Dx()
+			bgH := bgBounds.Dy()
 
-	outputFile, err := os.Create(imgDiskPath)
+			watermarkBounds := watermark.Bounds()
+			watermarkW := watermarkBounds.Dx()
+			watermarkH := watermarkBounds.Dy()
+
+			var watermarkPos image.Point
+
+			switch format.Watermark.Horizontal {
+			default:
+				format.Watermark.Horizontal = Left
+				fallthrough
+			case Left:
+				watermarkPos.X += format.Watermark.OffsetX
+			case Right:
+				RightX := bgBounds.Min.X + bgW - watermarkW
+				watermarkPos.X = RightX - format.Watermark.OffsetX
+			case Center:
+				CenterX := bgBounds.Min.X + bgW/2
+				watermarkPos.X = CenterX - watermarkW/2 + format.Watermark.OffsetX
+			}
+
+			switch format.Watermark.Vertical {
+			default:
+				format.Watermark.Vertical = Top
+				fallthrough
+			case Top:
+				watermarkPos.Y += format.Watermark.OffsetY
+			case Bottom:
+				BottomY := bgBounds.Min.Y + bgH - watermarkH
+				watermarkPos.Y = BottomY - format.Watermark.OffsetY
+			case Center:
+				CenterY := bgBounds.Min.Y + bgH/2
+				watermarkPos.Y = CenterY - watermarkH/2 + format.Watermark.OffsetY
+			}
+
+			img = imaging.Overlay(img, watermark, watermarkPos, 1.0)
+		}
+	}
+
+	imagingFormat, err := imaging.FormatFromFilename(imgDiskPath)
+	if err != nil {
+		return errors.Wrap(err, "image get format error")
+	}
+
+	newDiskPath := imgDiskPath + ":" + format.Name
+
+	outputFile, err := os.Create(newDiskPath)
 	if err != nil {
 		return errors.Wrap(err, "image create error")
 	}
 	defer outputFile.Close()
 
-	switch convertTo {
-	case TypeImageJPEG, TypeImageJPG:
-		return jpeg.Encode(outputFile, dst, nil)
-	case TypeImagePNG:
-		return png.Encode(outputFile, dst)
-	}
-
-	return nil
+	return imaging.Encode(outputFile, img, imagingFormat)
 }
