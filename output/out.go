@@ -232,7 +232,7 @@ func (l *Output) PostProcessGoFiles() {
 		}
 	}()
 
-	fmt.Printf("dep %s in progress...", mode)
+	fmt.Printf("dep %s in progress...\n", mode)
 	wg.Wait()
 }
 
