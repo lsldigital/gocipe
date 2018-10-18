@@ -26,7 +26,7 @@ func Generate(out output.Output, r *util.Recipe) {
 		}
 
 		if entity.HasCrudHooks() {
-			out.GenerateAndOverwrite("GenerateAdminHooks"+entity.Name, "admin/service_admin_hooks.go.tmpl", fmt.Sprintf(
+			out.GenerateAndOverwrite("GenerateAdmin Hooks"+entity.Name, "admin/service_admin_hooks.go.tmpl", fmt.Sprintf(
 				"services/admin/%s_hooks.gocipe.go", strings.ToLower(entity.Name)), struct {
 				Entity     util.Entity
 				ImportPath string
@@ -48,11 +48,11 @@ func Generate(out output.Output, r *util.Recipe) {
 		ImportPath string
 	}{util.AppImportPath})
 
-	out.GenerateAndOverwrite("GenerateAdminProto", "admin/service_admin.proto.tmpl", "proto/service_admin.proto", struct {
+	out.GenerateAndOverwrite("GenerateAdmin Proto", "admin/service_admin.proto.tmpl", "proto/service_admin.proto", struct {
 		ImportPath string
 	}{util.AppImportPath})
 
-	out.GenerateAndOverwrite("GenerateAdminProto", "admin/admin_permissions.go.tmpl", "services/admin/service_admin_permissions.go", struct {
+	out.GenerateAndOverwrite("GenerateAdmin Permissions", "admin/admin_permissions.go.tmpl", "services/admin/service_admin_permissions.go", struct {
 		ImportPath  string
 		Permissions []util.Permission
 	}{util.AppImportPath, r.GetPermissions()})

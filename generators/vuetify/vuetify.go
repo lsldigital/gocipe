@@ -38,10 +38,10 @@ func Generate(out output.Output, r *util.Recipe) {
 
 		filePath := path.Join(dstPath, "/forms/", inflection.Plural(entity.Name))
 
-		out.GenerateAndOverwrite("VuetifyList", "vuetify/forms/list.vue.tmpl", filepath.Join(filePath, "List.vue"), data)
+		out.GenerateAndOverwrite("Vuetify List", "vuetify/forms/list.vue.tmpl", filepath.Join(filePath, "List.vue"), data)
 		forms = append(forms, inflection.Plural(data.Entity.Name)+"List")
 
-		out.GenerateAndOverwrite("VuetifyEdit", "vuetify/forms/edit.vue.tmpl", filepath.Join(filePath, "Edit.vue"), data)
+		out.GenerateAndOverwrite("Vuetify Edit", "vuetify/forms/edit.vue.tmpl", filepath.Join(filePath, "Edit.vue"), data)
 		forms = append(forms, inflection.Plural(data.Entity.Name)+"Edit")
 
 		// edit, err := util.ExecuteTemplate("vuetify_edit.vue.tmpl", data)
@@ -74,11 +74,11 @@ func Generate(out output.Output, r *util.Recipe) {
 	}
 
 	for _, file := range widgets {
-		out.GenerateAndOverwrite("Vuetify", filepath.Join("vuetify/widgets/", file+".tmpl"), filepath.Join(dstPath, "/widgets/", file), nil)
+		out.GenerateAndOverwrite("Vuetify Widgets", filepath.Join("vuetify/widgets/", file+".tmpl"), filepath.Join(dstPath, "/widgets/", file), nil)
 	}
 
 	// components
-	out.GenerateAndOverwrite("Vuetify", "vuetify/js/components-registration.js.tmpl", filepath.Join(dstPath, "/components-registration.js"), struct {
+	out.GenerateAndOverwrite("Vuetify Registration", "vuetify/js/components-registration.js.tmpl", filepath.Join(dstPath, "/components-registration.js"), struct {
 		Widgets map[string]string
 		Forms   []string
 	}{Widgets: widgets, Forms: forms})

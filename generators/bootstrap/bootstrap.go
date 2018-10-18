@@ -24,7 +24,7 @@ func Generate(out output.Output, r *util.Recipe) error {
 		Bootstrap util.BootstrapOpts
 	}{r.Bootstrap})
 
-	out.GenerateAndSave("GenerateBootstrap", "bootstrap/env.tmpl", ".env.dist", struct {
+	out.GenerateAndSave("GenerateBootstrap Env", "bootstrap/env.tmpl", ".env.dist", struct {
 		Bootstrap util.BootstrapOpts
 	}{r.Bootstrap})
 
