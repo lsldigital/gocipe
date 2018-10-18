@@ -2,14 +2,19 @@
 DROP TABLE IF EXISTS {{.Table}};
 
 CREATE TABLE {{.Table}} (
-	"id" TEXT,
-	{{range .Fields}}{{.SchemaDefinition}},{{end}}
-	{{range .GetForeignKeyFields}}{{.}},{{end}}
-	{{range .TableConstraints}}{{.}},{{end}}
+	{{- range .Fields}}
+	{{.SchemaDefinition}},
+	{{- end}}
+	{{- range .GetForeignKeyFields}}
+	{{.}},
+	{{- end}}
+	{{- range .TableConstraints}}
+	{{.}},
+	{{- end}}
 	PRIMARY KEY ("id")
 );
 
-{{range .GetRelatedTables}}
+{{- range .GetRelatedTables}}
 DROP TABLE IF EXISTS {{.JoinTable}};
 
 CREATE TABLE {{.JoinTable}} (
@@ -23,5 +28,4 @@ DROP INDEX IF EXISTS {{.JoinTable}}_{{.ThatID}};
 CREATE INDEX {{.JoinTable}}_{{.ThisID}} ON {{.JoinTable}} ({{.ThisID}});
 CREATE INDEX {{.JoinTable}}_{{.ThatID}} ON {{.JoinTable}} ({{.ThatID}});
 {{end}}
-
-{{end}}
+{{- end}}

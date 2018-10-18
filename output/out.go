@@ -80,9 +80,10 @@ func (l *Output) GenerateAndOverwrite(component string, template string, filenam
 // GenerateAndSave saves a generated file and returns error
 func (l *Output) GenerateAndSave(component string, template string, filename string, data interface{}) {
 	var (
-		code string
-		err  error
-		mode os.FileMode = 0755
+		code     string
+		isString bool
+		err      error
+		mode     os.FileMode = 0755
 	)
 
 	filename, err = util.GetAbsPath(filename)
@@ -106,13 +107,15 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 		return
 	}
 
-	code, err = util.ExecuteTemplate(template, data)
-	if err != nil {
-		log.Println(filename)
-		log.Println(err)
-		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
-		l.failure++
-		return
+	if code, isString = data.(string); !isString {
+		code, err = util.ExecuteTemplate(template, data)
+		if err != nil {
+			log.Println(filename)
+			log.Println(err)
+			l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
+			l.failure++
+			return
+		}
 	}
 
 	err = ioutil.WriteFile(filename, []byte(code), mode)

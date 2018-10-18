@@ -100,8 +100,8 @@ func init() {
 	}
 	fileq := &embedded.EmbeddedFile{
 		Filename:    "schema/schema.sql.tmpl",
-		FileModTime: time.Unix(1539865512, 0),
-		Content:     string("{{range .Entities}}\nDROP TABLE IF EXISTS {{.Table}};\n\nCREATE TABLE {{.Table}} (\n\t\"id\" TEXT,\n\t{{range .Fields}}{{.SchemaDefinition}},{{end}}\n\t{{range .GetForeignKeyFields}}{{.}},{{end}}\n\t{{range .TableConstraints}}{{.}},{{end}}\n\tPRIMARY KEY (\"id\")\n);\n\n{{range .GetRelatedTables}}\nDROP TABLE IF EXISTS {{.JoinTable}};\n\nCREATE TABLE {{.JoinTable}} (\n\t\"{{.ThisID}}\" TEXT NOT NULL,\n\t\"{{.ThatID}}\" TEXT NOT NULL\n);\n\nDROP INDEX IF EXISTS {{.JoinTable}}_{{.ThisID}};\nDROP INDEX IF EXISTS {{.JoinTable}}_{{.ThatID}};\n\nCREATE INDEX {{.JoinTable}}_{{.ThisID}} ON {{.JoinTable}} ({{.ThisID}});\nCREATE INDEX {{.JoinTable}}_{{.ThatID}} ON {{.JoinTable}} ({{.ThatID}});\n{{end}}\n\n{{end}}\n"),
+		FileModTime: time.Unix(1539868675, 0),
+		Content:     string("{{range .Entities}}\nDROP TABLE IF EXISTS {{.Table}};\n\nCREATE TABLE {{.Table}} (\n\t{{- range .Fields}}\n\t{{.SchemaDefinition}},\n\t{{- end}}\n\t{{- range .GetForeignKeyFields}}\n\t{{.}},\n\t{{- end}}\n\t{{- range .TableConstraints}}\n\t{{.}},\n\t{{- end}}\n\tPRIMARY KEY (\"id\")\n);\n\n{{- range .GetRelatedTables}}\nDROP TABLE IF EXISTS {{.JoinTable}};\n\nCREATE TABLE {{.JoinTable}} (\n\t\"{{.ThisID}}\" TEXT NOT NULL,\n\t\"{{.ThatID}}\" TEXT NOT NULL\n);\n\nDROP INDEX IF EXISTS {{.JoinTable}}_{{.ThisID}};\nDROP INDEX IF EXISTS {{.JoinTable}}_{{.ThatID}};\n\nCREATE INDEX {{.JoinTable}}_{{.ThisID}} ON {{.JoinTable}} ({{.ThisID}});\nCREATE INDEX {{.JoinTable}}_{{.ThatID}} ON {{.JoinTable}} ({{.ThatID}});\n{{end}}\n{{- end}}\n"),
 	}
 	files := &embedded.EmbeddedFile{
 		Filename:    "util/credentials.go.tmpl",

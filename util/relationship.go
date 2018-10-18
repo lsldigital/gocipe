@@ -93,7 +93,7 @@ func (p *Relationship) init(r *Recipe, e *Entity) {
 		} else {
 			p.JoinTable = p.related.Table + "_" + e.Table
 		}
-		p.ThisID = strings.ToLower(p.Name) + "_id"
+		p.ThisID = strings.ToLower(p.Entity) + "_id"
 		p.ThatID = strings.ToLower(e.Name) + "_id"
 	}
 
