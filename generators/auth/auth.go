@@ -6,5 +6,5 @@ import (
 
 // Generate auth code
 func Generate(out *output.Output) {
-	out.GenerateAndOverwrite("Auth", "auth/auth.go.tmpl", "auth/auth.gocipe.go", nil)
+	out.GenerateAndOverwrite("Auth", "auth/auth.go.tmpl", "auth/auth.gocipe.go", output.WithHeader, nil)
 }

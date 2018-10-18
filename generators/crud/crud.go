@@ -50,19 +50,19 @@ func Generate(out *output.Output, r *util.Recipe) {
 	for _, e := range r.Entities {
 
 		if e.HasCrudHooks() {
-			out.GenerateAndSave("Crud Proto", "crud/models.proto.tmpl", "proto/models.proto", struct {
+			out.GenerateAndSave("Crud Proto", "crud/models.proto.tmpl", "proto/models.proto", output.WithHeader, struct {
 				Entities      []util.Entity
 				AppImportPath string
 			}{Entities: r.Entities, AppImportPath: util.AppImportPath})
 		}
 	}
 
-	out.GenerateAndOverwrite("Crud Proto", "crud/models.proto.tmpl", "proto/models.proto", struct {
+	out.GenerateAndOverwrite("Crud Proto", "crud/models.proto.tmpl", "proto/models.proto", output.WithHeader, struct {
 		Entities      []util.Entity
 		AppImportPath string
 	}{Entities: r.Entities, AppImportPath: util.AppImportPath})
 
-	out.GenerateAndOverwrite("Crud Moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", struct{}{})
+	out.GenerateAndOverwrite("Crud Moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", output.WithHeader, struct{}{})
 
 	//old:
 
@@ -80,7 +80,7 @@ func Generate(out *output.Output, r *util.Recipe) {
 
 		if code, err := generateCrud2(r); err == nil {
 			name := strings.ToLower(entity.Name)
-			out.GenerateAndOverwrite("Crud Entity "+name, "crud/crud.go.tmpl", fmt.Sprintf("models/%s_repo.gocipe.go", name), code)
+			out.GenerateAndOverwrite("Crud Entity "+name, "crud/crud.go.tmpl", fmt.Sprintf("models/%s_repo.gocipe.go", name), output.WithHeader, code)
 		} //TODO cater for error
 	}
 

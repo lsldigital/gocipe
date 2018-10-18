@@ -20,11 +20,11 @@ func Generate(out *output.Output, r *util.Recipe) error {
 		r.Bootstrap.GRPCPort = "4000"
 	}
 
-	out.GenerateAndSave("GenerateBootstrap", "bootstrap/bootstrap.go.tmpl", "core/bootstrap.gocipe.go", struct {
+	out.GenerateAndSave("GenerateBootstrap", "bootstrap/bootstrap.go.tmpl", "core/bootstrap.gocipe.go", output.WithHeader, struct {
 		Bootstrap util.BootstrapOpts
 	}{r.Bootstrap})
 
-	out.GenerateAndSave("GenerateBootstrap Env", "bootstrap/env.tmpl", ".env.dist", struct {
+	out.GenerateAndSave("GenerateBootstrap Env", "bootstrap/env.tmpl", ".env.dist", output.WithHeader, struct {
 		Bootstrap util.BootstrapOpts
 	}{r.Bootstrap})
 

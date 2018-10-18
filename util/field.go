@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -163,4 +164,14 @@ func (f *Field) GetAfter(op string) []string {
 	}
 
 	return after
+}
+
+//GetEditWidgetOptionsJSON returns code executed after a statement is executed (used in crud)
+func (f *Field) GetEditWidgetOptionsJSON() string {
+	jsob, err := json.Marshal(f.EditWidget.Options)
+	if err != nil {
+		return ""
+	}
+
+	return string(jsob)
 }

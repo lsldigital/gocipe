@@ -49,7 +49,7 @@
                                             
                                             {{- /* SELECTBOX */ -}}
                                             {{- if eq .EditWidget.Type "select" }} 
-                                            :options='{{json .EditWidget.Options }}' 
+                                            :options='{{ .GetEditWidgetOptionsJSON }}' 
                                             {{- end -}}
                                             
                                             {{- /* IMAGEFIELD */ -}}
@@ -112,7 +112,7 @@
                                     :hint="'{{ .TypeField.EditWidget.Description }}'" 
                                     :value="this.entity.get{{ucfirst .TypeField.Name}}()" 
                                     @gocipe="(e) => this.change{{ucfirst .TypeField.Name}}(e)" 
-                                    :options='{{json .TypeField.EditWidget.Options }}'
+                                    :options='{{ .TypeField.GetEditWidgetOptionsJSON }}'
                                     :multiple="false"
                                     {{- /* SELECTBOX */ -}}
                                 ></component>
