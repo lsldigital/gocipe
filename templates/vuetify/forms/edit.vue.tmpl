@@ -6,10 +6,38 @@
                 <v-btn icon :to="{name: '{{- plural (lower .Entity.Name) -}}_list'}">
                     <v-icon>arrow_back</v-icon>
                 </v-btn>
-
                 <v-toolbar-title>Edit {{.Entity.Name}} </v-toolbar-title>
 
                 <v-spacer></v-spacer>
+                
+                {{- if .Entity.ContentBuilder }}
+                <v-tabs
+                    centered
+                    v-model="tab"
+                    color="transparent"
+                    align-with-title
+                    :grow="false"
+                >
+                    <v-tabs-slider color="primary"></v-tabs-slider>
+                    <v-tab v-for="item in items" :key="item.id">
+                        {{ "{{ item.text }}" }}
+                    </v-tab>
+                </v-tabs>
+                
+                <v-spacer></v-spacer>
+
+                <v-btn-toggle :disabled="tab === 0" flat class="transparent" v-model="viewport">
+                    <v-btn :disabled="tab === 0" flat small icon :color="getViewport === 'mobile' ? 'primary' : ''" @click="changeViewport('mobile')">
+                        <v-icon small dark>phone_iphone</v-icon>
+                    </v-btn>
+                    <v-btn :disabled="tab === 0" flat small icon :color="getViewport === 'tablet' ? 'primary' : ''" @click="changeViewport('tablet')">
+                        <v-icon small dark>tablet_mac</v-icon>
+                    </v-btn>
+                    <v-btn :disabled="tab === 0" flat small icon :color="getViewport === 'desktop' ? 'primary' : ''" @click="changeViewport('desktop')">
+                        <v-icon small dark>desktop_mac</v-icon>
+                    </v-btn>
+                </v-btn-toggle>
+                {{- end }}
                 
                 <v-btn color="primary"  @click="update">
                     Save
@@ -27,6 +55,15 @@
                 </v-btn>
             </v-toolbar>
         </div>
+
+        {{- if .Entity.ContentBuilder }}
+
+        <v-tabs-items v-model="tab">
+            <v-tab-item key="info">
+                <v-card-text>
+
+        {{- end }}
+
         <div v-if="loading" centered>
             <v-progress-linear :indeterminate="true"></v-progress-linear>
             <p class="text-xs-center">contacting server...</p>
@@ -147,7 +184,16 @@
             </v-card-text>
         </v-card>
         
+        {{ if .Entity.ContentBuilder }}
 
+                </v-card-text>
+            </v-tab-item>
+            <v-tab-item key="builder">
+                <Lardwaz :information="getInformation()"/>
+            </v-tab-item>
+        </v-tabs-items>
+
+        {{ end }}
         
          
         <v-toolbar class="transparent listing-toolbar blue-grey darken-4 px-3" dark flat ml-0  v-if="!nested">
@@ -186,10 +232,15 @@
 import { AdminClient } from "@/services/service_admin_pb_service";
 import { GetRequest } from "@/services/service_admin_pb";
 import { Update{{ .Entity.Name}}Request } from "@/services/service_admin_pb";
+import { mapGetters } from 'vuex'
 
-{{range .Entity.Relationships -}}{{- if or (eq .Type "many-many") (eq .Type "many-many-owner") }}
+{{- range .Entity.Relationships -}}{{- if or (eq .Type "many-many") (eq .Type "many-many-owner") }}
 import { {{.Entity}} } from "@/services/models_pb"
-{{end}}{{end}}
+{{end}}{{end -}}
+
+{{- if .Entity.ContentBuilder }}
+import Lardwaz from '@/modules/lardwaz/views/Lardwaz'
+{{- end }}
 
 let cli = new AdminClient("/api");
 export default {
@@ -204,6 +255,11 @@ export default {
       loading: false,
       id: null,
       componentLoaded: false,
+      {{- if .Entity.ContentBuilder }}
+      tab: null,
+      items: [{ id: 'info', text: 'Information'}, { id: 'builder', text: 'Content Builder'}],
+      viewport: null,
+      {{ end }}
       {{ range .Entity.References -}}
       lookup{{ucfirst .TypeField.Name}}RPC: null,
       {{- end }}
@@ -222,14 +278,23 @@ export default {
         }
     },
   */}}
-
+  {{- if .Entity.ContentBuilder }}
   components: {
+    Lardwaz
   },
+  {{ end }}
   props: ["filter_id", "nested", "visible"],
   mounted() {
-    this.request()
-    
+    this.request()  
   },
+  {{- if .Entity.ContentBuilder }}
+  computed: {
+    ...mapGetters({
+        getLardwaz: 'lardwaz/getBlocks',
+        getViewport: 'lardwaz/getViewport'
+    })
+  },
+  {{ end }}
   methods: {
         {{- range .Entity.Relationships -}}
         {{- if or (eq .Type "many-many") (eq .Type "many-many-owner") }}
@@ -277,11 +342,28 @@ export default {
                 {{ range .Entity.References -}}
                 this.lookup{{ucfirst .TypeField.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Name}}();
                 {{- end }}
+                {{- if .Entity.ContentBuilder -}}
+                // Set Lardwaz content only when there is data
+                this.$store.dispatch('lardwaz/setBlocks', { data: [] })
+                if (this.entity.getContent() && (this.entity.getContent() !== "{}" && this.entity.getContent().length > 0)) {
+                    this.$store.dispatch('lardwaz/setBlocks', { data: JSON.parse(this.entity.getContent()) })
+                }
+
+                this.viewport = this.getViewport
+                {{- end }}
             });
         },
         update: function() {
     
             let req = new Update{{.Entity.Name}}Request();
+
+            {{- if .Entity.ContentBuilder }}
+            // Save Lardwaz content only if there are blocks
+            if (this.getLardwaz.length) {
+                this.entity.setContent(JSON.stringify(this.getLardwaz));
+            }
+            {{- end -}}
+
             req.set{{ ucfirst .Entity.Name}}(this.entity);
             // this.loading = true;
 
@@ -325,7 +407,17 @@ export default {
         },
         snackbarHide: function() {
             this.snackbar.show = false
-        }
+            },
+            {{ if .Entity.ContentBuilder -}}
+            getInformation: function () {
+                let information = {};
+                information.title = this.entity && this.entity.getTitle() && this.entity.getTitle().length > 0 ? this.entity.getTitle() : null;
+                return information;
+            },
+            changeViewport: function (value) {
+              this.$store.dispatch('lardwaz/setViewport', { data: value })
+            },
+            {{- end }}
   }
   /* watch: {
     visible: function(val) {

@@ -54,6 +54,18 @@ var fieldSlug = Field{
 	},
 }
 
+var contentField = Field{
+	Label: "Lardwaz",
+	Name:  "Content",
+	Type:  "string",
+	EditWidget: EditWidgetOpts{
+		Hide: true,
+	},
+	ListWidget: ListWidgetOpts{
+		Hide: true,
+	},
+}
+
 func fieldReferenceMakeFields(name string) (Field, Field) {
 	var idField = Field{
 		Label: name + "ID",

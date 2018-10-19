@@ -93,6 +93,9 @@ type Entity struct {
 
 	//fields is a map for random access of fields contained in entity
 	fields map[string]*Field
+
+	// ContentBuilder includes the Lardwaz module for content building
+	ContentBuilder bool `json:"content_builder"`
 }
 
 func (e *Entity) init(r *Recipe) {
@@ -101,6 +104,10 @@ func (e *Entity) init(r *Recipe) {
 
 	if e.Slug != "" {
 		defaultFields = append(defaultFields, fieldSlug)
+	}
+
+	if e.ContentBuilder {
+		defaultFields = append(defaultFields, contentField)
 	}
 
 	if r.Admin.Auth.Generate {
