@@ -201,12 +201,12 @@ export default {
       },
       text: "",
       headers: [
-      {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
-		    {{range .Entity.Fields }}
-          {{if not .ListWidget.Hide}}
-		      {text: "{{.Label}}", value: "{{.Name}}"},
-		    {{end}}
-      {{end}}
+        {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
+		    {{- range .Entity.Fields }}
+        {{- if not .ListWidget.Hide}}
+        {text: "{{.Label}}", value: "{{.Name}}"},
+        {{- end}}
+        {{- end}}
       ],
       entities: [],
       loading: false
@@ -274,17 +274,15 @@ export default {
 
           this.entities = resp.get{{ucfirst (plural .Entity.Name)}}List().map(entity => {
             return {
-              {{ range .Entity.Fields -}}
+              {{ range .Entity.Fields }}
                 {{- if eq .ListWidget.Type "time" -}}
-                  {{ucfirst .Name}}: {{- printf " entity.get%s().toDate() " (ucfirst .Name)}},
+                  {{ucfirst .Name}}: {{- printf " entity.get%s().toDate()" (ucfirst .Name)}},
                 {{- else -}}
-                  {{ucfirst .Name}}: {{- printf " entity.get%s() " (ucfirst .Name)}},
+                  {{ucfirst .Name}}: {{- printf " entity.get%s()" (ucfirst .Name)}},
                 {{- end }}
               {{ end }}
-              id: entity.getId()
             }
           })
-          
         });
        },
       duplicate(id) {
