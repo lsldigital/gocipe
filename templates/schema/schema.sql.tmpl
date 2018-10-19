@@ -1,4 +1,4 @@
-{{range .Entities}}
+{{- range .Entities}}
 DROP TABLE IF EXISTS {{.Table}};
 
 CREATE TABLE {{.Table}} (
@@ -27,5 +27,5 @@ DROP INDEX IF EXISTS {{.JoinTable}}_{{.ThatID}};
 
 CREATE INDEX {{.JoinTable}}_{{.ThisID}} ON {{.JoinTable}} ({{.ThisID}});
 CREATE INDEX {{.JoinTable}}_{{.ThatID}} ON {{.JoinTable}} ({{.ThatID}});
-{{end}}
 {{- end}}
+{{end}}
