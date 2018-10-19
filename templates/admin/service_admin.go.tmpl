@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"github.com/mitchellh/copystructure"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	
@@ -80,7 +81,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 		return &res, errors.WithStack(err)
 	}
 
-	if hasPerm := passport.HasPermission(res.{{.Name}}, PermCreate{{.Name}}); !hasPerm {
+	if hasPerm := passport.HasPermission(PermCreate{{.Name}}); !hasPerm {
 		return &res, errors.WithStack(fmt.Errorf("Permission denied")) 
 	}
 	{{ end }}
@@ -143,6 +144,25 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 	{{- end}}
 
 	res.{{.Name}}, err = models.{{.Name}}Repo.GetWithRel(ctx, req.ID)
+
+	{{ if .Admin.Auth.Generate }}
+	passport, err := _guardian.GetPassport(req.GetKey())
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	var permission string
+	isOwned := res.{{.Name}}.UserID == passport.GetID()
+	if isOwned {
+		permission = PermEdit{{.Name}}
+	} else {
+		permission = PermEdit{{.Name}}Any
+	}
+
+	if hasPerm := passport.HasPermission(permission); !hasPerm {
+		return &res, errors.WithStack(fmt.Errorf("Permission denied")) 
+	}
+	{{ end }}
 
 	{{if .Admin.Hooks.PostRead -}}
 	stop, err = s.{{lower .Name}}PostRead(ctx, req, &res, err)
@@ -270,7 +290,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 		permission = PermEdit{{.Name}}Any
 	}
 
-	if hasPerm := passport.HasPermission(res.{{.Name}}, permission); !hasPerm {
+	if hasPerm := passport.HasPermission(permission); !hasPerm {
 		return &res, errors.WithStack(fmt.Errorf("Permission denied")) 
 	}
 	{{ end }}
@@ -411,11 +431,22 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 	}
 
 	switch req.Field {
-		{{- range (.GetFileFieldsDefinition)}}
-		{{.}}
+		{{$EntityName := .Name -}}
+		{{- range (.GetFileFields)}}
+		case "{{.Name}}":
+			// Deep copy needed to prevent unwanted changes to global options "{{$EntityName}}{{.Name}}UploadOpts"
+			opts, _ := copystructure.Copy(&{{$EntityName}}{{.Name}}UploadOpts)
+			options = opts.(*files.UploadOptions)
+			fieldname = "{{.Name}}"
 		{{- end}}
 		default:
 			return &res, ErrorInvalidUploadField
+	}
+
+	if !req.UploadOptions.GetWatermark() {
+		for i := range options.ImgDimensions.Formats {
+			options.ImgDimensions.Formats[i].Watermark = nil
+		}
 	}
 
 	fileDiskPath, filePath, err := files.Upload(req.Filename, req.Content, options)
