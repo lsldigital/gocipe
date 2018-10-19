@@ -57,7 +57,7 @@ var fieldSlug = Field{
 func fieldReferenceMakeFields(name string) (Field, Field) {
 	var idField = Field{
 		Label: name + "ID",
-		Name:  name + "ID",
+		Name:  name,
 		Type:  "string",
 		EditWidget: EditWidgetOpts{
 			Hide: true,

@@ -114,7 +114,6 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 	if code, isString = data.(string); !isString {
 		code, err = util.ExecuteTemplate(template, data)
 		if err != nil {
-			log.Println(err)
 			l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 			l.failure++
 			return
