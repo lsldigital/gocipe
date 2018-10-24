@@ -239,7 +239,7 @@ import { {{.Entity}} } from "@/services/models_pb"
 {{end}}{{end -}}
 
 {{- if .Entity.ContentBuilder }}
-import Lardwaz from '@/modules/lardwaz/views/Lardwaz'
+import Lardwaz from '@lardwaz/views/Lardwaz'
 {{- end }}
 
 let cli = new AdminClient("/api");
