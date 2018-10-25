@@ -1,0 +1,126 @@
+<template>
+    <div class="single-component-wrapper">
+        <v-form v-model="valid">
+            <v-container>
+                <v-layout row wrap>
+                    <v-flex md-12>
+                        <v-expansion-panel popout>
+                            <v-expansion-panel-content v-for="(item, i) in local" :key="i">
+                                <div slot="header">
+                                    Item {{ "{{i + 1}}" }}
+                                </div>
+                                <v-card>
+                                    <v-card-text>
+                                        <v-form v-model="valid">
+                                            <v-layout row>
+                                                <v-flex md-12>
+                                                    <v-text-field
+                                                        label="URL"
+                                                        v-model="local[i].url"
+                                                        @keyup="update"
+                                                        required
+                                                        :rules="urlRules"
+                                                    >
+                                                    </v-text-field>
+                                                </v-flex>
+                                            </v-layout>
+                                            <v-layout row>
+                                                <v-flex md-12>
+                                                    <v-text-field
+                                                        label="Caption"
+                                                        v-model="local[i].caption"
+                                                        @keyup="update"
+                                                        required
+                                                        :rules="captionRules"
+                                                    >
+                                                    </v-text-field>
+                                                </v-flex>
+                                                <v-btn color="primary" fab small dark @click="deleteItem(i)">
+                                                    <v-icon>delete</v-icon>
+                                                </v-btn>
+                                            </v-layout>
+                                        </v-form>
+                                    </v-card-text>
+                                </v-card>
+                            </v-expansion-panel-content>
+                        </v-expansion-panel>
+                        <v-spacer></v-spacer>
+                    </v-flex>
+                </v-layout>
+                <v-layout row wrap>
+                    <v-flex md-12>
+                        <v-btn
+                            color="blue-grey"
+                            class="white--text"
+                            block
+                            @click="addItem()"
+                        >
+                            Add Item
+                            <v-icon right dark>photo_library</v-icon>
+                        </v-btn>
+                    </v-flex>
+                </v-layout>
+            </v-container>
+            <v-layout row>
+
+            </v-layout>
+        </v-form>
+    </div>
+</template>
+
+<script>
+    import _ from 'lodash'
+
+    export default {
+        props: {
+            value: {
+                type: Array,
+                default: function () {
+                    return [
+                        {
+                            url: '',
+                            caption: ''
+                        }
+                    ]
+                }
+            }
+        },
+        data() {
+            return {
+                local: this.value === null ? [] : this.value,
+                valid: false,
+                captionRules: [
+                    v => !!v || 'Caption is required',
+                    v => v.length >= 1 || 'Caption must be greater than 1 character(s)'
+                ],
+                urlRules: [
+                    v => !!v || 'URL is required',
+                    v => /^https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,}$/.test(v) || 'URL must be valid'
+                ],
+            };
+        },
+        methods: {
+            update() {
+                if (this.valid === true) {
+                    this.$emit("input", this.local);
+                }
+            },
+            addItem () {
+                let galleryTemplate = {
+                    url: '',
+                    caption: ''
+                }
+                this.local.push(galleryTemplate)
+            },
+            deleteItem (item) {
+                console.log(item)
+                let tempLocal = this.local
+                tempLocal.splice(item, 1)
+            }
+        }
+    };
+</script>
+
+<style lang="scss" scoped>
+
+</style>

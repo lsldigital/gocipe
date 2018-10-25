@@ -1,0 +1,22 @@
+<template>
+    <div class="gallery__container">
+        <div class="gallery__item"  v-if="content.value" :style="galleryImage(item)" v-for="(item, index) in content.value" :key="index">
+            <div class="caption">
+                {{ "{{item.caption}}" }}
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+export default {
+  props: ["content"],
+  components: {},
+  methods: {
+    galleryImage(item) {
+      return "background: url(" + item.url + ");";
+    }
+  }
+};
+</script>
+<style lang="scss">
+</style>

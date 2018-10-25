@@ -94,12 +94,14 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 
 	filename, err = util.GetAbsPath(filename)
 	if err != nil {
+		fmt.Println(err)
 		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 		l.failure++
 		return
 	}
 
 	if util.FileExists(filename) {
+		fmt.Println("skipping")
 		l.WithFields(log.Fields{"filename": filename}).Warn("Skipping existing file.")
 		l.skipped++
 		return
@@ -114,6 +116,7 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 	if code, isString = data.(string); !isString {
 		code, err = util.ExecuteTemplate(template, data)
 		if err != nil {
+			fmt.Println(err)
 			l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 			l.failure++
 			return
@@ -135,6 +138,7 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 
 	err = ioutil.WriteFile(filename, []byte(header+code), mode)
 	if err != nil {
+		fmt.Println(err)
 		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
 		l.failure++
 		return

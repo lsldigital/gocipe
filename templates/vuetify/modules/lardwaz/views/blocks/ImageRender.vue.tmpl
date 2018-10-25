@@ -1,0 +1,15 @@
+<template>
+    <figure>
+        <img :src="content.value.url" :alt="content.value.caption">
+        <figcaption>
+            <p>{{ "{{ content.value.caption }}" }}</p>
+        </figcaption>
+    </figure>
+</template>
+<script>
+export default {
+  props: ["content"]
+};
+</script>
+<style lang="scss">
+</style>

@@ -87,24 +87,24 @@ type {{.Name}}Repository interface {
 {{- $ThisEntity := . -}}
 {{range .Relationships -}}
 {{if eq .Type "many-many-inverse" -}}
-	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
-	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities
+	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 {{end -}}
-{{if or (eq .Type "many-many") (eq .Type "many-many-owner") -}}
-	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
-	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
-	// Save{{RelFuncName .}} is a helper function to save related {{.Name}} in a pivot table (many-many relationship)
-	Save{{RelFuncName .}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{fkeyPropertyTypeName $Entities .}}) error
-	// Save{{RelFuncName .}}IDs is a helper function to save related {{.Name}} IDs in a pivot table (many-many relationship)
-	Save{{RelFuncName .}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...) error
+{{if eq .Type "many-many-owner" -}}
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities
+	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
+	// Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table (many-many relationship)
+	Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{fkeyPropertyTypeName $Entities .}}) error
+	// Save{{.Name}}IDs is a helper function to save related {{.Name}} IDs in a pivot table (many-many relationship)
+	Save{{.Name}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...) error
 {{end -}}
 {{if eq .Type "one-many" -}}
-	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
-	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities
+	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 {{end -}}
 {{if eq .Type "many-one" -}}
-	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
-	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities
+	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 {{end -}}
 {{end -}}
 }
