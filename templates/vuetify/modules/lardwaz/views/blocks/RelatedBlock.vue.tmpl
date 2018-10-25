@@ -1,0 +1,130 @@
+<template>
+    <div class="single-component-wrapper">
+        <v-form v-model="valid">
+            <v-container>
+                <v-layout row wrap>
+                    <v-flex md-12>
+                        <v-expansion-panel popout>
+                            <v-expansion-panel-content v-for="(item, i) in local" :key="i">
+                                <div slot="header">
+                                    Article {{ "{{i + 1}}" }}
+                                </div>
+                                <v-card>
+                                    <v-card-text>
+                                        <v-form v-model="valid">
+                                            <v-layout row>
+                                                <v-flex md-12>
+                                                    <v-autocomplete
+                                                        :items="articles"
+                                                        item-text="title"
+                                                        label="Choose article"
+                                                        v-model="local[i]"
+                                                        @keyup="update"
+                                                        @change="update"
+                                                        required
+                                                    ></v-autocomplete>
+                                                </v-flex>
+                                            </v-layout>
+                                            <v-layout row>
+                                                <v-btn color="primary" fab small dark @click="deleteItem(i)">
+                                                    <v-icon>delete</v-icon>
+                                                </v-btn>
+                                            </v-layout>
+                                        </v-form>
+                                    </v-card-text>
+                                </v-card>
+                            </v-expansion-panel-content>
+                        </v-expansion-panel>
+                        <v-spacer></v-spacer>
+                    </v-flex>
+                </v-layout>
+                <v-layout row wrap>
+                    <v-flex md-12>
+                        <v-btn
+                                color="blue-grey"
+                                class="white--text"
+                                block
+                                @click="addItem()"
+                        >
+                            Add Article
+                            <v-icon right dark>art_track</v-icon>
+                        </v-btn>
+                    </v-flex>
+                </v-layout>
+            </v-container>
+            <v-layout row>
+
+            </v-layout>
+        </v-form>
+    </div>
+</template>
+
+<script>
+import _ from "lodash";
+
+export default {
+  props: {
+    value: {
+      type: Array,
+      default: function() {
+        return [];
+      }
+    }
+  },
+  data() {
+    return {
+      local: this.value === null ? [] : this.value,
+      valid: false,
+      articles: [
+        {
+          id: 1,
+          title: "Article 1"
+        },
+        {
+          id: 2,
+          title: "Article 2"
+        },
+        {
+          id: 3,
+          title: "Article 3"
+        },
+        {
+          id: 4,
+          title: "Article 4"
+        }
+      ],
+      canAddArticles: true
+    };
+  },
+  computed: {},
+  methods: {
+    update() {
+      console.log("emitting");
+      this.$emit("input", this.local);
+    },
+    addItem() {
+      let article = {
+        id: "",
+        name: ""
+      };
+      this.local.push(article);
+    },
+    deleteItem(item) {
+      let tempLocal = this.local;
+      tempLocal.splice(item, 1);
+    }
+  },
+  watch: {
+    local(val) {
+      if (val.length >= 4) {
+        this.canAddArticles = false;
+      } else {
+        this.canAddArticles = true;
+      }
+    }
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+</style>

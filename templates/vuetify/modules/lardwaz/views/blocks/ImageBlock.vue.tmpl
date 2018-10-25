@@ -1,0 +1,45 @@
+<template>
+  <div class="single-component-wrapper">
+    <v-form v-model="valid">
+      <v-text-field label="Image path" v-model="local.url" @change="update" :rules="urlRules" required></v-text-field>
+      <v-text-field label="Caption" v-model="local.caption" @change="update" :rules="captionRules" required></v-text-field>
+    </v-form>
+  </div>
+</template>
+
+<script>
+  export default {
+    props: ['value'],
+    data() {
+      const fields = {
+        url: '',
+        caption: ''
+      }
+      let local = Object.assign(fields, this.value)
+      return {
+        valid: false,
+        captionRules: [
+          v => !!v || 'Caption is required',
+          v => v.length >= 1 || 'Caption must be greater than 1 character(s)'
+        ],
+        urlRules: [
+          v => !!v || 'URL is required',
+          v => /^https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,}$/.test(v) || 'URL must be valid'
+        ],
+        local
+      }
+    },
+    methods: {
+      update() {
+        // emit changes only if validations are passed
+        if (this.valid === true) {
+          this.$emit('input', this.local)
+        }
+      }
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+
+</style>

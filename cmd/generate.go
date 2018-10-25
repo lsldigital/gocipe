@@ -10,9 +10,9 @@ import (
 	"github.com/fluxynet/gocipe/generators/crud"
 	"github.com/fluxynet/gocipe/generators/schema"
 	utils "github.com/fluxynet/gocipe/generators/util"
-	"github.com/fluxynet/gocipe/util"
 	"github.com/fluxynet/gocipe/generators/vuetify"
 	"github.com/fluxynet/gocipe/output"
+	"github.com/fluxynet/gocipe/util"
 
 	"github.com/spf13/cobra"
 )
@@ -36,7 +36,7 @@ var generateCmd = &cobra.Command{
 		output.SetVerbose(verbose)
 
 		rcp, err := util.LoadRecipe()
-		
+
 		if err != nil {
 			log.Fatalln("[loadRecipe]", err)
 		}
@@ -51,7 +51,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateSchema {
-		   schema.Generate(out, rcp)
+			schema.Generate(out, rcp)
 		}
 
 		if generateCrud {
