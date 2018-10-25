@@ -8,7 +8,7 @@ import (
 	{{range .Imports}}{{.}}
 	{{end}}
 )
-{{.Structure}}
+
 
 {{range .Entities}}
 //[BEGIN] {{.Name}}
@@ -275,7 +275,7 @@ func (repo {{.Name}}Repositorium) Get(ctx context.Context, id string) (*{{.Name}
 
 		err = rows.Scan({{.GetStruct "get"}})
 		if err != nil {
-			log.WithFields(log.Fields{"id": id, "query": `{{.SQLGet}}`, "fields": "{{.StructGet}}", "error": err}).Error("repo.{{.Name}}.Get scan error")
+			log.WithFields(log.Fields{"id": id, "query": `{{.SQLGet}}`, "fields": "{{.GetStruct "get"}}", "error": err}).Error("repo.{{.Name}}.Get scan error")
 			return nil, err
 		}
 		
@@ -411,7 +411,7 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 
 		err = rows.Scan({{.GetStruct "list"}})
 		if err != nil {
-			log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "fields": "{{.StructList}}", "error": err}).Error("repo.{{.Name}}.List scan error")
+			log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "fields": "{{.GetStruct "list"}}", "error": err}).Error("repo.{{.Name}}.List scan error")
 			return nil, err
 		}
 		
@@ -519,7 +519,7 @@ func (repo {{.Name}}Repositorium) Select(ctx context.Context, opts *ListOpts, co
 
 		err = rows.Scan({{.GetStruct "list"}})
 		if err != nil {
-			log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "query": query, "fields": "{{.StructList}}", "error": err}).Error("repo.{{.Name}}.Select scan error")
+			log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "query": query, "fields": "{{.GetStruct "list"}}", "error": err}).Error("repo.{{.Name}}.Select scan error")
 			return nil, err
 		}
 		
@@ -1573,9 +1573,6 @@ func (repo {{$.Name}}Repositorium) Save{{.Name}}IDs(ctx context.Context, tx *sql
 }
 {{end}}
 {{end}}
-
-{# {{range .LoadRelated}}{{.}}{{end}}
-{{range .SaveRelated}}{{.}}{{end}} #}
 
 //[END] {{.Name}}
 {{end}}

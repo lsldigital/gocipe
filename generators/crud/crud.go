@@ -2,9 +2,9 @@ package crud
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
-	"github.com/fluxynet/gocipe/generators/crud"
 	"github.com/fluxynet/gocipe/output"
 	"github.com/fluxynet/gocipe/util"
 )
@@ -51,7 +51,9 @@ func Generate(out *output.Output, r *util.Recipe) {
 	for _, e := range r.Entities {
 
 		if e.HasCrudHooks() {
-			output.GenerateAndSave("crud:hooks", "crud/hooks.go.tmpl", fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(e.Name)), e, true)
+			out.GenerateAndSave("crud:hooks", "crud/hooks.go.tmpl", fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(e.Name)), output.WithHeader, struct {
+				Entities []util.Entity
+			}{Entities: r.Entities})
 		}
 	}
 
@@ -79,16 +81,20 @@ func Generate(out *output.Output, r *util.Recipe) {
 		if code, err := generateCrud2(r); err == nil {
 			name := strings.ToLower(entity.Name)
 			out.GenerateAndOverwrite("Crud Entity "+name, "crud/crud.go.tmpl", fmt.Sprintf("models/%s_repo.gocipe.go", name), output.WithHeader, code)
-		} //TODO cater for error
+		} else {
+			log.Println(err)
+		}
 	}
 
+	fmt.Println(generateAny)
+
 	if generateAny {
-		out.GenerateAndOverwrite("crud/models.go.tmpl", "models/models.gocipe.go", output.WithHeader, struct {
+		out.GenerateAndOverwrite("GenerateCRUDModels", "crud/models.go.tmpl", "models/models.gocipe.go", output.WithHeader, struct {
 			Crud     bool
-			Entities map[string]util.Entity
+			Entities []util.Entity
 		}{
-			Crud:     crud.Generate,
-			Entities: entities,
+			Crud:     generateAny,
+			Entities: r.Entities,
 		})
 
 	}
