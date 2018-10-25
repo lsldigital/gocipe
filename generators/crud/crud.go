@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fluxynet/gocipe/generators/crud"
 	"github.com/fluxynet/gocipe/output"
 	"github.com/fluxynet/gocipe/util"
 )
@@ -50,10 +51,7 @@ func Generate(out *output.Output, r *util.Recipe) {
 	for _, e := range r.Entities {
 
 		if e.HasCrudHooks() {
-			out.GenerateAndSave("Crud Proto", "crud/models.proto.tmpl", "proto/models.proto", output.WithHeader, struct {
-				Entities      []util.Entity
-				AppImportPath string
-			}{Entities: r.Entities, AppImportPath: util.AppImportPath})
+			output.GenerateAndSave("crud:hooks", "crud/hooks.go.tmpl", fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(e.Name)), e, true)
 		}
 	}
 
@@ -82,6 +80,17 @@ func Generate(out *output.Output, r *util.Recipe) {
 			name := strings.ToLower(entity.Name)
 			out.GenerateAndOverwrite("Crud Entity "+name, "crud/crud.go.tmpl", fmt.Sprintf("models/%s_repo.gocipe.go", name), output.WithHeader, code)
 		} //TODO cater for error
+	}
+
+	if generateAny {
+		out.GenerateAndOverwrite("crud/models.go.tmpl", "models/models.gocipe.go", output.WithHeader, struct {
+			Crud     bool
+			Entities map[string]util.Entity
+		}{
+			Crud:     crud.Generate,
+			Entities: entities,
+		})
+
 	}
 
 }
