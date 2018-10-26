@@ -129,7 +129,7 @@ func (f *Field) GetBefore(op string) []string {
 	var before []string
 
 	if f.Name == "CreatedAt" {
-		if op == "create" {
+		if op == "insert" {
 			before = append(before, fmt.Sprintf(`entity.%s = ptypes.TimestampNow()`, f.Name))
 		}
 	} else if f.Name == "UpdatedAt" {
@@ -142,8 +142,8 @@ func (f *Field) GetBefore(op string) []string {
 		switch op {
 		case "get", "list":
 			before = append(before, fmt.Sprintf(`var %s time.Time`, strings.ToLower(f.Name)))
-		case "create", "merge", "update":
-			before = append(before, fmt.Sprintf(`%s, _ := pytpes.Timestamp(entity.%s)`, strings.ToLower(f.Name), f.Name))
+		case "insert", "merge", "update":
+			before = append(before, fmt.Sprintf(`%s, _ := ptypes.Timestamp(entity.%s)`, strings.ToLower(f.Name), f.Name))
 		}
 	}
 

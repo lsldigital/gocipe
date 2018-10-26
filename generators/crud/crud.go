@@ -54,6 +54,9 @@ func Generate(out *output.Output, r *util.Recipe) {
 				Entities []util.Entity
 			}{Entities: r.Entities})
 		}
+
+		generateAny = generateAny || r.Crud.Generate
+
 	}
 
 	out.GenerateAndOverwrite("Crud Proto", "crud/models.proto.tmpl", "proto/models.proto", output.WithHeader, struct {
@@ -63,30 +66,12 @@ func Generate(out *output.Output, r *util.Recipe) {
 
 	out.GenerateAndOverwrite("Crud Moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", output.WithHeader, struct{}{})
 
-	//old:
+	entities, imports := generateCrud2(r)
 
-	for _, entity := range r.Entities {
-		generateAny = generateAny || r.Crud.Generate
-
-		if !r.Crud.Generate {
-			util.DeleteIfExists(fmt.Sprintf("models/%s_repo.gocipe.go", strings.ToLower(entity.Name)))
-			util.DeleteIfExists(fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(entity.Name)))
-			// work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUD[%s]", entity.Name), Error: util.ErrorSkip}
-			// work.Done <- util.GeneratedCode{Generator: fmt.Sprintf("GenerateCRUDHooks[%s]", entity.Name), Error: util.ErrorSkip}
-			//TODO cater for skip
-			continue
-		}
-
-		entities, imports := generateCrud2(r)
-		name := strings.ToLower(entity.Name)
-		out.GenerateAndOverwrite("Crud Entity "+name, "crud/crud.go.tmpl", fmt.Sprintf("models/%s_repo.gocipe.go", name), output.WithHeader, struct {
-			Entities []util.Postgres
-			Imports  []string
-		}{Entities: entities, Imports: imports})
-
-	}
-
-	fmt.Println(generateAny)
+	out.GenerateAndOverwrite("Crud Repo", "crud/crud.go.tmpl", "models/crud.gocipe.go", output.WithHeader, struct {
+		Entities []util.Postgres
+		Imports  []string
+	}{Entities: entities, Imports: imports})
 
 	if generateAny {
 		out.GenerateAndOverwrite("GenerateCRUDModels", "crud/models.go.tmpl", "models/models.gocipe.go", output.WithHeader, struct {
@@ -96,7 +81,6 @@ func Generate(out *output.Output, r *util.Recipe) {
 			Crud:     generateAny,
 			Entities: r.Entities,
 		})
-
 	}
 
 }
@@ -105,7 +89,6 @@ func generateCrud2(r *util.Recipe) ([]util.Postgres, []string) {
 	var (
 		entities []util.Postgres
 		imports  []string
-		before   []string
 	)
 
 	for _, e := range r.Entities {
