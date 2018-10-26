@@ -360,6 +360,12 @@ func (e *Entity) GetProtoFields() []string {
 //GetStruct returns list of fields to be used for 'op' statement
 func (e *Entity) GetStruct(op string) string {
 	var fields []string
+	switch op {
+	case "get", "list":
+		//
+	case "update":
+		fields = append(fields, "entity.ID")
+	}
 
 	for _, f := range e.Fields {
 		//some fields require preprocessing
@@ -368,14 +374,14 @@ func (e *Entity) GetStruct(op string) string {
 			switch op {
 			case "get", "list":
 				fields = append(fields, fmt.Sprintf("&%s", strings.ToLower(f.Name)))
-			case "create", "merge", "update":
+			case "insert", "merge", "update":
 				fields = append(fields, strings.ToLower(f.Name))
 			}
 		} else {
 			switch op {
 			case "get", "list":
 				fields = append(fields, fmt.Sprintf(`&entity.%s`, f.Name))
-			case "create", "merge", "update":
+			case "insert", "merge", "update":
 				fields = append(fields, fmt.Sprintf(`entity.%s`, f.Name))
 			}
 		}

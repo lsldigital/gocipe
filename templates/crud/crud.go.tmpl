@@ -17,7 +17,6 @@ import (
 func (repo {{.Name}}Repositorium) Insert(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error {
 	var (
 		{{- if pkeyIsAuto .PrimaryKey -}}
-		id string
 		{{- end}}
 		err  error
 		stmt *sql.Stmt

@@ -159,7 +159,7 @@ func (f *Field) GetAfter(op string) []string {
 	if f.Type == "time" {
 		switch op {
 		case "get", "list":
-			after = append(after, fmt.Sprintf(`entity.%s, _ = ptypes.TimestampProto(%s)`, strings.ToLower(f.Name), f.Name))
+			after = append(after, fmt.Sprintf(`entity.%s, _ = ptypes.TimestampProto(%s)`, f.Name, strings.ToLower(f.Name)))
 		}
 	}
 

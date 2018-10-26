@@ -295,6 +295,8 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 	{{ end }}
 
+
+	{{if or .Admin.Hooks.PreUpdate .GetFileFields -}}
 	// existing records in DB
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)
 	if err != nil {
@@ -306,6 +308,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 		{{end}}
 		return &res, errors.WithStack(err)
 	}
+    {{end}}
 
 	switch req.{{.Name}}.Status {
 		case StatusDraft, StatusSaved, StatusUnpublished, StatusPublished:
