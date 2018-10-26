@@ -88,14 +88,14 @@ type Entity struct {
 	// DefaultSort is a sort string used while generating List() method in CRUD
 	DefaultSort string `json:"default_sort"`
 
+	// ContentBuilder represents the Lardwaz module for content building
+	ContentBuilder ContentBuilderOpts `json:"content_builder"`
+
 	// Table is the name of the database table for the entity
 	Table string `json:"-"`
 
-	//fields is a map for random access of fields contained in entity
+	// fields is a map for random access of fields contained in entity
 	fields map[string]*Field
-
-	// ContentBuilder includes the Lardwaz module for content building
-	ContentBuilder bool `json:"content_builder"`
 }
 
 func (e *Entity) init(r *Recipe) {
@@ -106,7 +106,7 @@ func (e *Entity) init(r *Recipe) {
 		defaultFields = append(defaultFields, fieldSlug)
 	}
 
-	if e.ContentBuilder {
+	if e.ContentBuilder.Generate {
 		defaultFields = append(defaultFields, contentField)
 	}
 

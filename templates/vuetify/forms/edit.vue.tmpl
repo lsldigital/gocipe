@@ -10,7 +10,7 @@
 
                 <v-spacer></v-spacer>
                 
-                {{- if .Entity.ContentBuilder }}
+                {{- if .Entity.ContentBuilder.Generate }}
                 <v-tabs
                     centered
                     v-model="tab"
@@ -56,7 +56,7 @@
             </v-toolbar>
         </div>
 
-        {{- if .Entity.ContentBuilder }}
+        {{- if .Entity.ContentBuilder.Generate }}
 
         <v-tabs-items v-model="tab">
             <v-tab-item key="info">
@@ -184,7 +184,7 @@
             </v-card-text>
         </v-card>
         
-        {{ if .Entity.ContentBuilder }}
+        {{ if .Entity.ContentBuilder.Generate }}
 
                 </v-card-text>
             </v-tab-item>
@@ -238,7 +238,7 @@ import { mapGetters } from 'vuex'
 import { {{.Entity}} } from "@/services/models_pb"
 {{end}}{{end -}}
 
-{{- if .Entity.ContentBuilder }}
+{{- if .Entity.ContentBuilder.Generate }}
 import Lardwaz from '@lardwaz/views/Lardwaz'
 {{- end }}
 
@@ -255,7 +255,7 @@ export default {
       loading: false,
       id: null,
       componentLoaded: false,
-      {{- if .Entity.ContentBuilder }}
+      {{- if .Entity.ContentBuilder.Generate }}
       tab: null,
       items: [{ id: 'info', text: 'Information'}, { id: 'builder', text: 'Content Builder'}],
       viewport: null,
@@ -278,7 +278,7 @@ export default {
         }
     },
   */}}
-  {{- if .Entity.ContentBuilder }}
+  {{- if .Entity.ContentBuilder.Generate }}
   components: {
     Lardwaz
   },
@@ -287,7 +287,7 @@ export default {
   mounted() {
     this.request()  
   },
-  {{- if .Entity.ContentBuilder }}
+  {{- if .Entity.ContentBuilder.Generate }}
   computed: {
     ...mapGetters({
         getLardwaz: 'lardwaz/getBlocks',
@@ -342,7 +342,7 @@ export default {
                 {{ range .Entity.References -}}
                 this.lookup{{ucfirst .TypeField.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Name}}();
                 {{- end }}
-                {{- if .Entity.ContentBuilder -}}
+                {{- if .Entity.ContentBuilder.Generate -}}
                 // Set Lardwaz content only when there is data
                 this.$store.dispatch('lardwaz/setBlocks', { data: [] })
                 if (this.entity.getContent() && (this.entity.getContent() !== "{}" && this.entity.getContent().length > 0)) {
@@ -357,7 +357,7 @@ export default {
     
             let req = new Update{{.Entity.Name}}Request();
 
-            {{- if .Entity.ContentBuilder }}
+            {{- if .Entity.ContentBuilder.Generate }}
             // Save Lardwaz content only if there are blocks
             if (this.getLardwaz.length) {
                 this.entity.setContent(JSON.stringify(this.getLardwaz));
@@ -408,7 +408,7 @@ export default {
         snackbarHide: function() {
             this.snackbar.show = false
             },
-            {{ if .Entity.ContentBuilder -}}
+            {{ if .Entity.ContentBuilder.Generate -}}
             getInformation: function () {
                 let information = {};
                 information.title = this.entity && this.entity.getTitle() && this.entity.getTitle().length > 0 ? this.entity.getTitle() : null;
