@@ -285,3 +285,15 @@ type ListWidgetOpts struct {
 	// Type indicates which widget type is represented
 	Type string `json:"type"`
 }
+
+// ContentBuilderOpts represents the Lardwaz options for content building
+type ContentBuilderOpts struct {
+	// Generate indicates whether or not Lardwaz module should be generated
+	Generate bool `json:"generate"`
+
+	// AllowUpload indicates whether or not Lardwaz module should cater for upload
+	AllowUpload string `json:"allow_upload"`
+
+	// UploadTypes represents the file types catered by Lardwaz module upload feature
+	UploadTypes []string `json:"upload_types"`
+}
