@@ -2,7 +2,6 @@ package crud
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/fluxynet/gocipe/output"
@@ -78,12 +77,13 @@ func Generate(out *output.Output, r *util.Recipe) {
 			continue
 		}
 
-		if code, err := generateCrud2(r); err == nil {
-			name := strings.ToLower(entity.Name)
-			out.GenerateAndOverwrite("Crud Entity "+name, "crud/crud.go.tmpl", fmt.Sprintf("models/%s_repo.gocipe.go", name), output.WithHeader, code)
-		} else {
-			log.Println(err)
-		}
+		entities, imports := generateCrud2(r)
+		name := strings.ToLower(entity.Name)
+		out.GenerateAndOverwrite("Crud Entity "+name, "crud/crud.go.tmpl", fmt.Sprintf("models/%s_repo.gocipe.go", name), output.WithHeader, struct {
+			Entities []util.Postgres
+			Imports  []string
+		}{Entities: entities, Imports: imports})
+
 	}
 
 	fmt.Println(generateAny)
@@ -101,10 +101,11 @@ func Generate(out *output.Output, r *util.Recipe) {
 
 }
 
-func generateCrud2(r *util.Recipe) (string, error) {
+func generateCrud2(r *util.Recipe) ([]util.Postgres, []string) {
 	var (
 		entities []util.Postgres
 		imports  []string
+		before   []string
 	)
 
 	for _, e := range r.Entities {
@@ -113,8 +114,5 @@ func generateCrud2(r *util.Recipe) (string, error) {
 
 	imports = append(imports, `uuid "github.com/satori/go.uuid"`)
 
-	return util.ExecuteTemplate("crud/crud.go.tmpl", struct {
-		Entities []util.Postgres
-		Imports  []string
-	}{Entities: entities, Imports: imports})
+	return entities, imports
 }
