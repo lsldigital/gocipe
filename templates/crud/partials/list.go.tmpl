@@ -153,10 +153,7 @@ func (repo {{.EntityName}}Repositorium) Select(ctx context.Context, opts *ListOp
 	}
 
 	if opts != nil {
-		switch opts.Sort {
-		case {{.OrderFields}}:
-			query += ` ORDER BY t."` + opts.Sort + `"`
-		}
+		query += opts.SortOpts()
 	}
 
 	if opts != nil && opts.Offset > 0 {

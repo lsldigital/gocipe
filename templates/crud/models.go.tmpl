@@ -45,16 +45,16 @@ func StartTransaction(ctx context.Context) (*sql.Tx, error) {
 // SortOpts provides an SQL valid ORDER BY
 func (s ListOpts) SortOpts() string {
 	var sort []string
-	for i := range s.ListSortOpts {
+	for i := range s.Sort {
 		var order string
 
-		if s.ListSortOpts[i].Ascending {
+		if s.Sort[i].Ascending {
 			order = " ASC"
 		} else {
 			order = " DESC"
 		}
 
-		sort = append(sort, s.ListSortOpts[i].Field + order)
+		sort = append(sort, s.Sort[i].Field + order)
 	}
 
 	if len(sort) != 0 {
