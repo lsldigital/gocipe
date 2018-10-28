@@ -49,12 +49,12 @@ func (s ListOpts) SortOpts() string {
 		var order string
 
 		if s.Sort[i].Ascending {
-			order = " ASC"
+			order = "ASC"
 		} else {
-			order = " DESC"
+			order = "DESC"
 		}
 
-		sort = append(sort, s.Sort[i].Field + order)
+		sort = append(sort, `"t.`+s.Sort[i].Field+`" `+order)
 	}
 
 	if len(sort) != 0 {
