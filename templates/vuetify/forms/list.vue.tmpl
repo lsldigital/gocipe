@@ -58,22 +58,22 @@
     <v-card v-else>
         <v-data-table :headers="headers" max :items="entities" class="elevation-0" :search="search">
           <template slot="items" slot-scope="props">
-            <tr :class="{'highlight': recentlySaved(props.item.id)}" :key="props.item.id">
+            <tr :class="{'highlight': recentlySaved(props.item.Id)}" :key="props.item.Id">
               <td class="justify-center layout">
-                <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.id, props.item.Name)">
+                <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.Id, props.item.Name)">
                   <v-icon>delete</v-icon>
                 </v-btn>
-                <v-btn icon class="mx-0" @click.stop="duplicate(props.item.id)">
+                <v-btn icon class="mx-0" @click.stop="duplicate(props.item.Id)">
                   <v-icon>file_copy</v-icon>
                 </v-btn>
                 <v-tooltip top v-if="nested">
-                  <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.id, props.item.Name)">
+                  <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.Id, props.item.Name)">
                     <v-icon>edit</v-icon>
                   </v-btn>
                   <span>Edit</span>
                 </v-tooltip>
                 <v-tooltip top v-else>
-                  <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.id }}">
+                  <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.Id }}">
                     <v-icon>edit</v-icon>
                   </v-btn>
                   <span>Edit</span>
