@@ -29,4 +29,24 @@ var {{$entity.Name}}{{.Name}}UploadOpts = files.UploadOptions{
 	},
 }
 {{end}}
+
+{{if $entity.ContentBuilder.Generate}}
+{{range $entity.ContentBuilder.UploadTypes}}
+// Content{{$entity.Name}}{{.}}UploadOpts contains upload parameters for the Content "{{.}}" Lardwaz field in Entity "{{$entity.Name}}"
+var Content{{$entity.Name}}{{.}}UploadOpts = files.UploadOptions{
+	Dir:			"media",
+	Destination:    "{{lower $entity.Name}}/content",
+	MediaPrefixURL: "/media/",
+	MaxSize:        util.NoLimit,
+	ImgDimensions:  &imagist.ImageDimensions{
+		MinWidth:       util.NoLimit,
+		MinHeight:      util.NoLimit,
+		Formats: []imagist.FormatDimensions{
+			{Name: "thumb", Width: 400, Height: 200},
+			{Name: "full", Width: util.NoLimit, Height: util.NoLimit, Watermark: imagist.BottomRight},
+		},
+	},
+}
+{{end}}
+{{end}}
 {{end}}
