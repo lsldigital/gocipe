@@ -81,6 +81,10 @@ type {{.Name}}Repository interface {
 	
 	// List returns a slice containing {{.Name}} records
 	List(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.Name}}, error)
+	
+	// Count returns a count of a query containing {{.Name}} records
+	Count(ctx context.Context, opts *ListOpts, filters ...*Filter) (int64, error)
+
 	// ListWithRel returns a slice containing {{.Name}} records; will also load related entities.
 	ListWithRel(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.Name}}, error)
 	

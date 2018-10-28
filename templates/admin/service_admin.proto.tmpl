@@ -25,6 +25,10 @@ message ListRequest {
     repeated admin.Filter Filters = 3;
 }
 
+message CountResponse {
+    int64 Count = 1;
+}
+
 // DeleteRequest represents a request to allow deleting an entity
 message DeleteRequest {
     string Key = 1;
@@ -87,6 +91,9 @@ service Admin {
     {{if .Admin.List}}
     // List{{plural .Name}} allows listing all entity of type {{.Name}}
     rpc List{{plural .Name}}(ListRequest) returns (List{{plural .Name}}Response);
+
+    // Count{{plural .Name}} allows counting the listing all entity of type {{.Name}}
+    rpc Count{{plural .Name}}(ListRequest) returns (CountResponse);
     {{- end}}
     {{if .Admin.Update}}
     // Update{{.Name}} allows updating one entity of type {{.Name}}

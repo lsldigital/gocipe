@@ -227,3 +227,66 @@ func (repo {{.EntityName}}Repositorium) SelectWithRel(ctx context.Context, opts 
 
 	return entities, nil
 }
+
+// Count returns a count of a query containing {{.EntityName}} records
+func (repo {{.EntityName}}Repositorium) Count(ctx context.Context, opts *ListOpts, filters ...*Filter) (int64, error) {
+	var (
+		segments []string
+		values	 []interface{}
+		err		 error
+		rows	 *sql.Rows
+		index	 int = 0
+		count    int64
+	)
+
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.EntityName}}.Count entered")
+	query := `SELECT COUNT(id) FROM {{.Table}} t`
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.EntityName}}.Count context error")
+		return count, err
+	}
+
+	for _, filter := range filters {
+		if filter.Operation == "IN" || filter.Operation == "NOT IN" {
+			seg, val, err := QueryAddIN(segments, values, &index, filter.Field, filter.Value, "NOT IN" == filter.Operation)
+			if err != nil {
+				log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{.EntityName}}.Count QueryAddIN error")
+				continue
+			}
+			segments = seg
+			values = val
+		} else {
+			index += 1
+			segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(index))
+			values = append(values, filter.Value)
+		}
+	}
+
+	if len(segments) != 0 {
+		query += " WHERE " + strings.Join(segments, " AND ")
+	}
+
+	rows, err = repo.db.QueryContext(ctx, query, values...)
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "error": err}).Error("repo.{{.EntityName}}.Count query error")
+		return count, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.EntityName}}.Count query done")
+
+	defer rows.Close()
+	if rows.Next() {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.EntityName}}.Count row found")
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.EntityName}}.Count context error")
+			return count, err
+		}
+
+		err = rows.Scan(&count)
+		if err != nil {
+			log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "fields": "{{.StructFields}}", "error": err}).Error("repo.{{.EntityName}}.Count scan error")
+			return count, err
+		}
+	}
+
+	return count, nil
+}
