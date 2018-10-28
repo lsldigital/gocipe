@@ -42,6 +42,28 @@ func StartTransaction(ctx context.Context) (*sql.Tx, error) {
 	return db.BeginTx(ctx, nil)
 }
 
+// SortOpts provides an SQL valid ORDER BY
+func (s ListOpts) SortOpts() string {
+	var sort []string
+	for i := range s.ListSortOpts {
+		var order string
+
+		if s.ListSortOpts[i].Ascending {
+			order = " ASC"
+		} else {
+			order = " DESC"
+		}
+
+		sort = append(sort, s.ListSortOpts[i].Field + order)
+	}
+
+	if len(sort) != 0 {
+		return " ORDER BY " + strings.Join(sort, ", ")
+	}
+
+	return ""
+}
+
 {{- $Entities := .Entities -}}
 {{range .Entities }}
 // {{.Name}}Repository encapsulates operations that may be performed on the entity {{.Name}}

@@ -44,8 +44,8 @@ func (repo {{.EntityName}}Repositorium) List(ctx context.Context, opts *ListOpts
 		query += " WHERE " + strings.Join(segments, " AND ")
 	}
 
-	if opts != nil && opts.Sort != "" {
-		query += " ORDER BY " + opts.Sort
+	if opts != nil {
+		query += opts.SortOpts()
 	}{{if .DefaultSort}} else {
 		query += ` ORDER BY {{.DefaultSort}}`
 	}
