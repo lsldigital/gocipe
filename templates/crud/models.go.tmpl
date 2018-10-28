@@ -54,7 +54,7 @@ func (s ListOpts) SortOpts() string {
 			order = "DESC"
 		}
 
-		sort = append(sort, `"t.`+s.Sort[i].Field+`" `+order)
+		sort = append(sort, `t."`+s.Sort[i].Field+`" `+order)
 	}
 
 	if len(sort) != 0 {
