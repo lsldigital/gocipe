@@ -79,7 +79,6 @@ func Generate(out *output.Output, r *util.Recipe) {
 	lardwaz := map[string]string{
 		"README":                    "lardwaz/README.md",
 		"RendererVariablesSCSS":     "lardwaz/renderer/_variables.scss",
-		"RendererBusinessMagSCSS":   "lardwaz/renderer/businessmag.scss",
 		"StoreActions":              "lardwaz/store/actions.js",
 		"StoreGetters":              "lardwaz/store/getters.js",
 		"StoreIndex":                "lardwaz/store/index.js",
