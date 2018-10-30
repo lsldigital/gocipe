@@ -30,10 +30,10 @@ var {{$entity.Name}}{{.Name}}UploadOpts = files.UploadOptions{
 }
 {{end}}
 
-{{if $entity.ContentBuilder.Generate}}
+{{if and ($entity.ContentBuilder.Generate)  ($entity.ContentBuilder.AllowUpload)}}
 {{range $entity.ContentBuilder.UploadTypes}}
-// {{$entity.Name}}{{.}}UploadOpts contains upload parameters for the Content "{{.}}" Lardwaz field in Entity "{{$entity.Name}}"
-var {{$entity.Name}}{{.}}UploadOpts = files.UploadOptions{
+// {{$entity.Name}}Content{{.}}UploadOpts contains upload parameters for the Content "{{.}}" Lardwaz field in Entity "{{$entity.Name}}"
+var {{$entity.Name}}Content{{.}}UploadOpts = files.UploadOptions{
 	Dir:			"media",
 	Destination:    "{{lower $entity.Name}}/content/{{lower .Name}}",
 	MediaPrefixURL: "/media/",
