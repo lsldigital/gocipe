@@ -59,9 +59,16 @@ func NewDateFilter(filter *Filter) (*models.Filter, error) {
 	return &models.Filter{Field: filter.Field, Operation: "LIKE", Value: value}, nil
 }
 
+func isMn(r rune) bool {
+	return unicode.Is(unicode.Mn, r) // Mn: nonspacing marks
+}
+
 func setSlug(id string, value string, table string, field string) {
 	suffix := ""
 	max := 10
+	// Normalize input
+	t := transform.Chain(norm.NFD, transform.RemoveFunc(isMn), norm.NFC)
+	value, _, _ = transform.String(t, value)
 	for i := 0; i < max; i++ {
 		if i >= max-1 {
 			now := time.Now()
