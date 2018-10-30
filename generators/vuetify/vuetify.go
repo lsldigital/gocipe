@@ -137,7 +137,9 @@ func Generate(out *output.Output, r *util.Recipe) {
 	}
 
 	for name, file := range lardwaz {
-		out.GenerateAndOverwrite("Vuetify Lardwaz "+name, filepath.Join("vuetify/modules", file+".tmpl"), filepath.Join(util.WorkingDir, "web", r.Vuetify.App, "modules", file), output.WithHeader, nil)
+		out.GenerateAndOverwrite("Vuetify Lardwaz "+name, filepath.Join("vuetify/modules", file+".tmpl"), filepath.Join(util.WorkingDir, "web", r.Vuetify.App, "modules", file), output.WithHeader, struct {
+			Recipe *util.Recipe
+		}{r})
 	}
 
 }

@@ -407,17 +407,18 @@ export default {
         },
         snackbarHide: function() {
             this.snackbar.show = false
-            },
-            {{ if .Entity.ContentBuilder.Generate -}}
-            getInformation: function () {
-                let information = {};
-                information.title = this.entity && this.entity.getTitle() && this.entity.getTitle().length > 0 ? this.entity.getTitle() : null;
-                return information;
-            },
-            changeViewport: function (value) {
-              this.$store.dispatch('lardwaz/setViewport', { data: value })
-            },
-            {{- end }}
+        },
+        {{ if .Entity.ContentBuilder.Generate -}}
+        getInformation: function () {
+            let information = {};
+            information.title = this.entity && this.entity.getTitle() && this.entity.getTitle().length > 0 ? this.entity.getTitle() : null;
+            information.entityName = "{{.Entity.Name}}";
+            return information;
+        },
+        changeViewport: function (value) {
+            this.$store.dispatch('lardwaz/setViewport', { data: value })
+        },
+        {{- end }}
   }
   /* watch: {
     visible: function(val) {

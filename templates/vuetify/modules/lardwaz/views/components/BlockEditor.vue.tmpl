@@ -1,7 +1,7 @@
 <template>
   <div class="block-editor-wrapper">
     <div class="components-editor">
-      <v-expansion-panel focusable class="expansion-panel">
+      <v-expansion-panel focusable class="expansion-panel" v-model="blocksOnPage">
         <draggable class="full-width" v-model="blocks" :options="{handle:'.handle'}" @start="drag=true"
                    @end="drag=false">
           <v-expansion-panel-content text-md-center v-for="(block, index) in blocks" :key="index">
@@ -11,6 +11,7 @@
                 <component
                   :is="block.type + 'Block'"
                   v-model="block.value"
+                  :information="information"
                 >
                 </component>
                 <v-card-actions>
@@ -86,10 +87,17 @@ import MailArticlesListingBlock from "../blocks/mail/MailArticlesListingBlock";
 import MailAdBlock from "../blocks/mail/MailAdBlock";
 
 export default {
+  props: {
+    information: {
+      default: null,
+      type: Object
+    }
+  },
   data() {
     return {
       deleteDialog: false,
-      blockID: null
+      blockID: null,
+      blocksOnPage: null
     };
   },
   computed: {
@@ -102,7 +110,11 @@ export default {
       }
     }
   },
-  methods: {},
+  methods: {
+    expand(val) {
+      console.log("EVENT = " + val);
+    }
+  },
   components: {
     draggable,
     BlockPicker,
@@ -135,6 +147,13 @@ export default {
     deleteItemBlock() {
       this.blocks.splice(this.blockID, 1);
       this.deleteDialog = false;
+    }
+  },
+  watch: {
+    blocksOnPage(val) {
+      setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+      }, 200);
     }
   }
 };

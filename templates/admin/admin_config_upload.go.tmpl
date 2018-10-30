@@ -6,6 +6,11 @@ var UploadPaths = map[string]*files.UploadOptions{
 	{{- range $entity.GetFileFields}}
 	"{{lower $entity.Name}}/{{lower .Name}}":	&{{$entity.Name}}{{.Name}}UploadOpts,
 	{{- end}}
+	{{- if and ($entity.ContentBuilder.Generate)  ($entity.ContentBuilder.AllowUpload)}}
+	{{- range $entity.ContentBuilder.UploadTypes}}
+	"{{lower $entity.Name}}/content/{{lower .}}":	&{{$entity.Name}}Content{{.}}UploadOpts,
+	{{- end}}
+	{{- end}}
 	{{- end}}
 }
 
@@ -35,9 +40,11 @@ var {{$entity.Name}}{{.Name}}UploadOpts = files.UploadOptions{
 // {{$entity.Name}}Content{{.}}UploadOpts contains upload parameters for the Content "{{.}}" Lardwaz field in Entity "{{$entity.Name}}"
 var {{$entity.Name}}Content{{.}}UploadOpts = files.UploadOptions{
 	Dir:			"media",
-	Destination:    "{{lower $entity.Name}}/content/{{lower .Name}}",
+	Destination:    "{{lower $entity.Name}}/content/{{lower .}}",
 	MediaPrefixURL: "/media/",
+	FileType:       files.TypeImage,
 	MaxSize:        util.NoLimit,
+	ConvertTo:      imagist.TypeImageJPG,
 	ImgDimensions:  &imagist.ImageDimensions{
 		MinWidth:       util.NoLimit,
 		MinHeight:      util.NoLimit,

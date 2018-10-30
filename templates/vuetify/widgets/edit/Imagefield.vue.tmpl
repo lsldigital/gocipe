@@ -25,7 +25,7 @@
       <v-alert :value="uploadStatus.error" type="error" dismissible small transition="scale-transition">
       {{ "{{ uploadStatus.error | capitalize }}" }}
       </v-alert>
-      <v-alert :value="true" color="gray lighten-3" dark icon="info" class="pa-2">
+      <v-alert :value="$attrs.hint" color="gray lighten-3" dark icon="info" class="pa-2">
       {{ "{{ $attrs.hint }}" }}
       </v-alert>
     </div>
@@ -126,6 +126,8 @@ export default {
         this.uploadStatus.success = true;
 
         this.image = resp.getUri();
+
+        this.$emit('gocipe', this.image);
       });
     }
   }

@@ -9,7 +9,7 @@
       <!--</v-btn>-->
       <v-layout row wrap fill-height="true" v-if="ready" class="editor">
         <v-flex xs4 class="editor-left-wrapper">
-          <BlockEditor />
+          <BlockEditor :information="information" />
         </v-flex>
         <v-flex xs8 class="editor-right-wrapper">
           <Preview transition="fade-transition" :information="information"/>

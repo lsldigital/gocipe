@@ -420,14 +420,14 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	return &res, nil
 }
 {{- end}}
-{{if or (.GetFileFields) (and (.Contentbuilder.Generate) (.ContentBuilder.AllowUpload))}}
+{{if or (.GetFileFields) (and (.ContentBuilder.Generate) (.ContentBuilder.AllowUpload))}}
 // Upload{{.Name}} allows uploading of files for entity of type {{.Name}}
 func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*UploadResponse, error) {
 	var (
 		res       		UploadResponse
 		options   		*files.UploadOptions
 		fieldname 		string
-		{{if and (.ContentBuilder.Generate)  (.ContentBuilder.AllowUpload)}}contentBuilder 	bool{{end}}
+		{{if and (.ContentBuilder.Generate)  (.ContentBuilder.AllowUpload) -}}contentBuilder 	bool{{- end}}
 	)
 
 	if req == nil {
@@ -443,15 +443,15 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 			options = opts.(*files.UploadOptions)
 			fieldname = "{{.Name}}"
 		{{- end}}
-		{{if and (.ContentBuilder.Generate) (.ContentBuilder.AllowUpload)}}
-		{{range .ContentBuilder.UploadTypes}}
+		{{- if and (.ContentBuilder.Generate) (.ContentBuilder.AllowUpload)}}
+		{{- range .ContentBuilder.UploadTypes}}
 		case "Content{{.}}":
 			// Deep copy needed to prevent unwanted changes to global options "{{$EntityName}}Content{{.}}UploadOpts"
 			opts, _ := copystructure.Copy(&{{$EntityName}}Content{{.}}UploadOpts)
 			options = opts.(*files.UploadOptions)
 			contentBuilder = true
-		{{end}}
-		{{end}}
+		{{- end}}
+		{{- end}}
 		default:
 			return &res, ErrorInvalidUploadField
 	}

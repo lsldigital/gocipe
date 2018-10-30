@@ -1,5 +1,5 @@
 <template>
-    <figure>
+    <figure v-if="content.value != null">
         <img :src="content.value.url" :alt="content.value.caption">
         <figcaption>
             <p>{{ "{{ content.value.caption }}" }}</p>

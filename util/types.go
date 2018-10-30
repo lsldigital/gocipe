@@ -292,7 +292,7 @@ type ContentBuilderOpts struct {
 	Generate bool `json:"generate"`
 
 	// AllowUpload indicates whether or not Lardwaz module should cater for upload
-	AllowUpload string `json:"allow_upload"`
+	AllowUpload bool `json:"allow_upload"`
 
 	// UploadTypes represents the file types catered by Lardwaz module upload feature
 	UploadTypes []string `json:"upload_types"`

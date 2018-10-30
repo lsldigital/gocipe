@@ -164,6 +164,16 @@ func (r *Recipe) HasFileFields() bool {
 	return false
 }
 
+//HasContentFileUpload returns true if at least an entity has file upload option for content builder
+func (r *Recipe) HasContentFileUpload() bool {
+	for _, e := range r.Entities {
+		if e.ContentBuilder.Generate && e.ContentBuilder.AllowUpload {
+			return true
+		}
+	}
+	return false
+}
+
 //HasAuth returns true if at least an entity requires Auth
 func (r *Recipe) HasAuth() bool {
 	for _, e := range r.Entities {
