@@ -251,6 +251,39 @@ type VuetifyEntityOpts struct {
 	Icon string `json:"icon"`
 }
 
+// DecksOpts represents options for decks generator
+type DecksOpts struct {
+	// Generate represents whether or not to generate decks
+	Generate bool `json:"embed"`
+
+	// Decks represents list of decks to generate
+	Decks []DeckOpts `json:"decks"`
+}
+
+// DeckOpts represents options for deck generator
+type DeckOpts struct {
+	// Label represents the human friendly name of deck
+	Label string `json:"label"`
+
+	// Name represents the machine friendly name of deck
+	Name string `json:"name"`
+
+	// Description represents the description of deck
+	Description string `json:"description"`
+
+	// NoDuplicate represents whether or not deck should accept duplicate cards
+	NoDuplicate bool `json:"no_duplicate"`
+
+	// NoTrace represents whether or not deck should keep trace of cards in it
+	NoTrace bool `json:"no_trace"`
+
+	// Slots represents the maximum number of cards the deck can hold
+	Slots int64 `json:"slots"`
+
+	// EntitiyTypeWhitelist represents the allowed entity types of the cards in the deck
+	EntitiyTypeWhitelist []string `json:"entity_type_whitelist"`
+}
+
 // EditWidgetOpts represents a UI widget for edit forms
 type EditWidgetOpts struct {
 	// Type indicates which widget type is represented

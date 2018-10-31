@@ -138,8 +138,18 @@ func (e *Entity) init(r *Recipe) {
 
 	for i := range e.References {
 		c := &e.References[i]
-		c.init()
 
+		// Fill in reference type field edit widget options for Card entity
+		if r.Decks.Generate && e.Name == "Card" {
+			// TODO: Options based on current deck selected (@runtime) ?
+			for _, t := range r.Entities {
+				c.TypeField.EditWidget.Options = append(c.TypeField.EditWidget.Options,
+					EditWidgetOption{Text: t.Name, Value: t.Name},
+				)
+			}
+		}
+
+		c.init()
 		e.Fields = append(e.Fields, c.IDField)
 		e.Fields = append(e.Fields, c.TypeField)
 	}
@@ -147,6 +157,16 @@ func (e *Entity) init(r *Recipe) {
 	e.fields = make(map[string]*Field)
 	for i := range e.Fields {
 		f := &e.Fields[i]
+
+		// Fill in deckmachinename field edit widget options for Card entity
+		if r.Decks.Generate && e.Name == "Card" && f.Name == "DeckMachineName" {
+			for _, d := range r.Decks.Decks {
+				f.EditWidget.Options = append(f.EditWidget.Options,
+					EditWidgetOption{Text: d.Label, Value: d.Name},
+				)
+			}
+		}
+
 		f.init()
 		e.fields[f.Name] = f
 	}

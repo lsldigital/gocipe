@@ -35,6 +35,9 @@ type Recipe struct {
 	// Vuetify describes options for Vuetify generation
 	Vuetify VuetifyOpts `json:"vuetify"`
 
+	// Decks describes options for Decks generation
+	Decks DecksOpts `json:"decks"`
+
 	// Entities lists entities to be generated
 	Entities []Entity `json:"entities"`
 
@@ -86,6 +89,11 @@ func LoadRecipe() (*Recipe, error) {
 
 func (r *Recipe) init() {
 	r.entities = make(map[string]*Entity)
+
+	// Add default entities
+	if r.Decks.Generate {
+		r.Entities = append(r.Entities, card, cardSchedule)
+	}
 
 	for i := range r.Entities {
 		e := &r.Entities[i]
