@@ -257,19 +257,19 @@ type DecksOpts struct {
 	Generate bool `json:"embed"`
 
 	// Decks represents list of decks to generate
-	Decks DeckOpts `json:"decks"`
+	Decks []DeckOpts `json:"decks"`
 }
 
 // DeckOpts represents options for deck generator
 type DeckOpts struct {
 	// Label represents the human friendly name of deck
-	Label bool `json:"label"`
+	Label string `json:"label"`
+
+	// Name represents the machine friendly name of deck
+	Name string `json:"name"`
 
 	// Description represents the description of deck
-	Description bool `json:"description"`
-
-	// MachineName represents the machine friendly name of deck
-	MachineName bool `json:"machine_name"`
+	Description string `json:"description"`
 
 	// NoDuplicate represents whether or not deck should accept duplicate cards
 	NoDuplicate bool `json:"no_duplicate"`
@@ -278,10 +278,10 @@ type DeckOpts struct {
 	NoTrace bool `json:"no_trace"`
 
 	// Slots represents the maximum number of cards the deck can hold
-	Slots bool `json:"slots"`
+	Slots int64 `json:"slots"`
 
-	// EntitiesWhitelist represents the allowed entities types of the cards in the deck
-	EntitiesWhitelist bool `json:"entities_whitelist"`
+	// EntitiyTypeWhitelist represents the allowed entity types of the cards in the deck
+	EntitiyTypeWhitelist []string `json:"entity_type_whitelist"`
 }
 
 // EditWidgetOpts represents a UI widget for edit forms

@@ -96,6 +96,11 @@ func LoadRecipe() (*Recipe, error) {
 func (r *Recipe) init() {
 	r.entities = make(map[string]*Entity)
 
+	// Add default entities
+	if r.Decks.Generate {
+		r.Entities = append(r.Entities, card, cardSchedule)
+	}
+
 	for i := range r.Entities {
 		e := &r.Entities[i]
 		e.init(r)

@@ -71,12 +71,6 @@ func fieldReferenceMakeFields(name string) (Field, Field) {
 		Label: name + "ID",
 		Name:  name,
 		Type:  "string",
-		EditWidget: EditWidgetOpts{
-			Hide: true,
-		},
-		ListWidget: ListWidgetOpts{
-			Hide: true,
-		},
 	}
 
 	var typeField = Field{
@@ -84,10 +78,7 @@ func fieldReferenceMakeFields(name string) (Field, Field) {
 		Name:  name + "Type",
 		Type:  "string",
 		EditWidget: EditWidgetOpts{
-			Hide: true,
-		},
-		ListWidget: ListWidgetOpts{
-			Hide: true,
+			Type: WidgetTypeSelect,
 		},
 	}
 
