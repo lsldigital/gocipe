@@ -60,12 +60,6 @@ func LoadRecipe() (*Recipe, error) {
 	if err != nil {
 		return nil, err
 	}
-	//ToDo
-	// output.Log("%x", sha256.Sum256([]byte(recipeContent)))
-
-	// output.Inject(
-	// 	recipePath,
-	// )
 
 	err = json.Unmarshal(recipeContent, &recipe)
 	if err != nil {
