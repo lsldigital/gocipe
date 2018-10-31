@@ -35,6 +35,9 @@ type Recipe struct {
 	// Vuetify describes options for Vuetify generation
 	Vuetify VuetifyOpts `json:"vuetify"`
 
+	// Decks describes options for Decks generation
+	Decks DecksOpts `json:"decks"`
+
 	// Entities lists entities to be generated
 	Entities []Entity `json:"entities"`
 
