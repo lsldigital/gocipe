@@ -254,7 +254,7 @@ type VuetifyEntityOpts struct {
 // DecksOpts represents options for decks generator
 type DecksOpts struct {
 	// Generate represents whether or not to generate decks
-	Generate bool `json:"embed"`
+	Generate bool `json:"generate"`
 
 	// Decks represents list of decks to generate
 	Decks []DeckOpts `json:"decks"`

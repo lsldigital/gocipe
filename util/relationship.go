@@ -50,10 +50,10 @@ type Relationship struct {
 	// JoinTable represents the other table in a many-many relationship
 	JoinTable string `json:"-"`
 
-	// ThisID represents the field in this entity used for this relationship
+	// ThisID represents the field in this entity used for this relationship (schema)
 	ThisID string `json:"-"`
 
-	// ThatID represents the field in the other entity used for this relationship
+	// ThatID represents the field in the other entity used for this relationship (schema)
 	ThatID string `json:"-"`
 
 	//related is a pointer to the related entity
@@ -146,4 +146,19 @@ func (p *Relationship) ProtoDefinitions(index *int) []string {
 	}
 
 	return definitions
+}
+
+//GetRelatedID returns the related
+func (p *Relationship) GetRelatedID() string {
+	switch p.Type {
+	case RelationshipTypeManyOne, RelationshipTypeManyManyOwner, RelationshipTypeManyManyInverse:
+		return p.Entity + "ID"
+	}
+
+	return "ID"
+}
+
+//GetRelated returns the related
+func (p *Relationship) GetRelated() *Entity {
+	return p.related
 }

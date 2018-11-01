@@ -413,7 +413,7 @@ func (e *Entity) GetStruct(op string) string {
 			switch op {
 			case "get", "list":
 				fields = append(fields, fmt.Sprintf("&entity.%sID", p.Name))
-			case "create", "merge", "update":
+			case "insert", "merge", "update":
 				fields = append(fields, fmt.Sprintf("entity.%sID", p.Name))
 			}
 		}

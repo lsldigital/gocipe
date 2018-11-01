@@ -132,7 +132,7 @@ func (r *Recipe) GetPermissions() []Permission {
 	)
 
 	ops := []string{"Create", "Edit", "View", "List", "Delete", "Lookup"}
-	utf8list := genUTF8List(len(r.Entities) * len(ops) * 3)
+	utf8list := genUTF8List(len(r.Entities) * len(ops) * 4)
 	for _, e := range r.Entities {
 		if !e.Admin.Generate {
 			continue
