@@ -51,7 +51,7 @@ var generateCmd = &cobra.Command{
 		out := &output.Output{}
 		out.SetOutput(file)
 
-		out.Fatalln("Hello")
+		// out.Fatalln("Hello")
 
 		//scaffold application layout - synchronously before launching generators
 		application.Generate(out, rcp, overwrite)
@@ -72,7 +72,7 @@ var generateCmd = &cobra.Command{
 			admin.Generate(out, rcp)
 		}
 
-		if generateAdmin {
+		if generateAuth {
 			auth.Generate(out)
 		}
 

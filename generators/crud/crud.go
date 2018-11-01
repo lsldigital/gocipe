@@ -50,7 +50,7 @@ func Generate(out *output.Output, r *util.Recipe) {
 	for _, e := range r.Entities {
 
 		if e.HasCrudHooks() {
-			out.GenerateAndSave("crud:hooks", "crud/hooks.go.tmpl", fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(e.Name)), output.WithHeader, struct {
+			out.GenerateAndSave("GenerateCRUD Hooks "+e.Name, "crud/hooks.go.tmpl", fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(e.Name)), output.WithHeader, struct {
 				Entities []util.Entity
 			}{Entities: r.Entities})
 		}
@@ -59,22 +59,22 @@ func Generate(out *output.Output, r *util.Recipe) {
 
 	}
 
-	out.GenerateAndOverwrite("Crud Proto", "crud/models.proto.tmpl", "proto/models.proto", output.WithHeader, struct {
+	out.GenerateAndOverwrite("GenerateCRUD Proto", "crud/models.proto.tmpl", "proto/models.proto", output.WithHeader, struct {
 		Entities      []util.Entity
 		AppImportPath string
 	}{Entities: r.Entities, AppImportPath: util.AppImportPath})
 
-	out.GenerateAndOverwrite("Crud Moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", output.WithHeader, struct{}{})
+	out.GenerateAndOverwrite("GenerateCRUD Moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", output.WithHeader, struct{}{})
 
 	entities, imports := generateCrud2(r)
 
-	out.GenerateAndOverwrite("Crud Repo", "crud/crud.go.tmpl", "models/crud.gocipe.go", output.WithHeader, struct {
+	out.GenerateAndOverwrite("GenerateCRUD Repo", "crud/crud.go.tmpl", "models/crud.gocipe.go", output.WithHeader, struct {
 		Entities []util.Postgres
 		Imports  []string
 	}{Entities: entities, Imports: imports})
 
 	if generateAny {
-		out.GenerateAndOverwrite("GenerateCRUDModels", "crud/models.go.tmpl", "models/models.gocipe.go", output.WithHeader, struct {
+		out.GenerateAndOverwrite("GenerateCRUD Models", "crud/models.go.tmpl", "models/models.gocipe.go", output.WithHeader, struct {
 			Crud     bool
 			Entities []util.Entity
 		}{
