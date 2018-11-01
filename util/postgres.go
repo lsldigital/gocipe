@@ -33,6 +33,16 @@ func (s Postgres) SQLInsert() string {
 		}
 	}
 
+	for _, c := range s.References {
+		fields = append(fields, c.IDField.schema.Field)
+		placeholders = append(placeholders, "$"+strconv.Itoa(index))
+		index++
+
+		fields = append(fields, c.TypeField.schema.Field)
+		placeholders = append(placeholders, "$"+strconv.Itoa(index))
+		index++
+	}
+
 	return fmt.Sprintf(
 		`INSERT INTO %s (%s) VALUES (%s)`,
 		s.Table,
@@ -56,6 +66,10 @@ func (s Postgres) SQLGet() string {
 		}
 	}
 
+	for _, c := range s.References {
+		fields = append(fields, fmt.Sprintf(`t."%s"`, c.IDField.schema.Field), fmt.Sprintf(`t."%s"`, c.TypeField.schema.Field))
+	}
+
 	return fmt.Sprintf(
 		`SELECT %s FROM %s t WHERE t."id" = $1 ORDER BY t."id" ASC`,
 		strings.Join(fields, ", "),
@@ -76,6 +90,10 @@ func (s Postgres) SQLList() string {
 		case RelationshipTypeManyOne:
 			fields = append(fields, fmt.Sprintf(`t."%s"`, p.ThisID))
 		}
+	}
+
+	for _, c := range s.References {
+		fields = append(fields, fmt.Sprintf(`t."%s"`, c.IDField.schema.Field), fmt.Sprintf(`t."%s"`, c.TypeField.schema.Field))
 	}
 
 	return fmt.Sprintf(
@@ -146,6 +164,14 @@ func (s Postgres) SQLUpdate() string {
 		}
 	}
 
+	for _, c := range s.References {
+		fields = append(fields, fmt.Sprintf(`"%s" = $%d`, c.IDField.schema.Field, index))
+		index++
+
+		fields = append(fields, fmt.Sprintf(`"%s" = $%d`, c.TypeField.schema.Field, index))
+		index++
+	}
+
 	return fmt.Sprintf(
 		`UPDATE %s SET %s WHERE id = $1`,
 		s.Table,
@@ -175,6 +201,18 @@ func (s Postgres) SQLMerge() string {
 			placeholders = append(placeholders, "$"+strconv.Itoa(index))
 			index++
 		}
+	}
+
+	for _, c := range s.References {
+		inserts = append(inserts, c.IDField.schema.Field)
+		updates = append(updates, fmt.Sprintf(`"%s" = $%d`, c.IDField.schema.Field, index))
+		placeholders = append(placeholders, "$"+strconv.Itoa(index))
+		index++
+
+		inserts = append(inserts, c.TypeField.schema.Field)
+		updates = append(updates, fmt.Sprintf(`"%s" = $%d`, c.TypeField.schema.Field, index))
+		placeholders = append(placeholders, "$"+strconv.Itoa(index))
+		index++
 	}
 
 	return fmt.Sprintf(

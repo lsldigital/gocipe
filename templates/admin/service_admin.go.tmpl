@@ -522,7 +522,7 @@ func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) 
 		return &res, err
 	}
     
-	rows, err = tx.Query(`SELECT id, t."{{.LabelField}}", t."status" FROM {{.Table}} t WHERE t."{{.LabelField}}" LIKE $1`, req.Term+"%")
+	rows, err = tx.Query(`SELECT id, t."{{lower .LabelField}}", t."status" FROM {{.Table}} t WHERE t."{{lower .LabelField}}" LIKE $1`, req.Term+"%")
 	if err != nil {
 		return &res, err
 	}

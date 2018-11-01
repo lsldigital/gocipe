@@ -139,19 +139,17 @@ func (e *Entity) init(r *Recipe) {
 	for i := range e.References {
 		c := &e.References[i]
 
+		c.init()
+
 		// Fill in reference type field edit widget options for Card entity
 		if r.Decks.Generate && e.Name == "Card" {
 			// TODO: Options based on current deck selected (@runtime) ?
 			for _, t := range r.Entities {
 				c.TypeField.EditWidget.Options = append(c.TypeField.EditWidget.Options,
-					EditWidgetOption{Text: t.Name, Value: t.Name},
+					EditWidgetOption{Text: t.Name, Value: inflection.Plural(t.Name)},
 				)
 			}
 		}
-
-		c.init()
-		e.Fields = append(e.Fields, c.IDField)
-		e.Fields = append(e.Fields, c.TypeField)
 	}
 
 	e.fields = make(map[string]*Field)
@@ -374,6 +372,10 @@ func (e *Entity) GetProtoFields() []string {
 		fields = append(fields, p.ProtoDefinitions(&index)...)
 	}
 
+	for _, c := range e.References {
+		fields = append(fields, c.IDField.ProtoDefinition(&index), c.TypeField.ProtoDefinition(&index))
+	}
+
 	return fields
 }
 
@@ -416,6 +418,15 @@ func (e *Entity) GetStruct(op string) string {
 			case "insert", "merge", "update":
 				fields = append(fields, fmt.Sprintf("entity.%sID", p.Name))
 			}
+		}
+	}
+
+	for _, c := range e.References {
+		switch op {
+		case "get", "list":
+			fields = append(fields, fmt.Sprintf("&entity.%s", c.IDField.Name), fmt.Sprintf("&entity.%s", c.TypeField.Name))
+		case "insert", "merge", "update":
+			fields = append(fields, fmt.Sprintf("entity.%s", c.IDField.Name), fmt.Sprintf("entity.%s", c.TypeField.Name))
 		}
 	}
 
