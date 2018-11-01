@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"log"
-	"os"
 
 	"github.com/fluxynet/gocipe/generators/admin"
 	"github.com/fluxynet/gocipe/generators/application"
@@ -42,14 +41,14 @@ var generateCmd = &cobra.Command{
 			log.Fatalln("[loadRecipe]", err)
 		}
 
-		file, err := os.OpenFile("gocipe.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-		defer file.Close()
-		if err != nil {
-			log.Fatalln("Failed to open log file for output.")
-		}
+		// file, err := os.OpenFile("gocipe.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		// defer file.Close()
+		// if err != nil {
+		// 	log.Fatalln("Failed to open log file for output.")
+		// }
 
 		out := &output.Output{}
-		out.SetOutput(file)
+		// out.SetOutput(file)
 
 		// out.Fatalln("Hello")
 
