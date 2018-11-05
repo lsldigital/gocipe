@@ -111,11 +111,11 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, errors.WithStack(err)
 }
@@ -169,11 +169,11 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, nil
 }
@@ -250,12 +250,12 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
-	
+
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
-
+	{{- end}}
+	
 	return &res, nil
 }
 {{- end}}
@@ -351,11 +351,11 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, nil
 }
@@ -411,11 +411,11 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 	
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, nil
 }
