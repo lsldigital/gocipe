@@ -144,6 +144,9 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 	{{- end}}
 
 	res.{{.Name}}, err = models.{{.Name}}Repo.GetWithRel(ctx, req.ID)
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
 
 	{{ if .Admin.Auth.Generate }}
 	passport, err := _guardian.GetPassport(req.GetKey())
