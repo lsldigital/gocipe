@@ -306,6 +306,19 @@ func (e *Entity) GetForeignKeyFields() []string {
 	return related
 }
 
+//GetReferenceFields returns definition of reference fields (used by schema)
+func (e *Entity) GetReferenceFields() []string {
+	var referenced []string
+
+	for _, p := range e.References {
+		referenced = append(referenced,
+			fmt.Sprintf(`"%s" TEXT NOT NULL`, p.IDField.schema.Field),
+			fmt.Sprintf(`"%s" TEXT NOT NULL`, p.TypeField.schema.Field)) //TODO SQL-dialect sensitive
+	}
+
+	return referenced
+}
+
 //GetRelatedTables returns definition of related tables; typically due to many-many relationships (used by schema)
 func (e *Entity) GetRelatedTables() []Relationship {
 	var related []Relationship

@@ -8,6 +8,9 @@ CREATE TABLE {{.Table}} (
 	{{- range .GetForeignKeyFields}}
 	{{.}},
 	{{- end}}
+	{{- range .GetReferenceFields}}
+	{{.}},
+	{{- end}}
 	{{- range .TableConstraints}}
 	{{.}},
 	{{- end}}
