@@ -29,7 +29,7 @@ var card = Entity{
 		Relationship{
 			Name:   "CardSchedule",
 			Entity: "CardSchedule",
-			Type:   RelationshipTypeManyOne,
+			Type:   RelationshipTypeOneMany,
 		},
 	},
 	References: []Reference{
@@ -54,6 +54,9 @@ var cardSchedule = Entity{
 			EditWidget: EditWidgetOpts{
 				Type: WidgetTypeTime,
 			},
+			ListWidget: ListWidgetOpts{
+				Type: WidgetTypeTime,
+			},
 		},
 		Field{
 			Label: "Action",
@@ -68,7 +71,7 @@ var cardSchedule = Entity{
 		Relationship{
 			Name:   "Card",
 			Entity: "Card",
-			Type:   RelationshipTypeOneMany,
+			Type:   RelationshipTypeManyOne,
 		},
 	},
 }
