@@ -255,6 +255,11 @@ func (e *Entity) GetAdminFilters() AdminFilters {
 		}
 	}
 
+	for _, c := range e.References {
+		filtersString = append(filtersString, c.IDField.schema.Field, c.TypeField.schema.Field)
+		filters.HasString = true
+	}
+
 	if len(filtersBool) != 0 {
 		filters.BoolFilters = `"` + strings.Join(filtersBool, `","`) + `"`
 	}
