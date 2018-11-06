@@ -63,7 +63,11 @@ var cardSchedule = Entity{
 			Name:  "Action",
 			Type:  "string",
 			EditWidget: EditWidgetOpts{
-				Type: WidgetTypeTextField,
+				Type: WidgetTypeSelect,
+				Options: []EditWidgetOption{
+					EditWidgetOption{Text: "Add", Value: ActionAdd},
+					EditWidgetOption{Text: "Remove", Value: ActionRemove},
+				},
 			},
 		},
 	},

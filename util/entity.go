@@ -17,6 +17,10 @@ const (
 	StatusUnpublished = "unpublished"
 	// StatusPublished "P" for status Published
 	StatusPublished = "published"
+	// ActionAdd for action Add
+	ActionAdd = "add"
+	// ActionRemove for action Remove
+	ActionRemove = "remove"
 )
 
 var (
