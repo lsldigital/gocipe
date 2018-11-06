@@ -264,6 +264,12 @@ func (s Postgres) SQLLoadManyOne(rel Relationship) string {
 		}
 	}
 
+	for _, c := range related.References {
+		fields = append(fields,
+			fmt.Sprintf(`t."%s"`, c.IDField.schema.Field),
+			fmt.Sprintf(`t."%s"`, c.TypeField.schema.Field))
+	}
+
 	return fmt.Sprintf(
 		`SELECT t."id", %s FROM %s t WHERE t."id" IN`,
 		strings.Join(fields, ", "),
@@ -285,6 +291,12 @@ func (s Postgres) SQLLoadOneMany(rel Relationship) string {
 		if rel.Type == RelationshipTypeManyOne {
 			fields = append(fields, fmt.Sprintf(`t."%s"`, rel.ThisID))
 		}
+	}
+
+	for _, c := range related.References {
+		fields = append(fields,
+			fmt.Sprintf(`t."%s"`, c.IDField.schema.Field),
+			fmt.Sprintf(`t."%s"`, c.TypeField.schema.Field))
 	}
 
 	return fmt.Sprintf(
