@@ -149,6 +149,9 @@ func (e *Entity) init(r *Recipe) {
 		if r.Decks.Generate && e.Name == "Card" {
 			// TODO: Options based on current deck selected (@runtime) ?
 			for _, t := range r.Entities {
+				if t.Name == "Card" || t.Name == "CardSchedule" {
+					continue
+				}
 				c.TypeField.EditWidget.Options = append(c.TypeField.EditWidget.Options,
 					EditWidgetOption{Text: t.Name, Value: inflection.Plural(t.Name)},
 				)

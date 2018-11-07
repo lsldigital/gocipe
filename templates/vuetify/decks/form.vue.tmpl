@@ -1,0 +1,367 @@
+<template>
+    <div class="px-3 listing--container">
+        <v-toolbar color="transparent" class="listing-toolbar blue-grey darken-3 px-3"
+            dark flat ml-0>
+            <v-btn icon>
+                <v-icon>pages</v-icon>
+            </v-btn>
+            <v-toolbar-title class="ml-0 pl-0">Deck {{ .Deck.Label }}</v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-spacer></v-spacer>
+            <v-btn mr-0 class="success" color="white" small flat @click="create">
+                <v-icon dark>add</v-icon> Add
+            </v-btn>
+        </v-toolbar>
+
+        <!-- Cards Management -->
+        <v-card>
+            <v-card-title class=" pb-0">
+                <div class="headline">Current Arrangement</div>
+            </v-card-title>
+            <v-card-text>
+              <div v-if="loading" centered>
+                <v-progress-linear :indeterminate="true"></v-progress-linear>
+                <p class="text-xs-center">loading cards..</p>
+              </div>
+
+                <div class="deck-builder-container" v-else>
+                        <draggable class="dragArea" v-for="(slot, index) in slots" :key="slot.id" v-model="slot.cards"
+                            :options="{group:{name:'card', put: true} }" @end="updatePosition">
+                            <div class="dragGroup" v-for="card in slot.cards"
+                                :key="card.Id">
+                                <div class="dragItem">
+                                    <v-list-tile>
+                                        <v-icon>drag_indicator</v-icon>
+                                        {{ "{{ card.Label }}" }}
+                                    </v-list-tile>
+                                </div>
+                            </div>
+                          <v-card-actions class="slot-action">
+                              <v-btn icon class="error" small v-if="!isSlotEmpty(slot)" @click.native="deleteTry(slot)">
+                                  <v-icon>delete</v-icon>
+                              </v-btn>
+                              <v-spacer></v-spacer>
+                              <v-btn v-if="isSlotEmpty(slot)" icon class="success"
+                                  small @click.native="create(index)">
+                                  <v-icon>add</v-icon>
+                              </v-btn>
+                              <v-btn v-else icon class="info"
+                                  small @click.native="nestedFormEdit(slot.cards[0].Id, slot.cards[0].Label)">
+                                  <v-icon>edit</v-icon>
+                              </v-btn>
+                          </v-card-actions>
+                      </draggable>
+                </div>
+            </v-card-text>
+        </v-card>
+
+        <!-- Schedules -->
+        <v-card>
+            <v-card-text>
+                <component :is="'CardSchedulesList'" :ref="'cardSchedule'" :nested="true" :filter_field="'deck_machine_name'" :filter_id="'{{ .Deck.Name }}'"/>
+            </v-card-text>
+        </v-card>
+
+        <!-- Remove Action Dialog -->
+        <v-dialog v-model="dialog" persistent max-width="300">
+          <v-card dark>
+            <v-card-title class="headline">Confirm Delete</v-card-title>
+            <v-card-text>
+              You are about to delete
+              <strong>"{{ "{{ deleteItem.label }}" }}"</strong>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn flat @click.native="dialog = false;">Cancel</v-btn>
+              <v-spacer></v-spacer>
+              <v-btn color="error" dark @click.native="deleteConfirm">Yes, Delete</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+        <!-- Edit In Place -->
+        <v-dialog :persistent="true" :lazy="true" v-model="nestedForm.visible" width="auto" class="pa-4" max-width="1000px">
+          <component :is="'CardsEdit'" :key="nestedForm.id" @closeform="nestedFormClose" :visible="nestedForm.visible" :position="nestedForm.pos" :filter_id="nestedForm.id" :nested="true" />
+        </v-dialog>
+        <!-- !# Edit In Place -->
+
+        <v-snackbar v-model="snackbar.show"  :bottom="true"  color="primary" auto-height :timeout="2000">
+          {{ "{{ snackbar.text }}" }}
+          <v-btn dark flat @click="snackbarHide">
+            <v-icon>close</v-icon>
+          </v-btn>
+        </v-snackbar>
+    </div>
+</template>
+
+<script>
+import draggable from "vuedraggable";
+import { AdminClient } from "@/services/service_admin_pb_service";
+import { CreateCardRequest, ListRequest, GetRequest, Filter} from "@/services/service_admin_pb";
+import { DeleteRequest } from "@/services/service_admin_pb";
+import { mapGetters } from 'vuex';
+import { Card } from "@/services/models_pb.js";
+
+let cli = new AdminClient("/api");
+
+export default {
+  components: {
+    draggable
+  },
+  data() {
+    return {
+      dialog: false,
+      loading: false,
+      nestedForm: {
+        visible: null,
+        id: null,
+        label: null,
+        pos: null
+      },
+      deleteItem: {
+        id: null,
+        label: null
+      },
+      snackbar: {
+          show: false, 
+          text: ''
+      },
+      slots: []
+    };
+  },
+  computed: {
+    ...mapGetters({
+      'token': 'auth/getToken'
+    })
+  },
+  created() {
+    // this.loading = true;
+    this.getCards();
+  },
+  methods: {
+    isSlotEmpty(slot) {
+      return (slot.cards.length == 0);
+    },
+    nestedFormEdit(editid, name) {
+      this.nestedForm = {
+        visible: true,
+        id: editid,
+        label: name
+      };
+    },
+    nestedFormClose() {
+      // clear and reset nested form
+      this.getCards();
+      this.$refs.cardSchedule.getList();
+      this.nestedForm = {
+        visible: false,
+        id: "",
+        label: ""
+      };
+    },
+    initDeckSlots: function() {
+      for (var i=0;i<{{ .Deck.Slots }};i++) {
+        this.slots[i] = {
+          cards: []
+        };
+      }
+    },
+    getCards: function() {
+      let req = new ListRequest();
+
+      let deckFilter = new Filter();
+      deckFilter.setField("deck_machine_name");
+      deckFilter.setOperation("=");
+      deckFilter.setValue("{{ .Deck.Name }}");
+      req.addFilters(deckFilter);
+
+      let token = this.token
+      req.setKey(token);
+
+      this.loading = true;
+      cli.listCards(req, (err, resp) => {
+        this.loading = false;
+        if (err) {
+          console.log(err);
+          this.snackbarShow(err.message, "error");
+          return;
+        }
+        this.snackbarShow('Cards Loaded');
+        
+        // resets deck
+        this.initDeckSlots();
+
+        resp.getCardsList().map(entity => {
+          let position = entity.getPosition();
+          let slot = this.slots[position];
+          if (typeof slot !== 'undefined' || position < {{ .Deck.Slots }}){
+            new Promise(function(resolve, reject) {
+              let entityId = entity.getEntity();
+              let entityType = entity.getEntitytype();
+              
+              if (entityType == "" || entityId == "") {
+                resolve("[ No entity specified ]")
+              }
+
+              let req = new GetRequest();
+
+              req.setKey(token);
+              req.setId(entityId);
+
+              {{ range $i, $v := .Entities -}}
+              if (entityType == "{{ plural .Name }}") {
+                cli.get{{ .Name }}(req, (err, resp) => {
+                  if (err) {
+                    return reject(err);
+                  }
+                  if (resp == null) {
+                    return reject("resp null");
+                  }
+                  let ent = resp.get{{ .Name }}();
+                  resolve("[{{ .Name }}] "+ent.get{{ ucfirst .LabelField }}());
+                });
+              }{{if ne (plus1 $i) (len $.Entities)}} else {{end -}}
+              {{end}}
+            }).then((label) => {
+              slot.cards = [
+                {
+                  Id: entity.getId(),
+                  Label: label
+                }
+              ]
+            });
+          }
+        });
+        
+      });
+    },
+    create: function(position) {
+      let req = new CreateCardRequest();
+      req.setKey(this.token);
+
+      let entity = new Card();
+      entity.setDeckmachinename("{{ .Deck.Name }}");
+      if (typeof position !== 'undefined' && Number.isInteger(position)) {
+        entity.setPosition(position+"")
+      }
+      req.setCard(entity);
+      
+      this.snackbarShow('Loading Cards');
+
+      cli.createCard(req, (err, resp) => {
+        if (err) {
+          console.log(err);
+          this.snackbarShow("Create Error " + err.message, "error");
+          return;
+        }
+ 
+        this.nestedForm = {
+          visible: true,
+          id: resp.getCard().getId(),
+          label: ""
+        };
+      });
+    },
+    updatePosition: function() {
+      console.log("postion updated")
+      return true;
+    },
+    deleteTry: function(slot) {
+        if (this.isSlotEmpty(slot)) {
+          return;
+        }
+        this.deleteItem = { id: slot.cards[0].Id, label: slot.cards[0].Label };
+        this.dialog = true;
+    },
+    deleteConfirm: function() {
+
+        let req = new DeleteRequest();
+        req.setKey(this.token);
+        req.setId(this.deleteItem.id)
+
+        cli.deleteCard(req, (err, resp) => {
+          if (err) {
+              console.log(err);
+              this.snackbarShow("Delete error: " + err.message, "error");
+              return;
+          }
+
+          this.snackbarShow('Deleted', this.deleteItem.label);
+          this.getCards();
+        });
+
+        this.dialog = false;
+
+    },
+    snackbarShow: function(text, color) {
+      this.snackbar.show = true;
+      this.snackbar.color = color || 'info';
+      this.snackbar.text = text || 'something happened';
+    },
+    snackbarHide: function() {
+      this.snackbar.show = false
+    }
+  },
+};
+</script>
+
+
+<style lang="scss">
+.deck-builder-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-rows: 1fr;
+  grid-gap: 15px;
+
+  .dragArea {
+    position: relative;
+
+    &:hover {
+      .slot-action {
+        transition: opacity 0.2s ease-out;
+        // height: 40px;
+        opacity: 1;
+      }
+    }
+
+    .slot-action {
+      position: absolute;
+      top: 0;
+      transform: translateY(-50%);
+      opacity: 0;
+      //   transition: height 0.2s ease-in;
+      //   height: 0;
+      margin: 0;
+      padding: 0;
+      width: calc(100% - 30px);
+      //   position: relative;
+      left: 15px;
+    }
+  }
+}
+
+.dragArea {
+  width: 100%;
+  min-height:80px;
+  padding-top: 10px;
+  height: auto;
+  display: block;
+
+  border: 5px dashed lightgray;
+  border-radius: 10px;
+
+  .dragGroup {
+    .dragItem {
+      cursor: -webkit-grab;
+    }
+    &.sortable-chosen {
+      .dragItem {
+        cursor: grabbing;
+      }
+    }
+
+    &.sortable-drag {
+      background: green;
+    }
+  }
+}
+</style>

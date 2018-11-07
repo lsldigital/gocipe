@@ -45,10 +45,32 @@ func Generate(out *output.Output, r *util.Recipe) {
 		out.GenerateAndOverwrite("Vuetify Edit", "vuetify/forms/edit.vue.tmpl", filepath.Join(filePath, fileName+"Edit.vue"), output.WithHeader, data)
 		forms = append(forms, inflection.Plural(data.Entity.Name)+"Edit")
 	}
-
+	// routes
 	out.GenerateAndOverwrite("GenerateVuetify Routes", "vuetify/js/routes.js.tmpl", filepath.Join(dstPath, "/routes.js"), output.WithHeader, struct {
 		Entities []util.Entity
 	}{menuEntities})
+
+	// decks
+	if r.Decks.Generate {
+		out.GenerateAndOverwrite("GenerateVuetify Routes Decks", "vuetify/decks/routes.js.tmpl", filepath.Join(dstPath, "/decks/routes.js"), output.WithHeader, struct {
+			Decks []util.DeckOpts
+		}{r.Decks.Decks})
+
+		for _, deck := range r.Decks.Decks {
+			entities := make([]util.Entity, 0)
+			for _, name := range deck.EntityTypeWhitelist {
+				e, err := r.GetEntity(name)
+				if err != nil {
+					continue
+				}
+				entities = append(entities, *e)
+			}
+			out.GenerateAndOverwrite("GenerateVuetify Deck", "vuetify/decks/form.vue.tmpl", filepath.Join(dstPath, "/decks/"+deck.Name+".vue"), output.WithHeader, struct {
+				Deck     util.DeckOpts
+				Entities []util.Entity
+			}{deck, entities})
+		}
+	}
 
 	widgets := map[string]string{
 		"EditWidgetIcon":       "edit/Icon.vue",

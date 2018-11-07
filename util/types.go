@@ -280,8 +280,8 @@ type DeckOpts struct {
 	// Slots represents the maximum number of cards the deck can hold
 	Slots int64 `json:"slots"`
 
-	// EntitiyTypeWhitelist represents the allowed entity types of the cards in the deck
-	EntitiyTypeWhitelist []string `json:"entity_type_whitelist"`
+	// EntityTypeWhitelist represents the allowed entity types of the cards in the deck
+	EntityTypeWhitelist []string `json:"entity_type_whitelist"`
 }
 
 // EditWidgetOpts represents a UI widget for edit forms
