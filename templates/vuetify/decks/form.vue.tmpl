@@ -32,6 +32,7 @@
                                 <div class="dragItem">
                                     <v-list-tile>
                                         <v-icon>drag_indicator</v-icon>
+                                        <v-icon>{{ "{{ card.Icon }}" }}</v-icon>&nbsp;
                                         {{ "{{ card.Label }}" }}
                                     </v-list-tile>
                                 </div>
@@ -174,7 +175,7 @@ export default {
       deckFilter.setValue("{{ .Deck.Name }}");
       req.addFilters(deckFilter);
 
-      let token = this.token
+      let token = this.token;
       req.setKey(token);
 
       this.loading = true;
@@ -217,15 +218,16 @@ export default {
                     return reject("resp null");
                   }
                   let ent = resp.get{{ .Name }}();
-                  resolve("[{{ .Name }}] "+ent.get{{ ucfirst .LabelField }}());
+                  resolve([ent.get{{ ucfirst .LabelField }}(), "{{ .Vuetify.Icon }}"]);
                 });
               }{{if ne (plus1 $i) (len $.Entities)}} else {{end -}}
               {{end}}
-            }).then((label) => {
+            }).then(([label, icon]) => {
               slot.cards = [
                 {
                   Id: entity.getId(),
-                  Label: label
+                  Label: label,
+                  Icon: icon
                 }
               ]
             });
