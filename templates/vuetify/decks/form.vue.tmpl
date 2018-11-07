@@ -200,7 +200,7 @@ export default {
               let entityType = entity.getEntitytype();
               
               if (entityType == "" || entityId == "") {
-                resolve("[ No entity specified ]")
+                resolve(["No entity specified", "warning"])
               }
 
               let req = new GetRequest();
