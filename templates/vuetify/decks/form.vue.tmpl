@@ -248,48 +248,50 @@ export default {
     setSlotInfo: function(entity) {
       let position = entity.getPosition();
       let slot = this.slots[position];
+      let token = this.token;
 
-      if (typeof slot !== 'undefined' || position < {{ .Deck.Slots }}){
-        let token = this.token;
+      new Promise(function(resolve, reject) {
 
-        new Promise(function(resolve, reject) {
-          let entityId = entity.getEntity();
-          let entityType = entity.getEntitytype();
-          
-          if (entityType == "" || entityId == "") {
-            resolve(["No entity specified", "warning"])
-          }
+        if (typeof slot === 'undefined' || position > {{ .Deck.Slots }}){
+          return reject("slot or position invalid");            
+        }
 
-          let req = new GetRequest();
+        let entityId = entity.getEntity();
+        let entityType = entity.getEntitytype();
+        
+        if (entityType == "" || entityId == "") {
+          resolve([slot, entity, "No entity specified", "warning"])
+        }
 
-          req.setKey(token);
-          req.setId(entityId);
+        let req = new GetRequest();
 
-          {{ range $i, $v := .Entities -}}
-          if (entityType == "{{ plural .Name }}") {
-            cli.get{{ .Name }}(req, (err, resp) => {
-              if (err) {
-                return reject(err);
-              }
-              if (resp == null) {
-                return reject("resp null");
-              }
-              let ent = resp.get{{ .Name }}();
-              resolve([ent.get{{ ucfirst .LabelField }}(), "{{ .Vuetify.Icon }}"]);
-            });
-          }{{if ne (plus1 $i) (len $.Entities)}} else {{end -}}
-          {{end}}
-        }).then(([label, icon]) => {
-          slot.cards = [
-            {
-              Id: entity.getId(),
-              Label: label,
-              Icon: icon,
-              Entity: entity
+        req.setKey(token);
+        req.setId(entityId);
+
+        {{ range $i, $v := .Entities -}}
+        if (entityType == "{{ plural .Name }}") {
+          cli.get{{ .Name }}(req, (err, resp) => {
+            if (err) {
+              return reject(err);
             }
-          ]
-        });
-      }
+            if (resp == null) {
+              return reject("resp null");
+            }
+            let ent = resp.get{{ .Name }}();
+            resolve([slot, ent, ent.get{{ ucfirst .LabelField }}(), "{{ .Vuetify.Icon }}"]);
+          });
+        }{{if ne (plus1 $i) (len $.Entities)}} else {{end -}}
+        {{end}}
+      }).then(([slot, entity, label, icon]) => {
+        slot.cards = [
+          {
+            Id: entity.getId(),
+            Label: label,
+            Icon: icon,
+            Entity: entity
+          }
+        ]
+      });
     },
     deleteTry: function(slot) {
         if (this.isSlotEmpty(slot)) {
