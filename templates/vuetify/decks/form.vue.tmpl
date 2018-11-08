@@ -26,7 +26,7 @@
 
                 <div class="deck-builder-container" v-else>
                         <draggable class="dragArea" v-for="(slot, index) in slots" :key="slot.id" v-model="slot.cards"
-                            :options="{group:{name:'card', put: true} }" @end="updatePosition">
+                            :options="{group:{name:'card', put: true} }">
                             <div class="dragGroup" v-for="card in slot.cards"
                                 :key="card.Id">
                                 <div class="dragItem">
@@ -175,8 +175,7 @@ export default {
       deckFilter.setValue("{{ .Deck.Name }}");
       req.addFilters(deckFilter);
 
-      let token = this.token;
-      req.setKey(token);
+      req.setKey(this.token);
 
       this.loading = true;
       cli.listCards(req, (err, resp) => {
@@ -192,46 +191,7 @@ export default {
         this.initDeckSlots();
 
         resp.getCardsList().map(entity => {
-          let position = entity.getPosition();
-          let slot = this.slots[position];
-          if (typeof slot !== 'undefined' || position < {{ .Deck.Slots }}){
-            new Promise(function(resolve, reject) {
-              let entityId = entity.getEntity();
-              let entityType = entity.getEntitytype();
-              
-              if (entityType == "" || entityId == "") {
-                resolve(["No entity specified", "warning"])
-              }
-
-              let req = new GetRequest();
-
-              req.setKey(token);
-              req.setId(entityId);
-
-              {{ range $i, $v := .Entities -}}
-              if (entityType == "{{ plural .Name }}") {
-                cli.get{{ .Name }}(req, (err, resp) => {
-                  if (err) {
-                    return reject(err);
-                  }
-                  if (resp == null) {
-                    return reject("resp null");
-                  }
-                  let ent = resp.get{{ .Name }}();
-                  resolve([ent.get{{ ucfirst .LabelField }}(), "{{ .Vuetify.Icon }}"]);
-                });
-              }{{if ne (plus1 $i) (len $.Entities)}} else {{end -}}
-              {{end}}
-            }).then(([label, icon]) => {
-              slot.cards = [
-                {
-                  Id: entity.getId(),
-                  Label: label,
-                  Icon: icon
-                }
-              ]
-            });
-          }
+          this.setSlotInfo(entity)
         });
         
       });
@@ -246,8 +206,6 @@ export default {
         entity.setPosition(position+"")
       }
       req.setCard(entity);
-      
-      this.snackbarShow('Loading Cards');
 
       cli.createCard(req, (err, resp) => {
         if (err) {
@@ -263,9 +221,75 @@ export default {
         };
       });
     },
-    updatePosition: function() {
-      console.log("postion updated")
-      return true;
+    updatePosition: function(slot, position) {
+      let req = new UpdateCardRequest();
+      
+      if (typeof position === 'undefined' || !Number.isInteger(position)) {
+        this.snackbarShow("Invalid position", "error");
+        return;
+      }
+
+      slot.Entity.setPosition(position);
+      req.setCard(slot.Entity);
+
+      cli.updateCard(req, (err, resp) => {
+          if (err) {
+              console.log(err);
+              this.snackbarShow(err.message, "error");
+              return;
+          }
+
+          this.snackbarShow('Card Saved');
+          
+          let ent = resp.getCard();
+          this.setSlotInfo(ent);
+      });
+    },
+    setSlotInfo: function(entity) {
+      let position = entity.getPosition();
+      let slot = this.slots[position];
+
+      if (typeof slot !== 'undefined' || position < {{ .Deck.Slots }}){
+        let token = this.token;
+
+        new Promise(function(resolve, reject) {
+          let entityId = entity.getEntity();
+          let entityType = entity.getEntitytype();
+          
+          if (entityType == "" || entityId == "") {
+            resolve(["No entity specified", "warning"])
+          }
+
+          let req = new GetRequest();
+
+          req.setKey(token);
+          req.setId(entityId);
+
+          {{ range $i, $v := .Entities -}}
+          if (entityType == "{{ plural .Name }}") {
+            cli.get{{ .Name }}(req, (err, resp) => {
+              if (err) {
+                return reject(err);
+              }
+              if (resp == null) {
+                return reject("resp null");
+              }
+              let ent = resp.get{{ .Name }}();
+              resolve([ent.get{{ ucfirst .LabelField }}(), "{{ .Vuetify.Icon }}"]);
+            });
+          }{{if ne (plus1 $i) (len $.Entities)}} else {{end -}}
+          {{end}}
+        }).then(([label, icon]) => {
+          slot.cards = [
+            {
+              Id: entity.getId(),
+              Label: label,
+              Icon: icon,
+              Entity: entity
+            }
+          ]
+        });
+      }
     },
     deleteTry: function(slot) {
         if (this.isSlotEmpty(slot)) {
