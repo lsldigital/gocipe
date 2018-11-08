@@ -361,8 +361,7 @@ export default {
         update: function() {
     
             let req = new Update{{.Entity.Name}}Request();
-
-            {{- if .Entity.ContentBuilder.Generate }}
+            {{ if .Entity.ContentBuilder.Generate }}
             // Save Lardwaz content only if there are blocks
             if (this.getLardwaz.length) {
                 this.entity.setContent(JSON.stringify(this.getLardwaz));
