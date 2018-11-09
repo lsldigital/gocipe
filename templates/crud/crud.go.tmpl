@@ -187,7 +187,8 @@ func (repo {{.Name}}Repositorium) InsertWithRel(ctx context.Context, entity *{{.
 	}
 
 	{{range .Relationships}}{{if (eq "many-many-owner" .Type) }}
-	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{$entity.Name}}...)
+
+	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{.Name}}...)
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.InsertWithRel save related {{.Name}} error")
 		tx.Rollback()
@@ -977,7 +978,7 @@ func (repo {{.Name}}Repositorium) UpdateWithRel(ctx context.Context, entity *{{.
 	}
 
 	{{range .Relationships}}{{if (eq "many-many-owner" .Type) }}
-	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{$entity.Name}}...)
+	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{.Name}}...)
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.UpdateWithRel save related {{.Name}} error")
 		tx.Rollback()
@@ -1178,7 +1179,7 @@ func (repo {{.Name}}Repositorium) MergeWithRel(ctx context.Context, entity *{{.N
 	}
 
 	{{range .Relationships}}{{if (eq "many-many-owner" .Type) }}
-	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{$entity.Name}}...)
+	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{.Name}}...)
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "error": err}).Error("repo.{{$entity.Name}}.MergeWithRel load related {{.Name}} error")
 		tx.Rollback()
@@ -1428,7 +1429,7 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 {{range .Relationships}}
 {{if or (eq "many-many-owner" .Type) }}
 // Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table (many-many-owner relationship)
-func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...string) error {
+func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{.Entity}}) error {
 	var (
 		stmt *sql.Stmt
 		err  error
@@ -1482,7 +1483,7 @@ func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *
 
 		_, err = stmt.Exec(idthis, rel.ID)
 		if err != nil {
-			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save query exec " + rel.Name + " error")
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save query exec error")
 			tx.Rollback()
 			return errors.WithStack(err)
 		}
@@ -1500,7 +1501,7 @@ func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *
 }
 
 // Save{{.Name}}IDs is a helper function to save related {{.Name}} IDs in a pivot table (many-many-owner relationship)
-func (repo {{$entity.Name}}Repositorium) Save{{.Name}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ... string) error {
+func (repo {{$entity.Name}}Repositorium) Save{{.Name}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...string) error {
 	var (
 		stmt *sql.Stmt
 		err  error
