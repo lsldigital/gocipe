@@ -717,7 +717,7 @@ func (repo {{.Name}}Repositorium) DeleteMany(ctx context.Context, tx *sql.Tx, au
 	{{range .SQLDeleteManyJoin}}
 	stmt, err = tx.Prepare("{{.}}"+query+")")
 	if err != nil {
-		log.WithFields(log.Fields{"filters": filters, "query": {{.}}"+query+")", "error": err}).Error("repo.{{$entity.Name}}.DeleteMany query error")
+		log.WithFields(log.Fields{"filters": filters, "query": "{{.}}"+query+")", "error": err}).Error("repo.{{$entity.Name}}.DeleteMany query error")
 		return errors.WithStack(err)
 	}
 
