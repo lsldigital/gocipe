@@ -627,8 +627,8 @@ func (repo {{.Name}}Repositorium) Delete(ctx context.Context, entity *{{.Name}},
 	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID)
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.Delete save related {{.Name}} error")
-		{# tx.Rollback() #}
-		{# return errors.WithStack(err) #}
+	    tx.Rollback()
+	    return errors.WithStack(err)
 	}
 	if err = util.CheckContext(ctx); err != nil {
 		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.Delete context error")
@@ -717,13 +717,13 @@ func (repo {{.Name}}Repositorium) DeleteMany(ctx context.Context, tx *sql.Tx, au
 	{{range .SQLDeleteManyJoin}}
 	stmt, err = tx.Prepare("{{.}}"+query+")")
 	if err != nil {
-		log.WithFields(log.Fields{"filters": filters, "query": {{.}}"+query+")", "error": err}).Error("repo.{{.Name}}.DeleteMany query error")
+		log.WithFields(log.Fields{"filters": filters, "query": {{.}}"+query+")", "error": err}).Error("repo.{{$entity.Name}}.DeleteMany query error")
 		return errors.WithStack(err)
 	}
 
 	_, err = stmt.Exec(values...)
 	if err != nil {
-		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.Name}}.DeleteMany query exec error")
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{$entity.Name}}.DeleteMany query exec error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
