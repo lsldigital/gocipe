@@ -108,6 +108,7 @@ func setSlug(id string, value string, table string, field string) {
 		}
 
 		stmt, err := tx.Prepare(`UPDATE ` + table + ` SET ` + field + ` = $1 WHERE id = $2`)
+		defer stmt.Close()
 		if err != nil {
 			tx.Rollback()
 			continue

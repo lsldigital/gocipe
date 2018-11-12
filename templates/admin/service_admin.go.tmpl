@@ -490,6 +490,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 	}
 	
 	stmt, err := tx.Prepare(`UPDATE {{.Table}} SET `+fieldname+` = $1 WHERE id = $2`)
+	defer stmt.Close()
 	if err != nil {
 		files.Delete(fileDiskPath)
 		return &res, errors.WithStack(err)
