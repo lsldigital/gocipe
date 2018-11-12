@@ -261,6 +261,21 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 	
 	return &res, nil
 }
+
+// Count{{plural .Name}} allows counting of listing all entity of type {{.Name}}
+func(s Service) Count{{plural .Name}}(ctx context.Context, req *ListRequest) (*CountResponse, error) {
+	var (
+		res  CountResponse
+		err  error
+		filters []*models.Filter
+	)
+	
+	res.Count, err = models.{{.Name}}Repo.Count(ctx, req.ListOpts, filters...)
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+	return &res, nil
+}
 {{- end}}
 
 {{if .Admin.Update -}}
