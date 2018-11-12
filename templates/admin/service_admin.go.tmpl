@@ -444,7 +444,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 			// Deep copy needed to prevent unwanted changes to global options "{{$EntityName}}{{.Name}}UploadOpts"
 			opts, _ := copystructure.Copy(&{{$EntityName}}{{.Name}}UploadOpts)
 			options = opts.(*files.UploadOptions)
-			fieldname = "{{.Name}}"
+			fieldname = "{{.GetSchemaName}}"
 		{{- end}}
 		{{- if and (.ContentBuilder.Generate) (.ContentBuilder.AllowUpload)}}
 		{{- range .ContentBuilder.UploadTypes}}
