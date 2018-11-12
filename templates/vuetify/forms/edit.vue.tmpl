@@ -324,6 +324,11 @@ export default {
             } else {
                 this.id = this.$route.params.id;
             }
+
+            if (this.nested && typeof this.id === 'undefined') {
+                return;
+            }
+
             let req = new GetRequest();
             req.setId(this.id);
 
@@ -356,8 +361,7 @@ export default {
         update: function() {
     
             let req = new Update{{.Entity.Name}}Request();
-
-            {{- if .Entity.ContentBuilder.Generate }}
+            {{ if .Entity.ContentBuilder.Generate }}
             // Save Lardwaz content only if there are blocks
             if (this.getLardwaz.length) {
                 this.entity.setContent(JSON.stringify(this.getLardwaz));
@@ -367,7 +371,6 @@ export default {
             req.set{{ ucfirst .Entity.Name}}(this.entity);
             // this.loading = true;
 
-            this.snackbarShow('{{ucfirst .Entity.Name}} Saved');
             /* this.debug(); */
 
             cli.update{{.Entity.Name}}(req, (err, resp) => {
@@ -377,6 +380,8 @@ export default {
                     return;
                 }
 
+                this.snackbarShow('{{ucfirst .Entity.Name}} Saved');
+                
                 // this.loading = false;
                 if (this.nested) {
                     this.$emit("closeform", true);

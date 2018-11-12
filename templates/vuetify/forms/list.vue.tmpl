@@ -314,7 +314,7 @@ export default {
           req.set{{ucfirst .Entity.Name}}(existingEntity);
         } else if (this.nested) {
           let entity = new {{.Entity.Name}}();
-          entity[this.rpc](this.filter_id);
+          // entity[this.rpc](this.filter_id);
           req.set{{ucfirst .Entity.Name}}(entity);
         }
 
@@ -346,7 +346,7 @@ export default {
         });
       },
       deleteTry: function(id, label) {
-          this.deleteItemId = { id: id, label, label };
+          this.deleteItemId = { id: id, label: label };
           this.dialog = true;
       },
       deleteConfirm: function() {

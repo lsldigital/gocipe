@@ -60,7 +60,7 @@ var generateCmd = &cobra.Command{
 			admin.Generate(out, rcp)
 		}
 
-		if generateAdmin {
+		if generateAuth {
 			auth.Generate(out)
 		}
 

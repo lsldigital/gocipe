@@ -26,7 +26,7 @@ func Generate(out *output.Output, r *util.Recipe) {
 		}
 
 		if entity.HasAdminHooks() {
-			out.GenerateAndOverwrite("GenerateAdmin Hooks"+entity.Name, "admin/service_admin_hooks.go.tmpl", fmt.Sprintf(
+			out.GenerateAndOverwrite("GenerateAdmin Hooks "+entity.Name, "admin/service_admin_hooks.go.tmpl", fmt.Sprintf(
 				"services/admin/%s_hooks.gocipe.go", strings.ToLower(entity.Name)), output.WithoutHeader, struct {
 				Entity     util.Entity
 				ImportPath string

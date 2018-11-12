@@ -1,0 +1,20 @@
+{{- range .Decks -}}
+// {{.Name}} - {{.Description}}
+import {{.Name}}Deck from "./{{.Name}}.vue";
+{{end}}
+let routes = [
+  {{- range $i, $v := .Decks}}
+  {
+    path: "{{lower .Name}}",
+    name: "{{lower .Name}}_deck",
+    component: {{.Name}}Deck,
+    meta: {
+      entity: "{{.Label}}",
+      showInMenu: true,
+      icon: "lock"
+    }
+  }{{if ne (plus1 $i) (len $.Decks)}},{{end}}
+  {{- end}}
+];
+
+export default routes;

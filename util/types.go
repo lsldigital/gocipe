@@ -254,7 +254,7 @@ type VuetifyEntityOpts struct {
 // DecksOpts represents options for decks generator
 type DecksOpts struct {
 	// Generate represents whether or not to generate decks
-	Generate bool `json:"embed"`
+	Generate bool `json:"generate"`
 
 	// Decks represents list of decks to generate
 	Decks []DeckOpts `json:"decks"`
@@ -280,8 +280,8 @@ type DeckOpts struct {
 	// Slots represents the maximum number of cards the deck can hold
 	Slots int64 `json:"slots"`
 
-	// EntitiyTypeWhitelist represents the allowed entity types of the cards in the deck
-	EntitiyTypeWhitelist []string `json:"entity_type_whitelist"`
+	// EntityTypeWhitelist represents the allowed entity types of the cards in the deck
+	EntityTypeWhitelist []string `json:"entity_type_whitelist"`
 }
 
 // EditWidgetOpts represents a UI widget for edit forms

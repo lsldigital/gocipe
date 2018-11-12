@@ -10,7 +10,7 @@ import (
 )
 
 
-{{range .Entities}}
+{{range $i, $entity := .Entities}}
 //[BEGIN] {{.Name}}
 
 // Insert performs an SQL insert for {{.Name}} record and update instance with inserted id. Prefer using Save instead of Insert directly.
@@ -187,15 +187,16 @@ func (repo {{.Name}}Repositorium) InsertWithRel(ctx context.Context, entity *{{.
 	}
 
 	{{range .Relationships}}{{if (eq "many-many-owner" .Type) }}
-	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{$.Name}}...)
+
+	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{.Name}}...)
 	if err != nil {
-		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$.Name}}.InsertWithRel save related {{.Name}} error")
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.InsertWithRel save related {{.Name}} error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$.Name}}.InsertWithRel context error")
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.InsertWithRel context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -315,15 +316,15 @@ func (repo {{.Name}}Repositorium) GetWithRel(ctx context.Context, id string) (*{
 	{{range .Relationships}}
 	err = repo.Load{{.Name}}(ctx, entity)
 	if err != nil {
-		log.WithFields(log.Fields{"id": id, "error": err}).Error("repo.{{$.Name}}.Get load related {{.Name}} error")
+		log.WithFields(log.Fields{"id": id, "error": err}).Error("repo.{{$entity.Name}}.Get load related {{.Name}} error")
 		return nil, err
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{$.Name}}.Get context error")
+		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{$entity.Name}}.Get context error")
 		return nil, err
 	}
-	log.WithFields(log.Fields{"id": id}).Debug("repo.{{$.Name}}.GetWithRel related {{.Name}} loaded")
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{$entity.Name}}.GetWithRel related {{.Name}} loaded")
 	{{end}}
 
 	return entity, nil
@@ -454,15 +455,15 @@ func (repo {{.Name}}Repositorium) ListWithRel(ctx context.Context, opts *ListOpt
 	{{range .Relationships}}
 	err = repo.Load{{.Name}}(ctx, entities...)
 	if err != nil {
-		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{$.Name}}.ListWithRel list related {{.Name}} error")
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{$entity.Name}}.ListWithRel list related {{.Name}} error")
 		return nil, err
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{$.Name}}.ListWithRel context error")
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{$entity.Name}}.ListWithRel context error")
 		return nil, err
 	}
-	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{$.Name}}.ListWithRel related {{.Name}} listed")
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{$entity.Name}}.ListWithRel related {{.Name}} listed")
 	{{end}}
 
 	return entities, nil
@@ -549,15 +550,15 @@ func (repo {{.Name}}Repositorium) SelectWithRel(ctx context.Context, opts *ListO
 	{{range .Relationships}}
 	err = repo.Load{{.Name}}(ctx, entities...)
 	if err != nil {
-		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Error("repo.{{$.Name}}.SelectWithRel list related {{.Name}} error")
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Error("repo.{{$entity.Name}}.SelectWithRel list related {{.Name}} error")
 		return nil, err
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Info("repo.{{$.Name}}.SelectWithRel context error")
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Info("repo.{{$entity.Name}}.SelectWithRel context error")
 		return nil, err
 	}
-	log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{$.Name}}.SelectWithRel related {{.Name}} listed")
+	log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{$entity.Name}}.SelectWithRel related {{.Name}} listed")
 	{{end}}
 
 	return entities, nil
@@ -626,12 +627,12 @@ func (repo {{.Name}}Repositorium) Delete(ctx context.Context, entity *{{.Name}},
 	{{range .Relationships}}{{if (eq "many-many-owner" .Type) }}
 	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID)
 	if err != nil {
-		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$.Name}}.Delete save related {{.Name}} error")
-		{# tx.Rollback() #}
-		{# return errors.WithStack(err) #}
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.Delete save related {{.Name}} error")
+	    tx.Rollback()
+	    return errors.WithStack(err)
 	}
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$.Name}}.Delete context error")
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.Delete context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -717,13 +718,13 @@ func (repo {{.Name}}Repositorium) DeleteMany(ctx context.Context, tx *sql.Tx, au
 	{{range .SQLDeleteManyJoin}}
 	stmt, err = tx.Prepare("{{.}}"+query+")")
 	if err != nil {
-		log.WithFields(log.Fields{"filters": filters, "query": {{.}}"+query+")", "error": err}).Error("repo.{{.Name}}.DeleteMany query error")
+		log.WithFields(log.Fields{"filters": filters, "query": "{{.}}"+query+")", "error": err}).Error("repo.{{$entity.Name}}.DeleteMany query error")
 		return errors.WithStack(err)
 	}
 
 	_, err = stmt.Exec(values...)
 	if err != nil {
-		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.Name}}.DeleteMany query exec error")
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{$entity.Name}}.DeleteMany query exec error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -977,14 +978,14 @@ func (repo {{.Name}}Repositorium) UpdateWithRel(ctx context.Context, entity *{{.
 	}
 
 	{{range .Relationships}}{{if (eq "many-many-owner" .Type) }}
-	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{$.Name}}...)
+	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{.Name}}...)
 	if err != nil {
-		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$.Name}}.UpdateWithRel save related {{.Name}} error")
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.UpdateWithRel save related {{.Name}} error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$.Name}}.UpdateWithRel context error")
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.UpdateWithRel context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -1178,14 +1179,14 @@ func (repo {{.Name}}Repositorium) MergeWithRel(ctx context.Context, entity *{{.N
 	}
 
 	{{range .Relationships}}{{if (eq "many-many-owner" .Type) }}
-	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{$.Name}}...)
+	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{.Name}}...)
 	if err != nil {
-		log.WithFields(log.Fields{"entity": entity, "error": err}).Error("repo.{{$.Name}}.MergeWithRel load related {{.Name}} error")
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Error("repo.{{$entity.Name}}.MergeWithRel load related {{.Name}} error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$.Name}}.MergeWithRel context error")
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.MergeWithRel context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
@@ -1223,17 +1224,17 @@ func (repo {{.Name}}Repositorium) MergeWithRel(ctx context.Context, entity *{{.N
 {{range .Relationships}}
 {{if or (eq "many-many-owner" .Type) (eq "many-many-inverse" .Type) }}
 // Load{{.Name}} is a helper function to load related {{.Name}} entities
-func (repo {{$.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$.Name}}) error {
+func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
 	var (
 		err error
 		placeholder string
 		values  []interface{}
-		indices = make(map[{{.ThisType}}][]*{{$.Name}})
+		indices = make(map[string][]*{{$entity.Name}})
 	)
 
-	log.WithFields(log.Fields{"entities": entities}).Debug("repo.{{$.Name}}.Load entered")
+	log.WithFields(log.Fields{"entities": entities}).Debug("repo.{{$entity.Name}}.Load entered")
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$.Name}}.Load context error")
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
 		return errors.WithStack(err)
 	} else if len(entities) == 0 {
 		return nil
@@ -1249,31 +1250,31 @@ func (repo {{$.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities .
 	placeholder = strings.TrimRight(placeholder, ",")
 
 	rows, err := repo.db.QueryContext(ctx, `
-		{{$.SQLLoadManyMany .related}} (`+placeholder+`)
+		{{$entity.SQLLoadManyMany .}} (`+placeholder+`)
 	`, values...)
 	if err != nil {
-		log.WithFields(log.Fields{"entities": entities, "query": `{{$.SQLLoadManyMany .related}} (`+placeholder+`)`, "error": err}).Error("repo.{{$.Name}}.Load query error")
+		log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadManyMany .}} (`+placeholder+`)`, "error": err}).Error("repo.{{$entity.Name}}.Load query error")
 		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$.Name}}.Load context error")
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
 		return errors.WithStack(err)
 	}
 
 	for rows.Next() {
 		var (
-			thisID {{.ThisType}}
-			entity {{.related.Name}}
+			thisID string
+			entity {{.GetRelated.Name}}
 		)
-		{{range .related.Fields}}{{range .GetBefore "list"}}{{.}}
+		{{range .GetRelated.Fields}}{{range .GetBefore "list"}}{{.}}
 		{{end}}{{end}}
-		err = rows.Scan(&thisID, {{.related.GetStruct "list"}})
+		err = rows.Scan(&thisID, {{.GetRelated.GetStruct "list"}})
 		if err != nil {
-			log.WithFields(log.Fields{"entities": entities, "query": `{{$.SQLLoadManyMany .related}} (`+placeholder+`)`, "fields": "{{.related.GetStruct "list"}}", "error": err}).Error("repo.{{$.Name}}.Load scan error")
+			log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadManyMany .}} (`+placeholder+`)`, "fields": "{{.GetRelated.GetStruct "list"}}", "error": err}).Error("repo.{{$entity.Name}}.Load scan error")
 			return errors.WithStack(err)
 		}
-		{{range .related.Fields}}{{range .GetAfter "list"}}{{.}}
+		{{range .GetRelated.Fields}}{{range .GetAfter "list"}}{{.}}
 		{{end}}{{end}}
 		
 		for i := range indices[thisID] {
@@ -1281,7 +1282,7 @@ func (repo {{$.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities .
 		}
 		
 		if err = util.CheckContext(ctx); err != nil {
-			log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$.Name}}.Load context error")
+			log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
 			return errors.WithStack(err)
 		}
 	}
@@ -1290,17 +1291,17 @@ func (repo {{$.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities .
 }
 {{else if (eq "many-one" .Type) }}
 // Load{{.Name}} is a helper function to load related {{.Name}} entities
-func (repo {{$.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$.Name}}) error {
+func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
 	var (
 		err error
 		placeholder string
 		values  []interface{}
-		indices = make(map[string][]*{{$.Name}})
+		indices = make(map[string][]*{{$entity.Name}})
 	)
 
-	log.WithFields(log.Fields{"entities": entities}).Debug("repo.{{$.Name}}.Load entered")
+	log.WithFields(log.Fields{"entities": entities}).Debug("repo.{{$entity.Name}}.Load entered")
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$.Name}}.Load context error")
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
 		return errors.WithStack(err)
 	} else if len(entities) == 0 {
 		return nil
@@ -1309,45 +1310,45 @@ func (repo {{$.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities .
 	c := 1
 	for _, entity := range entities {
 		placeholder += "$" + strconv.Itoa(c) + ","
-		indices[entity.{{.ThisID}}] = append(indices[entity.{{.ThisID}}], entity)
-		values = append(values, entity.{{.ThisID}})
+		indices[entity.{{.GetRelatedID}}] = append(indices[entity.{{.GetRelatedID}}], entity)
+		values = append(values, entity.{{.GetRelatedID}})
 		c++
 	}
 	placeholder = strings.TrimRight(placeholder, ",")
 	rows, err := repo.db.QueryContext(ctx, `
-		{{$.SQLLoadManyOne .related}} (`+placeholder+`)
+		{{$entity.SQLLoadManyOne .}} (`+placeholder+`)
 	`, values...)
 	if err != nil {
-		log.WithFields(log.Fields{"entities": entities, "query": `{{$.SQLLoadManyOne .related}} (`+placeholder+`)`, "error": err}).Error("repo.{{$.Name}}.Load query error")
+		log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadManyOne .}} (`+placeholder+`)`, "error": err}).Error("repo.{{$entity.Name}}.Load query error")
 		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$.Name}}.Load context error")
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
 		return errors.WithStack(err)
 	}
 
 	for rows.Next() {
 		var (
 			thatID string
-			thatEntity {{.related.Name}}
+			entity {{.GetRelated.Name}}
 		)
-		{{range .related.Fields}}{{range .GetBefore "list"}}{{.}}
+		{{range .GetRelated.Fields}}{{range .GetBefore "list"}}{{.}}
 		{{end}}{{end}}
-		err = rows.Scan(&thatID, {{.related.GetStruct "list"}})
+		err = rows.Scan(&thatID, {{.GetRelated.GetStruct "list"}})
 		if err != nil {
-			log.WithFields(log.Fields{"entities": entities, "query": `{{$.SQLLoadManyOne .related}} (`+placeholder+`)`, "fields": "{{.related.GetStruct "list"}}", "error": err}).Error("repo.{{$.Name}}.Load scan error")
+			log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadManyOne .}} (`+placeholder+`)`, "fields": "{{.GetRelated.GetStruct "list"}}", "error": err}).Error("repo.{{$entity.Name}}.Load scan error")
 			return errors.WithStack(err)
 		}
-		{{range .related.Fields}}{{range .GetAfter "list"}}{{.}}
+		{{range .GetRelated.Fields}}{{range .GetAfter "list"}}{{.}}
 		{{end}}{{end}}
 
 		for i := range indices[thatID] {
-			indices[thatID][i].{{.Name}} = &thatEntity
+			indices[thatID][i].{{.Name}} = &entity
 		}
 		
 		if err = util.CheckContext(ctx); err != nil {
-			log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$.Name}}.Load context error")
+			log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
 			return errors.WithStack(err)
 		}
 	}
@@ -1356,17 +1357,17 @@ func (repo {{$.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities .
 }
 {{else if (eq "one-many" .Type) }}
 // Load{{.Name}} is a helper function to load related {{.Name}} entities
-func (repo {{$.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$.Name}}) error {
+func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
 	var (
 		err error
 		placeholder string
 		values  []interface{}
-		indices = make(map[{{.ThisType}}][]*{{$.Name}})
+		indices = make(map[string][]*{{$entity.Name}})
 	)
 
-	log.WithFields(log.Fields{"entities": entities}).Debug("repo.{{$.Name}}.Load entered")
+	log.WithFields(log.Fields{"entities": entities}).Debug("repo.{{$entity.Name}}.Load entered")
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$.Name}}.Load context error")
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
 		return errors.WithStack(err)
 	} else if len(entities) == 0 {
 		return nil
@@ -1382,32 +1383,32 @@ func (repo {{$.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities .
 	placeholder = strings.TrimRight(placeholder, ",")
 
 	rows, err := repo.db.QueryContext(ctx, `
-		{{$.SQLLoadOneMany .related}} (`+placeholder+`)
+		{{$entity.SQLLoadOneMany .}} (`+placeholder+`)
 	`, values...)
 	if err != nil {
-		log.WithFields(log.Fields{"entities": entities, "query": `{{$.SQLLoadOneMany .related}} (`+placeholder+`)`, "error": err}).Error("repo.{{$.Name}}.Load query error")
+		log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadOneMany .}} (`+placeholder+`)`, "error": err}).Error("repo.{{$entity.Name}}.Load query error")
 		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$.Name}}.Load context error")
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
 		return errors.WithStack(err)
 	}
 
 	for rows.Next() {
 		var (
-			thisID {{.ThisType}}
-			entity {{.related.Name}}
+			thisID string
+			entity {{.GetRelated.Name}}
 		)
 		
-		{{range .related.Fields}}{{range .GetBefore "list"}}{{.}}
+		{{range .GetRelated.Fields}}{{range .GetBefore "list"}}{{.}}
 		{{end}}{{end}}
-		err = rows.Scan(&thisID, {{.related.GetStruct "list"}})
+		err = rows.Scan(&thisID, {{.GetRelated.GetStruct "list"}})
 		if err != nil {
-			log.WithFields(log.Fields{"entities": entities, "query": `{{$.SQLLoadOneMany .related}} (`+placeholder+`)`, "fields": "{{.related.GetStruct "list"}}", "error": err}).Error("repo.{{$.Name}}.Load scan error")
+			log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadOneMany .}} (`+placeholder+`)`, "fields": "{{.GetRelated.GetStruct "list"}}", "error": err}).Error("repo.{{$entity.Name}}.Load scan error")
 			return errors.WithStack(err)
 		}
-		{{range .related.Fields}}{{range .GetAfter "list"}}{{.}}
+		{{range .GetRelated.Fields}}{{range .GetAfter "list"}}{{.}}
 		{{end}}{{end}}
 		
 		for i := range indices[thisID] {
@@ -1415,7 +1416,7 @@ func (repo {{$.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities .
 		}
 		
 		if err = util.CheckContext(ctx); err != nil {
-			log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$.Name}}.Load context error")
+			log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
 			return errors.WithStack(err)
 		}
 	}
@@ -1428,61 +1429,61 @@ func (repo {{$.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities .
 {{range .Relationships}}
 {{if or (eq "many-many-owner" .Type) }}
 // Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table (many-many-owner relationship)
-func (repo {{$.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...string) error {
+func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{.Entity}}) error {
 	var (
 		stmt *sql.Stmt
 		err  error
 	)
 
-	log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Debug("repo.{{$.Name}}.Save entered")
+	log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Debug("repo.{{$entity.Name}}.Save entered")
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$.Name}}.Save context error")
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save context error")
 			return errors.WithStack(err)
 		}
 
 		tx, err = StartTransaction(ctx)
 		if err != nil {
-			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$.Name}}.Save StartTransaction error")
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save StartTransaction error")
 			return errors.WithStack(err)
 		}
 	}
 
-	stmt, err = tx.Prepare("{{$.SQLSaveManyManyOwnerDelete .related}}")
+	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerDelete .}}")
 	if err != nil {
-		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$.SQLSaveManyManyOwnerDelete .related}}", "error": err}).Error("repo.{{$.Name}}.Save query error")
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerDelete .}}", "error": err}).Error("repo.{{$entity.Name}}.Save query error")
 		return errors.WithStack(err)
 	}
 
 	_, err = stmt.Exec(idthis)
 	if err != nil {
-		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$.Name}}.Save query exec error")
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save query exec error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$.Name}}.Save context error")
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
-	stmt, err = tx.Prepare("{{$.SQLSaveManyManyOwnerInsert .related}}")
+	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerInsert .}}")
 	if err != nil {
-		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$.SQLSaveManyManyOwnerInsert .related}}", "error": err}).Error("repo.{{$.Name}}.Save query error")
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerInsert .}}", "error": err}).Error("repo.{{$entity.Name}}.Save query error")
 		return errors.WithStack(err)
 	}
 
 	for _, rel := range relatives {
 		if err = util.CheckContext(ctx); err != nil {
-			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$.Name}}.Save context error")
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save context error")
 			tx.Rollback()
 			return errors.WithStack(err)
 		}
 
 		_, err = stmt.Exec(idthis, rel.ID)
 		if err != nil {
-			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$.Name}}.Save query exec " + rel.Name + " error")
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save query exec error")
 			tx.Rollback()
 			return errors.WithStack(err)
 		}
@@ -1491,7 +1492,7 @@ func (repo {{$.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *sql.Tx
 	if autocommit {
 		err = tx.Commit()
 		if err != nil {
-			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$.Name}}.Save commit error")
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save commit error")
 			tx.Rollback()
 		}
 	}
@@ -1500,61 +1501,61 @@ func (repo {{$.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *sql.Tx
 }
 
 // Save{{.Name}}IDs is a helper function to save related {{.Name}} IDs in a pivot table (many-many-owner relationship)
-func (repo {{$.Name}}Repositorium) Save{{.Name}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ... string) error {
+func (repo {{$entity.Name}}Repositorium) Save{{.Name}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...string) error {
 	var (
 		stmt *sql.Stmt
 		err  error
 	)
 
-	log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Debug("repo.{{$.Name}}.Save{{.Name}}IDs entered")
+	log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Debug("repo.{{$entity.Name}}.Save{{.Name}}IDs entered")
 	if tx == nil {
 		if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$.Name}}.Save{{.Name}}IDs context error")
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs context error")
 			return errors.WithStack(err)
 		}
 
 		tx, err = StartTransaction(ctx)
 		if err != nil {
-			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$.Name}}.Save{{.Name}}IDs StartTransaction error")
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs StartTransaction error")
 			return errors.WithStack(err)
 		}
 	}
 	
-	stmt, err = tx.Prepare("{{$.SQLSaveManyManyOwnerDelete .related}}")
+	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerDelete .}}")
 	if err != nil {
-		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$.SQLSaveManyManyOwnerDelete .related}}", "error": err}).Error("repo.{{$.Name}}.Save{{.Name}}IDs query error")
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerDelete .}}", "error": err}).Error("repo.{{$entity.Name}}.Save{{.Name}}IDs query error")
 		return errors.WithStack(err)
 	}
 
 	_, err = stmt.Exec(idthis)
 	if err != nil {
-		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$.Name}}.Save{{.Name}}IDs query exec error")
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs query exec error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
 	if err = util.CheckContext(ctx); err != nil {
-		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$.Name}}.Save{{.Name}}IDs context error")
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs context error")
 		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
-	stmt, err = tx.Prepare("{{$.SQLSaveManyManyOwnerInsert .related}}")
+	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerInsert .}}")
 	if err != nil {
-		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$.SQLSaveManyManyOwnerInsert .related}}", "error": err}).Error("repo.{{$.Name}}.Save{{.Name}}IDs query error")
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerInsert .}}", "error": err}).Error("repo.{{$entity.Name}}.Save{{.Name}}IDs query error")
 		return errors.WithStack(err)
 	}
 
 	for _, relid := range relatives {
 		if err = util.CheckContext(ctx); err != nil {
-			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$.Name}}.Save{{.Name}}IDs context error")
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs context error")
 			tx.Rollback()
 			return errors.WithStack(err)
 		}
 
 		_, err = stmt.Exec(idthis, relid)
 		if err != nil {
-			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$.Name}}.Save{{.Name}}IDs query exec " + relid + " error")
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs query exec " + relid + " error")
 			tx.Rollback()
 			return errors.WithStack(err)
 		}
@@ -1563,7 +1564,7 @@ func (repo {{$.Name}}Repositorium) Save{{.Name}}IDs(ctx context.Context, tx *sql
 	if autocommit {
 		err = tx.Commit()
 		if err != nil {
-			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$.Name}}.Save{{.Name}}IDs commit error")
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs commit error")
 			tx.Rollback()
 		}
 	}

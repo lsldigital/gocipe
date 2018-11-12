@@ -111,11 +111,11 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, errors.WithStack(err)
 }
@@ -144,6 +144,9 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 	{{- end}}
 
 	res.{{.Name}}, err = models.{{.Name}}Repo.GetWithRel(ctx, req.ID)
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
 
 	{{ if .Admin.Auth.Generate }}
 	passport, err := _guardian.GetPassport(req.GetKey())
@@ -169,11 +172,11 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, nil
 }
@@ -250,12 +253,12 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
-	
+
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
-
+	{{- end}}
+	
 	return &res, nil
 }
 {{- end}}
@@ -351,11 +354,11 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, nil
 }
@@ -411,11 +414,11 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 	
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, nil
 }
@@ -522,7 +525,7 @@ func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) 
 		return &res, err
 	}
     
-	rows, err = tx.Query(`SELECT id, t."{{.LabelField}}", t."status" FROM {{.Table}} t WHERE t."{{.LabelField}}" LIKE $1`, req.Term+"%")
+	rows, err = tx.Query(`SELECT id, t."{{lower .LabelField}}", t."status" FROM {{.Table}} t WHERE t."{{lower .LabelField}}" LIKE $1`, req.Term+"%")
 	if err != nil {
 		return &res, err
 	}

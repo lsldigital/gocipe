@@ -61,7 +61,7 @@ type Field struct {
 func (f *Field) init() {
 	switch f.Type { //TODO SQL-dialect sensitive
 	case fieldTypeBool:
-		f.schema.Type = "BOOL"
+		f.schema.Type = "BOOLEAN"
 	case fieldTypeInt:
 		f.schema.Type = "INTEGER"
 	case fieldTypeStr:

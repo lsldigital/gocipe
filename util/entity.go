@@ -17,6 +17,10 @@ const (
 	StatusUnpublished = "unpublished"
 	// StatusPublished "P" for status Published
 	StatusPublished = "published"
+	// ActionAdd for action Add
+	ActionAdd = "add"
+	// ActionRemove for action Remove
+	ActionRemove = "remove"
 )
 
 var (
@@ -139,19 +143,20 @@ func (e *Entity) init(r *Recipe) {
 	for i := range e.References {
 		c := &e.References[i]
 
+		c.init()
+
 		// Fill in reference type field edit widget options for Card entity
 		if r.Decks.Generate && e.Name == "Card" {
 			// TODO: Options based on current deck selected (@runtime) ?
 			for _, t := range r.Entities {
+				if t.Name == "Card" || t.Name == "CardSchedule" {
+					continue
+				}
 				c.TypeField.EditWidget.Options = append(c.TypeField.EditWidget.Options,
-					EditWidgetOption{Text: t.Name, Value: t.Name},
+					EditWidgetOption{Text: t.Name, Value: inflection.Plural(t.Name)},
 				)
 			}
 		}
-
-		c.init()
-		e.Fields = append(e.Fields, c.IDField)
-		e.Fields = append(e.Fields, c.TypeField)
 	}
 
 	e.fields = make(map[string]*Field)
@@ -257,6 +262,11 @@ func (e *Entity) GetAdminFilters() AdminFilters {
 		}
 	}
 
+	for _, c := range e.References {
+		filtersString = append(filtersString, c.IDField.schema.Field, c.TypeField.schema.Field)
+		filters.HasString = true
+	}
+
 	if len(filtersBool) != 0 {
 		filters.BoolFilters = `"` + strings.Join(filtersBool, `","`) + `"`
 	}
@@ -301,6 +311,19 @@ func (e *Entity) GetForeignKeyFields() []string {
 	}
 
 	return related
+}
+
+//GetReferenceFields returns definition of reference fields (used by schema)
+func (e *Entity) GetReferenceFields() []string {
+	var referenced []string
+
+	for _, p := range e.References {
+		referenced = append(referenced,
+			fmt.Sprintf(`"%s" TEXT NOT NULL`, p.IDField.schema.Field),
+			fmt.Sprintf(`"%s" TEXT NOT NULL`, p.TypeField.schema.Field)) //TODO SQL-dialect sensitive
+	}
+
+	return referenced
 }
 
 //GetRelatedTables returns definition of related tables; typically due to many-many relationships (used by schema)
@@ -374,6 +397,10 @@ func (e *Entity) GetProtoFields() []string {
 		fields = append(fields, p.ProtoDefinitions(&index)...)
 	}
 
+	for _, c := range e.References {
+		fields = append(fields, c.IDField.ProtoDefinition(&index), c.TypeField.ProtoDefinition(&index))
+	}
+
 	return fields
 }
 
@@ -413,9 +440,18 @@ func (e *Entity) GetStruct(op string) string {
 			switch op {
 			case "get", "list":
 				fields = append(fields, fmt.Sprintf("&entity.%sID", p.Name))
-			case "create", "merge", "update":
+			case "insert", "merge", "update":
 				fields = append(fields, fmt.Sprintf("entity.%sID", p.Name))
 			}
+		}
+	}
+
+	for _, c := range e.References {
+		switch op {
+		case "get", "list":
+			fields = append(fields, fmt.Sprintf("&entity.%s", c.IDField.Name), fmt.Sprintf("&entity.%s", c.TypeField.Name))
+		case "insert", "merge", "update":
+			fields = append(fields, fmt.Sprintf("entity.%s", c.IDField.Name), fmt.Sprintf("entity.%s", c.TypeField.Name))
 		}
 	}
 

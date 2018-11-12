@@ -94,9 +94,9 @@ type {{.Name}}Repository interface {
 	// Load{{.Name}} is a helper function to load related {{.Name}} entities
 	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 	// Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table (many-many relationship)
-	Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{fkeyPropertyTypeName $Entities .}}) error
+	Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{.Entity}}) error
 	// Save{{.Name}}IDs is a helper function to save related {{.Name}} IDs in a pivot table (many-many relationship)
-	Save{{.Name}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...) error
+	Save{{.Name}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...string) error
 {{end -}}
 {{if eq .Type "one-many" -}}
 	// Load{{.Name}} is a helper function to load related {{.Name}} entities
