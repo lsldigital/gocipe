@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"log"
-	"os"
 
 	"github.com/fluxynet/gocipe/generators/admin"
 	"github.com/fluxynet/gocipe/generators/application"
@@ -27,31 +26,20 @@ var (
 	generateAuth      bool
 	generateUtils     bool
 	generateVuetify   bool
-	// verbose           bool
+	verbose           bool
 )
 
 var generateCmd = &cobra.Command{
 	Use:     "generate",
 	Aliases: []string{"init"},
 	Run: func(cmd *cobra.Command, args []string) {
-		// output.SetVerbose(verbose)
+		out := output.New(verbose)
 
 		rcp, err := util.LoadRecipe()
 
 		if err != nil {
 			log.Fatalln("[loadRecipe]", err)
 		}
-
-		file, err := os.OpenFile("gocipe.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-		defer file.Close()
-		if err != nil {
-			log.Fatalln("Failed to open log file for output.")
-		}
-
-		out := &output.Output{}
-		out.SetOutput(file)
-
-		out.Fatalln("Hello")
 
 		//scaffold application layout - synchronously before launching generators
 		application.Generate(out, rcp, overwrite)
@@ -86,5 +74,6 @@ var generateCmd = &cobra.Command{
 
 		out.ProcessProto()
 		out.PostProcessGoFiles()
+		out.Write("gocipe.log")
 	},
 }
