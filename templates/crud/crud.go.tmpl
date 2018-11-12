@@ -381,8 +381,8 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 		query += " WHERE " + strings.Join(segments, " AND ")
 	}
 	
-	if opts != nil && opts.Sort != "" { //TODO SQL-dialect sensitive
-		query += " ORDER BY " + opts.Sort
+	if opts != nil { //TODO SQL-dialect sensitive
+		query += opts.SortOpts()
 	}{{if .DefaultSort}} else {
 		query += ` ORDER BY {{.DefaultSort}}`
 	}
@@ -549,7 +549,7 @@ func (repo {{.Name}}Repositorium) Select(ctx context.Context, opts *ListOpts, co
 	if opts != nil {
 		switch opts.Sort { //TODO SQL-dialect sensitive
 		case {{.OrderList}}: 
-			query += ` ORDER BY t."` + opts.Sort + `"`
+			query += opts.SortOpts()
 		}
 	}
 
