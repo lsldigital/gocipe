@@ -383,7 +383,7 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 	
 	if opts != nil { //TODO SQL-dialect sensitive
 		query += opts.SortOpts(func(field string) bool {
-			switch opts.Sort { //TODO SQL-dialect sensitive
+			switch field { //TODO SQL-dialect sensitive
 				case {{.OrderList}}: 
 					return true
 			}
@@ -555,7 +555,7 @@ func (repo {{.Name}}Repositorium) Select(ctx context.Context, opts *ListOpts, co
 
 	if opts != nil {
 		query += opts.SortOpts(func(field string) bool {
-			switch opts.Sort { //TODO SQL-dialect sensitive
+			switch field { //TODO SQL-dialect sensitive
 				case {{.OrderList}}: 
 					return true
 			}
