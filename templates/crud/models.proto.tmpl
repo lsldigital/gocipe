@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package models;
 option go_package = "{{.AppImportPath}}/models";
-
+{{if .HasTimestamp -}}
 import "google/protobuf/timestamp.proto";
-
+{{end}}
 // ListOpts contains options for listing, including Offset, Limit and Sort
 message ListOpts {
 	int64 Offset = 1;

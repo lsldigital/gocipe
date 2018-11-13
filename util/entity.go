@@ -382,6 +382,16 @@ func (e *Entity) HasAdminHooks() bool {
 	return false
 }
 
+// HasTimestamp returns true if the entity has at least 1 field of type timestamp
+func (e *Entity) HasTimestamp() bool {
+	for _, f := range e.Fields {
+		if f.Type == "time" {
+			return true
+		}
+	}
+	return false
+}
+
 //GetProtoFields returns list of protobuf field definitions for this entity
 func (e *Entity) GetProtoFields() []string {
 	var (
