@@ -43,10 +43,15 @@ func StartTransaction(ctx context.Context) (*sql.Tx, error) {
 }
 
 // SortOpts provides an SQL valid ORDER BY
-func (s ListOpts) SortOpts() string {
+func (s ListOpts) SortOpts(validateField func(string) bool) string {
 	var sort []string
 	for i := range s.Sort {
 		var order string
+
+		if !validateField(s.Sort[i].Field) {
+			continue
+		}
+
 		if s.Sort[i].Ascending {
 			order = "ASC"
 		} else {
