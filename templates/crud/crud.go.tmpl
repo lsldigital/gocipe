@@ -382,7 +382,14 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 	}
 	
 	if opts != nil { //TODO SQL-dialect sensitive
-		query += opts.SortOpts()
+		query += opts.SortOpts(func(field string) bool {
+			switch opts.Sort { //TODO SQL-dialect sensitive
+				case {{.OrderList}}: 
+					return true
+			}
+
+			return false
+		})
 	}{{if .DefaultSort}} else {
 		query += ` ORDER BY {{.DefaultSort}}`
 	}
