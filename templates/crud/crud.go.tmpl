@@ -362,8 +362,15 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 	}
 
 	for _, filter := range filters {
+		switch filter.Field {
+			default:
+				continue
+			case {{.OrderList}}: 
+				//ok
+		}
+
 		if filter.Operation == "IN" || filter.Operation == "NOT IN" { //TODO SQL-dialect sensitive
-			seg, val, err := QueryAddIN(segments, values, &index, filter.Field, filter.Value, "NOT IN" == filter.Operation)
+			seg, val, err := QueryAddIN(segments, values, &index, `t."`+filter.Field+`"`, filter.Value, "NOT IN" == filter.Operation)
 			if err != nil {
 				log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{.Name}}.List QueryAddIN error")
 				continue
@@ -372,7 +379,7 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 			values = val
 		} else {
 			index += 1
-			segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(index))
+			segments = append(segments, `t."`+filter.Field+`" `+filter.Operation+" $"+strconv.Itoa(index))
 			values = append(values, filter.Value)
 		}
 	}
@@ -468,6 +475,13 @@ func (repo {{.Name}}Repositorium) Count(ctx context.Context, opts *ListOpts, fil
 		return count, err
 	}
 	for _, filter := range filters {
+		switch filter.Field {
+			default:
+				continue
+			case {{.OrderList}}: 
+				//ok
+		}
+		
 		if filter.Operation == "IN" || filter.Operation == "NOT IN" {
 			seg, val, err := QueryAddIN(segments, values, &index, filter.Field, filter.Value, "NOT IN" == filter.Operation)
 			if err != nil {
