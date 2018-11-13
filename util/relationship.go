@@ -100,10 +100,12 @@ func (p *Relationship) init(r *Recipe, e *Entity) {
 		p.ThatID = inflection.Singular(strings.ToLower(e.Table)) + "_id"
 	}
 
-	if isMany {
-		p.Name = inflection.Plural(strings.Title(strings.ToLower(p.Entity)))
-	} else {
-		p.Name = strings.Title(p.Entity)
+	if p.Name == "" {
+		if isMany {
+			p.Name = inflection.Plural(strings.Title(strings.ToLower(p.Entity)))
+		} else {
+			p.Name += strings.Title(p.Entity)
+		}
 	}
 }
 

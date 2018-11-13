@@ -56,7 +56,6 @@ func Generate(out *output.Output, r *util.Recipe) {
 		}
 
 		generateAny = generateAny || r.Crud.Generate
-
 	}
 
 	out.GenerateAndOverwrite("GenerateCRUD Proto", "crud/models.proto.tmpl", "proto/models.proto", output.WithHeader, struct {
