@@ -3,6 +3,7 @@ package output
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -10,20 +11,21 @@ import (
 	"sync"
 
 	"github.com/fluxynet/gocipe/util"
-	log "github.com/sirupsen/logrus"
 )
 
 var (
-	_recipePath string
-	_tools      toolset
-	// _verbose    bool
+	_tools toolset
 )
 
 const (
-	logSuccess = "✅ [Ok]"
-	logSkipped = "👻 [Skipped]"
-	logError   = "❗️ [Error]"
-	logInfo    = "🦋 [Info]"
+	//LogSuccess indicates a Success log message type
+	LogSuccess = "✅ [Ok]"
+	//LogSkipped indicates a Skipped log message type
+	LogSkipped = "👻 [Skipped]"
+	//LogError indicates a Error log message type
+	LogError = "❗️ [Error]"
+	//LogInfo indicates a Info log message type
+	LogInfo = "🦋 [Info]"
 
 	//WithHeader indicates header to be prepended to file
 	WithHeader = true
@@ -34,9 +36,11 @@ const (
 
 // Output is the implementation
 type Output struct {
-	log.Logger
+	verbose                   bool
+	messages                  []string
 	gofiles                   []string
 	success, failure, skipped int
+	log                       chan string
 }
 
 // toolset represents go tools used by the generators
@@ -51,15 +55,58 @@ func init() {
 	initToolset()
 }
 
-// Inject gets path injected into this package
-func Inject(path string) {
-	_recipePath = path
+//New creates a new instance of output with logger started
+func New(verbose bool) *Output {
+	var out Output
+	out.log = make(chan string)
+	out.verbose = verbose
+
+	out.log = make(chan string)
+
+	go func() {
+		for m := range out.log {
+			out.messages = append(out.messages, m)
+			if out.verbose {
+				log.Println(m)
+			}
+		}
+	}()
+
+	return &out
 }
 
-// // SetVerbose can be used to toggle verbosity
-// func SetVerbose(verbose bool) {
-// 	_verbose = verbose
-// }
+//Write stops listening to messages and writes to file
+func (l *Output) Write(path string) {
+	close(l.log)
+
+	fmt.Println("\n\n# Summary:")
+
+	if l.skipped > 0 {
+		fmt.Printf("%s Skipped %d files\n", LogSkipped, l.skipped)
+	}
+
+	if l.success > 0 {
+		fmt.Printf("%s Wrote %d files\n", LogSuccess, l.success)
+	}
+
+	if l.failure > 0 {
+		fmt.Printf("%s Error generating %d files\n", LogError, l.failure)
+	}
+
+	err := ioutil.WriteFile(path, []byte(strings.Join(l.messages, "\n")), os.FileMode(0755))
+
+	if err != nil {
+		log.Println("Failed to write log file.")
+	}
+
+	l.messages = []string{}
+}
+
+//Log an entry record
+func (l *Output) Log(status, msg string, tokens ...interface{}) {
+	entry := status + ` ` + fmt.Sprintf(msg, tokens...)
+	l.messages = append(l.messages, entry)
+}
 
 //AddGoFile appends go file to slice gofiles
 func (l *Output) AddGoFile(name string) {
@@ -71,10 +118,10 @@ func (l *Output) GenerateAndOverwrite(component string, template string, filenam
 	var err error
 	filename, err = util.GetAbsPath(filename)
 	if err != nil {
-		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
+		l.Log(LogError, "Error resolving absolute path for overwrite <%s>: %s", filename, err)
 		l.failure++
 	} else if util.FileExists(filename) {
-		l.WithFields(log.Fields{"filename": filename}).Warn("Deleting existing file.")
+		l.Log(LogInfo, "Deleting existing file <%s>", filename)
 		util.DeleteIfExists(filename)
 	}
 
@@ -93,20 +140,19 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 	filename, err = util.GetAbsPath(filename)
 	if err != nil {
 		fmt.Println(err)
-		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
+		l.Log(LogError, "Error resolving absolute path for save <%s>: %s", filename, err)
 		l.failure++
 		return
 	}
 
 	if util.FileExists(filename) {
-		fmt.Println("skipping")
-		l.WithFields(log.Fields{"filename": filename}).Warn("Skipping existing file.")
+		l.Log(LogInfo, "Skipping existing file <%s>", filename)
 		l.skipped++
 		return
 	}
 
 	if err = os.MkdirAll(path.Dir(filename), mode); err != nil {
-		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
+		l.Log(LogError, "Error processing <%s>: %s", filename, err)
 		l.failure++
 		return
 	}
@@ -114,8 +160,7 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 	if code, isString = data.(string); !isString {
 		code, err = util.ExecuteTemplate(template, data)
 		if err != nil {
-			fmt.Println(err)
-			l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
+			l.Log(LogError, "Error executing template <%s>: %s", filename, err)
 			l.failure++
 			return
 		}
@@ -137,12 +182,12 @@ func (l *Output) GenerateAndSave(component string, template string, filename str
 	err = ioutil.WriteFile(filename, []byte(header+code), mode)
 	if err != nil {
 		fmt.Println(err)
-		l.WithFields(log.Fields{"filename": filename, "error": err}).Error("An error occurred.")
+		l.Log(LogError, "Error writing file <%s>: %s", filename, err)
 		l.failure++
 		return
 	}
 
-	l.WithFields(log.Fields{"filename": filename}).Info("File written.")
+	l.Log(LogSuccess, "Wrote file <%s>", filename)
 	l.success++
 
 	if strings.HasSuffix(filename, ".go") {
@@ -268,19 +313,18 @@ func (l *Output) ProcessProto() {
 
 	// l.Info(logInfo + " Executing protoc to generate go files...")
 	// l.failure++
-	l.WithFields(log.Fields{"filename": "Protoc", "info": "Executing protoc to generate go files..."}).Info("Executing protoc.")
+	l.Log(LogInfo, "Executing protoc to generate go files...")
 
 	// models.proto
 	if !util.FileExists(util.WorkingDir + "/models") {
 		if err = os.MkdirAll(util.WorkingDir+"/models", mode); err != nil {
 
-			l.WithFields(log.Fields{"filename": " could not create folder: " + util.WorkingDir + "/models", "error": err}).Error("An error occurred.")
+			l.Log(LogError, "Could not create folder <%s>: %s", util.WorkingDir+"/models", err)
 			l.failure++
-			fmt.Printf(logError+" Error creating folder %s: %s\n", util.WorkingDir+"/models", err)
 
 			return
 		}
-		l.WithFields(log.Fields{"Created folder": util.WorkingDir + "/models", "info": "Success creating folder: " + util.WorkingDir + "/models"}).Info("Create folder")
+		l.Log(LogInfo, "Created folder: <%s>", util.WorkingDir+"/models")
 	}
 	cmd = exec.Command(
 		_tools.Protoc,
@@ -293,22 +337,21 @@ func (l *Output) ProcessProto() {
 	err = cmd.Run()
 
 	if err != nil {
-
-		l.WithFields(log.Fields{"filename": " models.proto", "error": err}).Error("An error occurred.")
+		l.Log(LogError, "Error generating proto from models.proto: %s", err)
 		l.failure++
 		return
 	}
 
-	l.WithFields(log.Fields{"Created folder": util.WorkingDir + "/models", "info": "Success creating folder: " + util.WorkingDir + "/models"}).Info("Create folder")
+	l.Log(LogInfo, "Folder created <%s>: %s", util.WorkingDir+"/models")
 
 	// service_admin.proto, if admin service is to be generated
 	if util.FileExists(util.WorkingDir + `/proto/service_admin.proto`) {
 		if !util.FileExists(util.WorkingDir + "/services/admin") {
 			if err = os.MkdirAll(util.WorkingDir+"/services/admin", mode); err != nil {
-				l.WithFields(log.Fields{"Create folder": util.WorkingDir + "/services/admin", "error": err}).Error("An error occurred.")
+				l.Log(LogError, "Error creating folder <%s>: %s", util.WorkingDir+"/services/admin", err)
 				return
 			}
-			l.WithFields(log.Fields{"Create folder": "Success creating folder: " + util.WorkingDir + "/models"}).Info("Create folder")
+			l.Log(LogError, "Folder created <%s>", util.WorkingDir+"/services/admin")
 		}
 		cmd = exec.Command(
 			_tools.Protoc,
@@ -325,7 +368,7 @@ func (l *Output) ProcessProto() {
 			return
 		}
 
-		l.WithFields(log.Fields{"Protoc": "service_admin.proto", "info": "protoc generated go files from service_admin.proto"}).Info("Generate Protoc")
+		l.Log(LogInfo, `Generated go files from service_admin.proto using protoc`)
 
 	}
 

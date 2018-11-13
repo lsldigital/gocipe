@@ -44,8 +44,10 @@ func (repo {{.Name}}Repositorium) Insert(ctx context.Context, entity *{{.Name}},
 	{{end}}{{end}}
 
 	stmt, err = tx.Prepare(`{{.SQLInsert}}`)
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLInsert}}`, "error": err}).Error("repo.{{.Name}}.Insert query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Insert query done")
@@ -56,6 +58,7 @@ func (repo {{.Name}}Repositorium) Insert(ctx context.Context, entity *{{.Name}},
 	{{if .CrudHooks.PreSave}}
 	if err = util.CheckContext(ctx); err != nil {
 		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Insert context error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	
@@ -147,8 +150,10 @@ func (repo {{.Name}}Repositorium) InsertWithRel(ctx context.Context, entity *{{.
 	{{end}}{{end}}
 
 	stmt, err = tx.Prepare(`{{.SQLInsert}}`)
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLInsert}}`, "error": err}).Error("repo.{{.Name}}.InsertWithRel query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
@@ -256,6 +261,7 @@ func (repo {{.Name}}Repositorium) Get(ctx context.Context, id string) (*{{.Name}
 	}
 
 	rows, err = repo.db.QueryContext(ctx, `{{.SQLGet}}`, id)
+	defer rows.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"id": id, "query": `{{.SQLGet}}`, "error": err}).Error("repo.{{.Name}}.Get query error")
 		return nil, err
@@ -356,8 +362,15 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 	}
 
 	for _, filter := range filters {
+		switch filter.Field {
+			default:
+				continue
+			case {{.OrderList}}: 
+				//ok
+		}
+
 		if filter.Operation == "IN" || filter.Operation == "NOT IN" { //TODO SQL-dialect sensitive
-			seg, val, err := QueryAddIN(segments, values, &index, filter.Field, filter.Value, "NOT IN" == filter.Operation)
+			seg, val, err := QueryAddIN(segments, values, &index, `t."`+filter.Field+`"`, filter.Value, "NOT IN" == filter.Operation)
 			if err != nil {
 				log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{.Name}}.List QueryAddIN error")
 				continue
@@ -366,7 +379,7 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 			values = val
 		} else {
 			index += 1
-			segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(index))
+			segments = append(segments, `t."`+filter.Field+`" `+filter.Operation+" $"+strconv.Itoa(index))
 			values = append(values, filter.Value)
 		}
 	}
@@ -375,8 +388,15 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 		query += " WHERE " + strings.Join(segments, " AND ")
 	}
 	
-	if opts != nil && opts.Sort != "" { //TODO SQL-dialect sensitive
-		query += " ORDER BY " + opts.Sort
+	if opts != nil { //TODO SQL-dialect sensitive
+		query += opts.SortOpts(func(field string) bool {
+			switch field { //TODO SQL-dialect sensitive
+				case {{.OrderList}}: 
+					return true
+			}
+
+			return false
+		})
 	}{{if .DefaultSort}} else {
 		query += ` ORDER BY {{.DefaultSort}}`
 	}
@@ -391,13 +411,13 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 	}
 
 	rows, err = repo.db.QueryContext(ctx, query, values...)
+	defer rows.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "error": err}).Error("repo.{{.Name}}.List query error")
 		return nil, err
 	}
 	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.List query done")
 
-	defer rows.Close()
 	for rows.Next() {
 		log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.List row found")
 		if err = util.CheckContext(ctx); err != nil {
@@ -436,6 +456,69 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 	{{end}}
 
 	return list, nil
+}
+
+// Count returns a count of a query containing {{.Name}} records
+func (repo {{.Name}}Repositorium) Count(ctx context.Context, opts *ListOpts, filters ...*Filter) (int64, error) {
+	var (
+		segments []string
+		values	 []interface{}
+		err		 error
+		rows	 *sql.Rows
+		index	 int = 0
+		count    int64
+	)
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.Count entered")
+	query := `SELECT COUNT(id) FROM {{.Table}} t`
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.Name}}.Count context error")
+		return count, err
+	}
+	for _, filter := range filters {
+		switch filter.Field {
+			default:
+				continue
+			case {{.OrderList}}: 
+				//ok
+		}
+		
+		if filter.Operation == "IN" || filter.Operation == "NOT IN" {
+			seg, val, err := QueryAddIN(segments, values, &index, filter.Field, filter.Value, "NOT IN" == filter.Operation)
+			if err != nil {
+				log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{.Name}}.Count QueryAddIN error")
+				continue
+			}
+			segments = seg
+			values = val
+		} else {
+			index += 1
+			segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(index))
+			values = append(values, filter.Value)
+		}
+	}
+	if len(segments) != 0 {
+		query += " WHERE " + strings.Join(segments, " AND ")
+	}
+	rows, err = repo.db.QueryContext(ctx, query, values...)
+	defer rows.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "error": err}).Error("repo.{{.Name}}.Count query error")
+		return count, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.Count query done")
+	if rows.Next() {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.Count row found")
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.Name}}.Count context error")
+			return count, err
+		}
+		err = rows.Scan(&count)
+		if err != nil {
+			log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "error": err}).Error("repo.{{.Name}}.Count scan error")
+			return count, err
+		}
+	}
+	return count, nil
 }
 
 // ListWithRel returns a slice containing {{.Name}} records; will also load related entities.
@@ -485,10 +568,14 @@ func (repo {{.Name}}Repositorium) Select(ctx context.Context, opts *ListOpts, co
 	}
 
 	if opts != nil {
-		switch opts.Sort { //TODO SQL-dialect sensitive
-		case {{.OrderList}}: 
-			query += ` ORDER BY t."` + opts.Sort + `"`
-		}
+		query += opts.SortOpts(func(field string) bool {
+			switch field { //TODO SQL-dialect sensitive
+				case {{.OrderList}}: 
+					return true
+			}
+
+			return false
+		})
 	}
 
 	if opts != nil && opts.Offset > 0 { //TODO SQL-dialect sensitive
@@ -592,8 +679,10 @@ func (repo {{.Name}}Repositorium) Delete(ctx context.Context, entity *{{.Name}},
 	}
 
 	stmt, err = tx.Prepare("{{.SQLDeleteSingle}}")
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLDeleteSingle}}`, "error": err}).Error("repo.{{.Name}}.Delete query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	{{if .CrudHooks.PreDeleteSingle}}
@@ -717,8 +806,10 @@ func (repo {{.Name}}Repositorium) DeleteMany(ctx context.Context, tx *sql.Tx, au
 
 	{{range .SQLDeleteManyJoin}}
 	stmt, err = tx.Prepare("{{.}}"+query+")")
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"filters": filters, "query": "{{.}}"+query+")", "error": err}).Error("repo.{{$entity.Name}}.DeleteMany query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
@@ -731,8 +822,10 @@ func (repo {{.Name}}Repositorium) DeleteMany(ctx context.Context, tx *sql.Tx, au
 	{{end}}
 
 	stmt, err = tx.Prepare("{{.SQLDeleteMany}}"+query)
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"filters": filters, "query": "{{.SQLDeleteMany}}"+query+")", "error": err}).Error("repo.{{.Name}}.DeleteMany query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
@@ -849,8 +942,10 @@ func (repo {{.Name}}Repositorium) Update(ctx context.Context, entity *{{.Name}},
 	{{end}}{{end}}
 
 	stmt, err = tx.Prepare(`{{.SQLUpdate}}`)
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLUpdate}}`, "error": err}).Error("repo.{{.Name}}.Update query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Update query done")
@@ -944,8 +1039,10 @@ func (repo {{.Name}}Repositorium) UpdateWithRel(ctx context.Context, entity *{{.
 	{{end}}{{end}}
 
 	stmt, err = tx.Prepare(`{{.SQLUpdate}}`)
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLUpdate}}`, "error": err}).Error("repo.{{.Name}}.UpdateWithRel query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
@@ -1056,8 +1153,10 @@ func (repo {{.Name}}Repositorium) Merge(ctx context.Context, entity *{{.Name}}, 
 	{{end}}{{end}}
 
 	stmt, err = tx.Prepare(`{{.SQLMerge}}`)
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLMerge}}`, "error": err}).Error("repo.{{.Name}}.Merge query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Merge query done")
@@ -1149,8 +1248,10 @@ func (repo {{.Name}}Repositorium) MergeWithRel(ctx context.Context, entity *{{.N
 	{{end}}{{end}}
 
 	stmt, err = tx.Prepare(`{{.SQLMerge}}`)
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLMerge}}`, "error": err}).Error("repo.{{.Name}}.MergeWithRel query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
@@ -1451,8 +1552,10 @@ func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *
 	}
 
 	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerDelete .}}")
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerDelete .}}", "error": err}).Error("repo.{{$entity.Name}}.Save query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
@@ -1470,8 +1573,10 @@ func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *
 	}
 
 	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerInsert .}}")
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerInsert .}}", "error": err}).Error("repo.{{$entity.Name}}.Save query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
@@ -1523,8 +1628,10 @@ func (repo {{$entity.Name}}Repositorium) Save{{.Name}}IDs(ctx context.Context, t
 	}
 	
 	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerDelete .}}")
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerDelete .}}", "error": err}).Error("repo.{{$entity.Name}}.Save{{.Name}}IDs query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
@@ -1542,8 +1649,10 @@ func (repo {{$entity.Name}}Repositorium) Save{{.Name}}IDs(ctx context.Context, t
 	}
 
 	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerInsert .}}")
+	defer stmt.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerInsert .}}", "error": err}).Error("repo.{{$entity.Name}}.Save{{.Name}}IDs query error")
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 

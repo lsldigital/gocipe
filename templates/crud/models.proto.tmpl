@@ -9,7 +9,12 @@ import "google/protobuf/timestamp.proto";
 message ListOpts {
 	int64 Offset = 1;
 	int64 Limit = 2;
-	string Sort = 3;
+	repeated ListSortOpts Sort = 3;
+}
+
+message ListSortOpts {
+	string Field = 1;
+	bool Ascending = 2;
 }
 
 {{ range .Entities -}}
