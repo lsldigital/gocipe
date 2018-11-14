@@ -378,7 +378,7 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 			segments = seg
 			values = val
 		} else {
-			index += 1
+			index++
 			segments = append(segments, `t."`+filter.Field+`" `+filter.Operation+" $"+strconv.Itoa(index))
 			values = append(values, filter.Value)
 		}
@@ -491,7 +491,7 @@ func (repo {{.Name}}Repositorium) Count(ctx context.Context, opts *ListOpts, fil
 			segments = seg
 			values = val
 		} else {
-			index += 1
+			index++
 			segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(index))
 			values = append(values, filter.Value)
 		}
