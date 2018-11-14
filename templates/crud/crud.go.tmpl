@@ -1310,8 +1310,8 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 	c := 1
 	for _, entity := range entities {
 		placeholder += "$" + strconv.Itoa(c) + ","
-		indices[entity.{{.Name}}ID] = append(indices[entity.{{.Name}}ID], entity)
-		values = append(values, entity.{{.Name}}ID)
+		indices[entity.{{.GetRelatedID}}] = append(indices[entity.{{.GetRelatedID}}], entity)
+		values = append(values, entity.{{.GetRelatedID}})
 		c++
 	}
 	placeholder = strings.TrimRight(placeholder, ",")
