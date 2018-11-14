@@ -239,12 +239,12 @@ func (s Postgres) SQLLoadManyMany(rel Relationship) string {
 		`SELECT j.%s, %s FROM %s t 
 		INNER JOIN %s j ON t.id = j.%s
 		WHERE j.%s IN`,
-		rel.ThisID,
+		rel.ThatID,
 		strings.Join(fields, ", "),
 		related.Table,
 		rel.JoinTable,
-		rel.ThatID,
 		rel.ThisID,
+		rel.ThatID,
 	)
 }
 
@@ -301,10 +301,10 @@ func (s Postgres) SQLLoadOneMany(rel Relationship) string {
 
 	return fmt.Sprintf(
 		`SELECT t."%s", %s FROM %s t WHERE t."%s" IN`,
-		rel.ThisID,
+		rel.ThatID,
 		strings.Join(fields, ", "),
 		related.Table,
-		rel.ThisID,
+		rel.ThatID,
 	)
 }
 

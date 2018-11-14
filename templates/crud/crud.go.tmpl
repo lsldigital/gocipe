@@ -1353,6 +1353,7 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 	rows, err := repo.db.QueryContext(ctx, `
 		{{$entity.SQLLoadManyMany .}} (`+placeholder+`)
 	`, values...)
+	defer rows.Close()
 	if err != nil {
 		log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadManyMany .}} (`+placeholder+`)`, "error": err}).Error("repo.{{$entity.Name}}.Load query error")
 		return errors.WithStack(err)
