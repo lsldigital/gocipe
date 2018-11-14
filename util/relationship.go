@@ -157,7 +157,7 @@ func (p *Relationship) ProtoDefinitions(index *int) []string {
 func (p *Relationship) GetRelatedID() string {
 	switch p.Type {
 	case RelationshipTypeManyOne, RelationshipTypeManyManyOwner, RelationshipTypeManyManyInverse:
-		return p.Entity + "ID"
+		return p.Name + "ID"
 	}
 
 	return "ID"
