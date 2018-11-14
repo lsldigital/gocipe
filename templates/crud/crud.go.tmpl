@@ -513,6 +513,8 @@ func (repo {{.Name}}Repositorium) Count(ctx context.Context, opts *ListOpts, fil
 			return count, err
 		}
 		err = rows.Scan(&count)
+		log.WithFields(log.Fields{"count": count}).Debug("repo.{{.Name}}.Count result obtained")
+
 		if err != nil {
 			log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "error": err}).Error("repo.{{.Name}}.Count scan error")
 			return count, err

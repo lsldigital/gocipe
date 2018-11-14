@@ -175,6 +175,7 @@ import { DeleteRequest } from "@/services/service_admin_pb";
 import { mapGetters } from 'vuex';
 
 import { {{ .Entity.Name }}, ListOpts, ListSortOpts } from "@/services/models_pb.js";
+import _ from 'lodash';
 
 
 let cli = new AdminClient("/api");
@@ -322,6 +323,12 @@ export default {
           req.addFilters(filter);
         }
 
+        let searchFilter = new Filter();
+        searchFilter.setField('title');
+        searchFilter.setOperation("~");
+        searchFilter.setValue('%' + this.search + '%');
+        req.addFilters(searchFilter);
+
         let opts = new ListOpts();
         opts.setOffset((this.pagination.page - 1) * this.pagination.rowsPerPage)
         opts.setLimit(this.pagination.rowsPerPage);
@@ -439,7 +446,13 @@ export default {
         })
       },
       deep: true
-    }
+    },
+    search: _.debounce(function (val) {
+      this.getList().then(values => {
+        this.entities = values.entities;
+        this.totalItems = values.count
+      })
+    }, 500)
   }
 };
 </script>
