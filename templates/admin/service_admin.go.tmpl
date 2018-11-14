@@ -346,7 +346,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	{{if .Slug}}
-	go setSlug(existing.GetID(), req.{{.Name}}.Get{{ucfirst .Slug}}(), "{{.Table}}", "slug")
+	go setSlug(existing.GetID(), req.{{.Name}}.Get{{.Slug}}(), "{{.Table}}", "slug")
 	{{end}}
 
 	{{if .Admin.Hooks.PostUpdate -}}
