@@ -484,9 +484,6 @@ func (e *Entity) GetFileFields() []Field {
 
 //HasFileFields returns whether entity has file fields
 func (e *Entity) HasFileFields() bool {
-	if e.ContentBuilder.Generate {
-		return true
-	}
 	for _, f := range e.Fields {
 		switch f.EditWidget.Type {
 		case WidgetTypeFile, WidgetTypeImage:
