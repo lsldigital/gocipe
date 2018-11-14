@@ -56,7 +56,7 @@
 
     <!-- Table form listing -->
     <v-card v-else>
-        <v-data-table :headers="headers" max :items="entities" class="elevation-0" :search="search">
+        <v-data-table class="elevation-0" :headers="headers" :items="entities" :pagination.sync="pagination" :total-items="totalItems" :rows-per-page-items="pagination.rowsPerPageItems">
           <template slot="items" slot-scope="props">
             <tr :class="{'highlight': recentlySaved(props.item.Id)}" :key="props.item.Id">
               <td class="justify-center layout">
@@ -174,13 +174,24 @@ import { Create{{ .Entity.Name}}Request } from "@/services/service_admin_pb";
 import { DeleteRequest } from "@/services/service_admin_pb";
 import { mapGetters } from 'vuex';
 
-import { {{ .Entity.Name }} } from "@/services/models_pb.js";
+import { {{ .Entity.Name }}, ListOpts, ListSortOpts } from "@/services/models_pb.js";
+
 
 let cli = new AdminClient("/api");
 
 export default {
   data() {
     return {
+      pagination: {
+        sortBy: 'Title',
+        descending: true,
+        page: 1,
+        rowsPerPage: 5,
+        totalItems: 0,
+        rowsPerPageItems: [5, 10, 25, 50, 100]
+
+      },
+      totalItems: 0,
       messages: [],
       track: null,
       search: "",
@@ -222,7 +233,7 @@ export default {
   props: ["filter_id", "filter_field", "nested", "rpc"],
   mounted() {
     this.loading = true;
-    this.getList();
+    this.populateData();
     this.track = this.$route.params.track;
 
   },
@@ -249,42 +260,82 @@ export default {
           label: ""
         };
       },
-      getList: function(){
+      count(req) {
+        return new Promise((resolve, reject) => {
+          cli.count{{plural .Entity.Name }}(req, (err, resp) => {
+            if (err) {
+              console.log(err);
+              this.snackbarShow(err.message, "error");
+              reject(err);
+            }
+
+            let count = resp.getCount();
+            resolve(count);
+          })
+        })
+      },
+      populateData: function () {
+        this.getList().then((values) => {
+          this.entities = values.entities;
+          this.totalItems = values.count
+        })
+      },
+            
+      fetchEntities: function(req){
+        return new Promise((resolve, reject) => {
+          cli.list{{plural .Entity.Name}}(req, (err, resp) => {
+            if (err) {
+              console.log(err);
+              this.snackbarShow(err.message, "error");
+              return;
+            }
+            this.loading = false;
+            this.snackbarShow('{{ucfirst (plural .Entity.Name)}} Loaded');
+
+            let entities = resp.get{{ucfirst (plural .Entity.Name)}}List().map(entity => {
+              return {
+                {{ range .Entity.Fields }}
+                  {{- if eq .ListWidget.Type "time" -}}
+                    {{ucfirst .Name}}: {{- printf " entity.get%s().toDate()" (ucfirst .Name)}},
+                  {{- else -}}
+                    {{ucfirst .Name}}: {{- printf " entity.get%s()" (ucfirst .Name)}},
+                  {{- end }}
+                {{ end }}
+              }
+            })
+            resolve(entities);
+          });
+        });
+      },
+      getList: function () {
+        // Will fetch Total and Entities as per pagination request
         let req = new ListRequest();
+        let sort = new ListSortOpts();
+
+        req.setKey(this.token);
 
         if (this.filter_id) {
           let filter = new Filter();
           filter.setField(this.filter_field);
           filter.setOperation("=");
           filter.setValue(this.filter_id);
-
           req.addFilters(filter);
         }
 
-        req.setKey(this.token);
+        let opts = new ListOpts();
+        opts.setOffset((this.pagination.page - 1) * this.pagination.rowsPerPage)
+        opts.setLimit(this.pagination.rowsPerPage);
 
-        cli.list{{plural .Entity.Name}}(req, (err, resp) => {
-          if (err) {
-            console.log(err);
-            this.snackbarShow(err.message, "error");
-            return;
-          }
-          this.loading = false;
-          this.snackbarShow('{{ucfirst (plural .Entity.Name)}} Loaded');
+        sort.setAscending(true);
+        sort.setField("publish_date");
+        opts.addSort(sort);
 
-          this.entities = resp.get{{ucfirst (plural .Entity.Name)}}List().map(entity => {
-            return {
-              {{ range .Entity.Fields }}
-                {{- if eq .ListWidget.Type "time" -}}
-                  {{ucfirst .Name}}: {{- printf " entity.get%s().toDate()" (ucfirst .Name)}},
-                {{- else -}}
-                  {{ucfirst .Name}}: {{- printf " entity.get%s()" (ucfirst .Name)}},
-                {{- end }}
-              {{ end }}
-            }
-          })
-        });
-       },
+        req.setListopts(opts);
+
+        return Promise.all([this.count(req), this.fetchEntities(req)]).then(x => {
+          return Promise.resolve({ count: x[0], entities: x[1] })
+        })
+      },      
       duplicate(id) {
         let toBeDuplicatedId = id;
         let toBeDuplicatedEntity = null;
@@ -364,7 +415,7 @@ export default {
                 return;
             } else {
               this.snackbarShow('Deleted', this.deleteItemId.label);
-              this.getList();
+              this.populateData();
             }
           })
 
@@ -379,6 +430,16 @@ export default {
       snackbarHide: function() {
           this.snackbar.show = false
       }
+  },
+  watch: {
+    pagination: {
+      handler() {
+        this.getList().then(values => {
+          this.entities = values.entities;
+        })
+      },
+      deep: true
+    }
   }
 };
 </script>
