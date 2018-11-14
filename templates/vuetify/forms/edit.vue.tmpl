@@ -94,6 +94,7 @@
                                             :field="'{{ .Name}}'" 
                                             :rpc="'upload{{ $EntityName }}'" 
                                             :entityid="id"
+                                            :prefillopts="'{{ .EditWidget.ImageType }}'" 
                                             {{- end -}}
                                 ></component>
                             </div>
