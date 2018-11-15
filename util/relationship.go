@@ -79,11 +79,11 @@ func (p *Relationship) init(r *Recipe, e *Entity) {
 		isMany = true
 		p.JoinTable = p.related.Table
 		p.ThisID = "id"
-		p.ThatID = strings.ToLower(p.Name) + "_" + inflection.Singular(strings.ToLower(e.Table)) + "_id"
+		p.ThatID = strings.ToLower(p.Name) + "_" + e.Table + "_id"
 
 	case RelationshipTypeManyOne:
 		p.JoinTable = ""
-		p.ThisID = strings.ToLower(p.Name) + "_" + inflection.Singular(strings.ToLower(p.related.Table)) + "_id"
+		p.ThisID = strings.ToLower(p.Name) + "_" + p.related.Table + "_id"
 		p.ThatID = "id"
 
 	case RelationshipTypeManyManyOwner, RelationshipTypeManyManyInverse:
@@ -97,7 +97,7 @@ func (p *Relationship) init(r *Recipe, e *Entity) {
 			p.JoinTable += "_" + strings.ToLower(p.Name)
 		}
 		p.ThisID = strings.ToLower(p.Entity) + "_id"
-		p.ThatID = inflection.Singular(strings.ToLower(e.Table)) + "_id"
+		p.ThatID = e.Table + "_id"
 	}
 
 	if p.Name == "" {
