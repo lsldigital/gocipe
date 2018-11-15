@@ -183,7 +183,7 @@ export default {
   data() {
     return {
       pagination: {
-        sortBy: 'Title',
+        sortBy: '{{ .Entity.LabelField}}',
         descending: true,
         page: 1,
         rowsPerPage: 5,
@@ -324,7 +324,7 @@ export default {
 
         // Search term
         let searchFilter = new Filter();
-        searchFilter.setField('title');
+        searchFilter.setField('{{ .Entity.LabelField}}');
         searchFilter.setOperation("~");
         searchFilter.setValue('%' + this.search + '%');
         req.addFilters(searchFilter);

@@ -19,7 +19,7 @@ var card = Entity{
 		Field{
 			Label: "Position",
 			Name:  "Position",
-			Type:  "string",
+			Type:  "int64",
 			EditWidget: EditWidgetOpts{
 				Type: WidgetTypeTextField,
 			},
