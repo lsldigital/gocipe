@@ -375,6 +375,16 @@ func (e *Entity) HasAdminHooks() bool {
 	return false
 }
 
+// HasTimestamp returns true if the entity has at least 1 field of type timestamp
+func (e *Entity) HasTimestamp() bool {
+	for _, f := range e.Fields {
+		if f.Type == fieldTypeTime {
+			return true
+		}
+	}
+	return false
+}
+
 //GetProtoFields returns list of protobuf field definitions for this entity
 func (e *Entity) GetProtoFields() []string {
 	var (
@@ -410,7 +420,7 @@ func (e *Entity) GetStruct(op string) string {
 	for _, f := range e.Fields {
 		//some fields require preprocessing
 		//they will be assigned to a variable, use that instead of the property name
-		if f.Type == "time" {
+		if f.Type == fieldTypeTime {
 			switch op {
 			case "get", "list":
 				fields = append(fields, fmt.Sprintf("&%s", strings.ToLower(f.Name)))
@@ -452,13 +462,33 @@ func (e *Entity) GetStruct(op string) string {
 }
 
 //GetFileFields returns list of file fields
-func (e *Entity) GetFileFields() []Field {
-	var fields []Field
+func (e *Entity) GetFileFields() []FileField {
+	var fields []FileField
+
+	if e.ContentBuilder.Generate && e.ContentBuilder.AllowUpload {
+		for _, u := range e.ContentBuilder.UploadTypes {
+			uploadType := strings.Title(u)
+			fields = append(fields, FileField{
+				ConfigName:     e.Name + "Content" + uploadType + "UploadOpts",
+				Destination:    strings.ToLower(e.Name + "/content/" + uploadType),
+				EntityName:     e.Name,
+				FieldName:      uploadType,
+				ContentBuilder: true,
+			})
+		}
+	}
 
 	for _, f := range e.Fields {
 		switch f.EditWidget.Type {
 		case WidgetTypeFile, WidgetTypeImage:
-			fields = append(fields, f)
+			fields = append(fields, FileField{
+				ConfigName:     e.Name + f.Name + "UploadOpts",
+				Destination:    strings.ToLower(e.Name + "/" + f.Name),
+				EntityName:     e.Name,
+				FieldName:      f.Name,
+				SchemaName:     f.schema.Field,
+				ContentBuilder: false,
+			})
 		}
 	}
 
@@ -467,6 +497,10 @@ func (e *Entity) GetFileFields() []Field {
 
 //HasFileFields returns whether entity has file fields
 func (e *Entity) HasFileFields() bool {
+	if e.ContentBuilder.AllowUpload && len(e.ContentBuilder.UploadTypes) != 0 {
+		return true
+	}
+
 	for _, f := range e.Fields {
 		switch f.EditWidget.Type {
 		case WidgetTypeFile, WidgetTypeImage:

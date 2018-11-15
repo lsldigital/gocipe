@@ -11,7 +11,7 @@ import (
 
 
 {{range $i, $entity := .Entities}}
-//[BEGIN] {{.Name}}
+// [BEGIN] {{.Name}}
 
 // Insert performs an SQL insert for {{.Name}} record and update instance with inserted id. Prefer using Save instead of Insert directly.
 func (repo {{.Name}}Repositorium) Insert(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error {
@@ -1393,7 +1393,7 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 
 	return nil
 }
-{{else if (eq "many-one" .Type) }}
+{{else if eq "many-one" .Type }}
 // Load{{.Name}} is a helper function to load related {{.Name}} entities
 func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
 	var (
@@ -1459,7 +1459,7 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 
 	return nil
 }
-{{else if (eq "one-many" .Type) }}
+{{else if eq "one-many" .Type }}
 // Load{{.Name}} is a helper function to load related {{.Name}} entities
 func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
 	var (
@@ -1527,11 +1527,8 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 
 	return nil
 }
-{{end}}
-{{end}}
-
-{{range .Relationships}}
-{{if or (eq "many-many-owner" .Type) }}
+{{end}}{{/* if or (eq "many-many-owner" .Type) (eq "many-many-inverse" .Type) + else if... */}}
+{{if eq "many-many-owner" .Type }}
 // Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table (many-many-owner relationship)
 func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{.Entity}}) error {
 	var (
@@ -1683,8 +1680,8 @@ func (repo {{$entity.Name}}Repositorium) Save{{.Name}}IDs(ctx context.Context, t
 
 	return errors.WithStack(err)
 }
-{{end}}
-{{end}}
+{{end}}{{/* if or (eq "many-many-owner" .Type) */}}
+{{end}}{{/* range .Relationships */}}
 
-//[END] {{.Name}}
-{{end}}
+// [END] {{.Name}}
+{{end}}{{/* range $i, $entity := .Entities */}}

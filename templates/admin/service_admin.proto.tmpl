@@ -104,7 +104,7 @@ service Admin {
     // Delete{{.Name}} allows deleting an entity of type {{.Name}}
     rpc Delete{{.Name}}(DeleteRequest) returns (DeleteResponse);
     {{- end}}
-    {{- if .GetFileFields}}
+    {{- if .HasFileFields}}
     // Upload{{.Name}} allows uploading of files for entity of type {{.Name}}
     rpc Upload{{.Name}}(UploadRequest) returns (UploadResponse);
     {{end}}

@@ -1,0 +1,169 @@
+package decks
+
+import (
+	"context"
+	"log"
+
+	"github.com/pkg/errors"
+	"{{.AppImportPath}}/models"
+	"{{.AppImportPath}}/util"
+)
+
+// EntityRef holds entity reference
+type EntityRef struct {
+	Type string
+	ID   string
+}
+
+// Deck holds deck options
+type Deck struct {
+	MaxSlots           int
+	NoDuplicate        bool
+	NoTrace            bool
+	AllowedEntityTypes []string
+	Queries            []string
+}
+
+var deckList map[string]Deck
+
+func init() {
+	deckList = make(map[string]Deck)
+	{{- range .Decks}}
+	deckList["{{ .Name }}"] = Deck{
+		MaxSlots:           {{ .Slots }},
+		NoDuplicate:        {{ .NoDuplicate }},
+		NoTrace:            {{ .NoTrace }},
+		AllowedEntityTypes: []string{
+			{{- range .EntityTypeWhitelist}}
+			"{{ . }}",
+			{{- end}}
+		},
+		Queries: []string{
+			{{- range .Queries}}
+			"{{ . }}",
+			{{- end}}
+		},
+	}
+	{{- end}}
+}
+
+func listCardsByDecks(ctx context.Context, decks ...string) (map[string][]EntityRef, error) {
+	historyEntityRefs := make(map[EntityRef]struct{}, 0)
+	deckCards := make(map[string][]EntityRef)
+
+	for _, d := range decks {
+		deck, ok := deckList[d]
+		deckCards[d] = []EntityRef{}
+		if !ok {
+			log.Println("Invalid deck ", d)
+			continue
+		}
+
+		cards, err := models.CardRepo.List(ctx,
+			&models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit},
+			&models.Filter{Field: "deck_machine_name", Operation: "=", Value: d},
+			&models.Filter{Field: "entity_type", Operation: "!=", Value: ""},
+			&models.Filter{Field: "entity", Operation: "!=", Value: ""},
+		)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Error loading cards for deck %s", d))
+			continue
+		}
+
+		// Standard approach (loading from cards entities)
+		entRefs := make([]EntityRef, 0, deck.MaxSlots)
+		for _, c := range cards {
+			if len(entRefs) == deck.MaxSlots {
+				break
+			}
+
+			if err = util.CheckContext(ctx); err != nil {
+				break
+			}
+
+			entRef := EntityRef{
+				Type: c.EntityType,
+				ID:   c.Entity,
+			}
+			// Allow duplicate?
+			if _, dup := historyEntityRefs[entRef]; deck.NoDuplicate && dup {
+				// Entity skipped
+				continue
+			}
+
+			entRefs[c.Position] = entRef
+		}
+
+		if err = util.CheckContext(ctx); err != nil {
+			break
+		}
+
+		emptyPos := listEmptyPosition(entRefs)
+		// Autofill if not enough cards
+		if len(emptyPos) > 0 {
+			slotsRemaining := len(emptyPos)
+
+			tx, err := models.StartTransaction(ctx)
+			if err != nil {
+				return deckCards, err
+			}
+
+			for _, q := range deck.Queries {
+				if slotsRemaining == 0 {
+					break
+				}
+
+				rows, err := tx.Query(q)
+				if err != nil {
+					continue
+				}
+				defer rows.Close()
+
+				if err = util.CheckContext(ctx); err != nil {
+					break
+				}
+
+				for rows.Next() {
+					if slotsRemaining == 0 {
+						break
+					}
+
+					if err = util.CheckContext(ctx); err != nil {
+						break
+					}
+
+					var entRef EntityRef
+					err = rows.Scan(&entRef.ID, &entRef.Type)
+					if err != nil {
+						continue
+					}
+
+					pos := emptyPos[len(emptyPos)-slotsRemaining]
+					entRefs[pos] = entRef
+					slotsRemaining--
+				}
+			}
+		}
+
+		// Keep trace?
+		if !deck.NoTrace {
+			for _, entRef := range entRefs {
+				historyEntityRefs[entRef] = struct{}{}
+			}
+		}
+
+		deckCards[d] = entRefs
+	}
+
+	return deckCards, nil
+}
+
+func listEmptyPosition(entRefs []EntityRef) []int {
+	emptyPos := make([]int, 0)
+	for i, e := range entRefs {
+		if e.Type == "" || e.ID == "" {
+			emptyPos = append(emptyPos, i)
+		}
+	}
+	return emptyPos
+}

@@ -55,7 +55,7 @@
 
     <!-- Table form listing -->
     <v-card v-else>
-      <v-data-table class="elevation-0" :headers="headers" :items="entities" :pagination.sync="pagination" :total-items="totalItems" :rows-per-page-items="pagination.rowsPerPageItems">
+      <v-data-table class="elevation-0" :headers="headers" :items="entities" :pagination.sync="pagination" :total-items="pagination.totalItems" :rows-per-page-items="pagination.rowsPerPageItems">
         <template slot="items" slot-scope="props">
           <tr :class="{'highlight': recentlySaved(props.item.Id)}" :key="props.item.Id">
             <td class="justify-center layout">
@@ -134,6 +134,9 @@
           </v-flex>
         </template>
       </v-data-table>
+      <div class="text-xs-center pt-2 pb-4">
+        <v-pagination v-model="pagination.page" :length="pages" circle :total-visible="7"></v-pagination>
+      </div>
     </v-card>
 
     <v-dialog v-model="dialog" persistent max-width="300">
@@ -191,7 +194,6 @@ export default {
         rowsPerPageItems: [5, 10, 25, 50, 100]
 
       },
-      totalItems: 0,
       messages: [],
       track: null,
       search: "",
@@ -228,7 +230,14 @@ export default {
   computed: {
     ...mapGetters({
       'token': 'auth/getToken'
-    })
+    }),
+    pages() {
+      if (this.pagination.rowsPerPage == null ||
+        this.pagination.totalItems == null
+      ) return 0
+
+      return Math.ceil(this.pagination.totalItems / this.pagination.rowsPerPage)
+    }
   },
   props: ["filter_id", "filter_field", "nested", "rpc"],
   mounted() {
@@ -277,7 +286,7 @@ export default {
       populateData: function () {
         this.getList().then((values) => {
           this.entities = values.entities;
-          this.totalItems = values.count
+          this.pagination.totalItems = values.count
         })
       },
             

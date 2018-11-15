@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fluxynet/gocipe/util"
-
 	"github.com/fluxynet/gocipe/output"
+	"github.com/fluxynet/gocipe/util"
 )
 
 type fileField struct {

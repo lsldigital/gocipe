@@ -65,7 +65,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateUtils {
-			utils.Generate(out)
+			utils.Generate(out, rcp)
 		}
 
 		if generateVuetify {
