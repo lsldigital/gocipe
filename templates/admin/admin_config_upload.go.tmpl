@@ -4,22 +4,17 @@ package admin
 var UploadPaths = map[string]*files.UploadOptions{
 	{{- range $i, $entity := .Entities}}
 	{{- range $entity.GetFileFields}}
-	"{{lower $entity.Name}}/{{lower .Name}}":	&{{$entity.Name}}{{.Name}}UploadOpts,
-	{{- end}}
-	{{- if and ($entity.ContentBuilder.Generate)  ($entity.ContentBuilder.AllowUpload)}}
-	{{- range $entity.ContentBuilder.UploadTypes}}
-	"{{lower $entity.Name}}/content/{{lower .}}":	&{{$entity.Name}}Content{{.}}UploadOpts,
-	{{- end}}
-	{{- end}}
-	{{- end}}
+	"{{lower .EntityName}}/{{lower .FieldName}}":	&{{.ConfigName}},
+	{{- end}}{{/* range $entity.GetFileFields */}}	
+	{{- end}}{{/* range $i, $entity := .Entities */}}
 }
 
 {{range $i, $entity := .Entities -}}
 {{range $entity.GetFileFields }}
-// {{$entity.Name}}{{.Name}}UploadOpts contains upload parameters for the "{{.Name}}" field in Entity "{{$entity.Name}}"
-var {{$entity.Name}}{{.Name}}UploadOpts = files.UploadOptions{
+// {{.ConfigName}} contains upload parameters for the "{{.FieldName}}" field in Entity "{{.EntityName}}"
+var {{.ConfigName}} = files.UploadOptions{
 	Dir:			"media",
-	Destination:    "{{lower $entity.Name}}/{{lower .Name}}",
+	Destination:    "{{.Destination}}",
 	MediaPrefixURL: "/media/",
 	FileType:       files.TypeImage,
 	MaxSize:        util.NoLimit,
@@ -33,27 +28,5 @@ var {{$entity.Name}}{{.Name}}UploadOpts = files.UploadOptions{
 		},
 	},
 }
-{{end}}
-
-{{if and ($entity.ContentBuilder.Generate)  ($entity.ContentBuilder.AllowUpload)}}
-{{range $entity.ContentBuilder.UploadTypes}}
-// {{$entity.Name}}Content{{.}}UploadOpts contains upload parameters for the Content "{{.}}" Lardwaz field in Entity "{{$entity.Name}}"
-var {{$entity.Name}}Content{{.}}UploadOpts = files.UploadOptions{
-	Dir:			"media",
-	Destination:    "{{lower $entity.Name}}/content/{{lower .}}",
-	MediaPrefixURL: "/media/",
-	FileType:       files.TypeImage,
-	MaxSize:        util.NoLimit,
-	ConvertTo:      imagist.TypeImageJPG,
-	ImgDimensions:  &imagist.ImageDimensions{
-		MinWidth:       util.NoLimit,
-		MinHeight:      util.NoLimit,
-		Formats: []imagist.FormatDimensions{
-			{Name: "thumb", Width: 400, Height: 200},
-			{Name: "full", Width: util.NoLimit, Height: util.NoLimit, Watermark: imagist.BottomRight},
-		},
-	},
-}
-{{end}}
-{{end}}
-{{end}}
+{{end}}{{/* range $entity.GetFileFields */}}
+{{end}}{{/* range $i, $entity := .Entities */}}

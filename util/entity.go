@@ -469,13 +469,32 @@ func (e *Entity) GetStruct(op string) string {
 }
 
 //GetFileFields returns list of file fields
-func (e *Entity) GetFileFields() []Field {
-	var fields []Field
+func (e *Entity) GetFileFields() []FileField {
+	var fields []FileField
+
+	if e.ContentBuilder.Generate && e.ContentBuilder.AllowUpload {
+		for _, u := range e.ContentBuilder.UploadTypes {
+			uploadType := strings.Title(u)
+			fields = append(fields, FileField{
+				ConfigName:     e.Name + "Content" + uploadType + "UploadOpts",
+				Destination:    strings.ToLower(e.Name + "/content/" + uploadType),
+				EntityName:     e.Name,
+				FieldName:      uploadType,
+				ContentBuilder: true,
+			})
+		}
+	}
 
 	for _, f := range e.Fields {
 		switch f.EditWidget.Type {
 		case WidgetTypeFile, WidgetTypeImage:
-			fields = append(fields, f)
+			fields = append(fields, FileField{
+				ConfigName:     e.Name + f.Name + "UploadOpts",
+				Destination:    strings.ToLower(e.Name + "/" + f.Name),
+				EntityName:     e.Name,
+				FieldName:      f.Name,
+				ContentBuilder: false,
+			})
 		}
 	}
 
