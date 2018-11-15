@@ -6,8 +6,7 @@
       </v-btn>
       <v-toolbar-title class="ml-0 pl-0">{{.Entity.Name}} </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-text-field class="mb-3" prepend-inner-icon="search" label="Search"
-        single-line hide-details small v-model="search"></v-text-field>
+      <v-text-field class="mb-3" prepend-inner-icon="search" label="Search" single-line hide-details small v-model="search"></v-text-field>
       <v-btn-toggle flat class="transparent" v-model="toggle_status">
         <v-btn icon small :color="toggle_status === 0 ? 'success' : ''" flat>
           <v-icon small dark>check_circle</v-icon>
@@ -50,90 +49,91 @@
       <p class="text-xs-center">contacting server...</p>
     </div>
     <v-alert type="info" value="true" color="primary" outline icon="info" v-else-if="entities.length===0 && !loading">
-      No {{.Entity.Name}} exist. Would you like to create one now?
+      No {{plural .Entity.Name}} found. Would you like to create one now?
       <v-btn color="primary" @click="create">create new</v-btn>
     </v-alert>
 
     <!-- Table form listing -->
     <v-card v-else>
-        <v-data-table :headers="headers" max :items="entities" class="elevation-0" :search="search">
-          <template slot="items" slot-scope="props">
-            <tr :class="{'highlight': recentlySaved(props.item.Id)}" :key="props.item.Id">
-              <td class="justify-center layout">
-                <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.Id, props.item.Name)">
-                  <v-icon>delete</v-icon>
+      <v-data-table class="elevation-0" :headers="headers" :items="entities" :pagination.sync="pagination" :total-items="totalItems" :rows-per-page-items="pagination.rowsPerPageItems">
+        <template slot="items" slot-scope="props">
+          <tr :class="{'highlight': recentlySaved(props.item.Id)}" :key="props.item.Id">
+            <td class="justify-center layout">
+              <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.Id, props.item.Name)">
+                <v-icon>delete</v-icon>
+              </v-btn>
+              <v-btn icon class="mx-0" @click.stop="duplicate(props.item.Id)">
+                <v-icon>file_copy</v-icon>
+              </v-btn>
+              <v-tooltip top v-if="nested">
+                <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.Id, props.item.Name)">
+                  <v-icon>edit</v-icon>
                 </v-btn>
-                <v-btn icon class="mx-0" @click.stop="duplicate(props.item.Id)">
-                  <v-icon>file_copy</v-icon>
+                <span>Edit</span>
+              </v-tooltip>
+              <v-tooltip top v-else>
+                <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.Id }}">
+                  <v-icon>edit</v-icon>
                 </v-btn>
-                <v-tooltip top v-if="nested">
-                  <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.Id, props.item.Name)">
-                    <v-icon>edit</v-icon>
-                  </v-btn>
-                  <span>Edit</span>
-                </v-tooltip>
-                <v-tooltip top v-else>
-                  <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.Id }}">
-                    <v-icon>edit</v-icon>
-                  </v-btn>
-                  <span>Edit</span>
-                </v-tooltip>
-              </td>
-              <!-- Check if it should appear in the list -->
-              {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
-              <!-- Use different rendering for dates -->
-              {{ if eq .ListWidget.Type "time" }}
-              <td>
-                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Name) }}" />
-              </td>
-              {{- else -}}
-              <!-- Use different rendering for dates -->
-              {{if eq .ListWidget.Type "image"}}
-              <td>
-                <v-img :src="{{ printf " props.item.%s+':thumb' " (ucfirst .Name) }}" width="50" max-width="50" contain height="40" max-height="40"></v-img>
-              </td>
-              {{- else -}}
-              <!-- Use different rendering for select types -->
-              {{if eq .ListWidget.Type "select"}}
-              <td>
-                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :field="'{{ .Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Name) }}" />
-              </td>
-              {{- else -}}
-              <!-- Use different rendering for dates -->
-              {{if eq .ListWidget.Type "icon"}}
-              <td>
-                <v-icon>{{ printf "{{ props.item.%s }}" (ucfirst .Name) }}</v-icon>
-              </td>
-              {{else}}
-              <!-- Use different rendering for toggles -->
-              {{if eq .ListWidget.Type "toggle"}}
-              <td>
-                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Name) }}" />
-              </td>
-              {{else}}
-              <td>
-                <v-tooltip top>
-                  <span slot="activator">
-                    {{ printf "{{ props.item.%s}}" (ucfirst .Name) }}
+                <span>Edit</span>
+              </v-tooltip>
+            </td>
+            <!-- Check if it should appear in the list -->
+            {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
+            <!-- Use different rendering for dates -->
+            {{ if eq .ListWidget.Type "time" }}
+            <td>
+              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Name) }}" />
+            </td>
+            {{- else -}}
+            <!-- Use different rendering for dates -->
+            {{if eq .ListWidget.Type "image"}}
+            <td>
+              <v-img v-if="{{ printf "props.item.%s" (ucfirst .Name) }} != ''" :src="{{ printf "props.item.%s+':thumb' " (ucfirst .Name) }}" width="50" max-width="50" contain height="40" max-height="40"></v-img>
+              <span v-else> - </span>
+            </td>
+            {{- else -}}
+            <!-- Use different rendering for select types -->
+            {{if eq .ListWidget.Type "select"}}
+            <td>
+              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :field="'{{ .Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Name) }}" />
+            </td>
+            {{- else -}}
+            <!-- Use different rendering for dates -->
+            {{if eq .ListWidget.Type "icon"}}
+            <td>
+              <v-icon>{{ printf "{{ props.item.%s }}" (ucfirst .Name) }}</v-icon>
+            </td>
+            {{else}}
+            <!-- Use different rendering for toggles -->
+            {{if eq .ListWidget.Type "toggle"}}
+            <td>
+              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Name) }}" />
+            </td>
+            {{else}}
+            <td>
+              <v-tooltip top>
+                <span slot="activator">
+                  {{ printf "{{ props.item.%s}}" (ucfirst .Name) }}
 
-                  </span>
-                  <span>Widget Type : {{ ucfirst .Type}}</span>
-                </v-tooltip>
-              </td>
-              {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
-            </tr>
-          </template>
+                </span>
+                <span>Widget Type : {{ ucfirst .Type}}</span>
+              </v-tooltip>
+            </td>
+            {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
+          </tr>
+        </template>
 
-          <template slot="no-data">
-            <v-flex ma-4>
-              <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-if="search.length> 0"> Your search for "{{ "{{ search }}" }}" found no results.
-              </v-alert>
-              <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-else>
-                No {{.Entity.Name}} found.
-              </v-alert>
-            </v-flex>
-          </template>
-        </v-data-table>
+        <template slot="no-data">
+          <v-flex ma-4>
+            <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-if="search.length> 0"> Your search for "{{ "{{ search }}" }}" found no results.
+            </v-alert>
+            <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-else>
+              No {{.Entity.Name}} found.
+            </v-alert>
+          </v-flex>
+        </template>
+      </v-data-table>
     </v-card>
 
     <v-dialog v-model="dialog" persistent max-width="300">
@@ -157,8 +157,7 @@
     </v-dialog>
     <!-- !# Edit In Place -->
 
-
-    <v-snackbar v-model="snackbar.show"  :bottom="true"  color="primary" auto-height :timeout="2000">
+    <v-snackbar v-model="snackbar.show" :bottom="true" color="primary" auto-height :timeout="2000">
       {{ printf `{{ snackbar.text }}` }}
       <v-btn dark flat @click="snackbarHide">
         <v-icon>close</v-icon>
@@ -174,13 +173,25 @@ import { Create{{ .Entity.Name}}Request } from "@/services/service_admin_pb";
 import { DeleteRequest } from "@/services/service_admin_pb";
 import { mapGetters } from 'vuex';
 
-import { {{ .Entity.Name }} } from "@/services/models_pb.js";
+import { {{ .Entity.Name }}, ListOpts, ListSortOpts } from "@/services/models_pb.js";
+import _ from 'lodash';
+
 
 let cli = new AdminClient("/api");
 
 export default {
   data() {
     return {
+      pagination: {
+        sortBy: '{{ .Entity.LabelField}}',
+        descending: true,
+        page: 1,
+        rowsPerPage: 5,
+        totalItems: 0,
+        rowsPerPageItems: [5, 10, 25, 50, 100]
+
+      },
+      totalItems: 0,
       messages: [],
       track: null,
       search: "",
@@ -204,7 +215,7 @@ export default {
         {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
 		    {{- range .Entity.Fields }}
         {{- if not .ListWidget.Hide}}
-        {text: "{{.Label}}", value: "{{.Name}}"},
+        {text: "{{.Label}}", value: "{{.Name}}", sortable: false},
         {{- end}}
         {{- end}}
       ],
@@ -222,7 +233,7 @@ export default {
   props: ["filter_id", "filter_field", "nested", "rpc"],
   mounted() {
     this.loading = true;
-    this.getList();
+    this.populateData();
     this.track = this.$route.params.track;
 
   },
@@ -249,42 +260,113 @@ export default {
           label: ""
         };
       },
-      getList: function(){
+      count(req) {
+        return new Promise((resolve, reject) => {
+          cli.count{{plural .Entity.Name }}(req, (err, resp) => {
+            if (err) {
+              console.log(err);
+              this.snackbarShow(err.message, "error");
+              reject(err);
+            }
+
+            let count = resp.getCount();
+            resolve(count);
+          })
+        })
+      },
+      populateData: function () {
+        this.getList().then((values) => {
+          this.entities = values.entities;
+          this.totalItems = values.count
+        })
+      },
+            
+      fetchEntities: function(req){
+        return new Promise((resolve, reject) => {
+          cli.list{{plural .Entity.Name}}(req, (err, resp) => {
+            if (err) {
+              console.log(err);
+              this.snackbarShow(err.message, "error");
+              return;
+            }
+            this.loading = false;
+            this.snackbarShow('{{ucfirst (plural .Entity.Name)}} Loaded');
+
+            let entities = resp.get{{ucfirst (plural .Entity.Name)}}List().map(entity => {
+              return {
+                {{ range .Entity.Fields }}
+                  {{- if eq .ListWidget.Type "time" -}}
+                    {{ucfirst .Name}}: {{- printf " entity.get%s().toDate()" (ucfirst .Name)}},
+                  {{- else -}}
+                    {{ucfirst .Name}}: {{- printf " entity.get%s()" (ucfirst .Name)}},
+                  {{- end }}
+                {{ end }}
+              }
+            })
+            resolve(entities);
+          });
+        });
+      },
+      getList: function () {
+        // Will fetch Total and Entities as per pagination request
         let req = new ListRequest();
+        let sort = new ListSortOpts();
+
+        req.setKey(this.token);
 
         if (this.filter_id) {
           let filter = new Filter();
           filter.setField(this.filter_field);
           filter.setOperation("=");
           filter.setValue(this.filter_id);
-
           req.addFilters(filter);
         }
 
-        req.setKey(this.token);
+        // Search term
+        let searchFilter = new Filter();
+        searchFilter.setField('{{ .Entity.LabelField}}');
+        searchFilter.setOperation("~");
+        searchFilter.setValue('%' + this.search + '%');
+        req.addFilters(searchFilter);
 
-        cli.list{{plural .Entity.Name}}(req, (err, resp) => {
-          if (err) {
-            console.log(err);
-            this.snackbarShow(err.message, "error");
-            return;
+        // Status filter
+        if (this.toggle_status != null) {
+          let statusFilter = new Filter();
+          let statusTerm = '';
+          statusFilter.setField("status");
+          statusFilter.setOperation("=");
+
+          if (this.toggle_status == 1) {
+            statusTerm = 'saved'
           }
-          this.loading = false;
-          this.snackbarShow('{{ucfirst (plural .Entity.Name)}} Loaded');
+          else if (this.toggle_status == 2) {
+            statusTerm = 'draft'
+          }
+          else if (this.toggle_status == 3) {
+            statusTerm = 'unpublished'
+          }
+          else if (this.toggle_status == 0) {
+            statusTerm = 'published'
+          }
+          console.log(statusTerm);
+          statusFilter.setValue(statusTerm);
+          req.addFilters(statusFilter);
+        }
 
-          this.entities = resp.get{{ucfirst (plural .Entity.Name)}}List().map(entity => {
-            return {
-              {{ range .Entity.Fields }}
-                {{- if eq .ListWidget.Type "time" -}}
-                  {{ucfirst .Name}}: {{- printf " entity.get%s().toDate()" (ucfirst .Name)}},
-                {{- else -}}
-                  {{ucfirst .Name}}: {{- printf " entity.get%s()" (ucfirst .Name)}},
-                {{- end }}
-              {{ end }}
-            }
-          })
-        });
-       },
+        let opts = new ListOpts();
+        opts.setOffset((this.pagination.page - 1) * this.pagination.rowsPerPage)
+        opts.setLimit(this.pagination.rowsPerPage);
+
+        sort.setAscending(true);
+        sort.setField("publish_date");
+        opts.addSort(sort);
+
+        req.setListopts(opts);
+
+        return Promise.all([this.count(req), this.fetchEntities(req)]).then(x => {
+          return Promise.resolve({ count: x[0], entities: x[1] })
+        })
+      },      
       duplicate(id) {
         let toBeDuplicatedId = id;
         let toBeDuplicatedEntity = null;
@@ -364,7 +446,7 @@ export default {
                 return;
             } else {
               this.snackbarShow('Deleted', this.deleteItemId.label);
-              this.getList();
+              this.populateData();
             }
           })
 
@@ -379,6 +461,24 @@ export default {
       snackbarHide: function() {
           this.snackbar.show = false
       }
+  },
+  watch: {
+    pagination: {
+      handler() {
+        this.getList().then(values => {
+          this.entities = values.entities;
+        })
+      },
+      deep: true
+    },
+    toggle_status: {
+      handler() {
+        this.populateData()
+      }
+    },
+    search: _.debounce(function (val) {
+        this.populateData()
+    }, 500)
   }
 };
 </script>

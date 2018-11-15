@@ -259,6 +259,55 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 	
 	return &res, nil
 }
+
+// Count{{plural .Name}} allows counting of listing all entity of type {{.Name}}
+func(s Service) Count{{plural .Name}}(ctx context.Context, req *ListRequest) (*CountResponse, error) {
+	var (
+		res  CountResponse
+		err  error
+		filters []*models.Filter
+	)
+
+	{{$filters := .GetAdminFilters }}
+	{{if (or $filters.HasBool $filters.HasString $filters.HasDate)}}
+	if req.Filters != nil {
+		for i := range req.Filters {
+			switch req.Filters[i].Field {
+			{{if $filters.HasBool}}
+			case {{$filters.BoolFilters}}:
+				if f, err := NewBoolFilter(req.Filters[i]); err == nil {
+					filters = append(filters, f)
+				} else {
+					return &res, err
+				}
+			{{end}}
+			{{if $filters.HasString}}
+			case {{$filters.StringFilters}}:
+				if f, err := NewStringFilter(req.Filters[i]); err == nil {
+					filters = append(filters, f)
+				} else {
+					return &res, err
+				}
+			{{end}}
+			{{if $filters.HasDate}}
+			case {{$filters.DateFilters}}:
+				if f, err := NewDateFilter(req.Filters[i]); err == nil {
+					filters = append(filters, f)
+				} else {
+					return &res, err
+				}
+			{{end}}
+			}
+		}
+	}
+	{{end}}
+	
+	res.Count, err = models.{{.Name}}Repo.Count(ctx, req.ListOpts, filters...)
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+	return &res, nil
+}
 {{- end}}{{/* if .Admin.List */}}
 
 {{if .Admin.Update -}}
@@ -484,6 +533,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 	}
 	
 	stmt, err := tx.Prepare(`UPDATE {{.Table}} SET `+fieldname+` = $1 WHERE id = $2`)
+	defer stmt.Close()
 	if err != nil {
 		files.Delete(fileDiskPath)
 		return &res, errors.WithStack(err)
@@ -519,7 +569,7 @@ func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) 
 		return &res, err
 	}
     
-	rows, err = tx.Query(`SELECT id, t."{{lower .LabelField}}", t."status" FROM {{.Table}} t WHERE LOWER(t."{{lower .LabelField}}") LIKE $1`, "%"+strings.ToLower(req.Term)+"%")
+	rows, err = tx.Query(`SELECT id, t."{{.LabelField}}", t."status" FROM {{.Table}} t WHERE LOWER(t."{{lower .LabelField}}") LIKE $1`, "%"+strings.ToLower(req.Term)+"%")
 	if err != nil {
 		return &res, err
 	}

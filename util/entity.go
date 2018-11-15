@@ -179,7 +179,7 @@ func (e *Entity) init(r *Recipe) {
 	if e.LabelField == "" {
 		for _, p := range preferredLabelFields { //check if preferred label field present
 			if f, err := e.GetField(p); err == nil && f.Type == fieldTypeStr {
-				e.LabelField = f.Name
+				e.LabelField = f.schema.Field
 				break
 			}
 		}
@@ -187,7 +187,7 @@ func (e *Entity) init(r *Recipe) {
 		if e.LabelField == "" { //find first string field for label
 			for _, f := range e.Fields {
 				if f.Type == fieldTypeStr {
-					e.LabelField = f.Name
+					e.LabelField = f.schema.Field
 					break
 				}
 			}
@@ -206,13 +206,6 @@ func (e *Entity) Validate() error {
 		//all ok
 	default:
 		return ErrorEntityInvalidPrimaryKey
-	}
-
-	if e.LabelField == "" {
-	} else if f, err := e.GetField(e.LabelField); err != nil {
-		return err
-	} else if f.Type != fieldTypeStr {
-		return ErrorEntitySlugNotString
 	}
 
 	if e.Slug == "" {

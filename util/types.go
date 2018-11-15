@@ -282,6 +282,9 @@ type DeckOpts struct {
 
 	// EntityTypeWhitelist represents the allowed entity types of the cards in the deck
 	EntityTypeWhitelist []string `json:"entity_type_whitelist"`
+
+	// Queries represents the queries used for autofill (order-defined priority)
+	Queries []string `json:"queries"`
 }
 
 // EditWidgetOpts represents a UI widget for edit forms
@@ -300,6 +303,9 @@ type EditWidgetOpts struct {
 
 	// Description is the description shown to the user on the edit form
 	Description string `json:"description"`
+
+	// ImageType is the type of image that the imagefield have to prefill
+	ImageType string `json:"imagetype"`
 }
 
 // EditWidgetOption represents an option for SelectRel widget type

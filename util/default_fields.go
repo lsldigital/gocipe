@@ -50,6 +50,7 @@ var fieldSlug = Field{
 		Hide: true,
 	},
 	ListWidget: ListWidgetOpts{
+		Hide: true,
 		Type: WidgetTypeTextField,
 	},
 }
