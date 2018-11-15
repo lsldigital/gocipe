@@ -379,7 +379,7 @@ func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filt
 			values = val
 		} else {
 			index++
-			segments = append(segments, `t."`+filter.Field+`" `+filter.Operation+" $"+strconv.Itoa(index))
+			segments = append(segments, filter.ToQuerySegment(index))
 			values = append(values, filter.Value)
 		}
 	}

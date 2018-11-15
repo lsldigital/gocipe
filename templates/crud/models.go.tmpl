@@ -20,13 +20,30 @@ const (
 	NoOffset = -1
 	// NoLimit indicates List/Select queries without limit clause
 	NoLimit  = -1
+
+	// FilterFuncLower is a filter function for SQL, to produce lowercase
+	FilterFuncLower = "LOWER"
 )
 
 // Filter represents a filter to apply during listing (crud)
 type Filter struct {
-	Field     string
-	Operation string
-	Value     interface{}
+	Field         string
+	FieldFunction string
+	Operation     string
+	Value         interface{}
+}
+
+// ToQuerySegment will return a formatted SQL segment to be used in queries
+func (f Filter) ToQuerySegment(index int) string {
+	var fieldPrefix, fieldSuffix string
+
+	switch f.FieldFunction {
+	case FilterFuncLower:
+		fieldPrefix = "LOWER("
+		fieldSuffix = ")"
+	}
+
+	return fieldPrefix + `t."`+f.Field+`"`+fieldSuffix+` `+f.Operation+` $`+strconv.Itoa(index)
 }
 
 // Init is responsible to initialize all repositories
