@@ -24,11 +24,11 @@ func NewBoolFilter(filter *Filter) (*models.Filter, error) {
 func NewStringFilter(filter *Filter) (*models.Filter, error) {
 	switch filter.Operation {
 	case "=":
-		return &models.Filter{Field: filter.Field, FieldFunction: models.FilterFuncLower, Operation: "=", Value: string.ToLower(filter.Value)}, nil
+		return &models.Filter{Field: filter.Field, FieldFunction: models.FilterFuncLower, Operation: "=", Value: strings.ToLower(filter.Value)}, nil
 	case "!=":
-		return &models.Filter{Field: filter.Field, FieldFunction: models.FilterFuncLower, Operation: "!=", Value: string.ToLower(filter.Value)}, nil
+		return &models.Filter{Field: filter.Field, FieldFunction: models.FilterFuncLower, Operation: "!=", Value: strings.ToLower(filter.Value)}, nil
 	case "~":
-		return &models.Filter{Field: filter.Field, FieldFunction: models.FilterFuncLower, Operation: "LIKE", Value: string.ToLower(filter.Value)}, nil
+		return &models.Filter{Field: filter.Field, FieldFunction: models.FilterFuncLower, Operation: "LIKE", Value: strings.ToLower(filter.Value)}, nil
 	}
 
 	return nil, ErrorInvalidOperation
