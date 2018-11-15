@@ -282,6 +282,9 @@ type DeckOpts struct {
 
 	// EntityTypeWhitelist represents the allowed entity types of the cards in the deck
 	EntityTypeWhitelist []string `json:"entity_type_whitelist"`
+
+	// Queries represents the queries used for autofill (order-defined priority)
+	Queries []string `json:"queries"`
 }
 
 // EditWidgetOpts represents a UI widget for edit forms
