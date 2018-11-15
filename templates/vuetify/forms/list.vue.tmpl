@@ -50,13 +50,13 @@
       <p class="text-xs-center">contacting server...</p>
     </div>
     <v-alert type="info" value="true" color="primary" outline icon="info" v-else-if="entities.length===0 && !loading">
-      No {{.Entity.Name}} exist. Would you like to create one now?
+      No {{plural .Entity.Name}} found. Would you like to create one now?
       <v-btn color="primary" @click="create">create new</v-btn>
     </v-alert>
 
     <!-- Table form listing -->
     <v-card v-else>
-        <v-data-table :headers="headers" max :items="entities" class="elevation-0" :search="search">
+        <v-data-table class="elevation-0" :headers="headers" :items="entities" :pagination.sync="pagination" :total-items="totalItems" :rows-per-page-items="pagination.rowsPerPageItems">
           <template slot="items" slot-scope="props">
             <tr :class="{'highlight': recentlySaved(props.item.Id)}" :key="props.item.Id">
               <td class="justify-center layout">
@@ -174,13 +174,25 @@ import { Create{{ .Entity.Name}}Request } from "@/services/service_admin_pb";
 import { DeleteRequest } from "@/services/service_admin_pb";
 import { mapGetters } from 'vuex';
 
-import { {{ .Entity.Name }} } from "@/services/models_pb.js";
+import { {{ .Entity.Name }}, ListOpts, ListSortOpts } from "@/services/models_pb.js";
+import _ from 'lodash';
+
 
 let cli = new AdminClient("/api");
 
 export default {
   data() {
     return {
+      pagination: {
+        sortBy: '{{ .Entity.LabelField}}',
+        descending: true,
+        page: 1,
+        rowsPerPage: 5,
+        totalItems: 0,
+        rowsPerPageItems: [5, 10, 25, 50, 100]
+
+      },
+      totalItems: 0,
       messages: [],
       track: null,
       search: "",
@@ -222,7 +234,7 @@ export default {
   props: ["filter_id", "filter_field", "nested", "rpc"],
   mounted() {
     this.loading = true;
-    this.getList();
+    this.populateData();
     this.track = this.$route.params.track;
 
   },
@@ -249,42 +261,113 @@ export default {
           label: ""
         };
       },
-      getList: function(){
+      count(req) {
+        return new Promise((resolve, reject) => {
+          cli.count{{plural .Entity.Name }}(req, (err, resp) => {
+            if (err) {
+              console.log(err);
+              this.snackbarShow(err.message, "error");
+              reject(err);
+            }
+
+            let count = resp.getCount();
+            resolve(count);
+          })
+        })
+      },
+      populateData: function () {
+        this.getList().then((values) => {
+          this.entities = values.entities;
+          this.totalItems = values.count
+        })
+      },
+            
+      fetchEntities: function(req){
+        return new Promise((resolve, reject) => {
+          cli.list{{plural .Entity.Name}}(req, (err, resp) => {
+            if (err) {
+              console.log(err);
+              this.snackbarShow(err.message, "error");
+              return;
+            }
+            this.loading = false;
+            this.snackbarShow('{{ucfirst (plural .Entity.Name)}} Loaded');
+
+            let entities = resp.get{{ucfirst (plural .Entity.Name)}}List().map(entity => {
+              return {
+                {{ range .Entity.Fields }}
+                  {{- if eq .ListWidget.Type "time" -}}
+                    {{ucfirst .Name}}: {{- printf " entity.get%s().toDate()" (ucfirst .Name)}},
+                  {{- else -}}
+                    {{ucfirst .Name}}: {{- printf " entity.get%s()" (ucfirst .Name)}},
+                  {{- end }}
+                {{ end }}
+              }
+            })
+            resolve(entities);
+          });
+        });
+      },
+      getList: function () {
+        // Will fetch Total and Entities as per pagination request
         let req = new ListRequest();
+        let sort = new ListSortOpts();
+
+        req.setKey(this.token);
 
         if (this.filter_id) {
           let filter = new Filter();
           filter.setField(this.filter_field);
           filter.setOperation("=");
           filter.setValue(this.filter_id);
-
           req.addFilters(filter);
         }
 
-        req.setKey(this.token);
+        // Search term
+        let searchFilter = new Filter();
+        searchFilter.setField('{{ .Entity.LabelField}}');
+        searchFilter.setOperation("~");
+        searchFilter.setValue('%' + this.search + '%');
+        req.addFilters(searchFilter);
 
-        cli.list{{plural .Entity.Name}}(req, (err, resp) => {
-          if (err) {
-            console.log(err);
-            this.snackbarShow(err.message, "error");
-            return;
+        // Status filter
+        if (this.toggle_status != null) {
+          let statusFilter = new Filter();
+          let statusTerm = '';
+          statusFilter.setField("status");
+          statusFilter.setOperation("=");
+
+          if (this.toggle_status == 1) {
+            statusTerm = 'saved'
           }
-          this.loading = false;
-          this.snackbarShow('{{ucfirst (plural .Entity.Name)}} Loaded');
+          else if (this.toggle_status == 2) {
+            statusTerm = 'draft'
+          }
+          else if (this.toggle_status == 3) {
+            statusTerm = 'unpublished'
+          }
+          else if (this.toggle_status == 0) {
+            statusTerm = 'published'
+          }
+          console.log(statusTerm);
+          statusFilter.setValue(statusTerm);
+          req.addFilters(statusFilter);
+        }
 
-          this.entities = resp.get{{ucfirst (plural .Entity.Name)}}List().map(entity => {
-            return {
-              {{ range .Entity.Fields }}
-                {{- if eq .ListWidget.Type "time" -}}
-                  {{ucfirst .Name}}: {{- printf " entity.get%s().toDate()" (ucfirst .Name)}},
-                {{- else -}}
-                  {{ucfirst .Name}}: {{- printf " entity.get%s()" (ucfirst .Name)}},
-                {{- end }}
-              {{ end }}
-            }
-          })
-        });
-       },
+        let opts = new ListOpts();
+        opts.setOffset((this.pagination.page - 1) * this.pagination.rowsPerPage)
+        opts.setLimit(this.pagination.rowsPerPage);
+
+        sort.setAscending(true);
+        sort.setField("publish_date");
+        opts.addSort(sort);
+
+        req.setListopts(opts);
+
+        return Promise.all([this.count(req), this.fetchEntities(req)]).then(x => {
+          return Promise.resolve({ count: x[0], entities: x[1] })
+        })
+      },      
       duplicate(id) {
         let toBeDuplicatedId = id;
         let toBeDuplicatedEntity = null;
@@ -364,7 +447,7 @@ export default {
                 return;
             } else {
               this.snackbarShow('Deleted', this.deleteItemId.label);
-              this.getList();
+              this.populateData();
             }
           })
 
@@ -379,6 +462,24 @@ export default {
       snackbarHide: function() {
           this.snackbar.show = false
       }
+  },
+  watch: {
+    pagination: {
+      handler() {
+        this.getList().then(values => {
+          this.entities = values.entities;
+        })
+      },
+      deep: true
+    },
+    toggle_status: {
+      handler() {
+        this.populateData()
+      }
+    },
+    search: _.debounce(function (val) {
+        this.populateData()
+    }, 500)
   }
 };
 </script>

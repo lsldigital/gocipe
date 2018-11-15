@@ -300,6 +300,9 @@ type EditWidgetOpts struct {
 
 	// Description is the description shown to the user on the edit form
 	Description string `json:"description"`
+
+	// ImageType is the type of image that the imagefield have to prefill
+	ImageType string `json:"imagetype"`
 }
 
 // EditWidgetOption represents an option for SelectRel widget type
