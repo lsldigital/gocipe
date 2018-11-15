@@ -4,7 +4,7 @@ package admin
 var UploadPaths = map[string]*files.UploadOptions{
 	{{- range $i, $entity := .Entities}}
 	{{- range $entity.GetFileFields}}
-	"{{lower .EntityName}}/{{lower .FieldName}}":	&{{.ConfigName}},
+	"{{.Destination}}":	&{{.ConfigName}},
 	{{- end}}{{/* range $entity.GetFileFields */}}	
 	{{- end}}{{/* range $i, $entity := .Entities */}}
 }

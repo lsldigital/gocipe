@@ -385,7 +385,7 @@ func (e *Entity) HasAdminHooks() bool {
 // HasTimestamp returns true if the entity has at least 1 field of type timestamp
 func (e *Entity) HasTimestamp() bool {
 	for _, f := range e.Fields {
-		if f.Type == "time" {
+		if f.Type == fieldTypeTime {
 			return true
 		}
 	}
@@ -427,7 +427,7 @@ func (e *Entity) GetStruct(op string) string {
 	for _, f := range e.Fields {
 		//some fields require preprocessing
 		//they will be assigned to a variable, use that instead of the property name
-		if f.Type == "time" {
+		if f.Type == fieldTypeTime {
 			switch op {
 			case "get", "list":
 				fields = append(fields, fmt.Sprintf("&%s", strings.ToLower(f.Name)))
@@ -493,6 +493,7 @@ func (e *Entity) GetFileFields() []FileField {
 				Destination:    strings.ToLower(e.Name + "/" + f.Name),
 				EntityName:     e.Name,
 				FieldName:      f.Name,
+				SchemaName:     f.schema.Field,
 				ContentBuilder: false,
 			})
 		}

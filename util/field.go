@@ -103,11 +103,6 @@ func (f *Field) SchemaDefinition() string {
 	return fmt.Sprintf(`"%s" %s NOT NULL%s`, f.schema.Field, f.schema.Type, def)
 }
 
-//GetSchemaName returns field name
-func (f *Field) GetSchemaName() string {
-	return f.schema.Field
-}
-
 //ProtoDefinition returns proto definition for this field
 func (f *Field) ProtoDefinition(index *int) string {
 	var protoType string

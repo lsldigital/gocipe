@@ -6,10 +6,6 @@ type FileField struct {
 	Destination    string
 	EntityName     string
 	FieldName      string
+	SchemaName     string
 	ContentBuilder bool
-}
-
-// GetSchemaName returns field name in snake case format
-func (f *FileField) GetSchemaName() string {
-	return ToSnakeCase(f.FieldName)
 }
