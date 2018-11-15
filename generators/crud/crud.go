@@ -44,7 +44,10 @@ type relationship struct {
 
 // Generate returns generated code to run an http server
 func Generate(out *output.Output, r *util.Recipe) {
-	var generateAny bool
+	var (
+		generateAny  bool
+		hasTimestamp bool
+	)
 	// work.Waitgroup.Add(len(entities) * 2) //2 threads per entities. for models and models_hooks
 
 	for _, e := range r.Entities {
@@ -55,14 +58,15 @@ func Generate(out *output.Output, r *util.Recipe) {
 			}{Entities: r.Entities})
 		}
 
+		hasTimestamp = hasTimestamp || e.HasTimestamp()
 		generateAny = generateAny || r.Crud.Generate
-
 	}
 
 	out.GenerateAndOverwrite("GenerateCRUD Proto", "crud/models.proto.tmpl", "proto/models.proto", output.WithHeader, struct {
 		Entities      []util.Entity
 		AppImportPath string
-	}{Entities: r.Entities, AppImportPath: util.AppImportPath})
+		HasTimestamp  bool
+	}{Entities: r.Entities, AppImportPath: util.AppImportPath, HasTimestamp: hasTimestamp})
 
 	out.GenerateAndOverwrite("GenerateCRUD Moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", output.WithHeader, struct{}{})
 

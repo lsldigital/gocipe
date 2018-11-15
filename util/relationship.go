@@ -79,11 +79,11 @@ func (p *Relationship) init(r *Recipe, e *Entity) {
 		isMany = true
 		p.JoinTable = p.related.Table
 		p.ThisID = "id"
-		p.ThatID = strings.ToLower(e.Name) + "_id"
+		p.ThatID = strings.ToLower(p.Name) + "_" + e.Table + "_id"
 
 	case RelationshipTypeManyOne:
 		p.JoinTable = ""
-		p.ThisID = strings.ToLower(p.Entity) + "_id"
+		p.ThisID = strings.ToLower(p.Name) + "_" + p.related.Table + "_id"
 		p.ThatID = "id"
 
 	case RelationshipTypeManyManyOwner, RelationshipTypeManyManyInverse:
@@ -93,14 +93,19 @@ func (p *Relationship) init(r *Recipe, e *Entity) {
 		} else {
 			p.JoinTable = p.related.Table + "_" + e.Table
 		}
+		if p.Name != "" {
+			p.JoinTable += "_" + strings.ToLower(p.Name)
+		}
 		p.ThisID = strings.ToLower(p.Entity) + "_id"
-		p.ThatID = strings.ToLower(e.Name) + "_id"
+		p.ThatID = e.Table + "_id"
 	}
 
-	if isMany {
-		p.Name = inflection.Plural(strings.Title(strings.ToLower(p.Entity)))
-	} else {
-		p.Name = strings.Title(p.Entity)
+	if p.Name == "" {
+		if isMany {
+			p.Name = inflection.Plural(strings.Title(strings.ToLower(p.Entity)))
+		} else {
+			p.Name += strings.Title(p.Entity)
+		}
 	}
 }
 
@@ -152,7 +157,7 @@ func (p *Relationship) ProtoDefinitions(index *int) []string {
 func (p *Relationship) GetRelatedID() string {
 	switch p.Type {
 	case RelationshipTypeManyOne, RelationshipTypeManyManyOwner, RelationshipTypeManyManyInverse:
-		return p.Entity + "ID"
+		return p.Name + "ID"
 	}
 
 	return "ID"

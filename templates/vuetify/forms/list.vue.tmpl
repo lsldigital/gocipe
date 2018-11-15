@@ -6,8 +6,7 @@
       </v-btn>
       <v-toolbar-title class="ml-0 pl-0">{{.Entity.Name}} </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-text-field class="mb-3" prepend-inner-icon="search" label="Search"
-        single-line hide-details small v-model="search"></v-text-field>
+      <v-text-field class="mb-3" prepend-inner-icon="search" label="Search" single-line hide-details small v-model="search"></v-text-field>
       <v-btn-toggle flat class="transparent" v-model="toggle_status">
         <v-btn icon small :color="toggle_status === 0 ? 'success' : ''" flat>
           <v-icon small dark>check_circle</v-icon>
@@ -56,84 +55,88 @@
 
     <!-- Table form listing -->
     <v-card v-else>
-        <v-data-table class="elevation-0" :headers="headers" :items="entities" :pagination.sync="pagination" :total-items="totalItems" :rows-per-page-items="pagination.rowsPerPageItems">
-          <template slot="items" slot-scope="props">
-            <tr :class="{'highlight': recentlySaved(props.item.Id)}" :key="props.item.Id">
-              <td class="justify-center layout">
-                <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.Id, props.item.Name)">
-                  <v-icon>delete</v-icon>
+      <v-data-table class="elevation-0" :headers="headers" :items="entities" :pagination.sync="pagination" :total-items="pagination.totalItems" :rows-per-page-items="pagination.rowsPerPageItems">
+        <template slot="items" slot-scope="props">
+          <tr :class="{'highlight': recentlySaved(props.item.Id)}" :key="props.item.Id">
+            <td class="justify-center layout">
+              <v-btn icon class="mx-0" @click.stop="deleteTry(props.item.Id, props.item.Name)">
+                <v-icon>delete</v-icon>
+              </v-btn>
+              <v-btn icon class="mx-0" @click.stop="duplicate(props.item.Id)">
+                <v-icon>file_copy</v-icon>
+              </v-btn>
+              <v-tooltip top v-if="nested">
+                <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.Id, props.item.Name)">
+                  <v-icon>edit</v-icon>
                 </v-btn>
-                <v-btn icon class="mx-0" @click.stop="duplicate(props.item.Id)">
-                  <v-icon>file_copy</v-icon>
+                <span>Edit</span>
+              </v-tooltip>
+              <v-tooltip top v-else>
+                <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.Id }}">
+                  <v-icon>edit</v-icon>
                 </v-btn>
-                <v-tooltip top v-if="nested">
-                  <v-btn slot="activator" icon class="mx-0" @click="nestedFormEdit(props.item.Id, props.item.Name)">
-                    <v-icon>edit</v-icon>
-                  </v-btn>
-                  <span>Edit</span>
-                </v-tooltip>
-                <v-tooltip top v-else>
-                  <v-btn slot="activator" icon class="mx-0" :to="{name: '{{plural (lower .Entity.Name )}}_edit', params:{ id: props.item.Id }}">
-                    <v-icon>edit</v-icon>
-                  </v-btn>
-                  <span>Edit</span>
-                </v-tooltip>
-              </td>
-              <!-- Check if it should appear in the list -->
-              {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
-              <!-- Use different rendering for dates -->
-              {{ if eq .ListWidget.Type "time" }}
-              <td>
-                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Name) }}" />
-              </td>
-              {{- else -}}
-              <!-- Use different rendering for dates -->
-              {{if eq .ListWidget.Type "image"}}
-              <td>
-                <v-img :src="{{ printf " props.item.%s+':thumb' " (ucfirst .Name) }}" width="50" max-width="50" contain height="40" max-height="40"></v-img>
-              </td>
-              {{- else -}}
-              <!-- Use different rendering for select types -->
-              {{if eq .ListWidget.Type "select"}}
-              <td>
-                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :field="'{{ .Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Name) }}" />
-              </td>
-              {{- else -}}
-              <!-- Use different rendering for dates -->
-              {{if eq .ListWidget.Type "icon"}}
-              <td>
-                <v-icon>{{ printf "{{ props.item.%s }}" (ucfirst .Name) }}</v-icon>
-              </td>
-              {{else}}
-              <!-- Use different rendering for toggles -->
-              {{if eq .ListWidget.Type "toggle"}}
-              <td>
-                <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Name) }}" />
-              </td>
-              {{else}}
-              <td>
-                <v-tooltip top>
-                  <span slot="activator">
-                    {{ printf "{{ props.item.%s}}" (ucfirst .Name) }}
+                <span>Edit</span>
+              </v-tooltip>
+            </td>
+            <!-- Check if it should appear in the list -->
+            {{ range .Entity.Fields }} {{if not .ListWidget.Hide}}
+            <!-- Use different rendering for dates -->
+            {{ if eq .ListWidget.Type "time" }}
+            <td>
+              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :time="{{ printf " props.item.%s " (ucfirst .Name) }}" />
+            </td>
+            {{- else -}}
+            <!-- Use different rendering for dates -->
+            {{if eq .ListWidget.Type "image"}}
+            <td>
+              <v-img v-if="{{ printf "props.item.%s" (ucfirst .Name) }} != ''" :src="{{ printf "props.item.%s+':thumb' " (ucfirst .Name) }}" width="50" max-width="50" contain height="40" max-height="40"></v-img>
+              <span v-else> - </span>
+            </td>
+            {{- else -}}
+            <!-- Use different rendering for select types -->
+            {{if eq .ListWidget.Type "select"}}
+            <td>
+              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :field="'{{ .Name }}'" :status="{{ printf " props.item.%s " (ucfirst .Name) }}" />
+            </td>
+            {{- else -}}
+            <!-- Use different rendering for dates -->
+            {{if eq .ListWidget.Type "icon"}}
+            <td>
+              <v-icon>{{ printf "{{ props.item.%s }}" (ucfirst .Name) }}</v-icon>
+            </td>
+            {{else}}
+            <!-- Use different rendering for toggles -->
+            {{if eq .ListWidget.Type "toggle"}}
+            <td>
+              <component :is="'ListWidget{{ucfirst .ListWidget.Type}}'" :value="{{ printf " props.item.%s " (ucfirst .Name) }}" />
+            </td>
+            {{else}}
+            <td>
+              <v-tooltip top>
+                <span slot="activator">
+                  {{ printf "{{ props.item.%s}}" (ucfirst .Name) }}
 
-                  </span>
-                  <span>Widget Type : {{ ucfirst .Type}}</span>
-                </v-tooltip>
-              </td>
-              {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
-            </tr>
-          </template>
+                </span>
+                <span>Widget Type : {{ ucfirst .Type}}</span>
+              </v-tooltip>
+            </td>
+            {{end}} {{end}} {{end}} {{end}} {{end}} {{end}} {{end}}
+          </tr>
+        </template>
 
-          <template slot="no-data">
-            <v-flex ma-4>
-              <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-if="search.length> 0"> Your search for "{{ "{{ search }}" }}" found no results.
-              </v-alert>
-              <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-else>
-                No {{.Entity.Name}} found.
-              </v-alert>
-            </v-flex>
-          </template>
-        </v-data-table>
+        <template slot="no-data">
+          <v-flex ma-4>
+            <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-if="search.length> 0"> Your search for "{{ "{{ search }}" }}" found no results.
+            </v-alert>
+            <v-alert slot="no-results" :value="true" color="primary" outline icon="info" v-else>
+              No {{.Entity.Name}} found.
+            </v-alert>
+          </v-flex>
+        </template>
+      </v-data-table>
+      <div class="text-xs-center pt-2 pb-4">
+        <v-pagination v-model="pagination.page" :length="pages" circle :total-visible="7"></v-pagination>
+      </div>
     </v-card>
 
     <v-dialog v-model="dialog" persistent max-width="300">
@@ -157,8 +160,7 @@
     </v-dialog>
     <!-- !# Edit In Place -->
 
-
-    <v-snackbar v-model="snackbar.show"  :bottom="true"  color="primary" auto-height :timeout="2000">
+    <v-snackbar v-model="snackbar.show" :bottom="true" color="primary" auto-height :timeout="2000">
       {{ printf `{{ snackbar.text }}` }}
       <v-btn dark flat @click="snackbarHide">
         <v-icon>close</v-icon>
@@ -192,7 +194,6 @@ export default {
         rowsPerPageItems: [5, 10, 25, 50, 100]
 
       },
-      totalItems: 0,
       messages: [],
       track: null,
       search: "",
@@ -216,7 +217,7 @@ export default {
         {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
 		    {{- range .Entity.Fields }}
         {{- if not .ListWidget.Hide}}
-        {text: "{{.Label}}", value: "{{.Name}}"},
+        {text: "{{.Label}}", value: "{{.Name}}", sortable: false},
         {{- end}}
         {{- end}}
       ],
@@ -229,7 +230,14 @@ export default {
   computed: {
     ...mapGetters({
       'token': 'auth/getToken'
-    })
+    }),
+    pages() {
+      if (this.pagination.rowsPerPage == null ||
+        this.pagination.totalItems == null
+      ) return 0
+
+      return Math.ceil(this.pagination.totalItems / this.pagination.rowsPerPage)
+    }
   },
   props: ["filter_id", "filter_field", "nested", "rpc"],
   mounted() {
@@ -278,7 +286,7 @@ export default {
       populateData: function () {
         this.getList().then((values) => {
           this.entities = values.entities;
-          this.totalItems = values.count
+          this.pagination.totalItems = values.count
         })
       },
             
