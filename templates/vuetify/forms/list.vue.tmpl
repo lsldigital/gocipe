@@ -216,7 +216,7 @@ export default {
         {'text': 'Action', 'value': null, sortable: false, 'width': '80px'},
 		    {{- range .Entity.Fields }}
         {{- if not .ListWidget.Hide}}
-        {text: "{{.Label}}", value: "{{.Name}}"},
+        {text: "{{.Label}}", value: "{{.Name}}", sortable: false},
         {{- end}}
         {{- end}}
       ],
