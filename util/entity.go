@@ -503,6 +503,10 @@ func (e *Entity) GetFileFields() []FileField {
 
 //HasFileFields returns whether entity has file fields
 func (e *Entity) HasFileFields() bool {
+	if e.ContentBuilder.AllowUpload && len(e.ContentBuilder.UploadTypes) != 0 {
+		return true
+	}
+
 	for _, f := range e.Fields {
 		switch f.EditWidget.Type {
 		case WidgetTypeFile, WidgetTypeImage:
