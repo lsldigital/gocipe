@@ -42,15 +42,13 @@ func SetGuardian(guardian auth.Guardian) {
 		_guardian = guardian
 	}
 }
-{{ end }}
+{{ end }}{{/* if .GenerateAuth */}}
 
 // Service represents Admin service implementation
 type Service struct {}
 
 {{range $i, $entity := .Entities}}
-/**
- * [BEGIN] {{.Name}}
- */
+// [BEGIN] {{.Name}}
 
 {{if .Admin.Create -}}
 // Create{{.Name}} allows creation of entity of type {{.Name}}
@@ -119,7 +117,7 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 
 	return &res, errors.WithStack(err)
 }
-{{- end}}
+{{- end}}{{/* if .Admin.Create */}}
 
 {{if .Admin.Read -}}
 // Get{{.Name}} allows getting a single entity of type {{.Name}}
@@ -180,7 +178,7 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 
 	return &res, nil
 }
-{{- end}}
+{{- end}}{{/* if .Admin.Read */}}
 
 {{if .Admin.List -}}
 // List{{plural .Name}} allows listing all entity of type {{.Name}}
@@ -310,7 +308,7 @@ func(s Service) Count{{plural .Name}}(ctx context.Context, req *ListRequest) (*C
 	}
 	return &res, nil
 }
-{{- end}}
+{{- end}}{{/* if .Admin.List */}}
 
 {{if .Admin.Update -}}
 // Update{{.Name}} allows updating one entity of type {{.Name}}
@@ -348,7 +346,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	{{ end }}
 
 
-	{{if or .Admin.Hooks.PreUpdate .GetFileFields -}}
+	{{if or .Admin.Hooks.PreUpdate .HasFileFields -}}
 	// existing records in DB
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)
 	if err != nil {
@@ -370,9 +368,9 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	res.{{.Name}} = req.{{.Name}}
-	{{ range .GetFileFields }}
-	res.{{$entity.Name}}.{{.Name}} = existing.{{.Name}}
-	{{end }}
+	{{ range .GetFileFields }}{{if not .ContentBuilder}}
+	res.{{.EntityName}}.{{.FieldName}} = existing.{{.FieldName}}
+	{{end }}{{end }}{{/* range .GetFileFields */}}
 	{{ if .Slug}}
 	res.{{.Name}}.Slug = existing.Slug
 	{{ end }}
@@ -395,7 +393,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	{{if .Slug}}
-	go setSlug(existing.GetID(), req.{{.Name}}.Get{{ucfirst .Slug}}(), "{{.Table}}", "slug")
+	go setSlug(existing.GetID(), req.{{.Name}}.Get{{.Slug}}(), "{{.Table}}", "slug")
 	{{end}}
 
 	{{if .Admin.Hooks.PostUpdate -}}
@@ -411,7 +409,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 
 	return &res, nil
 }
-{{- end}}
+{{- end}}{{/* if .Admin.Update */}}
 
 {{if .Admin.Delete -}}
 // Delete{{.Name}} allows deleting an entity of type {{.Name}}
@@ -471,15 +469,16 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 
 	return &res, nil
 }
-{{- end}}
-{{if or (.GetFileFields) (and (.ContentBuilder.Generate) (.ContentBuilder.AllowUpload))}}
+{{- end}}{{/* if .Admin.Delete */}}
+
+{{if .HasFileFields}}
 // Upload{{.Name}} allows uploading of files for entity of type {{.Name}}
 func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*UploadResponse, error) {
 	var (
 		res       		UploadResponse
 		options   		*files.UploadOptions
 		fieldname 		string
-		{{if and (.ContentBuilder.Generate)  (.ContentBuilder.AllowUpload) -}}contentBuilder 	bool{{- end}}
+		contentBuilder 	bool
 	)
 
 	if req == nil {
@@ -489,21 +488,16 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 	switch req.Field {
 		{{$EntityName := .Name -}}
 		{{- range (.GetFileFields)}}
-		case "{{.Name}}":
-			// Deep copy needed to prevent unwanted changes to global options "{{$EntityName}}{{.Name}}UploadOpts"
-			opts, _ := copystructure.Copy(&{{$EntityName}}{{.Name}}UploadOpts)
+		case "{{.FieldName}}":
+			// Deep copy needed to prevent unwanted changes to global options "{{.ConfigName}}"
+			opts, _ := copystructure.Copy(&{{.ConfigName}})
 			options = opts.(*files.UploadOptions)
-			fieldname = "{{.GetSchemaName}}"
-		{{- end}}
-		{{- if and (.ContentBuilder.Generate) (.ContentBuilder.AllowUpload)}}
-		{{- range .ContentBuilder.UploadTypes}}
-		case "Content{{.}}":
-			// Deep copy needed to prevent unwanted changes to global options "{{$EntityName}}Content{{.}}UploadOpts"
-			opts, _ := copystructure.Copy(&{{$EntityName}}Content{{.}}UploadOpts)
-			options = opts.(*files.UploadOptions)
+			{{if .ContentBuilder}}
 			contentBuilder = true
-		{{- end}}
-		{{- end}}
+			{{else}}
+			fieldname = "{{.SchemaName}}"
+			{{end}}{{/* if .ContentBuilder */}}
+		{{- end}}{{/* range (.GetFileFields) */}}
 		default:
 			return &res, ErrorInvalidUploadField
 	}
@@ -521,12 +515,12 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 		}
 		return &res, err
 	}
-	{{if and (.ContentBuilder.Generate) (.ContentBuilder.AllowUpload)}}
+
 	if contentBuilder {
 		res.URI = filePath
 		return &res, nil
 	}
-	{{end}}
+	
 	if err = util.CheckContext(ctx); err != nil {
 		files.Delete(fileDiskPath)
 		return &res, errors.WithStack(err)
@@ -556,7 +550,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 	res.URI = filePath
 	return &res, err
 }
-{{- end}}
+{{- end}}{{/* if .HasFileFields */}}
 
 // Lookup{{plural .Name}} lookup allows looking up an entity by its label for entity of type {{.Name}}
 func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) (*LookupResponse, error) {
@@ -597,7 +591,6 @@ func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) 
 
 	return &res, err
 }
-/**
- * [END] {{.Name}}
- */
-{{end}}
+
+// [END] {{.Name}}
+{{end}}{{/* range $i, $entity := .Entities */}}
