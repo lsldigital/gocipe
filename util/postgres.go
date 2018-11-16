@@ -300,11 +300,10 @@ func (s Postgres) SQLLoadOneMany(rel Relationship) string {
 	}
 
 	return fmt.Sprintf(
-		`SELECT t."%s", %s FROM %s t WHERE t."%s" IN`,
-		rel.ThatID,
+		`SELECT %s FROM %s t WHERE t."%s" IN`,
 		strings.Join(fields, ", "),
 		related.Table,
-		rel.ThatID,
+		rel.ThisID,
 	)
 }
 
