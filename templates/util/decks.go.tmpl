@@ -42,7 +42,7 @@ func init() {
 			"{{ . }}",
 			{{- end}}
 		},
-		Queries: []string{
+		Queries: map[string]query{
 			{{- range .Queries}}
 			"{{ .Type }}": query{
 				Condition: "{{ .Condition }}",
@@ -50,6 +50,7 @@ func init() {
 			{{- end}}
 		},
 	}
+	{{- end}}
 }
 
 func listCardsByDecks(ctx context.Context, decks ...string) (map[string][]entityRef, error) {
