@@ -17,8 +17,10 @@ func Generate(out *output.Output, recipe *utils.Recipe) {
 	out.GenerateAndOverwrite("GenerateUtil Fileupload", "util/files.go.tmpl", "util/files/files.gocipe.go", output.WithHeader, data)
 	out.GenerateAndOverwrite("GenerateUtil Imagist", "util/imagist.go.tmpl", "util/imagist/imagist.gocipe.go", output.WithHeader, data)
 
-	out.GenerateAndOverwrite("GenerateUtil Decks", "util/decks.go.tmpl", "util/decks/decks.gocipe.go", output.WithHeader, struct {
-		AppImportPath string
-		Decks         []utils.DeckOpts
-	}{utils.AppImportPath, recipe.Decks.Decks})
+	if recipe.Decks.Generate {
+		out.GenerateAndOverwrite("GenerateUtil Decks", "util/decks.go.tmpl", "util/decks/decks.gocipe.go", output.WithHeader, struct {
+			AppImportPath string
+			Decks         []utils.DeckOpts
+		}{utils.AppImportPath, recipe.Decks.Decks})
+	}
 }
