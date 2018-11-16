@@ -284,7 +284,16 @@ type DeckOpts struct {
 	EntityTypeWhitelist []string `json:"entity_type_whitelist"`
 
 	// Queries represents the queries used for autofill (order-defined priority)
-	Queries []string `json:"queries"`
+	Queries []QueryOpts `json:"queries"`
+}
+
+// QueryOpts represents query options for a deck autofill
+type QueryOpts struct {
+	// Type represents entity type
+	Type string `json:"type"`
+
+	// Condition represents conditions to be used in query
+	Condition string `json:"condition"`
 }
 
 // EditWidgetOpts represents a UI widget for edit forms

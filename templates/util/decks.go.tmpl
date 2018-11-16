@@ -9,19 +9,23 @@ import (
 	"{{.AppImportPath}}/util"
 )
 
-// EntityRef holds entity reference
-type EntityRef struct {
+type entityRef struct {
 	Type string
 	ID   string
 }
 
-// Deck holds deck options
+type query struct {
+	Type      string
+	Condition string
+}
+
+// Deck represents a deck options
 type Deck struct {
 	MaxSlots           int
 	NoDuplicate        bool
 	NoTrace            bool
 	AllowedEntityTypes []string
-	Queries            []string
+	Queries            map[string]query
 }
 
 var deckList map[string]Deck
@@ -40,20 +44,21 @@ func init() {
 		},
 		Queries: []string{
 			{{- range .Queries}}
-			"{{ . }}",
+			"{{ .Type }}": query{
+				Condition: "{{ .Condition }}",
+			},
 			{{- end}}
 		},
 	}
-	{{- end}}
 }
 
-func listCardsByDecks(ctx context.Context, decks ...string) (map[string][]EntityRef, error) {
-	historyEntityRefs := make(map[EntityRef]struct{}, 0)
-	deckCards := make(map[string][]EntityRef)
+func listCardsByDecks(ctx context.Context, decks ...string) (map[string][]entityRef, error) {
+	historyEntityRefs := make(map[entityRef]struct{}, 0)
+	deckCards := make(map[string][]entityRef)
 
 	for _, d := range decks {
 		deck, ok := deckList[d]
-		deckCards[d] = []EntityRef{}
+		deckCards[d] = []entityRef{}
 		if !ok {
 			log.Println("Invalid deck ", d)
 			continue
@@ -71,7 +76,7 @@ func listCardsByDecks(ctx context.Context, decks ...string) (map[string][]Entity
 		}
 
 		// Standard approach (loading from cards entities)
-		entRefs := make([]EntityRef, 0, deck.MaxSlots)
+		entRefs := make([]entityRef, 0, deck.MaxSlots)
 		for _, c := range cards {
 			if len(entRefs) == deck.MaxSlots {
 				break
@@ -81,7 +86,7 @@ func listCardsByDecks(ctx context.Context, decks ...string) (map[string][]Entity
 				break
 			}
 
-			entRef := EntityRef{
+			entRef := entityRef{
 				Type: c.EntityType,
 				ID:   c.Entity,
 			}
@@ -108,12 +113,14 @@ func listCardsByDecks(ctx context.Context, decks ...string) (map[string][]Entity
 				return deckCards, err
 			}
 
-			for _, q := range deck.Queries {
+			for e, q := range deck.Queries {
 				if slotsRemaining == 0 {
 					break
 				}
 
-				rows, err := tx.Query(q)
+				query := fmt.Sprintf("SELECT id FROM %s %s LIMIT %d", inflection.Plural(strings.ToLower(e)), q.Condition, slotsRemaining)
+
+				rows, err := tx.Query(query)
 				if err != nil {
 					continue
 				}
@@ -132,8 +139,10 @@ func listCardsByDecks(ctx context.Context, decks ...string) (map[string][]Entity
 						break
 					}
 
-					var entRef EntityRef
-					err = rows.Scan(&entRef.ID, &entRef.Type)
+					entRef := entityRef{
+						Type: e,
+					}
+					err = rows.Scan(&entRef.ID)
 					if err != nil {
 						continue
 					}
@@ -158,7 +167,7 @@ func listCardsByDecks(ctx context.Context, decks ...string) (map[string][]Entity
 	return deckCards, nil
 }
 
-func listEmptyPosition(entRefs []EntityRef) []int {
+func listEmptyPosition(entRefs []entityRef) []int {
 	emptyPos := make([]int, 0)
 	for i, e := range entRefs {
 		if e.Type == "" || e.ID == "" {
