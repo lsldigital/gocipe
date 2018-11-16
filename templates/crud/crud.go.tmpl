@@ -1326,7 +1326,7 @@ func (repo {{.Name}}Repositorium) MergeWithRel(ctx context.Context, entity *{{.N
 
 {{range .Relationships}}
 {{if or (eq "many-many-owner" .Type) (eq "many-many-inverse" .Type) }}
-// Load{{.Name}} is a helper function to load related {{.Name}} entities
+// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
 func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
 	var (
 		err error
@@ -1394,7 +1394,7 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 	return nil
 }
 {{else if eq "many-one" .Type }}
-// Load{{.Name}} is a helper function to load related {{.Name}} entities
+// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
 func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
 	var (
 		err error
@@ -1460,7 +1460,7 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 	return nil
 }
 {{else if eq "one-many" .Type }}
-// Load{{.Name}} is a helper function to load related {{.Name}} entities
+// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
 func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
 	var (
 		err error
@@ -1529,7 +1529,7 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 }
 {{end}}{{/* if or (eq "many-many-owner" .Type) (eq "many-many-inverse" .Type) + else if... */}}
 {{if eq "many-many-owner" .Type }}
-// Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table (many-many-owner relationship)
+// Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table ( ({{.Type}} relationship)
 func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{.Entity}}) error {
 	var (
 		stmt *sql.Stmt
@@ -1605,7 +1605,7 @@ func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *
 	return errors.WithStack(err)
 }
 
-// Save{{.Name}}IDs is a helper function to save related {{.Name}} IDs in a pivot table (many-many-owner relationship)
+// Save{{.Name}}IDs is a helper function to save related {{.Name}} IDs in a pivot table ({{.Type}} relationship)
 func (repo {{$entity.Name}}Repositorium) Save{{.Name}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...string) error {
 	var (
 		stmt *sql.Stmt
