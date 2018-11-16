@@ -84,7 +84,12 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	}
 	{{ end }}
 
-	res.{{.Name}}.Status = StatusDraft
+	switch res.{{.Name}}.Status {
+		case StatusDraft, StatusSaved, StatusUnpublished, StatusPublished:
+			//all good
+		default:
+			res.{{.Name}}.Status = StatusDraft
+	}
 
 	tx, err = models.StartTransaction(ctx)
 	{{if .Admin.Hooks.PreCreate}}
