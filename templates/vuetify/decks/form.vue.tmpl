@@ -6,8 +6,8 @@
       </v-btn>
       <v-toolbar-title class="ml-0 pl-0">Deck {{ .Deck.Label }}</v-toolbar-title>
       <v-spacer></v-spacer>
-      <span v-if="!saved" class="warning--text"><v-icon color="warning" top class="pr-2">warning</v-icon>You have unsaved changes</span>
-      <span v-if="jobsInProgress && jobs == 0" class="success--text"><v-icon color="success" top class="pr-2">check</v-icon>All jobs saved!</span>
+      <span v-if="!saved" class="warning--text"><v-icon color="warning" top class="pr-2">warning</v-icon>Unsaved changes</span>
+      <span v-if="jobsInProgress && jobs == 0" class="success--text"><v-icon color="success" top class="pr-2">check</v-icon>Deck arrangement saved!</span>
       <v-spacer></v-spacer>
       <v-btn color="primary" :disabled="saved || loading" :loading="loading" @click="save">
         Save
@@ -466,6 +466,8 @@ export default {
 
         let entity = new CardSchedule();
         entity.setCardid(cardId);
+        entity.setAction("remove");
+        entity.setStatus("published");
         req.setCardschedule(entity);
 
         cli.createCardSchedule(req, (err, resp) => {
