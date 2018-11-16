@@ -100,7 +100,7 @@ func (p *Relationship) init(r *Recipe, e *Entity) {
 			p.JoinTable += "_" + strings.ToLower(p.Name)
 		}
 		p.ThisID = strings.ToLower(p.Entity) + "_id"
-		p.ThatID = e.Table + "_id"
+		p.ThatID = inflection.Singular(e.Table) + "_id"
 	}
 
 	if p.Name == "" {
