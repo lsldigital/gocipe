@@ -1392,8 +1392,8 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 	}
 
 	return nil
-}
-{{else if eq "many-one" .Type }}
+}{{/* if or (eq "many-many-owner" .Type) (eq "many-many-inverse" .Type) */}}
+{{else if eq "many-one" .Type}}
 // Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
 func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
 	var (
@@ -1458,8 +1458,8 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 	}
 
 	return nil
-}
-{{else if eq "one-many" .Type }}
+}{{/* else if eq "many-one" .Type */}}
+{{else if eq "one-many" .Type}}
 // Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
 func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
 	var (
@@ -1527,9 +1527,9 @@ func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, enti
 
 	return nil
 }
-{{end}}{{/* if or (eq "many-many-owner" .Type) (eq "many-many-inverse" .Type) + else if... */}}
-{{if eq "many-many-owner" .Type }}
-// Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table ( ({{.Type}} relationship)
+{{end}}{{/* else if eq "one-many" .Type */}}
+{{if eq "many-many-owner" .Type}}
+// Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table ({{.Type}} relationship)
 func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{.Entity}}) error {
 	var (
 		stmt *sql.Stmt
