@@ -84,7 +84,7 @@ func (s ListOpts) SortOpts(validateField func(string) bool) string {
 	return ""
 }
 
-{{range .Entities }}
+{{range .Entities}}
 // {{.Name}}Repository encapsulates operations that may be performed on the entity {{.Name}}
 type {{.Name}}Repository interface {
 {{if $.Crud -}}
@@ -126,31 +126,31 @@ type {{.Name}}Repository interface {
 	Save(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
 	// SaveWithRel either inserts or updates a {{.Name}} record based on whether or not id is nil; will also save related entities
 	SaveWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
-{{end -}}
+{{end -}}{{/* if $.Crud */}}
 
 {{- $ThisEntity := . -}}
 {{range .Relationships -}}
 {{if eq .Type "many-many-inverse" -}}
-	// Load{{.Name}} is a helper function to load related {{.Name}} entities
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
 	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 {{end -}}
 {{if eq .Type "many-many-owner" -}}
-	// Load{{.Name}} is a helper function to load related {{.Name}} entities
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
 	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
-	// Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table (many-many relationship)
+	// Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table ({{.Type}} relationship)
 	Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{.Entity}}) error
-	// Save{{.Name}}IDs is a helper function to save related {{.Name}} IDs in a pivot table (many-many relationship)
+	// Save{{.Name}}IDs is a helper function to save related {{.Name}} IDs in a pivot table ({{.Type}} relationship)
 	Save{{.Name}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...string) error
 {{end -}}
 {{if eq .Type "one-many" -}}
-	// Load{{.Name}} is a helper function to load related {{.Name}} entities
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
 	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 {{end -}}
 {{if eq .Type "many-one" -}}
-	// Load{{.Name}} is a helper function to load related {{.Name}} entities
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
 	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 {{end -}}
-{{end -}}
+{{end -}}{{/* range .Entities */}}
 }
 
 // {{.Name}}Repositorium implements {{.Name}}Repository
