@@ -435,7 +435,6 @@ func (e *Entity) GetStruct(op string) string {
 				fields = append(fields, fmt.Sprintf(`entity.%s`, f.Name))
 			}
 		}
-
 	}
 
 	for _, p := range e.Relationships {
