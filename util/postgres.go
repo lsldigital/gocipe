@@ -235,6 +235,13 @@ func (s Postgres) SQLLoadManyMany(rel Relationship) string {
 		fields = append(fields, fmt.Sprintf(`t."%s"`, f.schema.Field))
 	}
 
+	// many-one fields when loading entities in many-many-inverse relationships
+	for _, r := range related.Relationships {
+		if r.Type == RelationshipTypeManyOne {
+			fields = append(fields, fmt.Sprintf(`t."%s"`, r.ThisID))
+		}
+	}
+
 	return fmt.Sprintf(
 		`SELECT j.%s, %s FROM %s t 
 		INNER JOIN %s j ON t.id = j.%s
