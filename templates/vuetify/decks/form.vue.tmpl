@@ -257,7 +257,7 @@ import {
 } from "@/services/service_admin_pb";
 import { mapGetters } from "vuex";
 import { Card, CardSchedule } from "@/services/models_pb.js";
-import _ from "lodash";
+import { debounce, indexFilter } from "lodash";
 import dragula from "dragula";
 
 let cli = new AdminClient("/api");
@@ -330,7 +330,7 @@ export default {
     //   },
     //   deep: true
     // },
-    avaiEntitiesSearch: _.debounce(function (val) {
+    avaiEntitiesSearch: debounce(function (val) {
       this.getEntities();
     }, 500),
     jobs(val) {
@@ -384,14 +384,14 @@ export default {
           return b.id === id;
         });
         // Index of the card that is moving
-        var cardIndex = _.findIndex(this.avaiEntities.entities, currentCard);
+        var cardIndex = findIndex(this.avaiEntities.entities, currentCard);
       } else {
         // Card that is moving
         var currentCard = this.cards.find(b => {
           return b.id === id;
         });
         // Index of the card that is moving
-        var cardIndex = _.findIndex(this.cards, currentCard);
+        var cardIndex = findIndex(this.cards, currentCard);
       }
 
       if (this.isSlotEmpty(newSlotID)) {
@@ -412,7 +412,7 @@ export default {
         let cardInNewSlot = this.cards.find(b => {
           return b.status === parseInt(newSlotID);
         });
-        let cardIndexInNewSlot = _.findIndex(this.cards, cardInNewSlot);
+        let cardIndexInNewSlot = findIndex(this.cards, cardInNewSlot);
 
         // console.log('cardIndexInNewSlot = ' + cardIndexInNewSlot)
         this.updateCardSlot(cardIndex, oldSlotID, currentCardSlot, true);
@@ -750,7 +750,7 @@ export default {
       this.dialog = true;
     },
     deleteCardIndex(card) {
-      var cardIndex = _.findIndex(this.cards, card);
+      var cardIndex = findIndex(this.cards, card);
       this.cards.splice(cardIndex, 1);
     },
     deleteSchedule(schedule) {
