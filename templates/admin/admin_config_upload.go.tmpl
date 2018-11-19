@@ -1,5 +1,11 @@
 package admin
 
+import (
+	"{{.ImportPath}}/util"
+	"{{.ImportPath}}/util/imagist"
+	"{{.ImportPath}}/util/files"
+)
+
 // UploadPaths is an index of upload options
 var UploadPaths = map[string]*files.UploadOptions{
 	{{- range $i, $entity := .Entities}}

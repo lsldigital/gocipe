@@ -73,17 +73,20 @@ func Generate(out *output.Output, r *util.Recipe) {
 	entities, imports := generateCrud2(r)
 
 	out.GenerateAndOverwrite("GenerateCRUD Repo", "crud/crud.go.tmpl", "models/crud.gocipe.go", output.WithHeader, struct {
-		Entities []util.Postgres
-		Imports  []string
-	}{Entities: entities, Imports: imports})
+		Entities   []util.Postgres
+		Imports    []string
+		ImportPath string
+	}{Entities: entities, Imports: imports, ImportPath: r.ImportPath})
 
 	if generateAny {
 		out.GenerateAndOverwrite("GenerateCRUD Models", "crud/models.go.tmpl", "models/models.gocipe.go", output.WithHeader, struct {
-			Crud     bool
-			Entities []util.Entity
+			Crud       bool
+			Entities   []util.Entity
+			ImportPath string
 		}{
-			Crud:     generateAny,
-			Entities: r.Entities,
+			Crud:       generateAny,
+			Entities:   r.Entities,
+			ImportPath: r.ImportPath,
 		})
 	}
 

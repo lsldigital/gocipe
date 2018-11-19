@@ -39,8 +39,9 @@ func Generate(out *output.Output, r *util.Recipe) {
 
 	if r.HasFileFields() {
 		out.GenerateAndOverwrite("GenerateAdmin Upload", "admin/admin_config_upload.go.tmpl", "services/admin/service_admin_config_upload.gocipe.go", output.WithHeader, struct {
-			Entities []util.Entity
-		}{r.Entities})
+			Entities   []util.Entity
+			ImportPath string
+		}{r.Entities, r.ImportPath})
 	}
 
 	out.GenerateAndOverwrite("GenerateAdmin Helpers", "admin/admin_helpers.go.tmpl", "services/admin/admin_helpers.gocipe.go", output.WithHeader, struct {

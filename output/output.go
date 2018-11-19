@@ -252,6 +252,28 @@ func (l *Output) PostProcessGoFiles(r *util.Recipe) {
 		return
 	}
 
+	newProject := util.FileExists(util.WorkingDir + "/go.mod")
+
+	if newProject {
+		fmt.Println("Running go mod tidy")
+		cmd := exec.Command(_tools.Go, "mod", "tidy")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Error running go mod tidy: %s\n", err)
+		}
+
+		fmt.Println("Running go get")
+		cmd = exec.Command(_tools.Go, "get")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Error running go get: %s\n", err)
+		}
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(len(l.gofiles))
 
@@ -282,25 +304,7 @@ func (l *Output) PostProcessGoFiles(r *util.Recipe) {
 
 	wg.Wait()
 
-	if util.FileExists(util.WorkingDir + "/go.mod") {
-		fmt.Println("Running go mod tidy")
-		cmd := exec.Command(_tools.Go, "mod", "tidy")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		if err := cmd.Run(); err != nil {
-			fmt.Printf("Error running go mod tidy: %s\n", err)
-		}
-
-		fmt.Println("Running go get")
-		cmd = exec.Command(_tools.Go, "get")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		if err := cmd.Run(); err != nil {
-			fmt.Printf("Error running go get: %s\n", err)
-		}
-	} else {
+	if !newProject {
 		fmt.Printf("Running go mod init %s\n", r.ImportPath)
 		cmd := exec.Command(_tools.Go, "mod", "init", r.ImportPath)
 		cmd.Stdout = os.Stdout
