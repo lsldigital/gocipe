@@ -323,13 +323,6 @@ export default {
     this.initDragula();
   },
   watch: {
-    // avaiEntitiesSearch: {
-    //   handler: function (val) {
-    //     console.log('searching...');
-
-    //   },
-    //   deep: true
-    // },
     avaiEntitiesSearch: debounce(function (val) {
       this.getEntities();
     }, 500),
