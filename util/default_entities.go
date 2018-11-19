@@ -27,7 +27,6 @@ var card = Entity{
 	},
 	Relationships: []Relationship{
 		Relationship{
-			Name:   "CardSchedule",
 			Entity: "CardSchedule",
 			Type:   RelationshipTypeOneMany,
 		},
@@ -73,9 +72,11 @@ var cardSchedule = Entity{
 	},
 	Relationships: []Relationship{
 		Relationship{
-			Name:   "Card",
 			Entity: "Card",
 			Type:   RelationshipTypeManyOne,
+			EditWidget: EditWidgetOpts{
+				Hide: true,
+			},
 		},
 	},
 }

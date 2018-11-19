@@ -56,7 +56,14 @@ func Generate(out *output.Output, r *util.Recipe) {
 			Decks []util.DeckOpts
 		}{r.Decks.Decks})
 
+		out.GenerateAndOverwrite("GenerateVuetify Decks", "vuetify/decks/home.vue.tmpl", filepath.Join(dstPath, "/decks/home.vue"), output.WithHeader, struct {
+			Decks []util.DeckOpts
+		}{r.Decks.Decks})
+
 		for _, deck := range r.Decks.Decks {
+			if deck.Vuetify.NoGenerate {
+				continue
+			}
 			entities := make([]util.Entity, 0)
 			for _, name := range deck.EntityTypeWhitelist {
 				e, err := r.GetEntity(name)
