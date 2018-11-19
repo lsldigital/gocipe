@@ -5,9 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path"
-	"strings"
+	"log"
 	"unicode"
 )
 
@@ -23,6 +21,9 @@ type Permission struct {
 
 // Recipe represents a recipe to generate a project
 type Recipe struct {
+	// ImportPath denotes the absolute import path of the program being generated
+	ImportPath string `json:"import_path"`
+
 	// Container indicates whether or not container should be generated
 	Bootstrap BootstrapOpts `json:"bootstrap"`
 
@@ -69,25 +70,15 @@ func LoadRecipe() (*Recipe, error) {
 		return nil, fmt.Errorf("recipe decoding failed: %s", err)
 	}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-
-	WorkingDir = wd
-	AppImportPath = strings.TrimPrefix(wd, os.Getenv("GOPATH")+"/src/")
-	AppName = path.Base(AppImportPath)
-	if AppName == "." {
-		AppName = "app"
-	}
-	os.Getenv("GOPATH")
-
 	recipe.init()
-
 	return &recipe, nil
 }
 
 func (r *Recipe) init() {
+	if r.ImportPath == "" {
+		log.Fatalln("Import Path cannot be empty")
+	}
+
 	r.entities = make(map[string]*Entity)
 
 	// Add default entities

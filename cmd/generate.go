@@ -35,29 +35,28 @@ var generateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		out := output.New(verbose)
 
-		rcp, err := util.LoadRecipe()
+		r, err := util.LoadRecipe()
 
 		if err != nil {
 			log.Fatalln("[loadRecipe]", err)
 		}
 
-		//scaffold application layout - synchronously before launching generators
-		application.Generate(out, rcp, overwrite)
+		application.Generate(out, r, overwrite)
 
 		if generateBootstrap {
-			bootstrap.Generate(out, rcp)
+			bootstrap.Generate(out, r)
 		}
 
 		if generateSchema {
-			schema.Generate(out, rcp)
+			schema.Generate(out, r)
 		}
 
 		if generateCrud {
-			crud.Generate(out, rcp)
+			crud.Generate(out, r)
 		}
 
 		if generateAdmin {
-			admin.Generate(out, rcp)
+			admin.Generate(out, r)
 		}
 
 		if generateAuth {
@@ -65,15 +64,15 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateUtils {
-			utils.Generate(out, rcp)
+			utils.Generate(out, r)
 		}
 
 		if generateVuetify {
-			vuetify.Generate(out, rcp)
+			vuetify.Generate(out, r)
 		}
 
 		out.ProcessProto()
-		out.PostProcessGoFiles()
+		out.PostProcessGoFiles(r)
 		out.Write("gocipe.log")
 	},
 }
