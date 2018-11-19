@@ -66,7 +66,7 @@ func Generate(out *output.Output, r *util.Recipe) {
 		Entities      []util.Entity
 		AppImportPath string
 		HasTimestamp  bool
-	}{Entities: r.Entities, AppImportPath: util.AppImportPath, HasTimestamp: hasTimestamp})
+	}{Entities: r.Entities, AppImportPath: r.ImportPath, HasTimestamp: hasTimestamp})
 
 	out.GenerateAndOverwrite("GenerateCRUD Moderrors", "crud/moderrors.go.tmpl", "models/moderrors/errors.gocipe.go", output.WithHeader, struct{}{})
 

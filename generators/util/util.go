@@ -6,8 +6,8 @@ import (
 )
 
 // Generate common utility functions
-func Generate(out *output.Output, recipe *utils.Recipe) {
-	data := struct{ AppImportPath string }{utils.AppImportPath}
+func Generate(out *output.Output, r *utils.Recipe) {
+	data := struct{ AppImportPath string }{r.ImportPath}
 
 	out.GenerateAndOverwrite("GenerateUtil Rice", "util/rice.go.tmpl", "util/rice.gocipe.go", output.WithHeader, nil)
 	out.GenerateAndOverwrite("GenerateUtil Credentials", "util/credentials.go.tmpl", "util/credentials/credentials.gocipe.go", output.WithHeader, nil)
@@ -20,5 +20,5 @@ func Generate(out *output.Output, recipe *utils.Recipe) {
 	out.GenerateAndOverwrite("GenerateUtil Decks", "util/decks.go.tmpl", "util/decks/decks.gocipe.go", output.WithHeader, struct {
 		AppImportPath string
 		Decks         []utils.DeckOpts
-	}{utils.AppImportPath, recipe.Decks.Decks})
+	}{r.ImportPath, r.Decks.Decks})
 }

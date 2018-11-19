@@ -116,11 +116,6 @@ cd ${CURRENT_DIR}
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo -e "# Gen-service: ${dt}\n\n" > "${LOG_FILE}"
 
-if [ ! -d "${CURRENT_DIR}/vendor" ]; then
-    echo -e "# Dep init: Vendor folder not found.\n"
-    dep init >> $LOG_FILE
-fi
-
 HELP=false
 ALL=false
 declare -a SERVICES=() # an array

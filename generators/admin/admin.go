@@ -31,7 +31,7 @@ func Generate(out *output.Output, r *util.Recipe) {
 				ImportPath string
 			}{
 				Entity:     entity,
-				ImportPath: util.AppImportPath,
+				ImportPath: r.ImportPath,
 			})
 		}
 
@@ -45,21 +45,21 @@ func Generate(out *output.Output, r *util.Recipe) {
 
 	out.GenerateAndOverwrite("GenerateAdmin Helpers", "admin/admin_helpers.go.tmpl", "services/admin/admin_helpers.gocipe.go", output.WithHeader, struct {
 		ImportPath string
-	}{util.AppImportPath})
+	}{r.ImportPath})
 
 	out.GenerateAndOverwrite("GenerateAdmin Proto", "admin/service_admin.proto.tmpl", "proto/service_admin.proto", output.WithHeader, struct {
 		ImportPath string
 		Entities   []util.Entity
-	}{util.AppImportPath, r.Entities})
+	}{r.ImportPath, r.Entities})
 
 	out.GenerateAndOverwrite("GenerateAdmin Permissions", "admin/admin_permissions.go.tmpl", "services/admin/service_admin_permissions.go", output.WithHeader, struct {
 		ImportPath  string
 		Permissions []util.Permission
-	}{util.AppImportPath, r.GetPermissions()})
+	}{r.ImportPath, r.GetPermissions()})
 
 	out.GenerateAndOverwrite("GenerateAdmin", "admin/service_admin.go.tmpl", "services/admin/service_admin.gocipe.go", output.WithHeader, struct {
 		Entities     []util.Entity
 		GenerateAuth bool
 		ImportPath   string
-	}{r.Entities, r.HasAuth(), util.AppImportPath})
+	}{r.Entities, r.HasAuth(), r.ImportPath})
 }
