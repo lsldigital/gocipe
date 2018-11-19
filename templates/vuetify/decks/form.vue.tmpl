@@ -455,7 +455,7 @@ export default {
       this.cards = [];
       this.slots = [];
 
-      for (var i = 0; i < 10; i++) {
+      for (var i = 0; i < {{ .Deck.Slots }}; i++) {
         // Decks
         this.slots.push(i);
       }
@@ -643,7 +643,7 @@ export default {
     },
     save: function () {
       this.jobsInProgress = true;
-      for (var i = 0; i < 10; i++) {
+      for (var i = 0; i < {{ .Deck.Slots }}; i++) {
         this.processSlot(i);
       }
       this.saved = true;
