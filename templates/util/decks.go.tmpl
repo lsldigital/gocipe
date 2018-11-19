@@ -53,7 +53,8 @@ func init() {
 	{{- end}}
 }
 
-func listCardsByDecks(ctx context.Context, decks ...string) (map[string][]entityRef, error) {
+// ListCardsByDecks accepts a list of decks machine name and returns a map of decks to Entity References
+func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]entityRef, error) {
 	historyEntityRefs := make(map[entityRef]struct{}, 0)
 	deckCards := make(map[string][]entityRef)
 
