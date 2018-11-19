@@ -1,0 +1,154 @@
+package data
+
+import (
+    log "github.com/sirupsen/logrus"
+)
+
+const (
+	// _statusPublished: status = 'published'
+	_statusPublished = "published"
+)
+
+var (
+	errIDNotProvided   = errors.New("ID not provided")
+	errSlugNotProvided = errors.New("Slug not provided")
+)
+
+{{range $i, $entity := .Entities}}
+// [BEGIN] {{.Name}}
+
+func get{{.Name}}ByID(ctx context.Context, id string) (*models.{{.Name}}, error) {
+    var (
+		entities []*models.{{.Name}}
+		err      error
+	)
+
+	log.WithFields(log.Fields{}).Debug("data::get{{.Name}}ByID() entered")
+
+	entities, err = models.{{.Name}}Repo.List(
+		ctx,
+		&models.ListOpts{Offset: 0, Limit: 1, Sort: []*models.ListSortOpts{}},
+		&models.Filter{Field: "id", Operation: "=", Value: id},
+		&models.Filter{Field: "status", Operation: "=", Value: _statusPublished},
+	)
+
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Warn("{{.Name}}Repo.List() error in data::get{{.Name}}ByID()")
+		return nil, errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entities": entities}).Debug("Result of {{.Name}}Repo.List() in data::get{{.Name}}ByID()")
+
+	if len(entities) < 1 {
+		return nil, moderrors.RecordNotFoundError
+	}
+
+	log.WithFields(log.Fields{}).Debug("data::get{{.Name}}ByID() DONE!")
+
+	return entities[0], nil
+}
+
+{{- if ne .Slug ""}}
+func get{{.Name}}BySlug(ctx context.Context, slug string) (*models.{{.Name}}, error) {
+var (
+		entities []*models.{{.Name}}
+		err      error
+	)
+
+	log.WithFields(log.Fields{}).Debug("data::get{{.Name}}BySlug() entered")
+
+	entities, err = models.{{.Name}}Repo.List(
+		ctx,
+		&models.ListOpts{Offset: 0, Limit: 1, Sort: []*models.ListSortOpts{}},
+		&models.Filter{Field: "slug", Operation: "=", Value: slug},
+		&models.Filter{Field: "status", Operation: "=", Value: _statusPublished},
+	)
+
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Warn("{{.Name}}Repo.List() error in data::get{{.Name}}BySlug()")
+		return nil, errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entities": entities}).Debug("Result of {{.Name}}Repo.List() in data::get{{.Name}}BySlug()")
+
+	if len(entities) < 1 {
+		return nil, moderrors.RecordNotFoundError
+	}
+
+	log.WithFields(log.Fields{}).Debug("data::get{{.Name}}BySlug() DONE!")
+
+	return entities[0], nil
+}
+{{end}}
+// [END] {{.Name}}
+{{end}}{{/* range $i, $entity := .Entities */}}
+// ------------------
+// [Service Data] ---
+// ------------------
+
+// Service represents Data service implementation
+type Service struct {}
+{{range $i, $entity := .Entities}}
+// [BEGIN] {{.Name}}
+
+// Get{{.Name}}ByID returns a single {{.Name}} from database by primary key
+func(s Service) Get{{.Name}}ByID(ctx context.Context, req *GetByIDRequest) (*{{.Name}}Response, error) {
+	var (
+		res {{.Name}}Response
+		err error
+	)
+
+	if req.GetID() == "" {
+		return nil, errors.WithStack(errIDNotProvided)
+	}
+
+	res.{{.Name}}, err = get{{.Name}}ByID(ctx, req.GetID())
+	if err != nil {
+        return nil, errors.WithStack(err)	
+	}
+	
+	return &res, nil
+}
+
+// Get{{.Name}}ModifiedByID returns time of modification for entity by ID
+func(s Service) Get{{.Name}}ModifiedByID(ctx context.Context, req *GetByIDRequest) (*TimestampResponse, error) {
+    return nil, errors.New("TODO: implementation")
+}
+
+{{- if ne .Slug ""}}
+// Get returns a single {{.Name}} from database by slug
+func(s Service) Get{{.Name}}BySlug(ctx context.Context, req *GetBySlugRequest) (*{{.Name}}Response, error) {
+    var (
+		res {{.Name}}Response
+		err error
+	)
+
+	if req.GetSlug() == "" {
+		return nil, errors.WithStack(errSlugNotProvided)
+	}
+
+	res.{{.Name}}, err = get{{.Name}}BySlug(ctx, req.GetSlug())
+	if err != nil {
+        return nil, errors.WithStack(err)	
+	}
+	
+	return &res, nil
+}
+
+// Get{{.Name}}ModifiedBySlug returns time of modification for entity by slug
+func(s Service) Get{{.Name}}ModifiedBySlug(ctx context.Context, req *GetBySlugRequest) (*TimestampResponse, error) {
+    return nil, errors.New("TODO: implementation")
+}
+{{end}}
+// List{{plural .Name}} allows listing all entity of type {{.Name}}
+func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*List{{plural .Name}}Response, error) {
+    return nil, errors.New("TODO: implementation")
+}
+// [END] {{.Name}}
+{{end}}{{/* range $i, $entity := .Entities */}}
+// -------------------
+// Decks and cards ---
+// -------------------
+
+//  GetCards returns a list of card references (type & ID) for each decks in DeckRequest
+func(s Service) GetCards(ctx context.Context, req *DeckRequest) (*DeckContentResponse, error) {
+    return nil, errors.New("TODO: implementation")
+}
