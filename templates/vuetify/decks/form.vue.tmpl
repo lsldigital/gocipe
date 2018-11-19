@@ -257,7 +257,7 @@ import {
 } from "@/services/service_admin_pb";
 import { mapGetters } from "vuex";
 import { Card, CardSchedule } from "@/services/models_pb.js";
-import { debounce, indexFilter } from "lodash";
+import { debounce, findIndex } from "lodash";
 import dragula from "dragula";
 
 let cli = new AdminClient("/api");
