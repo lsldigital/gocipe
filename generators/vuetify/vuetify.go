@@ -61,6 +61,9 @@ func Generate(out *output.Output, r *util.Recipe) {
 		}{r.Decks.Decks})
 
 		for _, deck := range r.Decks.Decks {
+			if deck.Vuetify.NoGenerate {
+				continue
+			}
 			entities := make([]util.Entity, 0)
 			for _, name := range deck.EntityTypeWhitelist {
 				e, err := r.GetEntity(name)
