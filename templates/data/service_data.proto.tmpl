@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+package data;
+
+import "models.proto";
+option go_package = "{{.ImportPath}}/services/data";
+import "google/protobuf/timestamp.proto";
+
+// --------------------
+// Generic requests ---
+// --------------------
+
+// GetIDRequest represents a request to allow getting a single entity by ID
+message GetIDRequest {
+    string Key = 1;
+    string ID = 2;
+}
+
+// GetSlugRequest represents a request to allow getting a single entity by slug
+message GetSlugRequest {
+    string Key = 1;
+    string Slug = 2;
+}
+
+// ListRequest represents a request to allow listing of entities
+message ListRequest {
+    string Key = 1;
+    models.ListOpts ListOpts = 2;
+    repeated admin.Filter Filters = 3;
+}
+
+// --------------------
+// GetModified Response
+// --------------------
+
+// TimestampResponse
+message TimestampResponse {
+    google.protobuf.Timestamp ModifiedAt = 1;
+}
+
+// --------------------
+// Entity Responses ---
+// --------------------
+{{range .Entities}}
+// Get{{.Name}}Response represents result to a GetByIDRequest or GetBySlugRequest
+message Get{{.Name}}Response {
+    models.{{.Name}} {{.Name}} = 1;
+}
+
+// List{{plural .Name}}Response represents result to a ListRequest
+message List{{plural .Name}}Response {
+    repeated models.{{.Name}} {{plural .Name}} = 1;
+}
+{{end}}
+// -------------------
+// Decks and cards ---
+// -------------------
+
+// DeckRequest is a request to get cards for decks
+message DeckRequest {
+    string Key = 1;
+    repeated string Decks = 2;
+}
+
+// DeckContentResponse returns a list of cards for each decks in DeckRequest
+message DeckContentResponse {
+    repeated DeckContent DeckContents
+}
+
+// DeckContent contains a list of card references
+message DeckContent {
+   string   Name
+   repeated CardReference CardRefs
+}
+
+// CardReference contains reference to an entity's type and ID
+message CardReference {
+    string Type
+    string ID
+}
+
+// GRPC service Data
+service Data {
+{{- range .Entities}}
+
+    // Get{{.Name}}ByID returns a single {{.Name}} from database by primary key
+    rpc Get{{.Name}}ByID(GetByIDRequest) returns (Get{{.Name}}Response);
+    // Get{{.Name}}ModifiedByID returns time of modification for entity by ID
+    rpc Get{{.Name}}ModifiedByID(GetByIDRequest) returns (TimestampResponse);
+    {{if ne .Slug "" -}}
+    // Get returns a single {{.Name}} from database by slug
+    rpc Get{{.Name}}BySlug(GetBySlugRequest) returns (Get{{.Name}}Response);
+    // Get{{.Name}}ModifiedBySlug returns time of modification for entity by slug
+    rpc Get{{.Name}}ModifiedBySlug(GetBySlugRequest) returns (TimestampResponse);
+    {{end -}}
+    // List{{plural .Name}} allows listing all entity of type {{.Name}}
+    rpc List{{plural .Name}}(ListRequest) returns (List{{plural .Name}}Response);
+{{- end}}
+
+    // GetCards returns a list of card references (type & ID) for each decks in DeckRequest
+    rpc GetCards(DeckRequest) return (DeckContentResponse);
+}
