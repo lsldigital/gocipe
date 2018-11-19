@@ -1,8 +1,20 @@
-{{- range .Decks -}}
+// Decks listing
+import home from "./home.vue";
+{{ range .Decks -}}
 // {{.Name}} - {{.Description}}
 import {{.Name}}Deck from "./{{.Name}}.vue";
 {{end}}
 let routes = [
+  {
+    path: "home",
+    name: "home_deck",
+    component: home,
+    meta: {
+      entity: "Home",
+      showInMenu: true,
+      icon: "lock"
+    }
+  },
   {{- range $i, $v := .Decks}}
   {
     path: "{{lower .Name}}",

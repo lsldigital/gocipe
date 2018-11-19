@@ -1,0 +1,45 @@
+<template>
+  <div class="px-3 listing--container">
+    <v-toolbar color="transparent" class="listing-toolbar blue-grey darken-3 px-3" dark flat ml-0>
+      <v-btn icon>
+        <v-icon>pages</v-icon>
+      </v-btn>
+      <v-toolbar-title class="ml-0 pl-0">Decks</v-toolbar-title>
+      <v-spacer></v-spacer>
+    </v-toolbar>
+    <v-container class="px-0 py-0">
+      <!-- Decks Management -->
+      <v-card>
+        <v-card-text>
+          {{ range .Decks }}
+            Label: {{ .Label}}<br/>
+            Machine name: {{ .Name }}<br/>
+            Description: {{ .Description }}<br/>
+            Max slots: {{ .Slots }}<br/>
+            Allowed Entity Types:<br/>
+            {{ range .EntityTypeWhitelist }}
+              - {{ . }}<br/>
+            {{end}}
+            Route: <router-link :to="{ name: '{{ .Name }}_deck' }">{{ .Name }}</router-link><br/>
+            -------------------
+          {{end}}
+        </v-card-text>
+      </v-card>
+    </v-container>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {};
+  },
+  methods: {
+    
+  }
+};
+</script>
+
+<style lang="scss">
+
+</style>
