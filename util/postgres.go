@@ -278,7 +278,8 @@ func (s Postgres) SQLLoadManyOne(rel Relationship) string {
 	}
 
 	return fmt.Sprintf(
-		`SELECT %s FROM %s t WHERE t."%s" IN`,
+		`SELECT t."%s", %s FROM %s t WHERE t."%s" IN`,
+		rel.ThatID,
 		strings.Join(fields, ", "),
 		related.Table,
 		rel.ThatID,
