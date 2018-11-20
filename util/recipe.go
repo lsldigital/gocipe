@@ -47,10 +47,10 @@ type Recipe struct {
 }
 
 // LoadRecipe loads gocipe config file and returns it as Recipe
-func LoadRecipe() (*Recipe, error) {
+func LoadRecipe(recipeFile string) (*Recipe, error) {
 	var recipe Recipe
 
-	recipePath, err := GetAbsPath("gocipe.json")
+	recipePath, err := GetAbsPath(recipeFile)
 	if err != nil {
 		return nil, err
 	}
