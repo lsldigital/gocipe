@@ -79,7 +79,10 @@ func (p *Relationship) init(r *Recipe, e *Entity) {
 		isMany = true
 		p.JoinTable = p.related.Table
 		p.ThisID = "id"
-		p.ThatID = strings.ToLower(p.Name) + "_" + e.Table + "_id"
+		p.ThatID = e.Table + "_id"
+		if p.Name != "" {
+			p.ThatID = strings.ToLower(p.Name) + "_" + p.ThatID
+		}
 
 	case RelationshipTypeManyOne:
 		p.JoinTable = ""
