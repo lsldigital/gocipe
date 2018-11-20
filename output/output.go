@@ -47,7 +47,6 @@ type Output struct {
 type toolset struct {
 	Go        string
 	GoImports string
-	GoFmt     string
 	Protoc    string
 }
 
@@ -222,12 +221,6 @@ func initToolset() {
 		ok = false
 	}
 
-	_tools.GoFmt, err = exec.LookPath("gofmt")
-	if err != nil {
-		fmt.Println("Required tool gofmt not found: ", err)
-		ok = false
-	}
-
 	_tools.Protoc, err = exec.LookPath("protoc")
 	if err != nil {
 		fmt.Println("Required tool protoc not found: ", err)
@@ -252,25 +245,17 @@ func (l *Output) PostProcessGoFiles(r *util.Recipe) {
 		return
 	}
 
-	newProject := util.FileExists(util.WorkingDir + "/go.mod")
+	newProject := !util.FileExists(util.WorkingDir + "/go.mod")
 
 	if newProject {
-		fmt.Println("Running go mod tidy")
-		cmd := exec.Command(_tools.Go, "mod", "tidy")
+		fmt.Printf("Running go mod init %s\n", r.ImportPath)
+		cmd := exec.Command(_tools.Go, "mod", "init", r.ImportPath)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
+		err := cmd.Run()
 
-		if err := cmd.Run(); err != nil {
-			fmt.Printf("Error running go mod tidy: %s\n", err)
-		}
-
-		fmt.Println("Running go get")
-		cmd = exec.Command(_tools.Go, "get")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		if err := cmd.Run(); err != nil {
-			fmt.Printf("Error running go get: %s\n", err)
+		if err != nil {
+			fmt.Printf("Error running go mod init %s: %s\n", r.ImportPath, err)
 		}
 	}
 
@@ -290,29 +275,28 @@ func (l *Output) PostProcessGoFiles(r *util.Recipe) {
 				fmt.Printf("Error running %s on %s: %s\n", _tools.GoImports, file, err)
 				return
 			}
-
-			cmd = exec.Command(_tools.GoFmt, "-w", file)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			err = cmd.Run()
-
-			if err != nil {
-				fmt.Printf("Error running %s on %s: %s\n", _tools.GoFmt, file, err)
-			}
 		}(file)
 	}
 
 	wg.Wait()
 
 	if !newProject {
-		fmt.Printf("Running go mod init %s\n", r.ImportPath)
-		cmd := exec.Command(_tools.Go, "mod", "init", r.ImportPath)
+		fmt.Println("Running go mod tidy")
+		cmd := exec.Command(_tools.Go, "mod", "tidy")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		err := cmd.Run()
 
-		if err != nil {
-			fmt.Printf("Error running go mod init %s: %s\n", r.ImportPath, err)
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Error running go mod tidy: %s\n", err)
+		}
+
+		fmt.Println("Running go get")
+		cmd = exec.Command(_tools.Go, "get")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Error running go get: %s\n", err)
 		}
 	}
 }
