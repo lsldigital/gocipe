@@ -1,5 +1,13 @@
 package models
 
+import (
+	"context"
+	"database/sql"
+	"{{.ImportPath}}/models/moderrors"
+	"strconv"
+	"strings"
+)
+
 var (
 	db *sql.DB
 	{{range .Entities}}

@@ -9,7 +9,7 @@ import (
 )
 
 // Generate common utility functions
-func Generate(out *output.Output, recipe *util.Recipe, noSkip bool) {
+func Generate(out *output.Output, r *util.Recipe, noSkip bool) {
 	out.GenerateAndOverwrite("Scaffold Folder", "", "web/app/dist/.gitkeep", output.WithoutHeader, "Front-end production files must compile or be placed here. Delete this file when done.")
 	out.GenerateAndOverwrite("Scaffold Folder", "", "web/app/src/services/.gitkeep", output.WithoutHeader, "Generated client code will be here.")
 	out.GenerateAndOverwrite("Scaffold Folder", "", "services/.gitkeep", output.WithoutHeader, "Generated server code and implementation will be here.")
@@ -25,13 +25,13 @@ func Generate(out *output.Output, recipe *util.Recipe, noSkip bool) {
 				Recipe     *util.Recipe
 				ImportPath string
 			}{
-				Recipe:     recipe,
-				ImportPath: util.AppImportPath,
+				Recipe:     r,
+				ImportPath: r.ImportPath,
 			})
 		out.GenerateAndOverwrite("Scaffold Route", "application/route.go.tmpl", "route.go", output.WithHeader, struct {
 			Bootstrap util.BootstrapOpts
 			Admin     util.AdminOpts
-		}{recipe.Bootstrap, recipe.Admin})
+		}{r.Bootstrap, r.Admin})
 	} else {
 		out.GenerateAndSave("Scaffold Makefile", "application/makefile.tmpl", "Makefile", output.WithHeader, struct{ AppName string }{util.AppName})
 		out.GenerateAndSave("Scaffold Main", "application/main.go.tmpl", "main.go", output.WithHeader,
@@ -39,12 +39,12 @@ func Generate(out *output.Output, recipe *util.Recipe, noSkip bool) {
 				Recipe     *util.Recipe
 				ImportPath string
 			}{
-				Recipe:     recipe,
-				ImportPath: util.AppImportPath,
+				Recipe:     r,
+				ImportPath: r.ImportPath,
 			})
 		out.GenerateAndSave("Scaffold Route", "application/route.go.tmpl", "route.go", output.WithHeader, struct {
 			Bootstrap util.BootstrapOpts
 			Admin     util.AdminOpts
-		}{recipe.Bootstrap, recipe.Admin})
+		}{r.Bootstrap, r.Admin})
 	}
 }

@@ -285,6 +285,9 @@ type DeckOpts struct {
 
 	// Queries represents the queries used for autofill (order-defined priority)
 	Queries []QueryOpts `json:"queries"`
+
+	// Vuetify describes options for Vuetify generation - overrides recipe level Vuetify config
+	Vuetify VuetifyEntityOpts `json:"vuetify"`
 }
 
 // QueryOpts represents query options for a deck autofill

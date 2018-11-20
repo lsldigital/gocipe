@@ -45,10 +45,9 @@ type Output struct {
 
 // toolset represents go tools used by the generators
 type toolset struct {
+	Go        string
 	GoImports string
-	GoFmt     string
 	Protoc    string
-	Dep       string
 }
 
 func init() {
@@ -204,15 +203,21 @@ func initToolset() {
 		ok  = true
 	)
 
-	_tools.GoImports, err = exec.LookPath("goimports")
+	if wd, err := os.Getwd(); err != nil {
+		log.Fatalln("Could not get working directory: ", err)
+	} else {
+		util.WorkingDir = wd
+	}
+
+	_tools.Go, err = exec.LookPath("go")
 	if err != nil {
-		fmt.Println("Required tool goimports not found: ", err)
+		fmt.Println("Required tool go not found: ", err)
 		ok = false
 	}
 
-	_tools.GoFmt, err = exec.LookPath("gofmt")
+	_tools.GoImports, err = exec.LookPath("goimports")
 	if err != nil {
-		fmt.Println("Required tool gofmt not found: ", err)
+		fmt.Println("Required tool goimports not found: ", err)
 		ok = false
 	}
 
@@ -229,22 +234,29 @@ func initToolset() {
 		ok = false
 	}
 
-	_tools.Dep, err = exec.LookPath("dep")
-	if err != nil {
-		fmt.Println("Required tool dep not found: ", err)
-		fmt.Println("Install using go get -u github.com/golang/dep/cmd/dep")
-		ok = false
-	}
-
 	if !ok {
 		log.Fatalln("Please install above tools before continuing.")
 	}
 }
 
 // PostProcessGoFiles executes goimports and gofmt on go files that have been generated
-func (l *Output) PostProcessGoFiles() {
+func (l *Output) PostProcessGoFiles(r *util.Recipe) {
 	if len(l.gofiles) == 0 {
 		return
+	}
+
+	newProject := !util.FileExists(util.WorkingDir + "/go.mod")
+
+	if newProject {
+		fmt.Printf("Running go mod init %s\n", r.ImportPath)
+		cmd := exec.Command(_tools.Go, "mod", "init", r.ImportPath)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+
+		if err != nil {
+			fmt.Printf("Error running go mod init %s: %s\n", r.ImportPath, err)
+		}
 	}
 
 	var wg sync.WaitGroup
@@ -263,43 +275,30 @@ func (l *Output) PostProcessGoFiles() {
 				fmt.Printf("Error running %s on %s: %s\n", _tools.GoImports, file, err)
 				return
 			}
-
-			cmd = exec.Command(_tools.GoFmt, "-w", file)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			err = cmd.Run()
-
-			if err != nil {
-				fmt.Printf("Error running %s on %s: %s\n", _tools.GoFmt, file, err)
-			}
 		}(file)
 	}
 
 	wg.Wait()
 
-	var mode string
-	if util.FileExists(util.WorkingDir + "/Gopkg.toml") {
-		mode = "ensure"
-	} else {
-		mode = "init"
-	}
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		cmd := exec.Command(_tools.Dep, mode)
+	if !newProject {
+		fmt.Println("Running go mod tidy")
+		cmd := exec.Command(_tools.Go, "mod", "tidy")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		err := cmd.Run()
 
-		if err != nil {
-			fmt.Printf("Error running dep %s: %s\n", mode, err)
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Error running go mod tidy: %s\n", err)
 		}
-	}()
 
-	fmt.Printf("dep %s in progress...\n", mode)
-	wg.Wait()
+		fmt.Println("Running go get")
+		cmd = exec.Command(_tools.Go, "get")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Error running go get: %s\n", err)
+		}
+	}
 }
 
 // ProcessProto executes protoc to generate go files from protobuf files
@@ -311,8 +310,6 @@ func (l *Output) ProcessProto() {
 		gopath             = os.Getenv("GOPATH") + "/src/"
 	)
 
-	// l.Info(logInfo + " Executing protoc to generate go files...")
-	// l.failure++
 	l.Log(LogInfo, "Executing protoc to generate go files...")
 
 	// models.proto
@@ -364,30 +361,9 @@ func (l *Output) ProcessProto() {
 		err = cmd.Run()
 
 		if err != nil {
-			// Log(logError+" protoc execution error (%s): %s", "service_admin.proto", err)
 			return
 		}
 
 		l.Log(LogInfo, `Generated go files from service_admin.proto using protoc`)
-
 	}
-
-	// cmd = exec.Command(
-	// 	toolset.Protoc,
-	// 	`-I=proto`,
-	// 	`--plugin="protoc-gen-ts=`+util.WorkingDir+`/web/node_modules/.bin/protoc-gen-ts"`,
-	// 	`--js_out="binary:`+util.WorkingDir+`/web/src/services"`,
-	// 	`--ts_out="`+util.WorkingDir+`/web/src/services"`,
-	// 	`proto/models.proto`,
-	// )
-
-	// cmd.Stdout = os.Stdout
-	// cmd.Stderr = os.Stderr
-	// cmd.Dir = util.WorkingDir
-	// err = cmd.Run()
-
-	// if err != nil {
-	// 	fmt.Printf("Error running %s: %s\n", toolset.Protoc, err)
-	// 	return
-	// }
 }
