@@ -1,0 +1,75 @@
+{
+  "import_path": "gocipe/test/project",
+  "bootstrap": {
+    "generate": true,
+    [
+      {
+        "name": "BaseURL",
+        "description": "Base URL of the website (with NO trailing slash please)",
+        "public": true
+      }
+    ],
+    "assets": true
+  },
+  "crud": {
+    "generate": true
+  },
+  "admin": {
+    "generate": true,
+    "create": true,
+    "read": true,
+    "list": true,
+    "update": }
+  },
+  "vuetify": {
+    "generate": true,
+    "app": "admin"
+  },
+  "decks": {
+    "generate": [
+      {
+        "label": "Sample Deck A",
+        "name": "samdeckA",
+        "description": "Sample Deck to test gocipe",
+        "no_duplicate": true,
+        "no_trace": false,
+        "slots": 5,
+        "entity_type_whitelist": [
+            "EntityA"
+        ],
+        "queries": [
+          {
+            "type": "EntityA",
+            "condition": ""
+          }
+        ],
+        "vuetify": {
+          "icon": "lock"
+        }
+      }
+    ]
+  },
+  "entities": [
+    {
+      "name": "EntityA",
+      "primary_key": "uuid",
+      "description": "An entity",
+      "fields": [
+        {
+          "label": "Title",
+          "serialized": "title",
+          "edit_widget": {
+            "hide": false,
+            "type": "textfield"
+          },
+          "list_widget": {
+            "hide": false
+          },
+          "name": "Title",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}
+  
