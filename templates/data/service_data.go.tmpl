@@ -12,6 +12,7 @@ const (
 var (
 	errIDNotProvided   = errors.New("ID not provided")
 	errSlugNotProvided = errors.New("Slug not provided")
+	errItemNotFound    = errors.New("item not found")
 )
 
 // getModified returns the last modified date from database, given a table name, a field to compare a given value against for matching.
