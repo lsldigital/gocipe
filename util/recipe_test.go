@@ -1,9 +1,20 @@
 package util
 
 import (
+	"bytes"
+	"encoding/binary"
+	"encoding/gob"
+	"flag"
+	"log"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
+
+const testDataDir = "./test-fixtures/"
+
+var update = flag.Bool("update", false, "update golden files")
 
 func TestLoadRecipe(t *testing.T) {
 	type args struct {
@@ -22,66 +33,86 @@ func TestLoadRecipe(t *testing.T) {
 		},
 		{
 			name:    "Malformed recipe file",
-			args:    args{recipeFile: "gocipe_test_malformed.json"},
+			args:    args{recipeFile: "gocipe_malformed"},
 			wantErr: true,
 		},
 		{
-			name:    "Duplicate recipe entries file",
-			args:    args{recipeFile: "gocipe_test_duplicate.json"},
+			name:    "Duplicate entries recipe file",
+			args:    args{recipeFile: "gocipe_duplicate"},
 			wantErr: false,
 		},
 		{
 			name:    "Sample recipe file",
-			args:    args{recipeFile: "gocipe_test.json"},
+			args:    args{recipeFile: "gocipe"},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := LoadRecipe(tt.args.recipeFile)
+			actual, err := LoadRecipe(filepath.Join(testDataDir, tt.args.recipeFile+".json"))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadRecipe() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			if !tt.wantErr && got == nil {
-				t.Errorf("LoadRecipe() = %v, want recipe object", got)
+			if tt.wantErr && (actual == nil) {
+				return
+			}
+
+			golden := filepath.Join(testDataDir, tt.args.recipeFile+".golden")
+			if *update {
+				testWriteGob(t, golden, actual)
+			}
+
+			expected := new(Recipe)
+			testReadGob(t, golden, expected)
+			if !reflect.DeepEqual(actual, expected) {
+				t.Errorf("LoadRecipe() actual = %+v, \n\n\n want %+v", actual, expected)
+				return
 			}
 		})
 	}
 }
 
-func TestRecipe_init(t *testing.T) {
-	type fields struct {
-		ImportPath string
-		Bootstrap  BootstrapOpts
-		Crud       CrudOpts
-		Admin      AdminOpts
-		Vuetify    VuetifyOpts
-		Decks      DecksOpts
-		Entities   []Entity
-		entities   map[string]*Entity
+func testRecipeToByte(t *testing.T, recipe *Recipe) []byte {
+	t.Helper()
+
+	buf := &bytes.Buffer{}
+	log.Println(recipe)
+	err := binary.Write(buf, binary.LittleEndian, *recipe)
+	if err != nil {
+		t.Fatalf("Converting recipe to bytes err: %s", err)
 	}
-	tests := []struct {
-		name   string
-		fields fields
-	}{
-		// TODO: Add test cases.
+	return buf.Bytes()
+}
+
+func testWriteGob(t *testing.T, filePath string, object interface{}) {
+	t.Helper()
+
+	file, err := os.Create(filePath)
+	if err == nil {
+		encoder := gob.NewEncoder(file)
+		encoder.Encode(object)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &Recipe{
-				ImportPath: tt.fields.ImportPath,
-				Bootstrap:  tt.fields.Bootstrap,
-				Crud:       tt.fields.Crud,
-				Admin:      tt.fields.Admin,
-				Vuetify:    tt.fields.Vuetify,
-				Decks:      tt.fields.Decks,
-				Entities:   tt.fields.Entities,
-				entities:   tt.fields.entities,
-			}
-			r.init()
-		})
+	file.Close()
+
+	if err != nil {
+		t.Fatalf("Writing gob err: %s", err)
+	}
+}
+
+func testReadGob(t *testing.T, filePath string, object interface{}) {
+	t.Helper()
+
+	file, err := os.Open(filePath)
+	if err == nil {
+		decoder := gob.NewDecoder(file)
+		err = decoder.Decode(object)
+	}
+	file.Close()
+
+	if err != nil {
+		t.Fatalf("Reading gob err: %s", err)
 	}
 }
 
