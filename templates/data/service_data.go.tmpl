@@ -17,13 +17,13 @@ var (
 {{range $i, $entity := .Entities}}
 // [BEGIN] {{.Name}}
 
-func get{{.Name}}ByID(ctx context.Context, id string) (*models.{{.Name}}, error) {
+func Get{{.Name}}ByID(ctx context.Context, id string) (*models.{{.Name}}, error) {
     var (
 		entities []*models.{{.Name}}
 		err      error
 	)
 
-	log.WithFields(log.Fields{}).Debug("data::get{{.Name}}ByID() entered")
+	log.WithFields(log.Fields{}).Debug("data::Get{{.Name}}ByID() entered")
 
 	entities, err = models.{{.Name}}Repo.List(
 		ctx,
@@ -33,28 +33,28 @@ func get{{.Name}}ByID(ctx context.Context, id string) (*models.{{.Name}}, error)
 	)
 
 	if err != nil {
-		log.WithFields(log.Fields{"error": err}).Warn("{{.Name}}Repo.List() error in data::get{{.Name}}ByID()")
+		log.WithFields(log.Fields{"error": err}).Warn("{{.Name}}Repo.List() error in data::Get{{.Name}}ByID()")
 		return nil, errors.WithStack(err)
 	}
-	log.WithFields(log.Fields{"entities": entities}).Debug("Result of {{.Name}}Repo.List() in data::get{{.Name}}ByID()")
+	log.WithFields(log.Fields{"entities": entities}).Debug("Result of {{.Name}}Repo.List() in data::Get{{.Name}}ByID()")
 
 	if len(entities) < 1 {
 		return nil, moderrors.RecordNotFoundError
 	}
 
-	log.WithFields(log.Fields{}).Debug("data::get{{.Name}}ByID() DONE!")
+	log.WithFields(log.Fields{}).Debug("data::Get{{.Name}}ByID() DONE!")
 
 	return entities[0], nil
 }
 
 {{- if ne .Slug ""}}
-func get{{.Name}}BySlug(ctx context.Context, slug string) (*models.{{.Name}}, error) {
+func Get{{.Name}}BySlug(ctx context.Context, slug string) (*models.{{.Name}}, error) {
 var (
 		entities []*models.{{.Name}}
 		err      error
 	)
 
-	log.WithFields(log.Fields{}).Debug("data::get{{.Name}}BySlug() entered")
+	log.WithFields(log.Fields{}).Debug("data::Get{{.Name}}BySlug() entered")
 
 	entities, err = models.{{.Name}}Repo.List(
 		ctx,
@@ -64,16 +64,16 @@ var (
 	)
 
 	if err != nil {
-		log.WithFields(log.Fields{"error": err}).Warn("{{.Name}}Repo.List() error in data::get{{.Name}}BySlug()")
+		log.WithFields(log.Fields{"error": err}).Warn("{{.Name}}Repo.List() error in data::Get{{.Name}}BySlug()")
 		return nil, errors.WithStack(err)
 	}
-	log.WithFields(log.Fields{"entities": entities}).Debug("Result of {{.Name}}Repo.List() in data::get{{.Name}}BySlug()")
+	log.WithFields(log.Fields{"entities": entities}).Debug("Result of {{.Name}}Repo.List() in data::Get{{.Name}}BySlug()")
 
 	if len(entities) < 1 {
 		return nil, moderrors.RecordNotFoundError
 	}
 
-	log.WithFields(log.Fields{}).Debug("data::get{{.Name}}BySlug() DONE!")
+	log.WithFields(log.Fields{}).Debug("data::Get{{.Name}}BySlug() DONE!")
 
 	return entities[0], nil
 }
@@ -100,7 +100,7 @@ func(s Service) Get{{.Name}}ByID(ctx context.Context, req *GetByIDRequest) (*{{.
 		return nil, errors.WithStack(errIDNotProvided)
 	}
 
-	res.{{.Name}}, err = get{{.Name}}ByID(ctx, req.GetID())
+	res.{{.Name}}, err = Get{{.Name}}ByID(ctx, req.GetID())
 	if err != nil {
         return nil, errors.WithStack(err)	
 	}
@@ -125,7 +125,7 @@ func(s Service) Get{{.Name}}BySlug(ctx context.Context, req *GetBySlugRequest) (
 		return nil, errors.WithStack(errSlugNotProvided)
 	}
 
-	res.{{.Name}}, err = get{{.Name}}BySlug(ctx, req.GetSlug())
+	res.{{.Name}}, err = Get{{.Name}}BySlug(ctx, req.GetSlug())
 	if err != nil {
         return nil, errors.WithStack(err)	
 	}
