@@ -14,6 +14,41 @@ var (
 	errSlugNotProvided = errors.New("Slug not provided")
 )
 
+// getModified returns the last modified date from database, given a table name, a field to compare a given value against for matching.
+// warning: unsafe against sql injection. table and field data must be validated before passed to this function.
+func getModified(table, field, value string) (*timestamp.Timestamp, error) {
+    tx, err := models.StartTransaction(ctx)
+    if err != nil {
+        return nil, err
+    }
+
+    query := `SELECT "updated_at" FROM `+table+` WHERE "`+field+`" = $1`
+    stmt, err := tx.PrepareContext(ctx, query)
+    defer tx.Rollback()
+    if err != nil {
+        return nil, err
+    }
+
+    rows, err := stmt.QueryContext(ctx, value)
+    defer rows.Close()
+    if err != nil {
+        return nil, err
+    }
+
+    if rows.Next() {
+        var modified timestamp.Timestamp
+        err = rows.Scan(&modified)
+        if err != nil {
+            log.WithFields(log.Fields{"id": id, "query": query, "error": err}).Error("service data: getModified scan error")
+            return nil, err
+        }
+
+        return &modified, nil
+    }
+
+    return nil, errItemNotFound
+}
+
 {{range $i, $entity := .Entities}}
 // [BEGIN] {{.Name}}
 
@@ -110,7 +145,21 @@ func(s Service) Get{{.Name}}ByID(ctx context.Context, req *GetByIDRequest) (*{{.
 
 // Get{{.Name}}ModifiedByID returns time of modification for entity by ID
 func(s Service) Get{{.Name}}ModifiedByID(ctx context.Context, req *GetByIDRequest) (*TimestampResponse, error) {
-    return nil, errors.New("TODO: implementation")
+	var (
+        res TimestampResponse
+        err error
+    )
+
+    if req.GetID() == "" {
+        return nil, errors.WithStack(errIDNotProvided)
+    }
+
+    res.ModifiedAt, err = getModified({{.Table}}, "id", req.GetID())
+	if err != nil {
+        return nil, errors.WithStack(err)	
+	}
+
+    return &res, nil
 }
 
 {{- if ne .Slug ""}}
@@ -129,13 +178,27 @@ func(s Service) Get{{.Name}}BySlug(ctx context.Context, req *GetBySlugRequest) (
 	if err != nil {
         return nil, errors.WithStack(err)	
 	}
-	
+
 	return &res, nil
 }
 
 // Get{{.Name}}ModifiedBySlug returns time of modification for entity by slug
 func(s Service) Get{{.Name}}ModifiedBySlug(ctx context.Context, req *GetBySlugRequest) (*TimestampResponse, error) {
-    return nil, errors.New("TODO: implementation")
+    var (
+        res TimestampResponse
+        err error
+    )
+
+    if req.GetSlug() == "" {
+        return nil, errors.WithStack(errIDNotProvided)
+    }
+
+    res.ModifiedAt, err = getModified({{.Table}}, "slug", req.GetSlug())
+	if err != nil {
+        return nil, errors.WithStack(err)	
+	}
+
+    return &res, nil
 }
 {{end}}
 // List{{plural .Name}} allows listing all entity of type {{.Name}}
