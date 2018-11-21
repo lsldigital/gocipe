@@ -270,8 +270,6 @@ func (repo {{.Name}}Repositorium) Get(ctx context.Context, id string) (*{{.Name}
 		return nil, err
 	}
 	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.Name}}.Get query done")
-
-	defer rows.Close()
 	if rows.Next() {
 		log.WithFields(log.Fields{"id": id}).Debug("repo.{{.Name}}.Get row found")
 		if err = util.CheckContext(ctx); err != nil {
