@@ -59,23 +59,10 @@ generate_files() {
                 --ts_out="${d}src/services"
 
             # proto/models.proto goes in "models" folder
+            echo "# Generating GO services for models"
             protoc -I="${CURRENT_DIR}/proto" \
                 "${CURRENT_DIR}/proto/models.proto" \
-                --go_out=plugins=grpc:${GOPATH}/src
-        fi
-
-        if [ -f "${CURRENT_DIR}/proto/service_admin.proto" ]; then
-            echo "- generating JS services for admin"
-            protoc -I="${CURRENT_DIR}/proto" \
-                "${CURRENT_DIR}/proto/service_admin.proto" \
-                --plugin="protoc-gen-ts=${d}node_modules/.bin/protoc-gen-ts" \
-                --js_out="import_style=commonjs,binary:${d}src/services" \
-                --ts_out="${d}src/services"
-
-            # proto/admin.proto goes in "admin" folder
-            protoc -I="${CURRENT_DIR}/proto" \
-                "${CURRENT_DIR}/proto/service_admin.proto" \
-                --go_out=plugins=grpc:${GOPATH}/src
+                --go_out=plugins=grpc,paths=source_relative:${CURRENT_DIR}/models
         fi
 
         # For each proto file (the argument)
@@ -87,23 +74,19 @@ generate_files() {
                     --plugin="protoc-gen-ts=${d}node_modules/.bin/protoc-gen-ts" \
                     --js_out="import_style=commonjs,binary:${d}src/services" \
                     --ts_out="service=true:${d}src/services"
+
+                echo "# Generating GO services for ${f}"
+                if [ ! -d "${CURRENT_DIR}/services/${f}" ]; then
+                    mkdir -p "${CURRENT_DIR}/services/${f}"
+                fi
+
+                protoc -I="${CURRENT_DIR}/proto" \
+                    "${CURRENT_DIR}/proto/service_${f}.proto" \
+                    --go_out=plugins=grpc,paths=source_relative:${CURRENT_DIR}/services/${f}
             fi
         done
 
         echo -e ":: done\n"
-    done
-
-    # For each service proto file (the argument)
-    for f in $@; do
-        if [ -f "${CURRENT_DIR}/proto/service_${f}.proto" ]; then
-            echo "# Generating GO services for ${f}"
-            if [ ! -d "${CURRENT_DIR}/services/${f}" ]; then
-                mkdir -p "${CURRENT_DIR}/services/${f}"
-            fi
-            protoc -I="${CURRENT_DIR}/proto" \
-                "${CURRENT_DIR}/proto/service_${f}.proto" \
-                --go_out=plugins=grpc:${GOPATH}/src
-        fi
     done
 
     echo -e "\n::Done and dusted :-)\n"
