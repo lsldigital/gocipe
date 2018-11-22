@@ -6,19 +6,21 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	log "github.com/sirupsen/logrus"
+	"{{.Recipe.ImportPath}}/util/web"
 )
 
 func newProdRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	router := mux.NewRouter()
-	{{if not .Bootstrap.NoGRPCWeb}}
+	{{if not .Recipe.Bootstrap.NoGRPCWeb}}
 	if ws != nil {
 		router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
 	}
 	{{end}}
 
-	{{if .Admin.Generate}}
+	{{if .Recipe.Admin.Generate}}
+	{{if .Recipe.HasFileFields }}
 	files.HTTPImageDirHandler(router, http.Dir("media"), "/media", admin.UploadPaths)
-	
+	{{end}}
 	if err := web.VueAppRouting(router, "/admin", "admin", nil); err != nil {
 		log.Fatalf("Failed to create subroute admin: %s\n", err)
 		return nil
@@ -35,15 +37,16 @@ func newProdRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 
 func newDevRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	router := mux.NewRouter()
-	{{if not .Bootstrap.NoGRPCWeb}}
+	{{if not .Recipe.Bootstrap.NoGRPCWeb}}
 	if ws != nil {
 		router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
 	}
 	{{end}}
 
-	{{if .Admin.Generate}}
+	{{if .Recipe.Admin.Generate}}
+	{{if .Recipe.HasFileFields }}
 	files.HTTPImageDirHandler(router, http.Dir("media"), "/media", admin.UploadPaths)
-
+	{{end}}
 	if err := web.DevRouting(router, "/admin", "admin", "8587"); err != nil {
 		log.Warnf("Failed to create subrouter backoffice: %s\n", err)
 	}

@@ -8,10 +8,10 @@ import (
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"google.golang.org/grpc"
 	log "github.com/sirupsen/logrus"
-	"{{.ImportPath}}/core"
-	"{{.ImportPath}}/util/web"
+	"{{.Recipe.ImportPath}}/core"
+	"{{.Recipe.ImportPath}}/util/web"
 	{{- if .Recipe.Admin.Generate}}
-	"{{.ImportPath}}/services/admin"
+	"{{.Recipe.ImportPath}}/services/admin"
 	{{- end}}
 )
 
