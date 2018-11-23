@@ -87,18 +87,18 @@ service Data {
 
     // Get{{.Name}}ByID returns a single {{.Name}} from database by primary key
     rpc Get{{.Name}}ByID(GetByIDRequest) returns ({{.Name}}Response);
-    {{if .UpdatedAt}}
+    {{- if .UpdatedAt -}}
     // GetModified{{.Name}}ByID returns time of modification for entity by ID
     rpc GetModified{{.Name}}ByID(GetByIDRequest) returns (TimestampResponse);
-    {{end}}{{/* if .UpdatedAt */}}
-    {{if ne .Slug "" -}}
+    {{end -}}{{/* if .UpdatedAt */}}
+    {{- if ne .Slug ""}}
     // Get returns a single {{.Name}} from database by slug
     rpc Get{{.Name}}BySlug(GetBySlugRequest) returns ({{.Name}}Response);
-    {{- if .UpdatedAt}}
+    {{- if .UpdatedAt -}}
     // GetModified{{.Name}}BySlug returns time of modification for entity by slug
     rpc GetModified{{.Name}}BySlug(GetBySlugRequest) returns (TimestampResponse);
     {{end -}}{{/* if .UpdatedAt */}}
-    {{end -}}{{/* if ne .Slug "" */}}
+    {{- end -}}{{/* if ne .Slug "" */}}
     // List{{plural .Name}} allows listing all entity of type {{.Name}}
     rpc List{{plural .Name}}(ListRequest) returns (List{{plural .Name}}Response);
 {{- end}}
