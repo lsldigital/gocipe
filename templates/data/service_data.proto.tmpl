@@ -102,7 +102,7 @@ service Data {
     // List{{plural .Name}} allows listing all entity of type {{.Name}}
     rpc List{{plural .Name}}(ListRequest) returns (List{{plural .Name}}Response);
 {{- end}}
-
+{{if .DecksGenerated}}
     // GetCards returns a list of card references (type & ID) for each decks in DeckRequest
     rpc GetCards(DeckRequest) returns (DeckContentResponse);
 }
