@@ -111,6 +111,17 @@ func (s Postgres) OrderList() string {
 		fields = append(fields, f.schema.Field)
 	}
 
+	for k, f := range s.Relationships {
+		if f.Type == RelationshipTypeManyOne {
+			fields = append(fields, s.Relationships[k].ThisID)
+		}
+
+		if f.Type == RelationshipTypeOneMany {
+			fields = append(fields, s.Relationships[k].ThatID)
+		}
+
+	}
+
 	return `"` + strings.Join(fields, `","`) + `"`
 }
 
@@ -309,10 +320,11 @@ func (s Postgres) SQLLoadOneMany(rel Relationship) string {
 	}
 
 	return fmt.Sprintf(
-		`SELECT %s FROM %s t WHERE t."%s" IN`,
+		`SELECT t."%s", %s FROM %s t WHERE t."%s" IN`,
+		rel.ThisID,
 		strings.Join(fields, ", "),
 		related.Table,
-		rel.ThatID,
+		rel.ThisID,
 	)
 }
 
