@@ -170,9 +170,9 @@ func(s Service) Get{{.Name}}ByID(ctx context.Context, req *GetByIDRequest) (*{{.
 	
 	return &res, nil
 }
-
-// Get{{.Name}}ModifiedByID returns time of modification for entity by ID
-func(s Service) Get{{.Name}}ModifiedByID(ctx context.Context, req *GetByIDRequest) (*TimestampResponse, error) {
+{{if .UpdatedAt}}
+// GetModified{{.Name}}ByID returns time of modification for entity by ID
+func(s Service) GetModified{{.Name}}ByID(ctx context.Context, req *GetByIDRequest) (*TimestampResponse, error) {
 	var (
         res TimestampResponse
         err error
@@ -189,7 +189,7 @@ func(s Service) Get{{.Name}}ModifiedByID(ctx context.Context, req *GetByIDReques
 
     return &res, nil
 }
-
+{{end}}{{/* if .UpdatedAt */}}
 {{- if ne .Slug ""}}
 // Get{{.Name}}BySlug returns a single {{.Name}} from database by slug
 func(s Service) Get{{.Name}}BySlug(ctx context.Context, req *GetBySlugRequest) (*{{.Name}}Response, error) {
@@ -209,9 +209,9 @@ func(s Service) Get{{.Name}}BySlug(ctx context.Context, req *GetBySlugRequest) (
 
 	return &res, nil
 }
-
-// Get{{.Name}}ModifiedBySlug returns time of modification for entity by slug
-func(s Service) Get{{.Name}}ModifiedBySlug(ctx context.Context, req *GetBySlugRequest) (*TimestampResponse, error) {
+{{if .UpdatedAt}}
+// GetModified{{.Name}}BySlug returns time of modification for entity by slug
+func(s Service) GetModified{{.Name}}BySlug(ctx context.Context, req *GetBySlugRequest) (*TimestampResponse, error) {
     var (
         res TimestampResponse
         err error
@@ -228,7 +228,8 @@ func(s Service) Get{{.Name}}ModifiedBySlug(ctx context.Context, req *GetBySlugRe
 
     return &res, nil
 }
-{{end}}
+{{end -}}{{/* if .UpdatedAt */}}
+{{end}}{{/* if ne .Slug "" */}}
 // List{{plural .Name}} allows listing all entity of type {{.Name}}
 func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*List{{plural .Name}}Response, error) {
 	var (
