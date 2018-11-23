@@ -134,10 +134,10 @@ func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]Entity
 		// Standard approach (loading from cards entities)
 		entRefs := make([]EntityRef, deck.MaxSlots)
 		for _, c := range cards {
-			if len(entRefs) == deck.MaxSlots {
-				break
+			if entRefs[c.Position].Type != "" || entRefs[c.Position].ID != "" {
+				continue
 			}
-
+			
 			if err = util.CheckContext(ctx); err != nil {
 				break
 			}
