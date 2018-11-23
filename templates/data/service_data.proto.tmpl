@@ -106,5 +106,5 @@ service Data {
 {{if .DecksGenerated}}
     // GetCards returns a list of card references (type & ID) for each decks in DeckRequest
     rpc GetCards(DeckRequest) returns (DeckContentResponse);
+{{end -}}
 }
-{{end}}
