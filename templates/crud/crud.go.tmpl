@@ -564,7 +564,7 @@ func (repo {{.Name}}Repositorium) Select(ctx context.Context, opts *ListOpts, co
 	)
 
 	log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{.Name}}.Select entered")
-	query := `{{.SQLList}}` + condition
+	query := `{{.SQLList}} ` + condition
 	if err = util.CheckContext(ctx); err != nil {
 		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Info("repo.{{.Name}}.Select context error")
 		return nil, err

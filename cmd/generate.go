@@ -37,7 +37,7 @@ var generateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		out := output.New(verbose)
 
-		r, err := util.LoadRecipe()
+		r, err := util.LoadRecipe("gocipe.json")
 
 		if err != nil {
 			log.Fatalln("[loadRecipe]", err)

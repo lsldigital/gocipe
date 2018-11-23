@@ -20,31 +20,11 @@ func Generate(out *output.Output, r *util.Recipe, noSkip bool) {
 
 	if noSkip {
 		out.GenerateAndOverwrite("Scaffold Makefile", "application/makefile.tmpl", "Makefile", output.WithHeader, struct{ AppName string }{util.AppName})
-		out.GenerateAndOverwrite("Scaffold Main", "application/main.go.tmpl", "main.go", output.WithHeader,
-			struct {
-				Recipe     *util.Recipe
-				ImportPath string
-			}{
-				Recipe:     r,
-				ImportPath: r.ImportPath,
-			})
-		out.GenerateAndOverwrite("Scaffold Route", "application/route.go.tmpl", "route.go", output.WithHeader, struct {
-			Bootstrap util.BootstrapOpts
-			Admin     util.AdminOpts
-		}{r.Bootstrap, r.Admin})
+		out.GenerateAndOverwrite("Scaffold Main", "application/main.go.tmpl", "main.go", output.WithHeader, struct{ Recipe *util.Recipe }{r})
+		out.GenerateAndOverwrite("Scaffold Route", "application/route.go.tmpl", "route.go", output.WithHeader, struct{ Recipe *util.Recipe }{r})
 	} else {
 		out.GenerateAndSave("Scaffold Makefile", "application/makefile.tmpl", "Makefile", output.WithHeader, struct{ AppName string }{util.AppName})
-		out.GenerateAndSave("Scaffold Main", "application/main.go.tmpl", "main.go", output.WithHeader,
-			struct {
-				Recipe     *util.Recipe
-				ImportPath string
-			}{
-				Recipe:     r,
-				ImportPath: r.ImportPath,
-			})
-		out.GenerateAndSave("Scaffold Route", "application/route.go.tmpl", "route.go", output.WithHeader, struct {
-			Bootstrap util.BootstrapOpts
-			Admin     util.AdminOpts
-		}{r.Bootstrap, r.Admin})
+		out.GenerateAndSave("Scaffold Main", "application/main.go.tmpl", "main.go", output.WithHeader, struct{ Recipe *util.Recipe }{r})
+		out.GenerateAndSave("Scaffold Route", "application/route.go.tmpl", "route.go", output.WithHeader, struct{ Recipe *util.Recipe }{r})
 	}
 }

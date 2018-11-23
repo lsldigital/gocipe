@@ -9,7 +9,8 @@ import (
 	"{{.AppImportPath}}/util"
 )
 
-type entityRef struct {
+// EntityRef represents information about an entity reference
+type EntityRef struct {
 	Type string
 	ID   string
 }
@@ -53,14 +54,64 @@ func init() {
 	{{- end}}
 }
 
+// StartScheduler start the deck scheduler
+func StartScheduler() {
+	ticker := time.NewTicker(5 * time.Minute)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				log.Printf("[Cards Scheduler] Started at %s\n", time.Now())
+				ctx := context.Background()
+				filter := &models.Filter{Field: "date_time", Operation: "<=", Value: time.Now()}
+				schedules, err := models.CardScheduleRepo.ListWithRel(ctx, nil, filter)
+				if err != nil {
+					log.Println(errors.Wrap(err, "Failed to retrieve card schedules"))
+					break
+				}
+				for _, s := range schedules {
+					log.Println(s);
+					if s.Card == nil {
+						if err := models.CardScheduleRepo.Delete(ctx, s, nil, true); err != nil {
+							log.Println(errors.Wrap(err, "Failed to remove card schedule"))
+							continue
+						}
+						continue
+					}
+					switch s.Action {
+					case "add": 
+						card := s.Card
+						card.Status = "published"
+						if err := models.CardRepo.Update(ctx, card, nil, true); err != nil {
+							log.Println(errors.Wrap(err, "Failed to add card"))
+							continue
+						}
+					case "remove":
+						if err := models.CardRepo.Delete(ctx, s.Card, nil, true); err != nil {
+							log.Println(errors.Wrap(err, "Failed to remove card"))
+							continue
+						}
+
+						if err := models.CardScheduleRepo.Delete(ctx, s, nil, true); err != nil {
+							log.Println(errors.Wrap(err, "Failed to remove card schedule"))
+							continue
+						}
+					}
+				}
+				log.Printf("[Cards Scheduler] Ended at %s\n", time.Now())
+			}
+		}
+	}()
+}
+
 // ListCardsByDecks accepts a list of decks machine name and returns a map of decks to Entity References
-func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]entityRef, error) {
-	historyEntityRefs := make(map[entityRef]struct{}, 0)
-	deckCards := make(map[string][]entityRef)
+func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]EntityRef, error) {
+	historyEntityRefs := make(map[EntityRef]struct{}, 0)
+	deckCards := make(map[string][]EntityRef)
 
 	for _, d := range decks {
 		deck, ok := deckList[d]
-		deckCards[d] = []entityRef{}
+		deckCards[d] = []EntityRef{}
 		if !ok {
 			log.Println("Invalid deck ", d)
 			continue
@@ -69,6 +120,7 @@ func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]entity
 		cards, err := models.CardRepo.List(ctx,
 			&models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit},
 			&models.Filter{Field: "deck_machine_name", Operation: "=", Value: d},
+			&models.Filter{Field: "status", Operation: "=", Value: "published"},
 			&models.Filter{Field: "entity_type", Operation: "!=", Value: ""},
 			&models.Filter{Field: "entity", Operation: "!=", Value: ""},
 		)
@@ -78,7 +130,7 @@ func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]entity
 		}
 
 		// Standard approach (loading from cards entities)
-		entRefs := make([]entityRef, 0, deck.MaxSlots)
+		entRefs := make([]EntityRef, 0, deck.MaxSlots)
 		for _, c := range cards {
 			if len(entRefs) == deck.MaxSlots {
 				break
@@ -88,7 +140,7 @@ func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]entity
 				break
 			}
 
-			entRef := entityRef{
+			entRef := EntityRef{
 				Type: c.EntityType,
 				ID:   c.Entity,
 			}
@@ -141,7 +193,7 @@ func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]entity
 						break
 					}
 
-					entRef := entityRef{
+					entRef := EntityRef{
 						Type: e,
 					}
 					err = rows.Scan(&entRef.ID)
@@ -169,7 +221,7 @@ func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]entity
 	return deckCards, nil
 }
 
-func listEmptyPosition(entRefs []entityRef) []int {
+func listEmptyPosition(entRefs []EntityRef) []int {
 	emptyPos := make([]int, 0)
 	for i, e := range entRefs {
 		if e.Type == "" || e.ID == "" {
