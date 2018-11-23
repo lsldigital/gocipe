@@ -5,6 +5,7 @@ import (
 
 	"{{.ImportPath}}/models"
 	"{{.ImportPath}}/models/moderrors"
+	"{{.ImportPath}}/util/decks"
 )
 
 const (
@@ -253,6 +254,35 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 
 // GetCards returns a list of card references (type & ID) for each decks in DeckRequest
 func(s Service) GetCards(ctx context.Context, req *DeckRequest) (*DeckContentResponse, error) {
-    decks, err := decks.ListCardsByDecks(ctx, req.GetDecks())
+    var (
+		res       DeckContentResponse
+		err       error
+		deckCards map[string][]decks.EntityRef
+	)
+
+	deckCards, err = decks.ListCardsByDecks(ctx, req.GetDecks()...)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	for deck, entityRefs := range deckCards {
+		var cardRefs []*CardReference
+
+		for _, entityRef := range entityRefs {
+			cardRefs = append(cardRefs, &CardReference{
+				Type: entityRef.Type,
+				ID:   entityRef.ID,
+			})
+		}
+
+		deckContent := &DeckContent{
+			Name:     deck,
+			CardRefs: cardRefs,
+		}
+
+		res.DeckContents = append(res.DeckContents, deckContent)
+	}
+
+	return &res, nil
 }
 {{end}}
