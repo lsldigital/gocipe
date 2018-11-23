@@ -2,6 +2,9 @@ package data
 
 import (
     log "github.com/sirupsen/logrus"
+
+	"{{.ImportPath}}/models"
+	"{{.ImportPath}}/models/moderrors"
 )
 
 const (
@@ -53,6 +56,7 @@ func getModified(table, field, value string) (*timestamp.Timestamp, error) {
 {{range $i, $entity := .Entities}}
 // [BEGIN] {{.Name}}
 
+// Get{{.Name}}ByID fetches published {{.Name}} from DB by ID
 func Get{{.Name}}ByID(ctx context.Context, id string) (*models.{{.Name}}, error) {
     var (
 		entities []*models.{{.Name}}
@@ -84,6 +88,7 @@ func Get{{.Name}}ByID(ctx context.Context, id string) (*models.{{.Name}}, error)
 }
 
 {{- if ne .Slug ""}}
+// Get{{.Name}}ByID fetches published {{.Name}} from DB by slug
 func Get{{.Name}}BySlug(ctx context.Context, slug string) (*models.{{.Name}}, error) {
 var (
 		entities []*models.{{.Name}}
@@ -164,7 +169,7 @@ func(s Service) Get{{.Name}}ModifiedByID(ctx context.Context, req *GetByIDReques
 }
 
 {{- if ne .Slug ""}}
-// Get returns a single {{.Name}} from database by slug
+// Get{{.Name}}BySlug returns a single {{.Name}} from database by slug
 func(s Service) Get{{.Name}}BySlug(ctx context.Context, req *GetBySlugRequest) (*{{.Name}}Response, error) {
     var (
 		res {{.Name}}Response
@@ -212,7 +217,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 // Decks and cards ---
 // -------------------
 
-//  GetCards returns a list of card references (type & ID) for each decks in DeckRequest
+// GetCards returns a list of card references (type & ID) for each decks in DeckRequest
 func(s Service) GetCards(ctx context.Context, req *DeckRequest) (*DeckContentResponse, error) {
     return nil, errors.New("TODO: implementation")
 }
