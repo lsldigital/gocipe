@@ -21,6 +21,8 @@ var (
 // getModified returns the last modified date from database, given a table name, a field to compare a given value against for matching.
 // warning: unsafe against sql injection. table and field data must be validated before passed to this function.
 func getModified(table, field, value string) (*timestamp.Timestamp, error) {
+	ctx := context.Background()
+
     tx, err := models.StartTransaction(ctx)
     if err != nil {
         return nil, err
@@ -43,7 +45,7 @@ func getModified(table, field, value string) (*timestamp.Timestamp, error) {
         var modified timestamp.Timestamp
         err = rows.Scan(&modified)
         if err != nil {
-            log.WithFields(log.Fields{"id": id, "query": query, "error": err}).Error("service data: getModified scan error")
+            log.WithFields(log.Fields{"query": query, field: value, "error": err}).Error("service data: getModified scan error")
             return nil, err
         }
 
@@ -88,9 +90,9 @@ func Get{{.Name}}ByID(ctx context.Context, id string) (*models.{{.Name}}, error)
 }
 
 {{- if ne .Slug ""}}
-// Get{{.Name}}ByID fetches published {{.Name}} from DB by slug
+// Get{{.Name}}BySlug fetches published {{.Name}} from DB by slug
 func Get{{.Name}}BySlug(ctx context.Context, slug string) (*models.{{.Name}}, error) {
-var (
+	var (
 		entities []*models.{{.Name}}
 		err      error
 	)
@@ -119,6 +121,26 @@ var (
 	return entities[0], nil
 }
 {{end}}
+// List{{plural .Name}} fetches a list of published {{plural .Name}} from DB
+func List{{plural .Name}}(ctx context.Context, listOpts *models.ListOpts) ([]*models.{{.Name}}, error) {
+	var (
+		entities []*models.{{.Name}}
+		err error
+	)
+
+	log.WithFields(log.Fields{}).Debug("data::List{{.Name}}() entered")
+
+	entities, err = models.{{.Name}}Repo.ListWithRel(ctx, listOpts,
+		&models.Filter{Field: "status", Operation: "=", Value: _statusPublished},
+	)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Warn("data::List{{.Name}}(): {{.Name}}Repo.ListWithRel() error")
+		return nil, errors.WithStack(err)
+	}
+
+	log.WithFields(log.Fields{"entities": entities}).Debug("data::List{{.Name}}() DONE!")
+	return entities, nil
+}
 // [END] {{.Name}}
 {{end}}{{/* range $i, $entity := .Entities */}}
 // ------------------
@@ -160,7 +182,7 @@ func(s Service) Get{{.Name}}ModifiedByID(ctx context.Context, req *GetByIDReques
         return nil, errors.WithStack(errIDNotProvided)
     }
 
-    res.ModifiedAt, err = getModified({{.Table}}, "id", req.GetID())
+    res.ModifiedAt, err = getModified("{{.Table}}", "id", req.GetID())
 	if err != nil {
         return nil, errors.WithStack(err)	
 	}
@@ -199,7 +221,7 @@ func(s Service) Get{{.Name}}ModifiedBySlug(ctx context.Context, req *GetBySlugRe
         return nil, errors.WithStack(errIDNotProvided)
     }
 
-    res.ModifiedAt, err = getModified({{.Table}}, "slug", req.GetSlug())
+    res.ModifiedAt, err = getModified("{{.Table}}", "slug", req.GetSlug())
 	if err != nil {
         return nil, errors.WithStack(err)	
 	}
@@ -209,7 +231,17 @@ func(s Service) Get{{.Name}}ModifiedBySlug(ctx context.Context, req *GetBySlugRe
 {{end}}
 // List{{plural .Name}} allows listing all entity of type {{.Name}}
 func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*List{{plural .Name}}Response, error) {
-    return nil, errors.New("TODO: implementation")
+	var (
+		res List{{plural .Name}}Response
+		err error
+	)
+
+	res.{{plural .Name}}, err = List{{plural .Name}}(ctx, &models.ListOpts{Offset: req.ListOpts.GetOffset(), Limit: req.ListOpts.GetLimit()})
+	if err != nil {
+        return nil, errors.WithStack(err)	
+	}
+
+	return &res, nil
 }
 // [END] {{.Name}}
 {{end}}{{/* range $i, $entity := .Entities */}}
