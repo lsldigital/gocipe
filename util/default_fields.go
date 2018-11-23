@@ -68,7 +68,7 @@ var contentField = Field{
 }
 
 var fieldCreatedAt = Field{
-	Label: "CreatedAt",
+	Label: "Created",
 	Name:  "CreatedAt",
 	Type:  "time",
 	EditWidget: EditWidgetOpts{
@@ -76,12 +76,12 @@ var fieldCreatedAt = Field{
 	},
 	ListWidget: ListWidgetOpts{
 		Hide: false,
-		Type: WidgetTypeTextField,
+		Type: WidgetTypeTime,
 	},
 }
 
 var fieldUpdatedAt = Field{
-	Label: "UpdatedAt",
+	Label: "Updated",
 	Name:  "UpdatedAt",
 	Type:  "time",
 	EditWidget: EditWidgetOpts{
@@ -89,7 +89,7 @@ var fieldUpdatedAt = Field{
 	},
 	ListWidget: ListWidgetOpts{
 		Hide: false,
-		Type: WidgetTypeTextField,
+		Type: WidgetTypeTime,
 	},
 }
 
