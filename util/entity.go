@@ -62,6 +62,12 @@ type Entity struct {
 	// Slug indicates the field to be used for entity slug
 	Slug string `json:"slug"`
 
+	// CreatedAt indicates whether to add a predefined CreatedAt timestamp field in the entity
+	CreatedAt bool `json:"created_at"`
+
+	// UpdatedAt indicates whether to add a predefined CreatedAt timestamp field in the entity
+	UpdatedAt bool `json:"updated_at"`
+
 	// Description is a description of the entity
 	Description string `json:"description"`
 
@@ -116,6 +122,14 @@ func (e *Entity) init(r *Recipe) {
 
 	if r.Admin.Auth.Generate {
 		defaultFields = append(defaultFields, fieldUserID)
+	}
+
+	if e.CreatedAt {
+		defaultFields = append(defaultFields, fieldCreatedAt)
+	}
+
+	if e.UpdatedAt {
+		defaultFields = append(defaultFields, fieldUpdatedAt)
 	}
 
 	e.Fields = append(defaultFields, e.Fields...)

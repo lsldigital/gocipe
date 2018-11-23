@@ -67,6 +67,32 @@ var contentField = Field{
 	},
 }
 
+var fieldCreatedAt = Field{
+	Label: "CreatedAt",
+	Name:  "CreatedAt",
+	Type:  "time",
+	EditWidget: EditWidgetOpts{
+		Hide: true,
+	},
+	ListWidget: ListWidgetOpts{
+		Hide: false,
+		Type: WidgetTypeTextField,
+	},
+}
+
+var fieldUpdatedAt = Field{
+	Label: "UpdatedAt",
+	Name:  "UpdatedAt",
+	Type:  "time",
+	EditWidget: EditWidgetOpts{
+		Hide: true,
+	},
+	ListWidget: ListWidgetOpts{
+		Hide: false,
+		Type: WidgetTypeTextField,
+	},
+}
+
 func fieldReferenceMakeFields(name string) (Field, Field) {
 	var idField = Field{
 		Label: name + "ID",
