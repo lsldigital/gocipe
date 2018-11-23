@@ -13,25 +13,16 @@ func Generate(out *output.Output, r *util.Recipe) {
 	// 	return
 	// }
 
-	out.GenerateAndOverwrite(
-		"Generate ServiceData Proto", "data/service_data.proto.tmpl", "proto/service_data.proto", output.WithHeader,
-		struct {
-			Entities   []util.Entity
-			ImportPath string
-		}{
-			Entities:   r.Entities,
-			ImportPath: r.ImportPath,
-		},
-	)
+	data := struct {
+		Entities       []util.Entity
+		ImportPath     string
+		DecksGenerated bool
+	}{
+		Entities:       r.Entities,
+		ImportPath:     r.ImportPath,
+		DecksGenerated: r.Decks.Generate,
+	}
 
-	out.GenerateAndOverwrite(
-		"Generate ServiceData", "data/service_data.go.tmpl", "services/data/service_data.gocipe.go", output.WithHeader,
-		struct {
-			Entities   []util.Entity
-			ImportPath string
-		}{
-			Entities:   r.Entities,
-			ImportPath: r.ImportPath,
-		},
-	)
+	out.GenerateAndOverwrite("Generate ServiceData Proto", "data/service_data.proto.tmpl", "proto/service_data.proto", output.WithHeader, data)
+	out.GenerateAndOverwrite("Generate ServiceData", "data/service_data.go.tmpl", "services/data/service_data.gocipe.go", output.WithHeader, data)
 }

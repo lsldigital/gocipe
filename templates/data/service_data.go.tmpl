@@ -246,11 +246,13 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 }
 // [END] {{.Name}}
 {{end}}{{/* range $i, $entity := .Entities */}}
+{{if .DecksGenerated}}
 // -------------------
 // Decks and cards ---
 // -------------------
 
 // GetCards returns a list of card references (type & ID) for each decks in DeckRequest
 func(s Service) GetCards(ctx context.Context, req *DeckRequest) (*DeckContentResponse, error) {
-    return nil, errors.New("TODO: implementation")
+    decks, err := decks.ListCardsByDecks(ctx, req.GetDecks())
 }
+{{end}}
