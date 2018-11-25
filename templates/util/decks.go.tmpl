@@ -48,7 +48,7 @@ func init() {
 		Queries: map[string]query{
 			{{- range .Queries}}
 			"{{ .Type }}": query{
-				Condition: "{{ .Condition }}",
+				Condition: `{{ .Condition }}`,
 			},
 			{{- end}}
 		},
