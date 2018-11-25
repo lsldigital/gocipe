@@ -174,7 +174,7 @@ func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]Entity
 					break
 				}
 
-				query := fmt.Sprintf("SELECT id FROM %s %s LIMIT %d", inflection.Plural(strings.ToLower(e)), q.Condition, slotsRemaining)
+				query := fmt.Sprintf(`SELECT t."id" FROM %s t %s LIMIT %d`, inflection.Plural(strings.ToLower(e)), q.Condition, slotsRemaining)
 
 				rows, err := tx.Query(query)
 				if err != nil {
