@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="blocks">
     <template v-for="(component) in blocks">
       <component :is="component.type + 'Render'" :content="component"/>
     </template>
@@ -22,12 +22,7 @@ import LegacyRender from "@lardwaz/views/blocks/LegacyRender";
 
 export default {
   name: "Renderer",
-  props: {
-    blocks: {
-      default: null,
-      type: Array
-    }
-  },
+  props: ["blocks"],
   components: {
     HeadingRender,
     TextRender,
