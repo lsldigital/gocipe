@@ -8,6 +8,7 @@ import (
 	"github.com/fluxynet/gocipe/generators/auth"
 	"github.com/fluxynet/gocipe/generators/bootstrap"
 	"github.com/fluxynet/gocipe/generators/crud"
+	"github.com/fluxynet/gocipe/generators/data"
 	"github.com/fluxynet/gocipe/generators/schema"
 	utils "github.com/fluxynet/gocipe/generators/util"
 	"github.com/fluxynet/gocipe/generators/vuetify"
@@ -23,6 +24,7 @@ var (
 	generateSchema    bool
 	generateCrud      bool
 	generateAdmin     bool
+	generateData      bool
 	generateAuth      bool
 	generateUtils     bool
 	generateVuetify   bool
@@ -45,6 +47,10 @@ var generateCmd = &cobra.Command{
 
 		if generateBootstrap {
 			bootstrap.Generate(out, r)
+		}
+
+		if generateData {
+			data.Generate(out, r)
 		}
 
 		if generateSchema {
