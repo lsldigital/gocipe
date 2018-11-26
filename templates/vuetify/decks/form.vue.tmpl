@@ -659,6 +659,7 @@ export default {
         entity.setPosition(index + "");
         entity.setEntity(card.entId);
         entity.setEntitytype(card.type);
+        entity.setStatus("published");
         req.setCard(entity);
         this.jobs++;
         cli.createCard(req, (err, resp) => {

@@ -5,6 +5,8 @@ import (
 	"log"
 
 	"github.com/pkg/errors"
+	"github.com/jinzhu/inflection"
+
 	"{{.AppImportPath}}/models"
 	"{{.AppImportPath}}/util"
 )
@@ -46,7 +48,7 @@ func init() {
 		Queries: map[string]query{
 			{{- range .Queries}}
 			"{{ .Type }}": query{
-				Condition: "{{ .Condition }}",
+				Condition: `{{ .Condition }}`,
 			},
 			{{- end}}
 		},
@@ -130,12 +132,12 @@ func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]Entity
 		}
 
 		// Standard approach (loading from cards entities)
-		entRefs := make([]EntityRef, 0, deck.MaxSlots)
+		entRefs := make([]EntityRef, deck.MaxSlots)
 		for _, c := range cards {
-			if len(entRefs) == deck.MaxSlots {
-				break
+			if entRefs[c.Position].Type != "" || entRefs[c.Position].ID != "" {
+				continue
 			}
-
+			
 			if err = util.CheckContext(ctx); err != nil {
 				break
 			}
@@ -172,7 +174,7 @@ func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]Entity
 					break
 				}
 
-				query := fmt.Sprintf("SELECT id FROM %s %s LIMIT %d", inflection.Plural(strings.ToLower(e)), q.Condition, slotsRemaining)
+				query := fmt.Sprintf(`SELECT t."id" FROM %s t %s LIMIT %d`, inflection.Plural(strings.ToLower(e)), q.Condition, slotsRemaining)
 
 				rows, err := tx.Query(query)
 				if err != nil {
