@@ -1,0 +1,36 @@
+<template>
+    <div class="single-component-wrapper">
+        <vue-editor @text-change="update()" @blur="update()" id="editor" v-model="local" :editorToolbar="customToolbar">
+        </vue-editor>
+    </div>
+</template>
+
+<script>
+import { VueEditor } from "vue2-editor";
+
+export default {
+  components: {
+    VueEditor
+  },
+  props: ["value"],
+  data() {
+    return {
+      local: this.value,
+      customToolbar: [
+        ["bold", "italic", "underline"],
+        ["link", "blockquote"],
+        [{ list: "ordered" }, { list: "bullet" }],
+        [{ header: [1, 2, 3, false] }]
+      ]
+    };
+  },
+  methods: {
+    update() {
+      this.$emit("input", this.local);
+    }
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+</style>

@@ -3,7 +3,7 @@ syntax = "proto3";
 package admin;
 
 import "models.proto";
-option go_package = "{{.AppImportPath}}/services/admin";
+option go_package = "{{.ImportPath}}/services/admin";
 
 // Filter represents a filter that can be applied for listing requests
 message Filter {
@@ -23,6 +23,11 @@ message ListRequest {
     string Key = 1;
     models.ListOpts ListOpts = 2;
     repeated admin.Filter Filters = 3;
+}
+
+// CountResponse represents a response to a Count<Entity> Request
+message CountResponse {
+    int64 Count = 1;
 }
 
 // DeleteRequest represents a request to allow deleting an entity
@@ -87,6 +92,9 @@ service Admin {
     {{if .Admin.List}}
     // List{{plural .Name}} allows listing all entity of type {{.Name}}
     rpc List{{plural .Name}}(ListRequest) returns (List{{plural .Name}}Response);
+
+    // Count{{plural .Name}} allows counting the listing all entity of type {{.Name}}
+    rpc Count{{plural .Name}}(ListRequest) returns (CountResponse);
     {{- end}}
     {{if .Admin.Update}}
     // Update{{.Name}} allows updating one entity of type {{.Name}}
@@ -96,7 +104,7 @@ service Admin {
     // Delete{{.Name}} allows deleting an entity of type {{.Name}}
     rpc Delete{{.Name}}(DeleteRequest) returns (DeleteResponse);
     {{- end}}
-    {{- if hasFileFields .}}
+    {{- if .HasFileFields}}
     // Upload{{.Name}} allows uploading of files for entity of type {{.Name}}
     rpc Upload{{.Name}}(UploadRequest) returns (UploadResponse);
     {{end}}

@@ -1,0 +1,18 @@
+<template>
+    <div class="related__articles">
+        <article v-if="content.value" v-for="(article, index) in content.value" :key="index">
+            <a href="">
+                <h3>{{ "{{article.title}}" }}</h3>
+            </a>
+        </article>
+    </div>
+</template>
+<script>
+export default {
+  props: ["content"],
+  components: {},
+  methods: {}
+};
+</script>
+<style lang="scss">
+</style>

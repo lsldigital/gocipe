@@ -1,0 +1,69 @@
+<template>
+    <div class="single-component-wrapper">
+        <v-form v-model="valid">
+            <v-textarea label="Footer text" v-model="local.value" @keyup="update()" required></v-textarea>
+            <v-layout row>
+                <v-flex md-12>
+                    <v-autocomplete
+                            :items="googleFonts"
+                            item-text="family"
+                            label="Choose font"
+                            v-model="local.font"
+                            @keyup="update"
+                            required
+                    ></v-autocomplete>
+                </v-flex>
+            </v-layout>
+        </v-form>
+    </div>
+</template>
+<script>
+import axios from "axios";
+
+export default {
+  props: ["value"],
+  data() {
+    const footerData = {
+      value: "",
+      font: ""
+    };
+
+    let local = Object.assign(footerData, this.value);
+
+    return {
+      local,
+      valid: false,
+      googleFonts: []
+    };
+  },
+  computed: {},
+  methods: {
+    update() {
+      // emit changes only if validations are passed
+      if (this.valid === true) {
+        this.$emit("input", this.local);
+        console.log(this.local);
+      }
+    },
+    async getGoogleFonts() {
+      const API_KEY = "AIzaSyAxvv0x4p1PiV6x-psZtHqyo2PD-XJuo3o";
+      let response = await axios
+        .get("https://www.googleapis.com/webfonts/v1/webfonts?key=" + API_KEY)
+        .then(function(response) {
+          return response;
+        })
+        .catch(function(error) {
+          return error;
+        });
+
+      this.googleFonts = response.data.items;
+      return response;
+    }
+  },
+  created() {
+    this.getGoogleFonts();
+  }
+};
+</script>
+<style lang="scss">
+</style>

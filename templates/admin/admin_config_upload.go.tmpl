@@ -1,17 +1,26 @@
 package admin
 
+import (
+	"{{.ImportPath}}/util"
+	"{{.ImportPath}}/util/imagist"
+	"{{.ImportPath}}/util/files"
+)
+
 // UploadPaths is an index of upload options
 var UploadPaths = map[string]*files.UploadOptions{
-	{{range .FileFields -}}
-	"{{lower .Entity}}/{{lower .Field}}":	&{{.Entity}}{{.Field}}UploadOpts,
-	{{end}}
+	{{- range $i, $entity := .Entities}}
+	{{- range $entity.GetFileFields}}
+	"{{.Destination}}":	&{{.ConfigName}},
+	{{- end}}{{/* range $entity.GetFileFields */}}	
+	{{- end}}{{/* range $i, $entity := .Entities */}}
 }
 
-{{range .FileFields}}
-// {{.Entity}}{{.Field}}UploadOpts contains upload parameters for the "{{.Field}}" field in Entity "{{.Entity}}"
-var {{.Entity}}{{.Field}}UploadOpts = files.UploadOptions{
+{{range $i, $entity := .Entities -}}
+{{range $entity.GetFileFields }}
+// {{.ConfigName}} contains upload parameters for the "{{.FieldName}}" field in Entity "{{.EntityName}}"
+var {{.ConfigName}} = files.UploadOptions{
 	Dir:			"media",
-	Destination:    "{{lower .Entity}}/{{lower .Field}}",
+	Destination:    "{{.Destination}}",
 	MediaPrefixURL: "/media/",
 	FileType:       files.TypeImage,
 	MaxSize:        util.NoLimit,
@@ -25,4 +34,5 @@ var {{.Entity}}{{.Field}}UploadOpts = files.UploadOptions{
 		},
 	},
 }
-{{end}}
+{{end}}{{/* range $entity.GetFileFields */}}
+{{end}}{{/* range $i, $entity := .Entities */}}

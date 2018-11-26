@@ -4,6 +4,8 @@ import (
 	"github.com/mitchellh/copystructure"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"{{.ImportPath}}/util"
+	"{{.ImportPath}}/util/files"
 	
 	{{ if .GenerateAuth }}"{{.ImportPath}}/auth"{{ end }}
 )
@@ -42,15 +44,13 @@ func SetGuardian(guardian auth.Guardian) {
 		_guardian = guardian
 	}
 }
-{{ end }}
+{{ end }}{{/* if .GenerateAuth */}}
 
 // Service represents Admin service implementation
 type Service struct {}
 
-{{range .Entities}}
-/**
- * [BEGIN] {{.Name}}
- */
+{{range $i, $entity := .Entities}}
+// [BEGIN] {{.Name}}
 
 {{if .Admin.Create -}}
 // Create{{.Name}} allows creation of entity of type {{.Name}}
@@ -81,12 +81,17 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 		return &res, errors.WithStack(err)
 	}
 
-	if hasPerm := passport.HasPermission(res.{{.Name}}, PermCreate{{.Name}}); !hasPerm {
+	if hasPerm := passport.HasPermission(PermCreate{{.Name}}); !hasPerm {
 		return &res, errors.WithStack(fmt.Errorf("Permission denied")) 
 	}
 	{{ end }}
 
-	res.{{.Name}}.Status = StatusDraft
+	switch res.{{.Name}}.Status {
+		case StatusDraft, StatusSaved, StatusUnpublished, StatusPublished:
+			//all good
+		default:
+			res.{{.Name}}.Status = StatusDraft
+	}
 
 	tx, err = models.StartTransaction(ctx)
 	{{if .Admin.Hooks.PreCreate}}
@@ -111,15 +116,15 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, errors.WithStack(err)
 }
-{{- end}}
+{{- end}}{{/* if .Admin.Create */}}
 
 {{if .Admin.Read -}}
 // Get{{.Name}} allows getting a single entity of type {{.Name}}
@@ -144,21 +149,43 @@ func(s Service) Get{{.Name}}(ctx context.Context, req *GetRequest) (*Get{{.Name}
 	{{- end}}
 
 	res.{{.Name}}, err = models.{{.Name}}Repo.GetWithRel(ctx, req.ID)
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	{{ if .Admin.Auth.Generate }}
+	passport, err := _guardian.GetPassport(req.GetKey())
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	var permission string
+	isOwned := res.{{.Name}}.UserID == passport.GetID()
+	if isOwned {
+		permission = PermEdit{{.Name}}
+	} else {
+		permission = PermEdit{{.Name}}Any
+	}
+
+	if hasPerm := passport.HasPermission(permission); !hasPerm {
+		return &res, errors.WithStack(fmt.Errorf("Permission denied")) 
+	}
+	{{ end }}
 
 	{{if .Admin.Hooks.PostRead -}}
 	stop, err = s.{{lower .Name}}PostRead(ctx, req, &res, err)
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, nil
 }
-{{- end}}
+{{- end}}{{/* if .Admin.Read */}}
 
 {{if .Admin.List -}}
 // List{{plural .Name}} allows listing all entity of type {{.Name}}
@@ -187,7 +214,7 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 		req.ListOpts = &models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit}
 	}
 
-	{{$filters := getAdminFilters $.Entities . }}
+	{{$filters := .GetAdminFilters }}
 	{{if (or $filters.HasBool $filters.HasString $filters.HasDate)}}
 	if req.Filters != nil {
 		for i := range req.Filters {
@@ -231,15 +258,64 @@ func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*Li
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
-	
+
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
-
+	{{- end}}
+	
 	return &res, nil
 }
-{{- end}}
+
+// Count{{plural .Name}} allows counting of listing all entity of type {{.Name}}
+func(s Service) Count{{plural .Name}}(ctx context.Context, req *ListRequest) (*CountResponse, error) {
+	var (
+		res  CountResponse
+		err  error
+		filters []*models.Filter
+	)
+
+	{{$filters := .GetAdminFilters }}
+	{{if (or $filters.HasBool $filters.HasString $filters.HasDate)}}
+	if req.Filters != nil {
+		for i := range req.Filters {
+			switch req.Filters[i].Field {
+			{{if $filters.HasBool}}
+			case {{$filters.BoolFilters}}:
+				if f, err := NewBoolFilter(req.Filters[i]); err == nil {
+					filters = append(filters, f)
+				} else {
+					return &res, err
+				}
+			{{end}}
+			{{if $filters.HasString}}
+			case {{$filters.StringFilters}}:
+				if f, err := NewStringFilter(req.Filters[i]); err == nil {
+					filters = append(filters, f)
+				} else {
+					return &res, err
+				}
+			{{end}}
+			{{if $filters.HasDate}}
+			case {{$filters.DateFilters}}:
+				if f, err := NewDateFilter(req.Filters[i]); err == nil {
+					filters = append(filters, f)
+				} else {
+					return &res, err
+				}
+			{{end}}
+			}
+		}
+	}
+	{{end}}
+	
+	res.Count, err = models.{{.Name}}Repo.Count(ctx, req.ListOpts, filters...)
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+	return &res, nil
+}
+{{- end}}{{/* if .Admin.List */}}
 
 {{if .Admin.Update -}}
 // Update{{.Name}} allows updating one entity of type {{.Name}}
@@ -271,11 +347,13 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 		permission = PermEdit{{.Name}}Any
 	}
 
-	if hasPerm := passport.HasPermission(res.{{.Name}}, permission); !hasPerm {
+	if hasPerm := passport.HasPermission(permission); !hasPerm {
 		return &res, errors.WithStack(fmt.Errorf("Permission denied")) 
 	}
 	{{ end }}
 
+
+	{{if or .Admin.Hooks.PreUpdate .HasFileFields -}}
 	// existing records in DB
 	existing, err := models.{{.Name}}Repo.Get(ctx, req.{{.Name}}.ID)
 	if err != nil {
@@ -287,6 +365,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 		{{end}}
 		return &res, errors.WithStack(err)
 	}
+    {{end}}
 
 	switch req.{{.Name}}.Status {
 		case StatusDraft, StatusSaved, StatusUnpublished, StatusPublished:
@@ -296,8 +375,9 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	res.{{.Name}} = req.{{.Name}}
-	{{ range $fileField := index $.EntitiesFileFields .Name}}
-	res.{{.Entity}}.{{.Field}} = existing.{{.Field}}{{end }}
+	{{ range .GetFileFields }}{{if not .ContentBuilder}}
+	res.{{.EntityName}}.{{.FieldName}} = existing.{{.FieldName}}
+	{{end }}{{end }}{{/* range .GetFileFields */}}
 	{{ if .Slug}}
 	res.{{.Name}}.Slug = existing.Slug
 	{{ end }}
@@ -320,7 +400,7 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	}
 
 	{{if .Slug}}
-	go setSlug(existing.GetID(), req.{{.Name}}.Get{{ucfirst .Slug}}(), "{{.Table}}", "slug")
+	go setSlug(existing.GetID(), req.{{.Name}}.Get{{.Slug}}(), "{{.Table}}", "slug")
 	{{end}}
 
 	{{if .Admin.Hooks.PostUpdate -}}
@@ -328,15 +408,15 @@ func(s Service) Update{{.Name}}(ctx context.Context, req *Update{{.Name}}Request
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, nil
 }
-{{- end}}
+{{- end}}{{/* if .Admin.Update */}}
 
 {{if .Admin.Delete -}}
 // Delete{{.Name}} allows deleting an entity of type {{.Name}}
@@ -388,22 +468,24 @@ func(s Service) Delete{{.Name}}(ctx context.Context, req *DeleteRequest) (*Delet
 	if stop {
 		return &res, nil
 	}
-	{{- end}}
 	
 	if err != nil {
 		return &res, errors.WithStack(err)
 	}
+	{{- end}}
 
 	return &res, nil
 }
-{{- end}}
-{{if hasFileFields .}}
+{{- end}}{{/* if .Admin.Delete */}}
+
+{{if .HasFileFields}}
 // Upload{{.Name}} allows uploading of files for entity of type {{.Name}}
 func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*UploadResponse, error) {
 	var (
-		res       UploadResponse
-		options   *files.UploadOptions
-		fieldname string
+		res       		UploadResponse
+		options   		*files.UploadOptions
+		fieldname 		string
+		contentBuilder 	bool
 	)
 
 	if req == nil {
@@ -412,13 +494,17 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 
 	switch req.Field {
 		{{$EntityName := .Name -}}
-		{{- range (getFileFields .)}}
-		case "{{.PropertyName}}":
-			// Deep copy needed to prevent unwanted changes to global options "{{.EntityName}}{{.PropertyName}}UploadOpts"
-			opts, _ := copystructure.Copy(&{{.EntityName}}{{.PropertyName}}UploadOpts)
+		{{- range (.GetFileFields)}}
+		case "{{.FieldName}}":
+			// Deep copy needed to prevent unwanted changes to global options "{{.ConfigName}}"
+			opts, _ := copystructure.Copy(&{{.ConfigName}})
 			options = opts.(*files.UploadOptions)
-			fieldname = "{{.FieldName}}"
-		{{- end}}
+			{{if .ContentBuilder}}
+			contentBuilder = true
+			{{else}}
+			fieldname = "{{.SchemaName}}"
+			{{end}}{{/* if .ContentBuilder */}}
+		{{- end}}{{/* range (.GetFileFields) */}}
 		default:
 			return &res, ErrorInvalidUploadField
 	}
@@ -437,6 +523,11 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 		return &res, err
 	}
 
+	if contentBuilder {
+		res.URI = filePath
+		return &res, nil
+	}
+	
 	if err = util.CheckContext(ctx); err != nil {
 		files.Delete(fileDiskPath)
 		return &res, errors.WithStack(err)
@@ -449,6 +540,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 	}
 	
 	stmt, err := tx.Prepare(`UPDATE {{.Table}} SET `+fieldname+` = $1 WHERE id = $2`)
+	defer stmt.Close()
 	if err != nil {
 		files.Delete(fileDiskPath)
 		return &res, errors.WithStack(err)
@@ -465,7 +557,7 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 	res.URI = filePath
 	return &res, err
 }
-{{- end}}
+{{- end}}{{/* if .HasFileFields */}}
 
 // Lookup{{plural .Name}} lookup allows looking up an entity by its label for entity of type {{.Name}}
 func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) (*LookupResponse, error) {
@@ -484,7 +576,7 @@ func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) 
 		return &res, err
 	}
     
-	rows, err = tx.Query(`SELECT id, t."{{index $.EntitiesLabelField .Name}}", t."status" FROM {{.Table}} t WHERE t."{{index $.EntitiesLabelField .Name}}" LIKE $1`, req.Term+"%")
+	rows, err = tx.Query(`SELECT id, t."{{.LabelField}}", t."status" FROM {{.Table}} t WHERE LOWER(t."{{lower .LabelField}}") LIKE $1`, "%"+strings.ToLower(req.Term)+"%")
 	if err != nil {
 		return &res, err
 	}
@@ -506,7 +598,6 @@ func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) 
 
 	return &res, err
 }
-/**
- * [END] {{.Name}}
- */
-{{end}}
+
+// [END] {{.Name}}
+{{end}}{{/* range $i, $entity := .Entities */}}

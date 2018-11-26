@@ -1,0 +1,87 @@
+<template>
+    <table align="center" :background="content.value.background_image" border="0" cellpadding="0" cellspacing="0" role="presentation" :style="'background:url(' + content.value.background_image + ') top center / cover no-repeat;width:100%;'">
+        <tbody>
+        <tr>
+            <td>
+                <!--[if mso | IE]>
+                <v:rect  style="mso-width-percent:1000;" xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false">
+                    <v:fill  origin="0.5, 0" position="0.5, 0" :src="content.value.background_image" type="tile" />
+                    <v:textbox style="mso-fit-shape-to-text:true" inset="0,0,0,0">
+
+                        <table
+                                align="center" border="0" cellpadding="0" cellspacing="0" style="width:600px;" width="600"
+                        >
+                            <tr>
+                                <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                <![endif]-->
+                <div style="margin:0 auto;max-width:600px;">
+                    <div style="line-height:0;font-size:0;">
+                        <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
+                            <tbody>
+                            <tr>
+                                <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;vertical-align:middle;">
+                                    <!--[if mso | IE]>
+                                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+
+                                        <tr>
+
+                                            <td
+                                                    style="vertical-align:middle;width:600px;"
+                                            >
+                                    <![endif]-->
+                                    <div class="mj-column-per-100 outlook-group-fix" style="font-size:13px;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;">
+                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:middle;" width="100%">
+                                            <tbody><tr>
+                                                <td align="center" style="font-size:0px;padding:10px 25px;padding-top:45;padding-bottom:10px;word-break:break-word;">
+                                                    <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:14px;line-height:1;text-align:center;color:#45474e;"> <span style="font-size: 30px; line-height: 30px;">{{ "{{content.value.title}}" }}</span><br><br>{{ "{{content.value.description}}" }}</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td align="center" vertical-align="middle" style="font-size:0px;padding:10px 25px;padding-top:10;padding-bottom:45px;word-break:break-word;">
+                                                    <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:separate;line-height:100%;">
+                                                        <tbody><tr>
+                                                            <td align="center" bgcolor="#e85034" role="presentation" style="border:none;border-radius:24px;color:#fff;cursor:auto;padding:10px 25px;" valign="middle"> <a :href="content.value.button_url" style="background:#e85034;color:#fff;font-family:Ubuntu, Helvetica, Arial, sans-serif, Helvetica, Arial, sans-serif;font-size:13px;font-weight:normal;line-height:120%;Margin:0;text-decoration:none;text-transform:none;" target="_blank">
+                                                                {{ "{{content.value.button_text}}" }}
+                                                            </a> </td>
+                                                        </tr>
+                                                        </tbody></table>
+                                                </td>
+                                            </tr>
+                                            </tbody></table>
+                                    </div>
+                                    <!--[if mso | IE]>
+                                    </td>
+
+                                    </tr>
+
+                                    </table>
+                                    <![endif]-->
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!--[if mso | IE]>
+                </td>
+                </tr>
+                </table>
+
+                </v:textbox>
+                </v:rect>
+                <![endif]-->
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</template>
+<script>
+    export default {
+        props: [
+            'content'
+        ]
+    }
+</script>
+<style lang="scss" scoped="">
+
+</style>

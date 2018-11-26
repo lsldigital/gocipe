@@ -1,0 +1,31 @@
+<template>
+    <div class="single-component-wrapper">
+        <v-textarea outline v-model="local" @keyup="update()" required></v-textarea>
+    </div>
+</template>
+<script>
+let marked = require("marked");
+
+export default {
+  props: ["value"],
+  components: {},
+  data() {
+    return {
+      local: this.value,
+      valid: false
+    };
+  },
+  computed: {
+    previewText() {
+      return marked(this.local, { sanitize: true });
+    }
+  },
+  methods: {
+    update() {
+      this.$emit("input", this.previewText);
+    }
+  }
+};
+</script>
+<style lang="scss">
+</style>

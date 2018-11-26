@@ -1,0 +1,89 @@
+<template>
+  <div class="px-3 listing--container">
+    <v-toolbar color="transparent" class="listing-toolbar blue-grey darken-3 px-3" dark flat ml-0>
+      <v-btn icon>
+        <v-icon>pages</v-icon>
+      </v-btn>
+      <v-toolbar-title class="ml-0 pl-0">Decks</v-toolbar-title>
+      <v-spacer></v-spacer>
+    </v-toolbar>
+    <v-container class="px-0 py-0">
+      <!-- Decks Management -->
+      <v-card>
+        <v-card-text>
+          {{ range .Decks }}
+            <v-card>
+              <v-layout row>
+                <v-flex xs7>
+                  <v-card-title primary-title>
+                    <div>
+                      <span class="grey--text caption">NAME</span>
+                      <div class="headline">{{ .Label}}</div>
+                    </div>
+                  </v-card-title>
+                </v-flex>
+                <v-flex xs2>
+                  <v-card-title primary-title>
+                    <div>
+                      <span class="grey--text caption">MAX</span>
+                      <div class="headline">{{ .Slots }}</div>
+                    </div>
+                  </v-card-title>
+                </v-flex>
+                <v-flex xs3>
+                  <v-card-title primary-title>
+                    <div>
+                      <span class="grey--text caption">ACTIONS</span>
+                      <div class="headline">
+                        <v-btn :to="{ name: '{{ .Name }}_deck' }">View</v-btn>
+                      </div>
+                    </div>
+                  </v-card-title>
+                </v-flex>
+              </v-layout>
+              <v-divider light></v-divider>
+
+              <v-card-text>
+                <v-layout row>
+                  <v-flex xs7>
+                    <div class="caption">DESCRIPTION</div>
+                    <div class="subheading">{{ .Description }}</div>	
+                  </v-flex>
+                  <v-flex xs2>
+                    <div class="caption">MACHINE NAME</div>
+                    <pre>
+                      {{ .Name }}
+                    </pre>
+                  </v-flex>
+                  <v-flex xs3>
+                    <div class="caption">ENTITIES</div>
+                    {{ range .EntityTypeWhitelist }}
+                      {{ . }}
+                    {{end}}
+                  </v-flex>
+                </v-layout>
+              </v-card-text>
+              <v-card-action>
+              </v-card-action>
+            </v-card>
+          {{end}}
+        </v-card-text>
+      </v-card>
+    </v-container>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {};
+  },
+  methods: {
+    
+  }
+};
+</script>
+
+<style lang="scss">
+
+</style>

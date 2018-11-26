@@ -9,25 +9,22 @@ import (
 )
 
 // Generate common utility functions
-func Generate(recipe *util.Recipe, noSkip bool) {
-	output.GenerateAndSave("Scaffold", "", "web/app/dist/.gitkeep", "Front-end production files must compile or be placed here. Delete this file when done.", false)
-	output.GenerateAndSave("Scaffold", "", "web/app/src/services/.gitkeep", "Generated client code will be here.", false)
-	output.GenerateAndSave("Scaffold", "", "services/.gitkeep", "Generated server code and implementation will be here.", false)
-	output.GenerateAndSave("Scaffold", "", "assets/.gitkeep", "Place assets in this folder.", false)
-	output.GenerateAndSave("Scaffold", "", "assets/templates/.gitkeep", "Place templates in this folder.", false)
-	output.GenerateAndSave("Scaffold", "", "assets/web/app/.gitkeep", "Place web assets in this folder.", false)
-	output.GenerateAndSave("Scaffold", "application/gen-service.sh.tmpl", "gen-service.sh", struct{ GeneratePath string }{GeneratePath: "$GOPATH" + strings.TrimPrefix(util.WorkingDir, os.Getenv("GOPATH")) + "/services"}, false)
-	output.GenerateAndSave("Scaffold", "application/makefile.tmpl", "Makefile", struct{ AppName string }{util.AppName}, !noSkip)
-	output.GenerateAndSave("Scaffold", "application/main.go.tmpl", "main.go",
-		struct {
-			Recipe     *util.Recipe
-			ImportPath string
-		}{
-			Recipe:     recipe,
-			ImportPath: util.AppImportPath,
-		}, !noSkip)
-	output.GenerateAndSave("Scaffold", "application/route.go.tmpl", "route.go", struct {
-		Bootstrap util.BootstrapOpts
-		Admin     util.AdminOpts
-	}{recipe.Bootstrap, recipe.Admin}, !noSkip)
+func Generate(out *output.Output, r *util.Recipe, noSkip bool) {
+	out.GenerateAndOverwrite("Scaffold Folder", "", "web/app/dist/.gitkeep", output.WithoutHeader, "Front-end production files must compile or be placed here. Delete this file when done.")
+	out.GenerateAndOverwrite("Scaffold Folder", "", "web/app/src/services/.gitkeep", output.WithoutHeader, "Generated client code will be here.")
+	out.GenerateAndOverwrite("Scaffold Folder", "", "services/.gitkeep", output.WithoutHeader, "Generated server code and implementation will be here.")
+	out.GenerateAndOverwrite("Scaffold Folder", "", "assets/.gitkeep", output.WithoutHeader, "Place assets in this folder.")
+	out.GenerateAndOverwrite("Scaffold Folder", "", "assets/templates/.gitkeep", output.WithoutHeader, "Place templates in this folder.")
+	out.GenerateAndOverwrite("Scaffold Folder", "", "assets/web/app/.gitkeep", output.WithoutHeader, "Place web assets in this folder.")
+	out.GenerateAndOverwrite("Scaffold GenService", "application/gen-service.sh.tmpl", "gen-service.sh", output.WithoutHeader, struct{ GeneratePath string }{GeneratePath: "$GOPATH" + strings.TrimPrefix(util.WorkingDir, os.Getenv("GOPATH")) + "/services"})
+
+	if noSkip {
+		out.GenerateAndOverwrite("Scaffold Makefile", "application/makefile.tmpl", "Makefile", output.WithHeader, struct{ AppName string }{util.AppName})
+		out.GenerateAndOverwrite("Scaffold Main", "application/main.go.tmpl", "main.go", output.WithHeader, struct{ Recipe *util.Recipe }{r})
+		out.GenerateAndOverwrite("Scaffold Route", "application/route.go.tmpl", "route.go", output.WithHeader, struct{ Recipe *util.Recipe }{r})
+	} else {
+		out.GenerateAndSave("Scaffold Makefile", "application/makefile.tmpl", "Makefile", output.WithHeader, struct{ AppName string }{util.AppName})
+		out.GenerateAndSave("Scaffold Main", "application/main.go.tmpl", "main.go", output.WithHeader, struct{ Recipe *util.Recipe }{r})
+		out.GenerateAndSave("Scaffold Route", "application/route.go.tmpl", "route.go", output.WithHeader, struct{ Recipe *util.Recipe }{r})
+	}
 }

@@ -1,0 +1,288 @@
+package data
+
+import (
+    log "github.com/sirupsen/logrus"
+
+	"{{.ImportPath}}/models"
+	"{{.ImportPath}}/models/moderrors"
+	"{{.ImportPath}}/util/decks"
+)
+
+const (
+	// _statusPublished: status = 'published'
+	_statusPublished = "published"
+)
+
+var (
+	errIDNotProvided   = errors.New("ID not provided")
+	errSlugNotProvided = errors.New("Slug not provided")
+	errItemNotFound    = errors.New("item not found")
+)
+
+// getModified returns the last modified date from database, given a table name, a field to compare a given value against for matching.
+// warning: unsafe against sql injection. table and field data must be validated before passed to this function.
+func getModified(table, field, value string) (*timestamp.Timestamp, error) {
+	ctx := context.Background()
+
+    tx, err := models.StartTransaction(ctx)
+    if err != nil {
+        return nil, err
+    }
+
+    query := `SELECT "updated_at" FROM `+table+` WHERE "`+field+`" = $1`
+    stmt, err := tx.PrepareContext(ctx, query)
+    defer tx.Rollback()
+    if err != nil {
+        return nil, err
+    }
+
+    rows, err := stmt.QueryContext(ctx, value)
+    defer rows.Close()
+    if err != nil {
+        return nil, err
+    }
+
+    if rows.Next() {
+        var modified timestamp.Timestamp
+        err = rows.Scan(&modified)
+        if err != nil {
+            log.WithFields(log.Fields{"query": query, field: value, "error": err}).Error("service data: getModified scan error")
+            return nil, err
+        }
+
+        return &modified, nil
+    }
+
+    return nil, errItemNotFound
+}
+
+{{range $i, $entity := .Entities}}
+// [BEGIN] {{.Name}}
+
+// Get{{.Name}}ByID fetches published {{.Name}} from DB by ID
+func Get{{.Name}}ByID(ctx context.Context, id string) (*models.{{.Name}}, error) {
+    var (
+		entities []*models.{{.Name}}
+		err      error
+	)
+
+	log.WithFields(log.Fields{}).Debug("data::Get{{.Name}}ByID() entered")
+
+	entities, err = models.{{.Name}}Repo.List(
+		ctx,
+		&models.ListOpts{Offset: 0, Limit: 1, Sort: []*models.ListSortOpts{}},
+		&models.Filter{Field: "id", Operation: "=", Value: id},
+		&models.Filter{Field: "status", Operation: "=", Value: _statusPublished},
+	)
+
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Warn("{{.Name}}Repo.List() error in data::Get{{.Name}}ByID()")
+		return nil, errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entities": entities}).Debug("Result of {{.Name}}Repo.List() in data::Get{{.Name}}ByID()")
+
+	if len(entities) < 1 {
+		return nil, moderrors.RecordNotFoundError
+	}
+
+	log.WithFields(log.Fields{}).Debug("data::Get{{.Name}}ByID() DONE!")
+
+	return entities[0], nil
+}
+
+{{- if ne .Slug ""}}
+// Get{{.Name}}BySlug fetches published {{.Name}} from DB by slug
+func Get{{.Name}}BySlug(ctx context.Context, slug string) (*models.{{.Name}}, error) {
+	var (
+		entities []*models.{{.Name}}
+		err      error
+	)
+
+	log.WithFields(log.Fields{}).Debug("data::Get{{.Name}}BySlug() entered")
+
+	entities, err = models.{{.Name}}Repo.List(
+		ctx,
+		&models.ListOpts{Offset: 0, Limit: 1, Sort: []*models.ListSortOpts{}},
+		&models.Filter{Field: "slug", Operation: "=", Value: slug},
+		&models.Filter{Field: "status", Operation: "=", Value: _statusPublished},
+	)
+
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Warn("{{.Name}}Repo.List() error in data::Get{{.Name}}BySlug()")
+		return nil, errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entities": entities}).Debug("Result of {{.Name}}Repo.List() in data::Get{{.Name}}BySlug()")
+
+	if len(entities) < 1 {
+		return nil, moderrors.RecordNotFoundError
+	}
+
+	log.WithFields(log.Fields{}).Debug("data::Get{{.Name}}BySlug() DONE!")
+
+	return entities[0], nil
+}
+{{end}}
+// List{{plural .Name}} fetches a list of published {{plural .Name}} from DB
+func List{{plural .Name}}(ctx context.Context, listOpts *models.ListOpts) ([]*models.{{.Name}}, error) {
+	var (
+		entities []*models.{{.Name}}
+		err error
+	)
+
+	log.WithFields(log.Fields{}).Debug("data::List{{.Name}}() entered")
+
+	entities, err = models.{{.Name}}Repo.ListWithRel(ctx, listOpts,
+		&models.Filter{Field: "status", Operation: "=", Value: _statusPublished},
+	)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Warn("data::List{{.Name}}(): {{.Name}}Repo.ListWithRel() error")
+		return nil, errors.WithStack(err)
+	}
+
+	log.WithFields(log.Fields{"entities": entities}).Debug("data::List{{.Name}}() DONE!")
+	return entities, nil
+}
+// [END] {{.Name}}
+{{end}}{{/* range $i, $entity := .Entities */}}
+// ------------------
+// [Service Data] ---
+// ------------------
+
+// Service represents Data service implementation
+type Service struct {}
+{{range $i, $entity := .Entities}}
+// [BEGIN] {{.Name}}
+
+// Get{{.Name}}ByID returns a single {{.Name}} from database by primary key
+func(s Service) Get{{.Name}}ByID(ctx context.Context, req *GetByIDRequest) (*{{.Name}}Response, error) {
+	var (
+		res {{.Name}}Response
+		err error
+	)
+
+	if req.GetID() == "" {
+		return nil, errors.WithStack(errIDNotProvided)
+	}
+
+	res.{{.Name}}, err = Get{{.Name}}ByID(ctx, req.GetID())
+	if err != nil {
+        return nil, errors.WithStack(err)	
+	}
+	
+	return &res, nil
+}
+{{if .UpdatedAt}}
+// GetModified{{.Name}}ByID returns time of modification for entity by ID
+func(s Service) GetModified{{.Name}}ByID(ctx context.Context, req *GetByIDRequest) (*TimestampResponse, error) {
+	var (
+        res TimestampResponse
+        err error
+    )
+
+    if req.GetID() == "" {
+        return nil, errors.WithStack(errIDNotProvided)
+    }
+
+    res.ModifiedAt, err = getModified("{{.Table}}", "id", req.GetID())
+	if err != nil {
+        return nil, errors.WithStack(err)	
+	}
+
+    return &res, nil
+}
+{{end}}{{/* if .UpdatedAt */}}
+{{- if ne .Slug ""}}
+// Get{{.Name}}BySlug returns a single {{.Name}} from database by slug
+func(s Service) Get{{.Name}}BySlug(ctx context.Context, req *GetBySlugRequest) (*{{.Name}}Response, error) {
+    var (
+		res {{.Name}}Response
+		err error
+	)
+
+	if req.GetSlug() == "" {
+		return nil, errors.WithStack(errSlugNotProvided)
+	}
+
+	res.{{.Name}}, err = Get{{.Name}}BySlug(ctx, req.GetSlug())
+	if err != nil {
+        return nil, errors.WithStack(err)	
+	}
+
+	return &res, nil
+}
+{{if .UpdatedAt}}
+// GetModified{{.Name}}BySlug returns time of modification for entity by slug
+func(s Service) GetModified{{.Name}}BySlug(ctx context.Context, req *GetBySlugRequest) (*TimestampResponse, error) {
+    var (
+        res TimestampResponse
+        err error
+    )
+
+    if req.GetSlug() == "" {
+        return nil, errors.WithStack(errIDNotProvided)
+    }
+
+    res.ModifiedAt, err = getModified("{{.Table}}", "slug", req.GetSlug())
+	if err != nil {
+        return nil, errors.WithStack(err)	
+	}
+
+    return &res, nil
+}
+{{end -}}{{/* if .UpdatedAt */}}
+{{end}}{{/* if ne .Slug "" */}}
+// List{{plural .Name}} allows listing all entity of type {{.Name}}
+func(s Service) List{{plural .Name}}(ctx context.Context, req *ListRequest) (*List{{plural .Name}}Response, error) {
+	var (
+		res List{{plural .Name}}Response
+		err error
+	)
+
+	res.{{plural .Name}}, err = List{{plural .Name}}(ctx, &models.ListOpts{Offset: req.ListOpts.GetOffset(), Limit: req.ListOpts.GetLimit()})
+	if err != nil {
+        return nil, errors.WithStack(err)	
+	}
+
+	return &res, nil
+}
+// [END] {{.Name}}
+{{end}}{{/* range $i, $entity := .Entities */}}
+{{if .DecksGenerated}}
+// -------------------
+// Decks and cards ---
+// -------------------
+
+// GetCards returns a list of card references (type & ID) for each decks in DeckRequest
+func(s Service) GetCards(ctx context.Context, req *DeckRequest) (*DeckContentResponse, error) {
+    var (
+		res       DeckContentResponse
+		err       error
+		deckCards map[string][]decks.EntityRef
+	)
+
+	deckCards, err = decks.ListCardsByDecks(ctx, req.GetDecks()...)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	for deck, entityRefs := range deckCards {
+		var cardRefs []*CardReference
+
+		for _, entityRef := range entityRefs {
+			cardRefs = append(cardRefs, &CardReference{
+				Type: entityRef.Type,
+				ID:   entityRef.ID,
+			})
+		}
+
+		deckContent := &DeckContent{
+			Name:     deck,
+			CardRefs: cardRefs,
+		}
+
+		res.DeckContents = append(res.DeckContents, deckContent)
+	}
+
+	return &res, nil
+}
+{{end}}

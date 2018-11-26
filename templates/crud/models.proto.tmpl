@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package models;
+option go_package = "{{.AppImportPath}}/models";
+{{if .HasTimestamp -}}
+import "google/protobuf/timestamp.proto";
+{{end}}
+// ListOpts contains options for listing, including Offset, Limit and Sort
+message ListOpts {
+	int64 Offset = 1;
+	int64 Limit = 2;
+	repeated ListSortOpts Sort = 3;
+}
+
+message ListSortOpts {
+	string Field = 1;
+	bool Ascending = 2;
+}
+
+{{ range .Entities -}}
+// {{.Name}} {{.Description}}
+message {{.Name}} { {{ range .GetProtoFields }}
+	{{.}}
+{{- end}}
+}
+
+{{end}}
