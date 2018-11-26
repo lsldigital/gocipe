@@ -111,15 +111,10 @@ func (s Postgres) OrderList() string {
 		fields = append(fields, f.schema.Field)
 	}
 
-	for k, f := range s.Relationships {
-		if f.Type == RelationshipTypeManyOne {
-			fields = append(fields, s.Relationships[k].ThisID)
+	for _, p := range s.Relationships {
+		if p.Type == RelationshipTypeManyOne {
+			fields = append(fields, p.ThisID)
 		}
-
-		if f.Type == RelationshipTypeOneMany {
-			fields = append(fields, s.Relationships[k].ThatID)
-		}
-
 	}
 
 	return `"` + strings.Join(fields, `","`) + `"`
