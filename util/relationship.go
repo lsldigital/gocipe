@@ -33,6 +33,12 @@ var (
 	ErrorInvalidRelationshipType = errors.New("relationship type is invalid")
 )
 
+type RelationshipSeeder struct {
+	MaxPerEntity int `json:"max"`
+	FixPerEntity int `json:"fix"`
+	MinPerEntity int `json:"min"`
+}
+
 // Relationship represents a relationship between this entity and another
 type Relationship struct {
 	// Entity is the name of the related entity
@@ -55,6 +61,8 @@ type Relationship struct {
 
 	// ThatID represents the field in the other entity used for this relationship (schema)
 	ThatID string `json:"-"`
+
+	RelSeeder RelationshipSeeder `json:"relation_seeder"`
 
 	//related is a pointer to the related entity
 	related *Entity

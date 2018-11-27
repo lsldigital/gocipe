@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/fluxynet/gocipe/generators/admin"
+	"github.com/fluxynet/gocipe/generators/seeder"
 	"github.com/fluxynet/gocipe/generators/application"
 	"github.com/fluxynet/gocipe/generators/auth"
 	"github.com/fluxynet/gocipe/generators/bootstrap"
@@ -28,6 +29,7 @@ var (
 	generateAuth      bool
 	generateUtils     bool
 	generateVuetify   bool
+	generateSeeder    bool
 	verbose           bool
 )
 
@@ -55,6 +57,10 @@ var generateCmd = &cobra.Command{
 
 		if generateSchema {
 			schema.Generate(out, r)
+		}
+
+		if generateSeeder {
+			seeder.Generate( r)
 		}
 
 		if generateCrud {

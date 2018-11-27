@@ -104,6 +104,8 @@ type Entity struct {
 	// Table is the name of the database table for the entity
 	Table string `json:"-"`
 
+	SeedCount int `json:"seed_count"`
+
 	// fields is a map for random access of fields contained in entity
 	fields map[string]*Field
 }

@@ -14,11 +14,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-//ManyOne represents relation type
-const ManyOne string = "many-one"
-
-//ManyOwner represents relation type
-const ManyOwner string = "many-many-own"
+const Status string = "Status"
 
 //Timestamp represents a seed type
 const Timestamp string = "Timestamp"
@@ -321,6 +317,8 @@ const TypeTimeStamp string = "timestamp"
 
 const TypeBoolean = "boolean"
 
+const TypeText = "text"
+
 //Seed implements the seeder
 type Seed struct {
 	Type    string `json:"type"`
@@ -338,6 +336,13 @@ type Option struct {
 	Time       TimeOpts     `json:"time"`
 	Password   PasswordOpts `json:"password"`
 }
+
+// type StatusOpts struct {
+// 	Published   int `json: "published"`
+// 	Unpublished int `json: "unpublished"`
+// 	Draft       int `json: "draft"`
+// 	Saved       int `json: "saved"`
+// }
 
 type TimeOpts struct {
 	From int    `json:"from"`
@@ -382,27 +387,224 @@ type DateOpts struct {
 //Record implements a map[][]
 type Record map[string]interface{}
 
-func GenerataSeeds(r *Recipe) map[string][]Record {
+func GenerataSeeds(r *Recipe) []string {
 	var data = make(map[string][]Record)
 	var slugs []map[string]string
+
+	for _, entity := range r.Entities {
+
+		var seeds Seed
+		seeds.Type = "UUID"
+
+		entity.fields["ID"].Seed = seeds
+
+		var seed1 Seed
+		seed1.Type = "Status"
+		entity.fields["Status"].Seed = seed1
+
+	}
 
 	for _, entity := range r.Entities {
 		var records []Record
 		for i := 0; i < entity.SeedCount; i++ {
 			var record Record = make(map[string]interface{})
 			for _, field := range entity.Fields {
-
 				record[field.schema.Field] = getData(field, entity, &slugs, record)
 			}
+
 			records = append(records, record)
 		}
 		data[entity.Table] = records
 	}
 
-	return data
+	//Cater for relationships
+	for _, items := range r.Entities {
+		//Check type of relation
+		for _, rel := range items.Relationships {
+
+			switch rel.Type {
+			case RelationshipTypeManyOne:
+				//get len of entity having one-many with this entity
+				lenEntity := len(data[rel.related.Table])
+				for _, datum := range data[items.Table] {
+					randKey := fake.Year(0, lenEntity-1)
+					datum[rel.related.Table] = data[rel.related.Table][randKey]["id"]
+				}
+
+			case RelationshipTypeManyManyOwner:
+				//Many many owner (list of ids)
+				ThisEntity := getEntityIDs(data, rel, true, "")
+				//Many many inverse (list of ids)
+				ThatEntity := getEntityIDs(data, rel, false, items.Table)
+
+				var records []Record
+				var max = rel.RelSeeder.MaxPerEntity - 1
+				//Table many many generated
+				for k := range ThisEntity {
+					numRel := fake.Year(0, max)
+					maxNum1 := len(ThatEntity) - 1 //For entity (inverse)
+					for i := 0; i < numRel; i++ {
+						var record Record = make(map[string]interface{})
+
+						randNum1 := fake.Year(0, maxNum1)
+
+						//Get a random id of entity (own)
+						record[rel.ThisID] = ThisEntity[k]
+						//Get a random id of entity (inverse)
+						record[rel.ThatID] = ThatEntity[randNum1]
+						records = append(records, record)
+					}
+				}
+				data[rel.JoinTable] = records
+			}
+		}
+	}
+
+	allTypes := getAllDataWithType(r, data)
+	fmt.Println(allTypes)
+	var statements []string
+
+	for _, items := range r.Entities {
+		statements = sqlization(data, allTypes, items.Table, statements)
+	}
+
+	entityNames := getEntityNames(r)
+
+	var mnymnytbls []string
+	for key := range data {
+		isFalse := contains(entityNames, key)
+
+		if isFalse == false {
+			mnymnytbls = append(mnymnytbls, key)
+		}
+	}
+
+	for _, manymanyT := range mnymnytbls {
+		statements = sqlization(data, allTypes, manymanyT, statements)
+	}
+
+	return statements
 }
 
-func getEntityNames(f Recipe) []string {
+func getAllDataWithType(f *Recipe, data map[string][]Record) map[string][]map[string]string {
+	var datatype = make(map[string][]map[string]string)
+	for _, entity := range f.Entities {
+		var dataRec []map[string]string
+		for _, field := range entity.Fields {
+			var datatypeRec = make(map[string]string)
+			datatypeRec[field.schema.Field] = field.schema.Type
+			dataRec = append(dataRec, datatypeRec)
+		}
+		datatype[entity.Table] = dataRec
+
+		for _, rel := range entity.Relationships {
+			switch rel.Type {
+			case RelationshipTypeManyOne:
+
+				var datatypeRec = make(map[string]string)
+				datatypeRec[rel.related.Table] = "VARCHAR(255)"
+				dataRec = append(dataRec, datatypeRec)
+				datatype[entity.Table] = dataRec
+
+			case RelationshipTypeManyManyOwner:
+				var datatypeRec = make(map[string]string)
+				datatypeRec[rel.ThisID] = "VARCHAR(255)"
+				dataRec = append(dataRec, datatypeRec)
+
+				datatypeRec[rel.ThatID] = "VARCHAR(255)"
+				dataRec = append(dataRec, datatypeRec)
+
+				// str := getMnyMnyTblName(entity.Table, rel.related.Table)
+
+				datatype[rel.JoinTable] = dataRec
+			}
+
+		}
+
+	}
+
+	return datatype
+}
+
+func checkType(allTypes map[string][]map[string]string, tablename string, field string, val interface{}) string {
+	var fieldtype string
+
+	for _, v := range allTypes[tablename] {
+		fieldtype = v[field]
+
+		var s = strings.ToLower(fieldtype)
+		if strings.Contains(s, TypeVarchar) || strings.Contains(s, TypeChar) || strings.Contains(s, TypeTimeStamp) || strings.Contains(s, TypeText) {
+			return fmt.Sprintf(" '%s'", val)
+		} else if strings.Contains(s, TypeInt) {
+			return strconv.Itoa(val.(int))
+		}
+	}
+
+	r := fmt.Sprintf("%s", val)
+	return r
+}
+
+func sqlization(data map[string][]Record, allTypes map[string][]map[string]string, entityName string, statements []string) []string {
+
+	for _, record := range data[entityName] {
+		var vals []string
+		var fs []string
+		for k, v := range record {
+			dta := checkType(allTypes, entityName, k, v)
+
+			// //values
+			fs = append(fs, k)
+			vals = append(vals, dta)
+		}
+
+		concatFields := strings.Join(fs, ", ")
+		concatVals := strings.Join(vals, ",")
+		stmt := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);", entityName, concatFields, concatVals)
+		stmt = fmt.Sprintf("%s\n", stmt)
+
+		statements = append(statements, stmt)
+	}
+
+	return statements
+}
+
+func getEntityIDs(data map[string][]Record, rel Relationship, owner bool, tablename string) []string {
+	var ids []string
+
+	if owner == true {
+		for _, itm := range data[rel.related.Table] { // for p in Person
+			id := fmt.Sprintf("%v", itm["id"])
+			ids = append(ids, id)
+		}
+	} else {
+		for _, itm := range data[tablename] { // for p in Person
+			id := fmt.Sprintf("%v", itm["id"])
+			ids = append(ids, id)
+		}
+	}
+
+	return ids
+}
+
+func getAllIds(data map[string][]Record, rel Relationship, owner bool, tablename string) map[string]string {
+	ids := make(map[string]string)
+
+	if owner == true {
+		for _, itm := range data[rel.related.Table] { // for p in Person
+			id := fmt.Sprintf("%v", itm["id"])
+			ids[id] = id
+		}
+	} else {
+		for _, itm := range data[tablename] { // for p in Person
+			id := fmt.Sprintf("%v", itm["id"])
+			ids[id] = id
+		}
+	}
+
+	return ids
+}
+
+func getEntityNames(f *Recipe) []string {
 	var names []string
 	for _, entity := range f.Entities {
 		names = append(names, entity.Table)
@@ -429,6 +631,11 @@ func getMnyMnyTblName(tbl1, tbl2 string) string {
 }
 
 func getDummyDate(fromYY int, toYY int) string {
+	if fromYY == 0 || toYY == 0 {
+		now := time.Now()
+		return now.Format("02-01-2006")
+	}
+
 	d := fake.Year(1, 28)
 	y := fake.Year(fromYY, toYY)
 	mn := fake.Year(1, 12)
@@ -501,10 +708,10 @@ func RandString(n int) string {
 }
 
 func getData(field Field, entity Entity, slugs *[]map[string]string, record map[string]interface{}) interface{} {
-	// return "Hello"
 	var s = make(map[string]string)
 
 	switch field.Seed.Type {
+
 	case Timestamp:
 
 		dummydate := getDummyDate(field.Seed.Options.Datetime.FromYY, field.Seed.Options.Datetime.ToYY)
@@ -747,6 +954,8 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 		return fake.Year(field.Seed.Options.Number.Min, field.Seed.Options.Number.Max)
 	case Zip:
 		return fake.Zip()
+	case Status:
+		return "Published"
 	default:
 		log.Printf("Field: %s, does not have type %s", field.schema.Field, field.Seed.Type)
 	}

@@ -1,9 +1,9 @@
 package seeder
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"log"
+	"os"
 
 	"github.com/fluxynet/gocipe/util"
 )
@@ -11,11 +11,16 @@ import (
 // Generate returns generated database schema creation code
 func Generate(r *util.Recipe) {
 
-	data := util.GenerataSeeds(r)
-	rankings, _ := json.Marshal(data)
-	err := ioutil.WriteFile(util.WorkingDir+"output.json", rankings, 0644)
+	filename, _ := util.GetAbsPath("schema/seeder.gocipe.sql")
+	statements := util.GenerataSeeds(r)
 
-	fmt.Printf("%+v", rankings)
-	fmt.Printf("%+v", err)
+	fi, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal("Cannot create f", err)
+	}
+	defer fi.Close()
 
+	for _, s := range statements {
+		fmt.Fprintf(fi, s)
+	}
 }
