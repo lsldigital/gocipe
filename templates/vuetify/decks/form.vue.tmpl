@@ -256,7 +256,7 @@ import {
   DeleteRequest
 } from "@/services/service_admin_pb";
 import { mapGetters } from "vuex";
-import { Card, CardSchedule } from "@/services/models_pb.js";
+import { ListOpts, Card, CardSchedule } from "@/services/models_pb.js";
 import { debounce, findIndex } from "lodash";
 import dragula from "dragula";
 
@@ -559,6 +559,9 @@ export default {
       }
 
       let req = new LookupRequest();
+      let opts = new ListOpts();
+      opts.setLimit(10);
+      req.setListopts(opts);
       req.setTerm(this.avaiEntitiesSearch);
       this.avaiEntities.loading = true;
 
