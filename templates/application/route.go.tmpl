@@ -9,7 +9,7 @@ import (
 	"{{.Recipe.ImportPath}}/util/web"
 )
 
-func newProdRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
+func newProdRouter(g *grpc.Server) *mux.Router {
 	router := mux.NewRouter()
 	{{if not .Recipe.Bootstrap.NoGRPCWeb}}
 	if ws != nil {
@@ -35,7 +35,7 @@ func newProdRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
 	return router
 }
 
-func newDevRouter(ws *grpcweb.WrappedGrpcServer) *mux.Router {
+func newDevRouter(g *grpc.Server) *mux.Router {
 	router := mux.NewRouter()
 	{{if not .Recipe.Bootstrap.NoGRPCWeb}}
 	if ws != nil {
