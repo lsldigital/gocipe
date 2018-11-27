@@ -16,7 +16,8 @@ const (
 	RelationshipTypeManyManyInverse = "many-many-inverse"
 
 	// RelationshipTypeOneOne represents a relationship of type One-One
-	RelationshipTypeOneOne = "one-one"
+	RelationshipTypeOneOne      = "one-one"
+	RelationshipTypeOneOneOwner = "one-one-owner"
 
 	// RelationshipTypeOneMany represents a relationship of type One-Many
 	RelationshipTypeOneMany = "one-many"
@@ -32,12 +33,6 @@ var (
 	//ErrorInvalidRelationshipType indicates an invalid or unsupported relationship type
 	ErrorInvalidRelationshipType = errors.New("relationship type is invalid")
 )
-
-type RelationshipSeeder struct {
-	MaxPerEntity int `json:"max"`
-	FixPerEntity int `json:"fix"`
-	MinPerEntity int `json:"min"`
-}
 
 // Relationship represents a relationship between this entity and another
 type Relationship struct {
@@ -66,6 +61,12 @@ type Relationship struct {
 
 	//related is a pointer to the related entity
 	related *Entity
+}
+
+type RelationshipSeeder struct {
+	MaxPerEntity int `json:"max"`
+	FixPerEntity int `json:"fix"`
+	MinPerEntity int `json:"min"`
 }
 
 func (p *Relationship) init(r *Recipe, e *Entity) {

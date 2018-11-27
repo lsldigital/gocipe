@@ -1,7 +1,9 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"strconv"
@@ -421,8 +423,20 @@ func GenerataSeeds(r *Recipe) []string {
 	for _, items := range r.Entities {
 		//Check type of relation
 		for _, rel := range items.Relationships {
+			// fmt.Println(rel.Type)
 
 			switch rel.Type {
+			case RelationshipTypeOneOneOwner:
+				ThisEntity := getEntityIDs(data, rel, true, "")
+				// lenEntity := len(ThatEntity)
+
+				field := fmt.Sprintf("%s_id", strings.ToLower(rel.Entity))
+				var i = 0
+				for _, datum := range data[items.Table] {
+					datum[field] = ThisEntity[i]
+					i++
+				}
+
 			case RelationshipTypeManyOne:
 				//get len of entity having one-many with this entity
 				lenEntity := len(data[rel.related.Table])
@@ -438,7 +452,10 @@ func GenerataSeeds(r *Recipe) []string {
 				ThatEntity := getEntityIDs(data, rel, false, items.Table)
 
 				var records []Record
+
 				var max = rel.RelSeeder.MaxPerEntity - 1
+
+				fmt.Println(max)
 				//Table many many generated
 				for k := range ThisEntity {
 					numRel := fake.Year(0, max)
@@ -460,8 +477,12 @@ func GenerataSeeds(r *Recipe) []string {
 		}
 	}
 
+	filename, _ := GetAbsPath("schema/seeder.json")
+
+	d, _ := json.Marshal(data)
+	_ = ioutil.WriteFile(filename, d, 0644)
+
 	allTypes := getAllDataWithType(r, data)
-	fmt.Println(allTypes)
 	var statements []string
 
 	for _, items := range r.Entities {
@@ -958,6 +979,7 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 		return "Published"
 	default:
 		log.Printf("Field: %s, does not have type %s", field.schema.Field, field.Seed.Type)
+		return ""
 	}
 
 	return nil
