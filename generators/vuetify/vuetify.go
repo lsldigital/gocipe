@@ -4,9 +4,9 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/fluxynet/gocipe/output"
-	"github.com/fluxynet/gocipe/util"
 	"github.com/jinzhu/inflection"
+	"github.com/lsldigital/gocipe/output"
+	"github.com/lsldigital/gocipe/util"
 )
 
 // Generate returns generated vuetify components
