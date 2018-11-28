@@ -1,10 +1,7 @@
 package util
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -12,7 +9,6 @@ import (
 
 	"github.com/Pallinder/go-randomdata"
 	seeds "github.com/fluxynet/gocipe/util/seeds"
-	"github.com/gosimple/slug"
 	"github.com/icrowley/fake"
 	"github.com/satori/go.uuid"
 )
@@ -341,7 +337,7 @@ type Seed struct {
 	Options Option `json:"options"`
 }
 
-//Option represents the
+//Option represents the different options available
 type Option struct {
 	Blank      string       `json:"blank"`
 	CreditCard string       `json:"credit_card"`
@@ -464,7 +460,6 @@ func GenerataSeeds(r *Recipe) []string {
 
 				var max = rel.RelSeeder.MaxPerEntity - 1
 
-				fmt.Println(max)
 				//Table many many generated
 				for k := range ThisEntity {
 					numRel := fake.Year(0, max)
@@ -485,11 +480,6 @@ func GenerataSeeds(r *Recipe) []string {
 			}
 		}
 	}
-
-	filename, _ := GetAbsPath("schema/seeder.json")
-
-	d, _ := json.Marshal(data)
-	_ = ioutil.WriteFile(filename, d, 0644)
 
 	allTypes := getAllDataWithType(r, data)
 	var statements []string
@@ -600,17 +590,17 @@ func sqlization(data map[string][]Record, allTypes map[string][]map[string]strin
 
 func getEntityIDs(data map[string][]Record, rel Relationship, owner bool, tablename string) []string {
 	var ids []string
+	var tbl string
 
-	if owner == true {
-		for _, itm := range data[rel.related.Table] { // for p in Person
-			id := fmt.Sprintf("%v", itm["id"])
-			ids = append(ids, id)
-		}
+	if owner {
+		tbl = rel.related.Table
 	} else {
-		for _, itm := range data[tablename] { // for p in Person
-			id := fmt.Sprintf("%v", itm["id"])
-			ids = append(ids, id)
-		}
+		tbl = tablename
+	}
+
+	for _, itm := range data[tbl] {
+		id := fmt.Sprintf("%v", itm["id"])
+		ids = append(ids, id)
 	}
 
 	return ids
@@ -618,17 +608,16 @@ func getEntityIDs(data map[string][]Record, rel Relationship, owner bool, tablen
 
 func getAllIds(data map[string][]Record, rel Relationship, owner bool, tablename string) map[string]string {
 	ids := make(map[string]string)
-
-	if owner == true {
-		for _, itm := range data[rel.related.Table] { // for p in Person
-			id := fmt.Sprintf("%v", itm["id"])
-			ids[id] = id
-		}
+	var tbl string
+	if owner {
+		tbl = rel.related.Table
 	} else {
-		for _, itm := range data[tablename] { // for p in Person
-			id := fmt.Sprintf("%v", itm["id"])
-			ids[id] = id
-		}
+		tbl = tablename
+	}
+
+	for _, itm := range data[tbl] {
+		id := fmt.Sprintf("%v", itm["id"])
+		ids[id] = id
 	}
 
 	return ids
@@ -649,15 +638,6 @@ func contains(names []string, ele string) bool {
 		}
 	}
 	return false
-}
-
-func getMnyMnyTblName(tbl1, tbl2 string) string {
-	var t1 = strings.ToLower(tbl1)
-	var t2 = strings.ToLower(tbl2)
-	if t1 < t2 {
-		return fmt.Sprintf("%ss_%ss", t1, t2)
-	}
-	return fmt.Sprintf("%ss_%ss", t2, t1)
 }
 
 func getDummyDate(fromYY int, toYY int) string {
@@ -742,68 +722,6 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 
 	switch field.Seed.Type {
 
-	case Timestamp:
-
-		dummydate := getDummyDate(field.Seed.Options.Datetime.FromYY, field.Seed.Options.Datetime.ToYY)
-		dummytime := getDummyTime(field.Seed.Options.Datetime.FromTimeHH, 0, "")
-
-		if field.Seed.Options.Datetime.Timezone != "" {
-			return fmt.Sprintf("%s %s%s", dummydate, dummytime, field.Seed.Options.Datetime.Timezone)
-		}
-
-		return fmt.Sprintf("%s %s", dummydate, dummytime)
-
-	case Number:
-		return randomdata.Number(field.Seed.Options.Number.Min, field.Seed.Options.Number.Max)
-
-	case CustomList:
-		options := field.Seed.Options.CustomList
-		length := len(options) - 1
-
-		choice := randomdata.Number(0, length)
-		return options[choice]
-
-	case Slug:
-		str := fmt.Sprintf("%v", record[entity.Slug])
-		if len(strings.Trim(str, " ")) != 0 {
-			str = slug.Make(str)
-
-			//check if slug exits
-			exist := s[str]
-			if exist == "" {
-				s[str] = str
-				*slugs = append(*slugs, s)
-
-			} else {
-				// append a unique value to the slug
-				str = fmt.Sprintf("%s-%s", str, RandString(4))
-				s[str] = str
-				*slugs = append(*slugs, s)
-			}
-			return str
-		}
-
-	case Time:
-		return getDummyTime(field.Seed.Options.Time.From, field.Seed.Options.Time.To, field.Seed.Options.Time.Val)
-	case Dob:
-		var d int
-		d = fake.Year(1, 28)
-		y := fake.Year(field.Seed.Options.Date.From, field.Seed.Options.Date.To)
-		mn := fake.Year(1, 12)
-		var str string
-		if len(strconv.Itoa(d)) == 1 && len(strconv.Itoa(mn)) == 1 {
-			str = fmt.Sprintf("0%d-0%d-%d", d, mn, y)
-		} else if len(strconv.Itoa(d)) == 2 && len(strconv.Itoa(mn)) == 1 {
-			str = fmt.Sprintf("%d-0%d-%d", d, mn, y)
-		} else if len(strconv.Itoa(d)) == 1 && len(strconv.Itoa(mn)) == 2 {
-			str = fmt.Sprintf("0%d-%d-%d", d, mn, y)
-		} else {
-			str = fmt.Sprintf("%d-%d-%d", d, mn, y)
-		}
-
-		return str
-	case UUID:
-		return uuid.NewV4()
 	case Brand:
 		return fake.Brand()
 	case Character:
@@ -830,12 +748,36 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 		return fake.Currency()
 	case CurrencyCode:
 		return fake.CurrencyCode()
+
+	case CustomList:
+		options := field.Seed.Options.CustomList
+		length := len(options) - 1
+
+		choice := randomdata.Number(0, length)
+		return options[choice]
 	case Day:
 		return fake.Day()
 	case Digits:
 		return fake.Digits()
 	case DigitsN:
 		return fake.DigitsN(field.Seed.Options.Number.Val)
+	case Dob:
+		var d int
+		d = fake.Year(1, 28)
+		y := fake.Year(field.Seed.Options.Date.From, field.Seed.Options.Date.To)
+		mn := fake.Year(1, 12)
+		var str string
+		if len(strconv.Itoa(d)) == 1 && len(strconv.Itoa(mn)) == 1 {
+			str = fmt.Sprintf("0%d-0%d-%d", d, mn, y)
+		} else if len(strconv.Itoa(d)) == 2 && len(strconv.Itoa(mn)) == 1 {
+			str = fmt.Sprintf("%d-0%d-%d", d, mn, y)
+		} else if len(strconv.Itoa(d)) == 1 && len(strconv.Itoa(mn)) == 2 {
+			str = fmt.Sprintf("0%d-%d-%d", d, mn, y)
+		} else {
+			str = fmt.Sprintf("%d-%d-%d", d, mn, y)
+		}
+
+		return str
 	case DomainName:
 		return fake.DomainName()
 	case DomainZone:
@@ -930,6 +872,8 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 		return fake.MonthNum()
 	case MonthShort:
 		return fake.MonthShort()
+	case Number:
+		return randomdata.Number(field.Seed.Options.Number.Min, field.Seed.Options.Number.Max)
 	case Paragraph:
 		return fake.Paragraph()
 	case Paragraphs:
@@ -954,6 +898,26 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 		return fake.SentencesN(field.Seed.Options.Number.Val)
 	case SimplePassword:
 		return fake.SimplePassword()
+	case Slug:
+		str := fmt.Sprintf("%v", record[entity.Slug])
+		if len(strings.Trim(str, " ")) != 0 {
+			str = slug.Make(str)
+
+			//check if slug exits
+			exist := s[str]
+			if exist == "" {
+				s[str] = str
+				*slugs = append(*slugs, s)
+
+			} else {
+				// append a unique value to the slug
+				str = fmt.Sprintf("%s-%s", str, RandString(4))
+				s[str] = str
+				*slugs = append(*slugs, s)
+			}
+			return str
+		}
+
 	case State:
 		return fake.State()
 	case Status:
@@ -964,6 +928,18 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 		return fake.Street()
 	case StreetAddress:
 		return fake.StreetAddress()
+	case Time:
+		return getDummyTime(field.Seed.Options.Time.From, field.Seed.Options.Time.To, field.Seed.Options.Time.Val)
+	case Timestamp:
+
+		dummydate := getDummyDate(field.Seed.Options.Datetime.FromYY, field.Seed.Options.Datetime.ToYY)
+		dummytime := getDummyTime(field.Seed.Options.Datetime.FromTimeHH, 0, "")
+
+		if field.Seed.Options.Datetime.Timezone != "" {
+			return fmt.Sprintf("%s %s%s", dummydate, dummytime, field.Seed.Options.Datetime.Timezone)
+		}
+
+		return fmt.Sprintf("%s %s", dummydate, dummytime)
 	case Title:
 		return fake.Title()
 	case TopLevelDomain:
@@ -974,6 +950,8 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 		return fake.UserAgent()
 	case UserName:
 		return fake.UserName()
+	case UUID:
+		return uuid.NewV4()
 	case WeekDay:
 		return fake.WeekDay()
 	case WeekDayShort:
@@ -991,7 +969,6 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 	case Zip:
 		return fake.Zip()
 	default:
-		log.Printf("Field: %s, does not have type %s", field.schema.Field, field.Seed.Type)
 		return ""
 	}
 

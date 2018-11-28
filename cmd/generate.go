@@ -60,7 +60,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateSeeder {
-			seeder.Generate( r)
+			seeder.Generate(r)
 		}
 
 		if generateCrud {

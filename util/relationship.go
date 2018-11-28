@@ -64,6 +64,7 @@ type Relationship struct {
 	related *Entity
 }
 
+//RelationshipSeeder implements seeder option for relationship many-many
 type RelationshipSeeder struct {
 	MaxPerEntity int `json:"max"`
 	FixPerEntity int `json:"fix"`
