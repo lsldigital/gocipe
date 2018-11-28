@@ -17,8 +17,13 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+//URL represents a seed type Url
+const URL string = "Url"
+
+// Status represents a seed type Status
 const Status string = "Status"
 
+// ImageURL represents a seed type ImageURL
 const ImageURL string = "ImageUrl"
 
 //Timestamp represents a seed type
@@ -312,17 +317,23 @@ const Year string = "Year"
 //Zip represents seed type
 const Zip string = "Zip"
 
+//TypeVarchar represents a seed of type Varchar
 const TypeVarchar string = "varchar"
 
+//TypeChar represents a seed of type Char
 const TypeChar string = "char"
 
+//TypeInt represents a seed of type Int
 const TypeInt string = "int"
 
+//TypeTimeStamp represents a seed of type TimeStamp
 const TypeTimeStamp string = "timestamp"
 
-const TypeBoolean = "boolean"
+//TypeBoolean represents a seed of type Boolean
+const TypeBoolean string = "boolean"
 
-const TypeText = "text"
+//TypeText represents a seed of type Text
+const TypeText string = "text"
 
 //Seed implements the seeder
 type Seed struct {
@@ -342,13 +353,7 @@ type Option struct {
 	Password   PasswordOpts `json:"password"`
 }
 
-// type StatusOpts struct {
-// 	Published   int `json: "published"`
-// 	Unpublished int `json: "unpublished"`
-// 	Draft       int `json: "draft"`
-// 	Saved       int `json: "saved"`
-// }
-
+//TimeOpts implements options for Time
 type TimeOpts struct {
 	From int    `json:"from"`
 	To   int    `json:"to"`
@@ -392,6 +397,7 @@ type DateOpts struct {
 //Record implements a map[][]
 type Record map[string]interface{}
 
+//GenerataSeeds generate dummy data
 func GenerataSeeds(r *Recipe) []string {
 	var data = make(map[string][]Record)
 	var slugs []map[string]string
@@ -962,6 +968,8 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 		return fake.Title()
 	case TopLevelDomain:
 		return fake.TopLevelDomain()
+	case URL:
+		return seeds.RandDummyURL()
 	case UserAgent:
 		return fake.UserAgent()
 	case UserName:
@@ -983,7 +991,7 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 	case Zip:
 		return fake.Zip()
 	default:
-		log.Printf("")
+		log.Printf("Field: %s, does not have type %s", field.schema.Field, field.Seed.Type)
 		return ""
 	}
 
