@@ -11,12 +11,15 @@ import (
 	"time"
 
 	"github.com/Pallinder/go-randomdata"
+	seeds "github.com/fluxynet/gocipe/util/seeds"
 	"github.com/gosimple/slug"
 	"github.com/icrowley/fake"
 	"github.com/satori/go.uuid"
 )
 
 const Status string = "Status"
+
+const ImageURL string = "ImageUrl"
 
 //Timestamp represents a seed type
 const Timestamp string = "Timestamp"
@@ -867,6 +870,8 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 		return fake.HexColor()
 	case HexColorShort:
 		return fake.HexColorShort()
+	case ImageURL:
+		return seeds.RandDummyImageURL()
 	case IPv4:
 		return fake.IPv4()
 	case IPv6:
@@ -945,6 +950,8 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 		return fake.SimplePassword()
 	case State:
 		return fake.State()
+	case Status:
+		return "Published"
 	case StateAbbrev:
 		return fake.StateAbbrev()
 	case Street:
@@ -975,10 +982,8 @@ func getData(field Field, entity Entity, slugs *[]map[string]string, record map[
 		return fake.Year(field.Seed.Options.Number.Min, field.Seed.Options.Number.Max)
 	case Zip:
 		return fake.Zip()
-	case Status:
-		return "Published"
 	default:
-		log.Printf("Field: %s, does not have type %s", field.schema.Field, field.Seed.Type)
+		log.Printf("")
 		return ""
 	}
 

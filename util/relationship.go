@@ -16,7 +16,8 @@ const (
 	RelationshipTypeManyManyInverse = "many-many-inverse"
 
 	// RelationshipTypeOneOne represents a relationship of type One-One
-	RelationshipTypeOneOne      = "one-one"
+	RelationshipTypeOneOne = "one-one"
+
 	RelationshipTypeOneOneOwner = "one-one-owner"
 
 	// RelationshipTypeOneMany represents a relationship of type One-Many
