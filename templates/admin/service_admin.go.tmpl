@@ -563,7 +563,6 @@ func(s Service) Upload{{.Name}}(ctx context.Context, req *UploadRequest) (*Uploa
 func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) (*LookupResponse, error) {
 	var (
 		err  error
-		rows *sql.Rows
 		res  LookupResponse
 	)
 
@@ -571,29 +570,19 @@ func(s Service) Lookup{{plural .Name}}(ctx context.Context, req *LookupRequest) 
 		return &res, ErrorRequestEmpty
 	}
 
-	tx, err := models.StartTransaction(ctx)
-	if err != nil {
-		return &res, err
+	if req.ListOpts == nil {
+		req.ListOpts = &models.ListOpts{Offset: models.NoOffset, Limit: 25}
 	}
-    
-	rows, err = tx.Query(`SELECT id, t."{{.LabelField}}", t."status" FROM {{.Table}} t WHERE LOWER(t."{{lower .LabelField}}") LIKE $1`, "%"+strings.ToLower(req.Term)+"%")
-	if err != nil {
-		return &res, err
-	}
-    
-	defer rows.Close()
-	for rows.Next() {
-		var id, label, status string
-		if err = util.CheckContext(ctx); err != nil {
-			return &res, err
-		}
 
-		err = rows.Scan(&id, &label, &status)
-		if err != nil {
-			return &res, errors.WithStack(err)
-		}
-    
-		res.Result = append(res.Result, &LookupResult{ID: id, Label: label, Status: status})
+	filter := &models.Filter{Field: "{{.LabelField}}", FieldFunction: models.FilterFuncLower, Operation: "LIKE", Value: "%"+strings.ToLower(req.Term)+"%"}
+
+	{{plural .Name}}, err := models.{{.Name}}Repo.List(ctx, req.ListOpts, filter)
+	if err != nil {
+		return &res, errors.WithStack(err)
+	}
+
+	for _, e := range {{plural .Name}} {
+		res.Result = append(res.Result, &LookupResult{ID: e.ID, Label: e.{{.GetLabelFieldName}}, Status: e.Status})
 	}
 
 	return &res, err

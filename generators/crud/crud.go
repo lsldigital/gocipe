@@ -54,8 +54,8 @@ func Generate(out *output.Output, r *util.Recipe) {
 
 		if e.HasCrudHooks() {
 			out.GenerateAndSave("GenerateCRUD Hooks "+e.Name, "crud/hooks.go.tmpl", fmt.Sprintf("models/%s_crud_hooks.gocipe.go", strings.ToLower(e.Name)), output.WithHeader, struct {
-				Entities []util.Entity
-			}{Entities: r.Entities})
+				Entity util.Entity
+			}{Entity: e})
 		}
 
 		hasTimestamp = hasTimestamp || e.HasTimestamp()
