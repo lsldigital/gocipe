@@ -62,6 +62,7 @@ message UploadResponse {
 message LookupRequest {
     string Key  = 1;
     string Term = 2;
+    models.ListOpts ListOpts = 3;   
 }
 
 // LookupResult represents one (of many) results for an entity lookup request

@@ -354,6 +354,17 @@ func (e *Entity) GetRelatedTables() []Relationship {
 	return related
 }
 
+//GetLabelFieldName returns field name for label field
+func (e *Entity) GetLabelFieldName() string {
+	for _, f := range e.Fields {
+		if f.schema.Field == e.LabelField {
+			return f.Name
+		}
+	}
+
+	return ""
+}
+
 //HasCrudHooks returns true if any of crud hooks is enabled
 func (e *Entity) HasCrudHooks() bool {
 	switch true {

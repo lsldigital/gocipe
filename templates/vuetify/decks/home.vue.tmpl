@@ -12,28 +12,32 @@
       <v-card>
         <v-card-text>
           {{ range .Decks }}
-            <v-card>
+            <v-card class="mb-4">
               <v-layout row>
-                <v-flex xs7>
+                <v-flex xs6>
                   <v-card-title primary-title>
                     <div>
-                      <span class="grey--text caption">NAME</span>
                       <div class="headline">{{ .Label}}</div>
-                    </div>
-                  </v-card-title>
-                </v-flex>
-                <v-flex xs2>
-                  <v-card-title primary-title>
-                    <div>
-                      <span class="grey--text caption">MAX</span>
-                      <div class="headline">{{ .Slots }}</div>
+                      <span class="grey--text caption">{{ .Description }}</span>
                     </div>
                   </v-card-title>
                 </v-flex>
                 <v-flex xs3>
                   <v-card-title primary-title>
                     <div>
-                      <span class="grey--text caption">ACTIONS</span>
+                      <div class="headline">{{ .Slots }}</div>
+                      <span class="grey--text caption">
+                        {{ range .EntityTypeWhitelist }}
+                          {{ . }}
+                        {{end}}
+                    </span>
+                    </div>
+                  </v-card-title>
+                </v-flex>
+                <v-flex xs3>
+                  <v-card-title primary-title>
+                    <div>
+                      <span class="grey--text caption">🤖 {{ .Name }}</span>
                       <div class="headline">
                         <v-btn :to="{ name: '{{ .Name }}_deck' }">View</v-btn>
                       </div>
@@ -41,30 +45,6 @@
                   </v-card-title>
                 </v-flex>
               </v-layout>
-              <v-divider light></v-divider>
-
-              <v-card-text>
-                <v-layout row>
-                  <v-flex xs7>
-                    <div class="caption">DESCRIPTION</div>
-                    <div class="subheading">{{ .Description }}</div>	
-                  </v-flex>
-                  <v-flex xs2>
-                    <div class="caption">MACHINE NAME</div>
-                    <pre>
-                      {{ .Name }}
-                    </pre>
-                  </v-flex>
-                  <v-flex xs3>
-                    <div class="caption">ENTITIES</div>
-                    {{ range .EntityTypeWhitelist }}
-                      {{ . }}
-                    {{end}}
-                  </v-flex>
-                </v-layout>
-              </v-card-text>
-              <v-card-action>
-              </v-card-action>
             </v-card>
           {{end}}
         </v-card-text>
