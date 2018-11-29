@@ -40,6 +40,11 @@ const (
 	TypeInvalid = iota
 	TypeImage
 	TypeVideo
+	TypeAudio
+	TypeDocument
+	TypeSheet
+	TypeCSV
+	TypePDF
 )
 
 var (
@@ -109,6 +114,16 @@ func Upload(fileName string, fileContent []byte, options *UploadOptions) (string
 		err := _imagist.Add(buf, fileDiskPath, options.ImgDimensions, true)
 		return fileDiskPath, filePath, err
 	case TypeVideo:
+		// TODO: Not yet implemented
+	case TypeAudio:
+		// TODO: Not yet implemented
+	case TypeDocument:
+		// TODO: Not yet implemented
+	case TypeSheet:
+		// TODO: Not yet implemented
+	case TypeCSV:
+		// TODO: Not yet implemented
+	case TypePDF:
 		// TODO: Not yet implemented
 	default:
 		// Invalid file type in config
