@@ -1,4 +1,4 @@
-module github.com/fluxynet/gocipe
+module github.com/lsldigital/gocipe
 
 require (
 	github.com/GeertJohan/go.rice v0.0.0-20170420135705-c02ca9a983da

@@ -3,17 +3,17 @@ package cmd
 import (
 	"log"
 
-	"github.com/fluxynet/gocipe/generators/admin"
-	"github.com/fluxynet/gocipe/generators/application"
-	"github.com/fluxynet/gocipe/generators/auth"
-	"github.com/fluxynet/gocipe/generators/bootstrap"
-	"github.com/fluxynet/gocipe/generators/crud"
-	"github.com/fluxynet/gocipe/generators/data"
-	"github.com/fluxynet/gocipe/generators/schema"
-	utils "github.com/fluxynet/gocipe/generators/util"
-	"github.com/fluxynet/gocipe/generators/vuetify"
-	"github.com/fluxynet/gocipe/output"
-	"github.com/fluxynet/gocipe/util"
+	"github.com/lsldigital/gocipe/generators/admin"
+	"github.com/lsldigital/gocipe/generators/application"
+	"github.com/lsldigital/gocipe/generators/auth"
+	"github.com/lsldigital/gocipe/generators/bootstrap"
+	"github.com/lsldigital/gocipe/generators/crud"
+	"github.com/lsldigital/gocipe/generators/data"
+	"github.com/lsldigital/gocipe/generators/schema"
+	utils "github.com/lsldigital/gocipe/generators/util"
+	"github.com/lsldigital/gocipe/generators/vuetify"
+	"github.com/lsldigital/gocipe/output"
+	"github.com/lsldigital/gocipe/util"
 
 	"github.com/spf13/cobra"
 )

@@ -1,8 +1,8 @@
 package util
 
 import (
-	"github.com/fluxynet/gocipe/output"
-	utils "github.com/fluxynet/gocipe/util"
+	"github.com/lsldigital/gocipe/output"
+	utils "github.com/lsldigital/gocipe/util"
 )
 
 // Generate common utility functions

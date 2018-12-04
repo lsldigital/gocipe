@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"github.com/fluxynet/gocipe/output"
-	"github.com/fluxynet/gocipe/util"
+	"github.com/lsldigital/gocipe/output"
+	"github.com/lsldigital/gocipe/util"
 )
 
 // Generate auth code
