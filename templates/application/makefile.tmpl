@@ -14,9 +14,9 @@ build:
 	@cd ${BUILD_DIR} && ./${APPNAME}
 
 prod:
-	@echo "Compiling for PROD ..."
+	@echo "Compiling for PROD..."
+	@cd web/app && npm ci && npm run build && cd ../..
+	@cd web/admin && npm ci && npm run build && cd ../..
+	@rm -rf assets/web && mkdir assets/web && mv web/app/dist assets/web/app && mv web/admin/dist assets/web/admin
 	@go clean && go generate && env GOOS=linux GOARCH=amd64 go build -ldflags ${BUILD_FLAGS} -o ${BUILD_DIR}/${APPNAME}
-	@echo "Compressing into tar.gz ..."
-	@tar -czf ${BUILD_DIR}/${APPNAME}-`date +%FT%T`.tar.gz ${BUILD_DIR}/${APPNAME}
-	@rm ${BUILD_DIR}/${APPNAME}
 	@echo "Build done!"
