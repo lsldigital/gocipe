@@ -271,6 +271,9 @@ type DeckOpts struct {
 	// Description represents the description of deck
 	Description string `json:"description"`
 
+	// Group represents the group of deck
+	Group string `json:"group"`
+
 	// NoDuplicate represents whether or not deck should accept duplicate cards
 	NoDuplicate bool `json:"no_duplicate"`
 
