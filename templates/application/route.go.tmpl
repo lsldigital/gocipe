@@ -12,9 +12,7 @@ import (
 func newProdRouter(g *grpc.Server) *mux.Router {
 	router := mux.NewRouter()
 	{{if not .Recipe.Bootstrap.NoGRPCWeb}}
-	if ws != nil {
-		router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
-	}
+	router.PathPrefix("/api").Handler(http.StripPrefix("/api", grpcweb.WrapServer(g)))
 	{{end}}
 
 	{{if .Recipe.Admin.Generate}}
@@ -38,9 +36,7 @@ func newProdRouter(g *grpc.Server) *mux.Router {
 func newDevRouter(g *grpc.Server) *mux.Router {
 	router := mux.NewRouter()
 	{{if not .Recipe.Bootstrap.NoGRPCWeb}}
-	if ws != nil {
-		router.PathPrefix("/api").Handler(http.StripPrefix("/api", ws))
-	}
+	router.PathPrefix("/api").Handler(http.StripPrefix("/api", grpcweb.WrapServer(g)))
 	{{end}}
 
 	{{if .Recipe.Admin.Generate}}
