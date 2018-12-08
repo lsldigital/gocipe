@@ -12,6 +12,9 @@ type Reference struct {
 	//Name is the reference field name
 	Name string `json:"name"`
 
+	// TypeWhitelist represents a list of allowed entity types
+	TypeWhitelist []EditWidgetOption `json:"type_whitelist"`
+
 	// IDField represents field information for referenced entity ID field
 	IDField Field `json:"-"`
 
@@ -22,6 +25,8 @@ type Reference struct {
 func (c *Reference) init() {
 	c.IDField, c.TypeField = fieldReferenceMakeFields(c.Name)
 	c.IDField.init()
+
+	c.TypeField.EditWidget.Options = c.TypeWhitelist
 	c.TypeField.init()
 }
 
