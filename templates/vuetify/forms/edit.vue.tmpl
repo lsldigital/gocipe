@@ -312,7 +312,7 @@ export default {
         {{- end }}
         {{ range .Entity.References -}}
         change{{ucfirst .TypeField.Name}}: function(e){
-            this.entity.setEntitytype(e);
+            this.entity.set{{ucfirst .TypeField.Name}}(e);
             this.lookup{{ucfirst .TypeField.Name}}RPC = 'lookup'+this.entity.get{{ucfirst .TypeField.Name}}();
         },
         {{- end }}
