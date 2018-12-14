@@ -3,7 +3,7 @@
 import {{.Name}}List from "./forms/{{plural .Name}}List.vue";
 import {{.Name}}Edit from "./forms/{{plural .Name}}Edit.vue";
 {{end}}
-{{- if .GenerateDecks}}
+{{- if $.GenerateDecks}}
 // Decks routes
 import decks_routes from "./decks/routes.js";
 {{end}}
@@ -32,7 +32,7 @@ let routes = [
   }{{if ne (plus1 $i) (len $.Entities)}},{{end}}
   {{- end}}
 ];
-{{if .GenerateDecks}}
+{{if $.GenerateDecks}}
 routes = routes.concat(decks_routes);
 {{end}}
 export default routes;
