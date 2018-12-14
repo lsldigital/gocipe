@@ -18,6 +18,8 @@ const (
 	// RelationshipTypeOneOne represents a relationship of type One-One
 	RelationshipTypeOneOne = "one-one"
 
+	RelationshipTypeOneOneOwner = "one-one-owner"
+
 	// RelationshipTypeOneMany represents a relationship of type One-Many
 	RelationshipTypeOneMany = "one-many"
 
@@ -56,8 +58,17 @@ type Relationship struct {
 	// ThatID represents the field in the other entity used for this relationship (schema)
 	ThatID string `json:"-"`
 
+	RelSeeder RelationshipSeeder `json:"relation_seeder"`
+
 	//related is a pointer to the related entity
 	related *Entity
+}
+
+//RelationshipSeeder implements seeder option for relationship many-many
+type RelationshipSeeder struct {
+	MaxPerEntity int `json:"max"`
+	FixPerEntity int `json:"fix"`
+	MinPerEntity int `json:"min"`
 }
 
 func (p *Relationship) init(r *Recipe, e *Entity) {

@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/lsldigital/gocipe/generators/admin"
+	"github.com/lsldigital/gocipe/generators/seeder"
 	"github.com/lsldigital/gocipe/generators/application"
 	"github.com/lsldigital/gocipe/generators/auth"
 	"github.com/lsldigital/gocipe/generators/bootstrap"
@@ -28,6 +29,7 @@ var (
 	generateAuth      bool
 	generateUtils     bool
 	generateVuetify   bool
+	generateSeeder    bool
 	verbose           bool
 )
 
@@ -55,6 +57,10 @@ var generateCmd = &cobra.Command{
 
 		if generateSchema {
 			schema.Generate(out, r)
+		}
+
+		if generateSeeder {
+			seeder.Generate(r)
 		}
 
 		if generateCrud {

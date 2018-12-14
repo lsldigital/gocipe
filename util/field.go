@@ -48,6 +48,9 @@ type Field struct {
 	// Default provides the default value for this field in database
 	Default string `json:"default"`
 
+	// Seed represents seed information for the field
+	Seed Seed `json:"seed"`
+
 	// EditWidget represents widget information for the field
 	EditWidget EditWidgetOpts `json:"edit_widget"`
 
