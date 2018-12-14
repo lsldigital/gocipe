@@ -11,9 +11,11 @@ import (
 // Generate returns generated database schema creation code
 func Generate(r *util.Recipe) {
 
-	filename, _ := util.GetAbsPath("schema/seeder.gocipe.sql")
+	filename, err := util.GetAbsPath("schema/seeder.gocipe.sql")
+	if err != nil {
+		log.Fatal("Cannot get absolute path", err)
+	}
 	statements := util.GenerataSeeds(r)
-
 	fi, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal("Cannot create f", err)
