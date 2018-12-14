@@ -24,6 +24,7 @@ func init() {
 	generateCmd.Flags().BoolVarP(&generateAuth, "Auth", "", true, "")
 	generateCmd.Flags().BoolVarP(&generateUtils, "Utils", "", true, "")
 	generateCmd.Flags().BoolVarP(&generateVuetify, "Vuetify", "", true, "")
+	generateCmd.Flags().BoolVarP(&generateSeeder, "Seeder", "", true, "")
 
 	rootCmd.AddCommand(generateCmd, versionCmd)
 }

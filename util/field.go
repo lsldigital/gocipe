@@ -54,6 +54,8 @@ type Field struct {
 	// ListWidget represents widget information for the field
 	ListWidget ListWidgetOpts `json:"list_widget"`
 
+	Seed Seed `json:"seed"`
+
 	// schema represents schema information for the field
 	schema FieldSchema
 }
