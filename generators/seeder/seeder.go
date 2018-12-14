@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/fluxynet/gocipe/util"
+	"github.com/lsldigital/gocipe/util"
 )
 
 // Generate returns generated database schema creation code

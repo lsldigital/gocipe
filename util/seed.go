@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/Pallinder/go-randomdata"
-	seeds "github.com/fluxynet/gocipe/util/seeds"
+	"github.com/gosimple/slug"
 	"github.com/icrowley/fake"
+	seeds "github.com/lsldigital/gocipe/util/seeds"
 	"github.com/satori/go.uuid"
 )
 
