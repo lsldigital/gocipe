@@ -51,13 +51,13 @@ func main() {
 	{{- if .Recipe.Admin.Generate}}
 	admin.RegisterAdminServer(g, &admin.Service{})
 	{{- end}}
+	{{end}}
 	var router *mux.Router
 	if core.Env == core.EnvironmentDev {
-		router = newDevRouter(g)
+		router = newDevRouter({{if not .Recipe.Bootstrap.NoGRPCWeb}}g{{else}}nil{{end}})
 	} else {
-		router = newProdRouter(g)
+		router = newProdRouter({{if not .Recipe.Bootstrap.NoGRPCWeb}}g{{else}}nil{{end}})
 	}
-	{{end}}
 	
 	{{if not .Recipe.Bootstrap.NoGRPCWire}}
 	go func() {

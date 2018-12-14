@@ -1,8 +1,8 @@
 package data
 
 import (
-	"github.com/fluxynet/gocipe/output"
-	"github.com/fluxynet/gocipe/util"
+	"github.com/lsldigital/gocipe/output"
+	"github.com/lsldigital/gocipe/util"
 )
 
 // Generate returns generated code for a Data service

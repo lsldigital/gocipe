@@ -6,47 +6,62 @@
       </v-btn>
       <v-toolbar-title class="ml-0 pl-0">Decks</v-toolbar-title>
       <v-spacer></v-spacer>
+      <v-tabs centered color="transparent" align-with-title :grow="false" mode="out-in" v-model="deck">
+        <v-tabs-slider></v-tabs-slider>
+        {{- range $group, $decks := .Decks}}
+        <v-tab href="#tab-{{ $group }}">
+          {{ $group }}
+        </v-tab>
+        {{- end}}
+      </v-tabs>
+      <v-spacer></v-spacer>
     </v-toolbar>
     <v-container class="px-0 py-0">
       <!-- Decks Management -->
       <v-card>
         <v-card-text>
-          {{ range .Decks }}
-            <v-card class="mb-4">
-              <v-layout row>
-                <v-flex xs6>
-                  <v-card-title primary-title>
-                    <div>
-                      <div class="headline">{{ .Label}}</div>
-                      <span class="grey--text caption">{{ .Description }}</span>
-                    </div>
-                  </v-card-title>
-                </v-flex>
-                <v-flex xs3>
-                  <v-card-title primary-title>
-                    <div>
-                      <div class="headline">{{ .Slots }}</div>
-                      <span class="grey--text caption">
-                        {{ range .EntityTypeWhitelist }}
-                          {{ . }}
-                        {{end}}
-                    </span>
-                    </div>
-                  </v-card-title>
-                </v-flex>
-                <v-flex xs3>
-                  <v-card-title primary-title>
-                    <div>
-                      <span class="grey--text caption">🤖 {{ .Name }}</span>
-                      <div class="headline">
-                        <v-btn :to="{ name: '{{ .Name }}_deck' }">View</v-btn>
+          <v-tabs-items v-model="deck">
+          {{- range $group, $decks := .Decks}}
+            <v-tab-item :value="'tab-{{ $group }}'">
+              {{- range $i, $deck := $decks}}
+              <v-card class="mb-4">
+                <v-layout row>
+                  <v-flex xs6>
+                    <v-card-title primary-title>
+                      <div>
+                        <div class="headline">{{ $deck.Label}}</div>
+                        <span class="grey--text caption">{{ $deck.Description }}</span>
                       </div>
-                    </div>
-                  </v-card-title>
-                </v-flex>
-              </v-layout>
-            </v-card>
-          {{end}}
+                    </v-card-title>
+                  </v-flex>
+                  <v-flex xs3>
+                    <v-card-title primary-title>
+                      <div>
+                        <div class="headline">{{ $deck.Slots }}</div>
+                        <span class="grey--text caption">
+                          {{- range $deck.EntityTypeWhitelist }}
+                            {{ . }}
+                          {{- end}}
+                      </span>
+                      </div>
+                    </v-card-title>
+                  </v-flex>
+                  <v-flex xs3>
+                    <v-card-title primary-title>
+                      <div>
+                        <span class="grey--text caption">🤖 {{ $deck.Name }}</span>
+                        <div class="headline">
+                          <v-btn :to="{ name: '{{ $deck.Name }}_deck' }">View</v-btn>
+                        </div>
+                      </div>
+                    </v-card-title>
+                  </v-flex>
+                </v-layout>
+              </v-card>
+              {{- end}}
+            </v-tab-item>
+            {{- end}}
+          </v-tabs-items>
         </v-card-text>
       </v-card>
     </v-container>
@@ -56,7 +71,9 @@
 <script>
 export default {
   data() {
-    return {};
+    return {
+      deck: null
+    };
   },
   methods: {
     

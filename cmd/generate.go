@@ -72,7 +72,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		if generateAuth {
-			auth.Generate(out)
+			auth.Generate(out, r)
 		}
 
 		if generateUtils {

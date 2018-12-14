@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/fluxynet/gocipe/util"
+	"github.com/lsldigital/gocipe/util"
 )
 
 var (

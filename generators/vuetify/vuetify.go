@@ -4,9 +4,9 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/fluxynet/gocipe/output"
-	"github.com/fluxynet/gocipe/util"
 	"github.com/jinzhu/inflection"
+	"github.com/lsldigital/gocipe/output"
+	"github.com/lsldigital/gocipe/util"
 )
 
 // Generate returns generated vuetify components
@@ -47,8 +47,9 @@ func Generate(out *output.Output, r *util.Recipe) {
 	}
 	// routes
 	out.GenerateAndOverwrite("GenerateVuetify Routes", "vuetify/js/routes.js.tmpl", filepath.Join(dstPath, "/routes.js"), output.WithHeader, struct {
-		Entities []util.Entity
-	}{menuEntities})
+		Entities      []util.Entity
+		GenerateDecks bool
+	}{menuEntities, r.Decks.Generate})
 
 	// decks
 	if r.Decks.Generate {
@@ -56,14 +57,12 @@ func Generate(out *output.Output, r *util.Recipe) {
 			Decks []util.DeckOpts
 		}{r.Decks.Decks})
 
-		out.GenerateAndOverwrite("GenerateVuetify Decks", "vuetify/decks/home.vue.tmpl", filepath.Join(dstPath, "/decks/home.vue"), output.WithHeader, struct {
-			Decks []util.DeckOpts
-		}{r.Decks.Decks})
-
+		groupedDecks := make(map[string][]util.DeckOpts, 0)
 		for _, deck := range r.Decks.Decks {
 			if deck.Vuetify.NoGenerate {
 				continue
 			}
+			groupedDecks[deck.Group] = append(groupedDecks[deck.Group], deck)
 			entities := make([]util.Entity, 0)
 			for _, name := range deck.EntityTypeWhitelist {
 				e, err := r.GetEntity(name)
@@ -77,6 +76,10 @@ func Generate(out *output.Output, r *util.Recipe) {
 				Entities []util.Entity
 			}{deck, entities})
 		}
+
+		out.GenerateAndOverwrite("GenerateVuetify Decks", "vuetify/decks/home.vue.tmpl", filepath.Join(dstPath, "/decks/home.vue"), output.WithHeader, struct {
+			Decks map[string][]util.DeckOpts
+		}{groupedDecks})
 	}
 
 	widgets := map[string]string{

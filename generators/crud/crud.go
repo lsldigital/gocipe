@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fluxynet/gocipe/output"
-	"github.com/fluxynet/gocipe/util"
+	"github.com/lsldigital/gocipe/output"
+	"github.com/lsldigital/gocipe/util"
 )
 
 // // RepoCodes that must be analysed for interface generation

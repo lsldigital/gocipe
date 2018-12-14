@@ -1,5 +1,5 @@
 // Decks listing
-import home from "./home.vue";
+import decks from "./home.vue";
 {{ range .Decks -}}
 {{if not .Vuetify.NoGenerate -}}
 // {{.Name}} - {{.Description}}
@@ -8,13 +8,13 @@ import {{.Name}}Deck from "./{{.Name}}.vue";
 {{- end}}
 let routes = [
   {
-    path: "home",
-    name: "home_deck",
-    component: home,
+    path: "decks",
+    name: "decks",
+    component: decks,
     meta: {
-      entity: "Home",
+      entity: "Decks",
       showInMenu: true,
-      icon: "lock"
+      icon: "view_quilt"
     }
   },
   {{- range $i, $v := .Decks}}
@@ -25,7 +25,7 @@ let routes = [
     component: {{.Name}}Deck,
     meta: {
       entity: "{{.Label}}",
-      showInMenu: {{if .Vuetify.NotInMenu}}false{{else}}true{{end}},
+      showInMenu: false,
       icon: "{{.Vuetify.Icon}}"
     }
   }{{if ne (plus1 $i) (len $.Decks)}},{{end}}
