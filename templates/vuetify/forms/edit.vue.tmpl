@@ -133,7 +133,7 @@
                                     :value="this.entity.get{{ucfirst .Name}}()" 
                                     :rpc="'lookup{{plural .Entity}}'"
                                     :multiple="false"
-                                    @gocipe="(e) => this.entity.set{{ucfirst .Entity}}id(e)"
+                                    @gocipe="(e) => this.entity.set{{ucfirst .Name}}id(e)"
                                     {{- /* SELECTREL */ -}}
                                 ></component>
                         {{- end }}
