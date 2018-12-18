@@ -1,0 +1,77 @@
+<template>
+  <div class="single-component-wrapper">
+    <v-form v-model="valid">
+      <component
+        :is="'EditWidgetImagefield'"
+        :hint="''"
+        :value="local.imageurl"
+        @gocipe="(e) => this.updateUrl(e)"
+        :field="'Image'"
+        :rpc="'upload'+information.entityName"
+        :entityid="information.id"
+      ></component>
+      <vue-editor
+        @text-change="update()"
+        @blur="update()"
+        id="editor"
+        v-model="local.description"
+        :editorToolbar="customToolbar"
+      ></vue-editor>
+      <v-text-field label="Author Name" v-model="local.author.name" @change="update" required></v-text-field>
+      <v-text-field label="Author Title" v-model="local.author.title" @change="update" required></v-text-field>
+    </v-form>
+  </div>
+</template>
+
+<script>
+import { VueEditor } from "vue2-editor";
+
+export default {
+  components: {
+    VueEditor
+  },
+  props: {
+    information: {
+      default: null,
+      type: Object
+    },
+    value: Object
+  },
+  data() {
+    const fields = {
+      imageurl: "",
+      description: "",
+      author: {
+        name: "",
+        title: ""
+      }
+    };
+    let local = Object.assign(fields, this.value);
+    return {
+      valid: false,
+      local,
+      customToolbar: [
+        ["bold", "italic", "underline"],
+        ["link", "blockquote"],
+        [{ list: "ordered" }, { list: "bullet" }],
+        [{ header: [1, 2, 3, false] }]
+      ]
+    };
+  },
+  methods: {
+    update() {
+      // emit changes only if validations are passed
+      if (this.valid === true) {
+        this.$emit("input", this.local);
+      }
+    },
+    updateUrl: function(e) {
+      this.local.imageurl = e;
+      this.$emit("input", this.local);
+    }
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+</style>
