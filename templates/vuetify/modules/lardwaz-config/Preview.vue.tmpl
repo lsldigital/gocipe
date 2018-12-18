@@ -3,7 +3,7 @@
     <div class="preview-wrapper" :class="viewport">
       <!-- <link rel="stylesheet" :href="'/themes/' + cssfile + '/style.css'"> -->
       <div class="article-wrapper" id="article-wrapper">
-        <h1 class="preview__title" v-if="information && information.title">{{ information.title }}</h1>
+        <h1 class="preview__title" v-if="information && information.title">{{ "{{ information.title }}" }}</h1>
 
         <!-- Lardwaz Render -->
         <Renderer class="article__body" :blocks="blocks"/>
