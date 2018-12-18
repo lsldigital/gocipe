@@ -17,8 +17,8 @@
       ></p>
     </blockquote>
     <div class="author-detail-wrapper">
-      <p v-if="content.value && content.value.author">{{ content.value.author.name }}</p>
-      <p v-if="content.value && content.value.author">{{ content.value.author.title }}</p>
+      <p v-if="content.value && content.value.author">{{ "{{ content.value.author.name }}" }}</p>
+      <p v-if="content.value && content.value.author">{{ "{{ content.value.author.title }}" }}</p>
     </div>
     <div class="button-wrapper">
       <i class="arrow"></i>
