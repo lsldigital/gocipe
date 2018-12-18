@@ -19,7 +19,7 @@
       <v-list-tile
           v-for="block in toolbox"
           :key="block.type"
-          :disabled="block.disabled"
+          v-if="block.disabled === false"
           @click="add(block); hideSheet()"
       >
         <v-list-tile-avatar>
