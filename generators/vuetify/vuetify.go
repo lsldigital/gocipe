@@ -55,7 +55,8 @@ func Generate(out *output.Output, r *util.Recipe) {
 	if r.Decks.Generate {
 		out.GenerateAndOverwrite("GenerateVuetify Routes Decks", "vuetify/decks/routes.js.tmpl", filepath.Join(dstPath, "/decks/routes.js"), output.WithHeader, struct {
 			Decks []util.DeckOpts
-		}{r.Decks.Decks})
+			GenerateDecks bool
+		}{r.Decks.Decks, r.Decks.Generate})
 
 		groupedDecks := make(map[string][]util.DeckOpts, 0)
 		for _, deck := range r.Decks.Decks {
