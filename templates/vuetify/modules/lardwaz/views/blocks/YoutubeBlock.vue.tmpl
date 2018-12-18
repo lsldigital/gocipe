@@ -11,7 +11,7 @@
         ></v-text-field>
       </v-layout>
       <v-layout row>
-        <v-switch label="Featured (Video cover)" v-model="local.isFeatured"></v-switch>
+        <v-switch @change="update" label="Featured (Video cover)" v-model="local.isFeatured"></v-switch>
       </v-layout>
     </v-form>
   </div>
