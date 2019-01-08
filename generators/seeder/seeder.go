@@ -16,6 +16,10 @@ func Generate(r *util.Recipe) {
 		log.Fatal("Cannot get absolute path", err)
 	}
 	statements := util.GenerataSeeds(r)
+
+	//Delete file if already exists
+	exists(filename)
+
 	fi, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal("Cannot create f", err)
@@ -24,5 +28,17 @@ func Generate(r *util.Recipe) {
 
 	for _, s := range statements {
 		fmt.Fprintf(fi, s)
+	}
+}
+
+func exists(filename string) {
+
+	_, err := os.Stat(filename)
+
+	if !os.IsNotExist(err) {
+		err1 := os.Remove(filename)
+		if err1 != nil {
+			log.Println("File cannot be deleted: " + filename)
+		}
 	}
 }
