@@ -13,12 +13,18 @@ func Generate(r *util.Recipe) {
 
 	filename, err := util.GetAbsPath("schema/seeder.gocipe.sql")
 	if err != nil {
-		log.Fatal("Cannot get absolute path", err)
+		log.Println("Cannot get absolute path", err)
 	}
 	statements := util.GenerataSeeds(r)
+
+	//Delete file if already exists
+	if _, err := os.Stat(filename); err == nil {
+		os.Remove(filename)
+	}
+
 	fi, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Fatal("Cannot create f", err)
+		log.Println("Cannot create f", err)
 	}
 	defer fi.Close()
 
