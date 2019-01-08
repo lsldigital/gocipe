@@ -6,18 +6,18 @@
         <h1 class="preview__title" v-if="information && information.title">{{ "{{ information.title }}" }}</h1>
 
         <!-- Lardwaz Render -->
-        <Renderer class="article__body" :blocks="blocks" />
+        <Renderer class="article__body" :blocks="blocks"/>
       </div>
     </div>
 
     <!--<v-btn fab dark small :bottom="true" :right="true" color="primary" :absolute="true" class="responsive responsive-mobile" @click="changeViewport('mobile')">-->
-      <!--<v-icon dark>phone_iphone</v-icon>-->
+    <!--<v-icon dark>phone_iphone</v-icon>-->
     <!--</v-btn>-->
     <!--<v-btn fab dark small :bottom="true" :right="true" color="primary" :absolute="true" class="responsive responsive-tablet" @click="changeViewport('tablet')">-->
-      <!--<v-icon dark>tablet_mac</v-icon>-->
+    <!--<v-icon dark>tablet_mac</v-icon>-->
     <!--</v-btn>-->
     <!--<v-btn fab dark small :bottom="true" :right="true" color="primary" :absolute="true" class="responsive responsive-desktop" @click="changeViewport('desktop')">-->
-      <!--<v-icon dark>desktop_mac</v-icon>-->
+    <!--<v-icon dark>desktop_mac</v-icon>-->
     <!--</v-btn>-->
   </div>
 </template>
@@ -26,8 +26,8 @@
 import { mapGetters } from "vuex";
 import Renderer from "@lardwaz-config/Renderer";
 
-import variables from "@lardwaz/renderer/_variables.scss";
-// import article from "@lardwaz/renderer/project_name.scss";
+import variables from "@lardwaz-renderer/_variables.scss";
+import article from "@lardwaz-renderer/renderer.scss";
 import normalize from "normalize-css";
 
 export default {

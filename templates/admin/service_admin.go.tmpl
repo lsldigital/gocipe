@@ -84,6 +84,8 @@ func(s Service) Create{{.Name}}(ctx context.Context, req *Create{{.Name}}Request
 	if hasPerm := passport.HasPermission(PermCreate{{.Name}}); !hasPerm {
 		return &res, errors.WithStack(fmt.Errorf("Permission denied")) 
 	}
+
+	res.{{.Name}}.UserID = passport.GetID()
 	{{ end }}
 
 	switch res.{{.Name}}.Status {

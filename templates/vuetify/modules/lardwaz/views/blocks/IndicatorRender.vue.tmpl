@@ -1,0 +1,30 @@
+<template>
+  <div class="indicateur-wrapper">
+    <router-link :to="{ path: '/'  }">
+      <template v-if="content && content.value && content.value.hasImage">
+        <div class="image__wrapper">
+          <img :src="content.value.imageurl" class="indicator--image">
+        </div>
+      </template>
+      <template v-else>
+        <h1 v-if="content && content.value">
+          {{ "{{content.value.indicator}}" }}
+          <span>%</span>
+        </h1>
+      </template>
+    </router-link>
+    <p v-if="content && content.value" v-html="trimText(content.value.description)"></p>
+  </div>
+</template>
+<script>
+export default {
+  props: ["content"],
+  methods: {
+    trimText(val) {
+      return val.length <= 200 ? val : val.substring(0, 200) + "...";
+    }
+  }
+};
+</script>
+<style lang="scss">
+</style>

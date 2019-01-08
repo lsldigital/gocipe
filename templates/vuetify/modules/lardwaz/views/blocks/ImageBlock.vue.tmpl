@@ -10,7 +10,7 @@
                   :rpc="'upload'+information.entityName" 
                   :entityid="information.id"></component>
       {{- end}}
-      <v-text-field label="Image path" v-model="local.url" @change="update" :rules="urlRules" required></v-text-field>
+      <v-text-field :disabled="true" label="Image path" v-model="local.url" @change="update" :rules="urlRules" required></v-text-field>
       <v-text-field label="Caption" v-model="local.caption" @change="update" :rules="captionRules" required></v-text-field>
     </v-form>
   </div>

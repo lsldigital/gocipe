@@ -288,14 +288,15 @@ export default {
   mounted() {
     this.request()  
   },
-  {{- if .Entity.ContentBuilder.Generate }}
   computed: {
     ...mapGetters({
-        getLardwaz: 'lardwaz/getBlocks',
-        getViewport: 'lardwaz/getViewport'
+      {{- if .Entity.ContentBuilder.Generate }}
+      getLardwaz: 'lardwaz/getBlocks',
+      getViewport: 'lardwaz/getViewport',
+      {{end}}
+      'token': 'auth/getToken'
     })
   },
-  {{ end }}
   methods: {
         {{- range .Entity.Relationships -}}
         {{- if or (eq .Type "many-many") (eq .Type "many-many-owner") }}
@@ -332,6 +333,7 @@ export default {
 
             let req = new GetRequest();
             req.setId(this.id);
+            req.setKey(this.token);
 
             this.loading = true;
 
@@ -370,6 +372,7 @@ export default {
             {{- end -}}
 
             req.set{{ ucfirst .Entity.Name}}(this.entity);
+            req.setKey(this.token);
             // this.loading = true;
 
             /* this.debug(); */
