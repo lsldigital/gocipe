@@ -7,11 +7,10 @@ import (
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
 	log "github.com/sirupsen/logrus"
-	"{{.ImportPath}}/core"
-	"{{.ImportPath}}/util/grpcx"
-	"{{.ImportPath}}/util/web"
+	"{{.Recipe.ImportPath}}/core"
+	"{{.Recipe.ImportPath}}/util/web"
 	{{- if .Recipe.Admin.Generate}}
-	"{{.ImportPath}}/services/admin"
+	"{{.Recipe.ImportPath}}/services/admin"
 	{{- end}}
 )
 
@@ -52,13 +51,13 @@ func main() {
 	{{- if .Recipe.Admin.Generate}}
 	admin.RegisterAdminServer(g, &admin.Service{})
 	{{- end}}
+	{{end}}
 	var router *mux.Router
 	if core.Env == core.EnvironmentDev {
-		router = newDevRouter(g)
+		router = newDevRouter({{if not .Recipe.Bootstrap.NoGRPCWeb}}g{{else}}nil{{end}})
 	} else {
-		router = newProdRouter(g)
+		router = newProdRouter({{if not .Recipe.Bootstrap.NoGRPCWeb}}g{{else}}nil{{end}})
 	}
-	{{end}}
 	
 	{{if not .Recipe.Bootstrap.NoGRPCWire}}
 	go func() {

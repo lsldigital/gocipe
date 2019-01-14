@@ -2,13 +2,11 @@ package util
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"os"
 	"path"
 	"regexp"
 	"strings"
-	"sync"
 	"text/template"
 
 	rice "github.com/GeertJohan/go.rice"
@@ -32,9 +30,6 @@ var (
 	// AppName represents the application name
 	AppName string
 
-	// AppImportPath represents GO import path for the project at hand
-	AppImportPath string
-
 	// WorkingDir represents current working directory
 	WorkingDir string
 )
@@ -43,12 +38,6 @@ func init() {
 	templatesFn = template.FuncMap{
 		"plus1": func(index int) int {
 			return index + 1
-		},
-		"widget_field": func(component string, widget string, field Field) (string, error) {
-			if widget == "" {
-				return "", nil
-			}
-			return ExecuteTemplate(component+"_editor-field-"+widget+".vue.tmpl", field)
 		},
 		"plural": func(str string) string {
 			return inflection.Plural(str)
@@ -72,149 +61,13 @@ func init() {
 		"trimPrefix": func(str, prefix string) string {
 			return strings.TrimPrefix(str, prefix)
 		},
-		"DerefAdminOpts": func(b *AdminOpts) (AdminOpts, error) {
-			if b == nil {
-				return AdminOpts{}, errors.New("admin opts is nil")
-			}
-			return *b, nil
-		},
-		"RelFuncName":          RelFuncName,
 		"snake":                ToSnakeCase,
-		"pkeyPropertyType":     GetPrimaryKeyDataType,
 		"pkeyPropertyEmptyVal": GetPrimaryKeyEmptyVal,
 		"pkeyIsAuto":           GetPrimaryKeyDataIsAuto,
-		"pkeyIsInt":            GetPrimaryKeyDataIsInt,
-		"pkeyFieldType":        GetPrimaryKeyFieldType,
 		"fkeyPropertyTypeName": func(entities map[string]Entity, rel Relationship) string {
 			return entities[rel.Entity].Name
 		},
-		"fkeyPropertyType": func(entities map[string]Entity, rel Relationship) (string, error) {
-			return GetPrimaryKeyDataType(entities[rel.Entity].PrimaryKey)
-		},
-		// getAdminFilters returns possible filters from fields in an entity
-		"getAdminFilters": func(entities map[string]Entity, entity Entity) AdminFilters {
-			var (
-				filters                                 AdminFilters
-				filtersBool, filtersString, filtersDate []string
-			)
-
-			for _, field := range entity.Fields {
-				switch field.Property.Type {
-				case "bool":
-					filtersBool = append(filtersBool, field.Schema.Field)
-					filters.HasBool = true
-				case "string":
-					filtersString = append(filtersString, field.Schema.Field)
-					filters.HasString = true
-				case "date":
-					filtersDate = append(filtersDate, field.Schema.Field)
-					filters.HasDate = true
-				}
-			}
-
-			for _, rel := range entity.Relationships {
-				switch rel.Type {
-				case RelationshipTypeOneOne, RelationshipTypeManyOne:
-					switch entities[entity.Name].PrimaryKey {
-					case PrimaryKeyUUID, PrimaryKeyString:
-						filtersString = append(filtersString, rel.ThisID)
-						filters.HasString = true
-					}
-				}
-			}
-
-			if len(filtersBool) != 0 {
-				filters.BoolFilters = `"` + strings.Join(filtersBool, `","`) + `"`
-			}
-
-			if len(filtersString) != 0 {
-				filters.StringFilters = `"` + strings.Join(filtersString, `","`) + `"`
-			}
-
-			if len(filtersDate) != 0 {
-				filters.DateFilters = `"` + strings.Join(filtersDate, `","`) + `"`
-			}
-
-			return filters
-		},
-		"json": func(item interface{}) (string, error) {
-			jsob, err := json.Marshal(item)
-			if err == nil {
-				return string(jsob), err
-			}
-			return "", err
-		},
-		"hasFileFields": func(entity Entity) bool {
-			for _, field := range entity.Fields {
-				switch field.EditWidget.Type {
-				case WidgetTypeFile, WidgetTypeImage:
-					return true
-				}
-			}
-			return false
-		},
-		"getFileFields": func(entity Entity) []FileField {
-			var fileFields []FileField
-			for _, field := range entity.Fields {
-				switch field.EditWidget.Type {
-				case WidgetTypeFile, WidgetTypeImage:
-					fileFields = append(fileFields, FileField{EntityName: entity.Name, PropertyName: field.Property.Name, FieldName: field.Schema.Field})
-				}
-			}
-
-			return fileFields
-		},
-		"getEntityLabelField": func(entities map[string]Entity, name string) (string, error) {
-			if entity, ok := entities[name]; ok {
-				return entity.LabelField, nil
-			}
-
-			return "", errors.New("entity not found: " + name)
-		},
 	}
-}
-
-// GenerationWork represents generation work
-type GenerationWork struct {
-	Waitgroup *sync.WaitGroup
-	Done      chan GeneratedCode
-}
-
-// GeneratedCode represents code that has been generated and the intended file
-type GeneratedCode struct {
-	// Generator indicates which generator produced the code
-	Generator string
-
-	// Filename is the name of the file to write to
-	Filename string
-
-	// Code is the generated code
-	Code string
-
-	// NoOverwrite will not overwrite an existing file
-	NoOverwrite bool
-
-	// Aggregate indicates file output needs to be aggregated instead of individual file write
-	Aggregate bool
-
-	// Error represents any error that may have occurred
-	Error error
-
-	// GeneratedHeaderFormat is used to prepend generated warning header on non-overwritable files. default: // %s
-	GeneratedHeaderFormat string
-}
-
-// FileField used for getFileFields
-type FileField struct {
-	EntityName string
-	PropertyName string
-	FieldName string
-}
-
-// AdminFilters used for List
-type AdminFilters struct {
-	HasBool, HasString, HasDate             bool
-	BoolFilters, StringFilters, DateFilters string
 }
 
 // SetTemplates injects template box
@@ -286,21 +139,6 @@ func ToSnakeCase(str string) string {
 	return strings.ToLower(snake)
 }
 
-// GetPrimaryKeyDataType returns golang data type for a given PrimaryKey type
-func GetPrimaryKeyDataType(str string) (string, error) {
-	switch str {
-	case PrimaryKeySerial:
-		return "int64", nil
-	case PrimaryKeyInt:
-		return "int64", nil
-	case PrimaryKeyUUID:
-		return "string", nil
-	case PrimaryKeyString:
-		return "string", nil
-	}
-	return "", errors.New("invalid primary key type: " + str)
-}
-
 // GetPrimaryKeyEmptyVal returns empty value for primary key
 func GetPrimaryKeyEmptyVal(str string) (string, error) {
 	switch str {
@@ -312,21 +150,6 @@ func GetPrimaryKeyEmptyVal(str string) (string, error) {
 		return `""`, nil
 	case PrimaryKeyString:
 		return `""`, nil
-	}
-	return "", errors.New("invalid primary key type: " + str)
-}
-
-// GetPrimaryKeyFieldType returns sql field data type for a given PrimaryKey type
-func GetPrimaryKeyFieldType(str string) (string, error) {
-	switch str {
-	case PrimaryKeySerial:
-		return "SERIAL", nil
-	case PrimaryKeyInt:
-		return "UNSIGNED INT", nil
-	case PrimaryKeyUUID:
-		return "CHAR(36)", nil
-	case PrimaryKeyString:
-		return "VARCHAR(255)", nil
 	}
 	return "", errors.New("invalid primary key type: " + str)
 }
@@ -344,24 +167,4 @@ func GetPrimaryKeyDataIsAuto(str string) (bool, error) {
 		return false, nil
 	}
 	return false, errors.New("invalid primary key type: " + str)
-}
-
-// GetPrimaryKeyDataIsInt returns true if primary key is integer
-func GetPrimaryKeyDataIsInt(str string) (bool, error) {
-	switch str {
-	case PrimaryKeySerial:
-		return true, nil
-	case PrimaryKeyInt:
-		return true, nil
-	case PrimaryKeyUUID:
-		return false, nil
-	case PrimaryKeyString:
-		return false, nil
-	}
-	return false, errors.New("invalid primary key type: " + str)
-}
-
-// RelFuncName returns function name for a relationship repository function
-func RelFuncName(rel Relationship) string {
-	return inflection.Plural(strings.Title(strings.ToLower(rel.Name)))
 }

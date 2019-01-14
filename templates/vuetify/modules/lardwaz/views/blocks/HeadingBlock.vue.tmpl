@@ -1,0 +1,40 @@
+<template>
+  <div class="single-component-wrapper">
+    <v-form v-model="valid">
+      <v-text-field label="Text" v-model="local.text" @keyup="update()" :rules="headingRules" required></v-text-field>
+      <v-slider label="Style" :hint="local.size" persistent-hint min="1" max="6" step="1" v-model="rawsize" @input="update()"></v-slider>
+    </v-form>
+  </div>
+</template>
+<script>
+  export default {
+    props: ['value'],
+    data() {
+      const fields = {text: '', size: 'h1'}
+      let local    = Object.assign(fields, this.value);
+      let rawsize  = parseInt(local.size.substr(1))
+
+      return {
+        local,
+        rawsize,
+        valid: false,
+        headingRules: [
+          v => !!v || 'Heading is required',
+          v => v.length >= 1 || 'Heading must be greater than 1 character(s)'
+        ],
+      }
+    },
+    methods: {
+      update() {
+        if (this.valid === true) {
+          this.local.size = 'h' + this.rawsize
+          this.$emit('input', this.local)
+        }
+      }
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+
+</style>

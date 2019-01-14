@@ -1,0 +1,111 @@
+<template>
+    <div class="single-component-wrapper">
+        <v-text-field label="Logo URL" v-model="local.logo" @keyup="update()"></v-text-field>
+
+        <v-container>
+            <v-layout row wrap>
+                <v-flex md-12>
+                    <v-expansion-panel popout>
+                        <v-expansion-panel-content v-for="(item, i) in local.menus" :key="i">
+                            <div slot="header">
+                                Item {{ "{{i + 1}}" }}
+                            </div>
+                            <v-card>
+                                <v-card-text>
+                                    <v-form v-model="valid">
+                                        <v-layout row>
+                                            <v-flex md-12>
+                                                <v-text-field
+                                                    label="Text"
+                                                    v-model="local.menus[i].text"
+                                                    @keyup="update"
+                                                    required
+                                                    :rules="textRules"
+                                                >
+                                                </v-text-field>
+                                            </v-flex>
+                                        </v-layout>
+                                        <v-layout row>
+                                            <v-flex md-12>
+                                                <v-text-field
+                                                    label="URL"
+                                                    v-model="local.menus[i].url"
+                                                    @keyup="update"
+                                                    required
+                                                    :rules="urlRules"
+                                                >
+                                                </v-text-field>
+                                            </v-flex>
+                                            <v-btn color="primary" fab small dark @click="deleteItem(i)">
+                                                <v-icon>delete</v-icon>
+                                            </v-btn>
+                                        </v-layout>
+                                    </v-form>
+                                </v-card-text>
+                            </v-card>
+                        </v-expansion-panel-content>
+                    </v-expansion-panel>
+                    <v-spacer></v-spacer>
+                </v-flex>
+            </v-layout>
+            <v-layout row wrap>
+                <v-flex md-12>
+                    <v-btn
+                        color="blue-grey"
+                        class="white--text"
+                        block
+                        @click="addItem()"
+                    >
+                        Add Item
+                        <v-icon right dark>photo_library</v-icon>
+                    </v-btn>
+                </v-flex>
+            </v-layout>
+        </v-container>
+    </div>
+</template>
+<script>
+    export default {
+        props: [
+            'value'
+        ],
+        data() {
+            const fields = {
+                logo: '',
+                menus: []
+            }
+            return {
+                local: (this.value === null || this.value === {})  ? fields : this.value,
+                valid: false,
+                textRules: [
+                    v => !!v || 'Text is required',
+                    v => v.length >= 1 || 'Caption must be greater than 1 character(s)'
+                ],
+                urlRules: [
+                    v => !!v || 'URL is required',
+                    v => /^https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,}$/.test(v) || 'URL must be valid'
+                ]
+            }
+        },
+        methods: {
+            update() {
+                this.$emit('input', this.local)
+            },
+            addItem() {
+                let menuItem = {
+                    text: '',
+                    url: ''
+                }
+                this.local['menus'].push(menuItem)
+            },
+            deleteItem(item) {
+                let tempLocal = this.local.menus
+                tempLocal.splice(item, 1)
+            }
+        }
+    }
+</script>
+
+<style lang="scss" scoped>
+
+</style>

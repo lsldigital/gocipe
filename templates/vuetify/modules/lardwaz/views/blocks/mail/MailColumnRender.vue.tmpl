@@ -1,0 +1,81 @@
+<template>
+    <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#ffffff;background-color:#ffffff;width:100%;">
+        <tbody>
+        <tr>
+            <td>
+                <!--[if mso | IE]>
+                <table
+                        align="center" border="0" cellpadding="0" cellspacing="0" style="width:600px;" width="600"
+                >
+                    <tr>
+                        <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                <![endif]-->
+                <div style="Margin:0px auto;max-width:600px;">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
+                        <tbody>
+                        <tr>
+                            <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;vertical-align:top;">
+                                <!--[if mso | IE]>
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                <![endif]-->
+
+                                <template v-for="(item, i) in content.value">
+                                    <!--[if mso | IE]>
+                                    <td style="vertical-align:top;width:199.99999999999997px;" :key="i">
+                                    <![endif]-->
+                                    <div class="mj-column-per-33 outlook-group-fix" style="font-size:13px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
+                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
+                                            <tr>
+                                                <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                                                    <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
+                                                        <tbody>
+                                                        <tr>
+                                                            <td style="width:50px;"> <img height="auto" :src="item.image" style="border:0;display:block;outline:none;text-decoration:none;width:100%;" width="50" /> </td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td align="center" style="font-size:0px;padding:10px 25px;padding-top:20;padding-bottom:30px;word-break:break-word;">
+                                                    <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:11px;line-height:1;text-align:center;color:#9da3a3;"> <span style="font-size: 14px; color: #e85034">{{ "{{item.heading}}" }}</span><br><br> {{ "{{item.description}}" }} </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <!--[if mso | IE]>
+                                    </td>
+                                    <![endif]-->
+
+                                </template>
+
+                                <!--[if mso | IE]>
+                                    </tr>
+                                </table>
+                                <![endif]-->
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!--[if mso | IE]>
+                </td>
+                </tr>
+                </table>
+                <![endif]-->
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</template>
+<script>
+export default {
+    props: [
+        'content'
+    ]
+}
+</script>
+<style lang="scss" scoped="">
+
+</style>

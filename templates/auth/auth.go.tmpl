@@ -36,7 +36,7 @@ type Passport interface {
 	GetName() string
 
 	// HasPermission returns whether user has permission for an entity
-	HasPermission(entity interface{}, permission string) bool
+	HasPermission(permission string) bool
 }
 
 // dummyPassport implements the Passport interface
@@ -50,6 +50,6 @@ func (p dummyPassport) GetName() string {
 	return dummyName
 }
 
-func (p dummyPassport) HasPermission(entity interface{}, permission string) bool {
+func (p dummyPassport) HasPermission(permission string) bool {
 	return true
 }

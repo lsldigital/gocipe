@@ -1,0 +1,234 @@
+package decks
+
+import (
+	"context"
+	"log"
+
+	"github.com/pkg/errors"
+	"github.com/jinzhu/inflection"
+
+	"{{.AppImportPath}}/models"
+	"{{.AppImportPath}}/util"
+)
+
+// EntityRef represents information about an entity reference
+type EntityRef struct {
+	Type string
+	ID   string
+}
+
+type query struct {
+	Type      string
+	Condition string
+}
+
+// Deck represents a deck options
+type Deck struct {
+	MaxSlots           int
+	NoDuplicate        bool
+	NoTrace            bool
+	AllowedEntityTypes []string
+	Queries            map[string]query
+}
+
+var deckList map[string]Deck
+
+func init() {
+	deckList = make(map[string]Deck)
+	{{- range .Decks}}
+	deckList["{{ .Name }}"] = Deck{
+		MaxSlots:           {{ .Slots }},
+		NoDuplicate:        {{ .NoDuplicate }},
+		NoTrace:            {{ .NoTrace }},
+		AllowedEntityTypes: []string{
+			{{- range .EntityTypeWhitelist}}
+			"{{ . }}",
+			{{- end}}
+		},
+		Queries: map[string]query{
+			{{- range .Queries}}
+			"{{ .Type }}": query{
+				Condition: `{{ .Condition }}`,
+			},
+			{{- end}}
+		},
+	}
+	{{- end}}
+}
+
+// StartScheduler start the deck scheduler
+func StartScheduler() {
+	ticker := time.NewTicker(5 * time.Minute)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				log.Printf("[Cards Scheduler] Started at %s\n", time.Now())
+				ctx := context.Background()
+				filter := &models.Filter{Field: "date_time", Operation: "<=", Value: time.Now()}
+				schedules, err := models.CardScheduleRepo.ListWithRel(ctx, nil, filter)
+				if err != nil {
+					log.Println(errors.Wrap(err, "Failed to retrieve card schedules"))
+					break
+				}
+				for _, s := range schedules {
+					log.Println(s);
+					if s.Card == nil {
+						if err := models.CardScheduleRepo.Delete(ctx, s, nil, true); err != nil {
+							log.Println(errors.Wrap(err, "Failed to remove card schedule"))
+							continue
+						}
+						continue
+					}
+					switch s.Action {
+					case "add": 
+						card := s.Card
+						card.Status = "published"
+						if err := models.CardRepo.Update(ctx, card, nil, true); err != nil {
+							log.Println(errors.Wrap(err, "Failed to add card"))
+							continue
+						}
+					case "remove":
+						if err := models.CardRepo.Delete(ctx, s.Card, nil, true); err != nil {
+							log.Println(errors.Wrap(err, "Failed to remove card"))
+							continue
+						}
+
+						if err := models.CardScheduleRepo.Delete(ctx, s, nil, true); err != nil {
+							log.Println(errors.Wrap(err, "Failed to remove card schedule"))
+							continue
+						}
+					}
+				}
+				log.Printf("[Cards Scheduler] Ended at %s\n", time.Now())
+			}
+		}
+	}()
+}
+
+// ListCardsByDecks accepts a list of decks machine name and returns a map of decks to Entity References
+func ListCardsByDecks(ctx context.Context, decks ...string) (map[string][]EntityRef, error) {
+	historyEntityRefs := make(map[EntityRef]struct{}, 0)
+	deckCards := make(map[string][]EntityRef)
+
+	for _, d := range decks {
+		deck, ok := deckList[d]
+		deckCards[d] = []EntityRef{}
+		if !ok {
+			log.Println("Invalid deck ", d)
+			continue
+		}
+
+		cards, err := models.CardRepo.List(ctx,
+			&models.ListOpts{Offset: models.NoOffset, Limit: models.NoLimit},
+			&models.Filter{Field: "deck_machine_name", Operation: "=", Value: d},
+			&models.Filter{Field: "status", Operation: "=", Value: "published"},
+			&models.Filter{Field: "entity_type", Operation: "!=", Value: ""},
+			&models.Filter{Field: "entity", Operation: "!=", Value: ""},
+		)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Error loading cards for deck %s", d))
+			continue
+		}
+
+		// Standard approach (loading from cards entities)
+		entRefs := make([]EntityRef, deck.MaxSlots)
+		for _, c := range cards {
+			if entRefs[c.Position].Type != "" || entRefs[c.Position].ID != "" {
+				continue
+			}
+			
+			if err = util.CheckContext(ctx); err != nil {
+				break
+			}
+
+			entRef := EntityRef{
+				Type: c.EntityType,
+				ID:   c.Entity,
+			}
+			// Allow duplicate?
+			if _, dup := historyEntityRefs[entRef]; deck.NoDuplicate && dup {
+				// Entity skipped
+				continue
+			}
+
+			entRefs[c.Position] = entRef
+		}
+
+		if err = util.CheckContext(ctx); err != nil {
+			break
+		}
+
+		emptyPos := listEmptyPosition(entRefs)
+		// Autofill if not enough cards
+		if len(emptyPos) > 0 {
+			slotsRemaining := len(emptyPos)
+
+			tx, err := models.StartTransaction(ctx)
+			if err != nil {
+				return deckCards, err
+			}
+
+			for e, q := range deck.Queries {
+				if slotsRemaining == 0 {
+					break
+				}
+
+				query := fmt.Sprintf(`SELECT t."id" FROM %s t %s LIMIT %d`, inflection.Plural(strings.ToLower(e)), q.Condition, slotsRemaining)
+
+				rows, err := tx.Query(query)
+				if err != nil {
+					continue
+				}
+				defer rows.Close()
+
+				if err = util.CheckContext(ctx); err != nil {
+					break
+				}
+
+				for rows.Next() {
+					if slotsRemaining == 0 {
+						break
+					}
+
+					if err = util.CheckContext(ctx); err != nil {
+						break
+					}
+
+					entRef := EntityRef{
+						Type: e,
+					}
+					err = rows.Scan(&entRef.ID)
+					if err != nil {
+						continue
+					}
+
+					pos := emptyPos[len(emptyPos)-slotsRemaining]
+					entRefs[pos] = entRef
+					slotsRemaining--
+				}
+			}
+		}
+
+		// Keep trace?
+		if !deck.NoTrace {
+			for _, entRef := range entRefs {
+				historyEntityRefs[entRef] = struct{}{}
+			}
+		}
+
+		deckCards[d] = entRefs
+	}
+
+	return deckCards, nil
+}
+
+func listEmptyPosition(entRefs []EntityRef) []int {
+	emptyPos := make([]int, 0)
+	for i, e := range entRefs {
+		if e.Type == "" || e.ID == "" {
+			emptyPos = append(emptyPos, i)
+		}
+	}
+	return emptyPos
+}

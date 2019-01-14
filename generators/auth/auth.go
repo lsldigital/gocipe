@@ -1,12 +1,15 @@
 package auth
 
 import (
-	"github.com/fluxynet/gocipe/output"
-	"github.com/fluxynet/gocipe/util"
+	"github.com/lsldigital/gocipe/output"
+	"github.com/lsldigital/gocipe/util"
 )
 
 // Generate auth code
-func Generate(work util.GenerationWork) {
-	output.GenerateAndSave("Auth", "auth/auth.go.tmpl", "auth/auth.gocipe.go", nil, false)
-	work.Waitgroup.Done()
+func Generate(out *output.Output, r *util.Recipe) {
+	if !r.Admin.Auth.Generate {
+		return
+	}
+
+	out.GenerateAndOverwrite("GenerateAuth", "auth/auth.go.tmpl", "auth/auth.gocipe.go", output.WithHeader, nil)
 }

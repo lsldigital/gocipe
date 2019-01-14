@@ -3,9 +3,13 @@
 import {{.Name}}List from "./forms/{{plural .Name}}List.vue";
 import {{.Name}}Edit from "./forms/{{plural .Name}}Edit.vue";
 {{end}}
+{{- if $.GenerateDecks}}
+// Decks routes
+import decks_routes from "./decks/routes.js";
+{{end}}
 
 let routes = [
-  {{range $i, $v := .Entities}}
+  {{- range $i, $v := .Entities}}
   {
     path: "{{lower (plural .Name)}}",
     name: "{{lower (plural .Name)}}_list",
@@ -26,7 +30,9 @@ let routes = [
       showInMenu: false
     }
   }{{if ne (plus1 $i) (len $.Entities)}},{{end}}
-  {{end}}
+  {{- end}}
 ];
-
+{{if $.GenerateDecks}}
+routes = routes.concat(decks_routes);
+{{end}}
 export default routes;

@@ -1,5 +1,13 @@
 package models
 
+import (
+	"context"
+	"database/sql"
+	"{{.ImportPath}}/models/moderrors"
+	"strconv"
+	"strings"
+)
+
 var (
 	db *sql.DB
 	{{range .Entities}}
@@ -20,13 +28,30 @@ const (
 	NoOffset = -1
 	// NoLimit indicates List/Select queries without limit clause
 	NoLimit  = -1
+
+	// FilterFuncLower is a filter function for SQL, to produce lowercase
+	FilterFuncLower = "LOWER"
 )
 
 // Filter represents a filter to apply during listing (crud)
 type Filter struct {
-	Field     string
-	Operation string
-	Value     interface{}
+	Field         string
+	FieldFunction string
+	Operation     string
+	Value         interface{}
+}
+
+// ToQuerySegment will return a formatted SQL segment to be used in queries
+func (f Filter) ToQuerySegment(index int) string {
+	var fieldPrefix, fieldSuffix string
+
+	switch f.FieldFunction {
+	case FilterFuncLower:
+		fieldPrefix = "LOWER("
+		fieldSuffix = ")"
+	}
+
+	return fieldPrefix + `t."`+f.Field+`"`+fieldSuffix+` `+f.Operation+` $`+strconv.Itoa(index)
 }
 
 // Init is responsible to initialize all repositories
@@ -42,8 +67,32 @@ func StartTransaction(ctx context.Context) (*sql.Tx, error) {
 	return db.BeginTx(ctx, nil)
 }
 
-{{- $Entities := .Entities -}}
-{{range .Entities }}
+// SortOpts provides an SQL valid ORDER BY
+func (s ListOpts) SortOpts(validateField func(string) bool) string {
+	var sort []string
+	for i := range s.Sort {
+		var order string
+
+		if !validateField(s.Sort[i].Field) {
+			continue
+		}
+
+		if s.Sort[i].Ascending {
+			order = "ASC"
+		} else {
+			order = "DESC"
+		}
+		sort = append(sort, `t."`+s.Sort[i].Field+`" `+order)
+	}
+
+	if len(sort) != 0 {
+		return " ORDER BY " + strings.Join(sort, ", ")
+	}
+	
+	return ""
+}
+
+{{range .Entities}}
 // {{.Name}}Repository encapsulates operations that may be performed on the entity {{.Name}}
 type {{.Name}}Repository interface {
 {{if $.Crud -}}
@@ -53,14 +102,17 @@ type {{.Name}}Repository interface {
 	InsertWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
 	
 	// Get returns a single {{.Name}} from database by primary key
-	Get(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.Name}}, error)
+	Get(ctx context.Context, id string) (*{{.Name}}, error)
 	// GetWithRel returns a single {{.Name}} from database by primary key; loads related entities
-	GetWithRel(ctx context.Context, id {{pkeyPropertyType .PrimaryKey}}) (*{{.Name}}, error)
+	GetWithRel(ctx context.Context, id string) (*{{.Name}}, error)
 	
 	// List returns a slice containing {{.Name}} records
 	List(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.Name}}, error)
 	// ListWithRel returns a slice containing {{.Name}} records; will also load related entities.
 	ListWithRel(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.Name}}, error)
+
+	// Count returns a count of a query containing {{.Name}} records
+	Count(ctx context.Context, opts *ListOpts, filters ...*Filter) (int64, error)
 	
 	// Select returns a slice containing {{.Name}} records according to a custom SQL condition
 	Select(ctx context.Context, opts *ListOpts, condition string, values ...interface{}) ([]*{{.Name}}, error)
@@ -82,31 +134,31 @@ type {{.Name}}Repository interface {
 	Save(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
 	// SaveWithRel either inserts or updates a {{.Name}} record based on whether or not id is nil; will also save related entities
 	SaveWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error
-{{end -}}
+{{end -}}{{/* if $.Crud */}}
 
 {{- $ThisEntity := . -}}
 {{range .Relationships -}}
 {{if eq .Type "many-many-inverse" -}}
-	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
-	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
+	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 {{end -}}
-{{if or (eq .Type "many-many") (eq .Type "many-many-owner") -}}
-	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
-	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
-	// Save{{RelFuncName .}} is a helper function to save related {{.Name}} in a pivot table (many-many relationship)
-	Save{{RelFuncName .}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType $ThisEntity.PrimaryKey}}, relatives ...*{{fkeyPropertyTypeName $Entities .}}) error
-	// Save{{RelFuncName .}}IDs is a helper function to save related {{.Name}} IDs in a pivot table (many-many relationship)
-	Save{{RelFuncName .}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis {{pkeyPropertyType $ThisEntity.PrimaryKey}}, relatives ...{{fkeyPropertyType $Entities .}}) error
+{{if eq .Type "many-many-owner" -}}
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
+	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
+	// Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table ({{.Type}} relationship)
+	Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{.Entity}}) error
+	// Save{{.Name}}IDs is a helper function to save related {{.Name}} IDs in a pivot table ({{.Type}} relationship)
+	Save{{.Name}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...string) error
 {{end -}}
 {{if eq .Type "one-many" -}}
-	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
-	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
+	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 {{end -}}
 {{if eq .Type "many-one" -}}
-	// Load{{RelFuncName .}} is a helper function to load related {{.Name}} entities
-	Load{{RelFuncName .}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
+	// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
+	Load{{.Name}}(ctx context.Context, entities ...*{{$ThisEntity.Name}}) error
 {{end -}}
-{{end -}}
+{{end -}}{{/* range .Entities */}}
 }
 
 // {{.Name}}Repositorium implements {{.Name}}Repository
@@ -121,115 +173,115 @@ func QueryAddIN(segments []string, values []interface{}, index *int, fieldname s
 
 	if data, ok := val.([]bool); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]byte); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]complex64); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]complex128); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]float32); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]float64); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]int); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]int8); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]int16); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]int32); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]int64); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]rune); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]string); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uint); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uint8); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uint16); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uint32); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uint64); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}
 	} else if data, ok := val.([]uintptr); ok {
 		for d := range data {
-			*index += 1
+			*index++
 			subsegments = append(subsegments, "$"+strconv.Itoa(*index))
 			values = append(values, data[d])
 		}	} else {

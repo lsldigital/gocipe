@@ -2,13 +2,28 @@
   <div class="mt-4 mb-4">
     <div class="caption v-label v-label--active theme--light pb-2">{{ "{{ $attrs.label }}" }}</div>
     <div class="uploader-wrapper mt-1">
-      <picture-input buttonClass ref="pictureInput" :crop="false" :z-index="0"
-        class="image-uploader" :prefill="image" width="400" height="200" margin="16"
-        accept="image/jpeg,image/png" size="10" button-class="btn"
-        :custom-strings="{
-                    upload: '<h3>Image</h3>', drag: 'Click here to upload image' }"
-        @change="onChange">
-      </picture-input>
+     
+      <template v-if="prefillopts == 'svg'">
+        <picture-input buttonClass ref="pictureInput" :crop="false" :z-index="0"
+          class="image-uploader" :prefill="image" width="400" height="200" margin="16"
+          accept="image/jpeg,image/png,image/svg+xml" size="10" button-class="btn"
+          :custom-strings="{
+                      upload: '<h3>Image</h3>', drag: 'Click here to upload image' }"
+          :prefillOptions="{fileType: 'svg',mediaType: 'image/svg+xml'}"   
+          @change="onChange">
+        </picture-input>
+      </template>
+
+      <template v-else >
+        <picture-input buttonClass ref="pictureInput" :crop="false" :z-index="0"
+          class="image-uploader" :prefill="image" width="400" height="200" margin="16"
+          accept="image/jpeg,image/png" size="10" button-class="btn"
+          :custom-strings="{
+                      upload: '<h3>Image</h3>', drag: 'Click here to upload image' }"
+          @change="onChange">
+        </picture-input>
+      </template>
+
       <div class="px-2">
         <v-checkbox
           label="Apply watermark"
@@ -25,7 +40,7 @@
       <v-alert :value="uploadStatus.error" type="error" dismissible small transition="scale-transition">
       {{ "{{ uploadStatus.error | capitalize }}" }}
       </v-alert>
-      <v-alert :value="true" color="gray lighten-3" dark icon="info" class="pa-2">
+      <v-alert :value="$attrs.hint" color="gray lighten-3" dark icon="info" class="pa-2">
       {{ "{{ $attrs.hint }}" }}
       </v-alert>
     </div>
@@ -65,7 +80,8 @@ export default {
         error: null,
         uploading: false
       },
-      uploadOptions: null
+      uploadOptions: null,
+      prefillopts: ""
     };
   },
   components: {
@@ -76,6 +92,8 @@ export default {
 
     this.uploadOptions = new UploadOpts();
     this.uploadOptions.setWatermark(true);
+
+    this.prefillopts = this.$attrs.prefillopts;
   },
   filters: {
     capitalize: function(value) {
@@ -126,6 +144,8 @@ export default {
         this.uploadStatus.success = true;
 
         this.image = resp.getUri();
+
+        this.$emit('gocipe', this.image);
       });
     }
   }

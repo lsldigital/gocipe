@@ -5,17 +5,1684 @@ import (
 	"database/sql"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"{{.ImportPath}}/models/moderrors"
+	"{{.ImportPath}}/util"
+
 	{{range .Imports}}{{.}}
 	{{end}}
 )
-{{.Structure}}
-{{.Get}}
-{{.List}}
-{{.DeleteSingle}}
-{{.DeleteMany}}
-{{.Save}}
-{{.Insert}}
-{{.Update}}
-{{.Merge}}
-{{range .LoadRelated}}{{.}}{{end}}
-{{range .SaveRelated}}{{.}}{{end}}
+
+
+{{range $i, $entity := .Entities}}
+// [BEGIN] {{.Name}}
+
+// Insert performs an SQL insert for {{.Name}} record and update instance with inserted id. Prefer using Save instead of Insert directly.
+func (repo {{.Name}}Repositorium) Insert(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error {
+	var (
+		{{- if pkeyIsAuto .PrimaryKey -}}
+		{{- end}}
+		err  error
+		stmt *sql.Stmt
+	)
+
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Insert entered")
+	if entity == nil {
+		log.WithFields(log.Fields{"entity": entity}).Info("repo.{{.Name}}.Insert Entity empty error")
+		return moderrors.SaveEmptyEntityError
+	}
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Insert context error")
+			return errors.WithStack(err)
+		}
+		
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Insert StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+	{{range .Fields}}{{range .GetBefore "insert"}}{{.}}
+	{{end}}{{end}}
+
+	stmt, err = tx.Prepare(`{{.SQLInsert}}`)
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLInsert}}`, "error": err}).Error("repo.{{.Name}}.Insert query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Insert query done")
+
+	{{range .Fields}}{{range .GetAfter "insert"}}{{.}}
+	{{end}}{{end}}
+
+	{{if .CrudHooks.PreSave}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Insert context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	
+	if err = repo.preSave(ctx, tx, models.Insert, entity); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Insert hook preSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Insert hook preSave executed")
+	{{end}}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Insert context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{if eq .PrimaryKey "uuid" -}}
+	entity.ID = uuid.NewV4().String()
+	{{- end}}
+
+	_, err = stmt.Exec({{.GetStruct "insert"}})
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Insert query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{if .CrudHooks.PostSave}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Insert context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	if err := repo.postSave(ctx, "INSERT", entity, tx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Insert hook postSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Insert hook postSave executed")
+	{{end}}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Insert context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Insert commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+// InsertWithRel performs an SQL insert for {{.Name}} record and update instance with inserted id; including related entities. Prefer using Save instead of Insert directly.
+func (repo {{.Name}}Repositorium) InsertWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error{
+	var (
+		{{- if pkeyIsAuto .PrimaryKey -}}
+		id  string
+		{{- end}}
+		err  error
+		stmt *sql.Stmt
+	)
+	
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.InsertWithRel entered")
+	if entity == nil {
+		log.WithFields(log.Fields{"entity": entity}).Info("repo.{{.Name}}.InsertWithRel Entity empty error")
+		return moderrors.SaveEmptyEntityError
+	}
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.InsertWithRel context error")
+			return errors.WithStack(err)
+		}
+		
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.InsertWithRel StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+	{{range .Fields}}{{range .GetBefore "insert"}}{{.}}
+	{{end}}{{end}}
+
+	stmt, err = tx.Prepare(`{{.SQLInsert}}`)
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLInsert}}`, "error": err}).Error("repo.{{.Name}}.InsertWithRel query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{range .Fields}}{{range .GetAfter "insert"}}{{.}}
+	{{end}}{{end}}
+
+	{{if .CrudHooks.PreSave}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.InsertWithRel context error")
+		return errors.WithStack(err)
+	}
+	
+	if err = repo.preSave(ctx, tx, models.Insert, entity); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.InsertWithRel hook preSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.InsertWithRel hook preSave executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.InsertWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	{{if eq .PrimaryKey "uuid" -}}
+	idUUID := uuid.NewV4()
+	id = idUUID.String()
+	entity.ID = id
+	{{- end}}
+
+	_, err = stmt.Exec({{.GetStruct "get"}})
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.InsertWithRel query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{range .Relationships}}{{if (eq "many-many-owner" .Type) }}
+
+	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{.Name}}...)
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.InsertWithRel save related {{.Name}} error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.InsertWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	{{end}}{{end}}
+
+	{{if .CrudHooks.PostSave}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.InsertWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	if err := repo.postSave(ctx, "INSERT", entity, tx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.InsertWithRel hook postSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.InsertWithRel hook postSave executed")
+	{{end}}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.InsertWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.InsertWithRel commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+// Get returns a single {{.Name}} from database by primary key
+func (repo {{.Name}}Repositorium) Get(ctx context.Context, id string) (*{{.Name}}, error) {
+	var (
+		rows   *sql.Rows
+		err    error
+		entity {{.Name}}
+	)
+
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.Name}}.Get entered")
+	{{if .CrudHooks.PreRead}}
+    if err = repo.preGet(ctx, id); err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.Name}}.Get hook preGet error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.Name}}.Get hook preGet executed")
+    {{end}}
+	
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.Name}}.Get context error")
+		return nil, err
+	}
+
+	rows, err = repo.db.QueryContext(ctx, `{{.SQLGet}}`, id)
+	defer rows.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"id": id, "query": `{{.SQLGet}}`, "error": err}).Error("repo.{{.Name}}.Get query error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.Name}}.Get query done")
+	if rows.Next() {
+		log.WithFields(log.Fields{"id": id}).Debug("repo.{{.Name}}.Get row found")
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.Name}}.Get context error")
+			return nil, err
+		}
+
+		{{range .Fields}}{{range .GetBefore "get"}}{{.}}
+		{{end}}{{end}}
+
+		err = rows.Scan({{.GetStruct "get"}})
+		if err != nil {
+			log.WithFields(log.Fields{"id": id, "query": `{{.SQLGet}}`, "fields": "{{.GetStruct "get"}}", "error": err}).Error("repo.{{.Name}}.Get scan error")
+			return nil, err
+		}
+		
+		{{range .Fields}}{{range .GetAfter "get"}}{{.}}
+		{{end}}{{end}}
+
+		log.WithFields(log.Fields{"id": id}).Debug("repo.{{.Name}}.Get data scan done")
+	} else {
+		log.WithFields(log.Fields{"id": id}).Debug("repo.{{.Name}}.Get data not found")
+		return nil, moderrors.RecordNotFoundError
+	}
+	{{if .CrudHooks.PostRead}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.Name}}.Get context error")
+		return nil, err
+	}
+
+	if err = repo.postGet(ctx, &entity); err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{.Name}}.Get hook postGet error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.Name}}.Get hook postGet executed")
+	{{end}}
+
+	return &entity, nil
+}
+
+// GetWithRel returns a single {{.Name}} from database by primary key; loads related entities
+func (repo {{.Name}}Repositorium) GetWithRel(ctx context.Context, id string) (*{{.Name}}, error) {
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.Name}}.GetWithRel entered")
+	entity, err := repo.Get(ctx, id)
+	if err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Error("repo.{{.Name}}.GetWithRel get entity error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{.Name}}.GetWithRel entity loaded")
+
+	{{range .Relationships}}
+	err = repo.Load{{.Name}}(ctx, entity)
+	if err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Error("repo.{{$entity.Name}}.Get load related {{.Name}} error")
+		return nil, err
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": id, "error": err}).Info("repo.{{$entity.Name}}.Get context error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"id": id}).Debug("repo.{{$entity.Name}}.GetWithRel related {{.Name}} loaded")
+	{{end}}
+
+	return entity, nil
+}
+
+// List returns a slice containing {{.Name}} records
+func (repo {{.Name}}Repositorium) List(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.Name}}, error) {
+	var (
+		list	 []*{{.Name}}
+		segments []string
+		values	 []interface{}
+		err		 error
+		rows	 *sql.Rows
+		index	 int = 0
+	)
+
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.List entered")
+	query := `{{.SQLList}}`
+	{{if .CrudHooks.PreList}}
+    if filters, err = repo.preList(ctx, filters); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.Name}}.List hook preList error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.List hook preGet executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.Name}}.List context error")
+		return nil, err
+	}
+
+	for _, filter := range filters {
+		switch filter.Field {
+			default:
+				continue
+			case {{.OrderList}}: 
+				//ok
+		}
+
+		if filter.Operation == "IN" || filter.Operation == "NOT IN" { //TODO SQL-dialect sensitive
+			seg, val, err := QueryAddIN(segments, values, &index, `t."`+filter.Field+`"`, filter.Value, "NOT IN" == filter.Operation)
+			if err != nil {
+				log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{.Name}}.List QueryAddIN error")
+				continue
+			}
+			segments = seg
+			values = val
+		} else {
+			index++
+			segments = append(segments, filter.ToQuerySegment(index))
+			values = append(values, filter.Value)
+		}
+	}
+
+	if len(segments) != 0 {
+		query += " WHERE " + strings.Join(segments, " AND ")
+	}
+	
+	if opts != nil { //TODO SQL-dialect sensitive
+		query += opts.SortOpts(func(field string) bool {
+			switch field { //TODO SQL-dialect sensitive
+				case {{.OrderList}}: 
+					return true
+			}
+
+			return false
+		})
+	}{{if .DefaultSort}} else {
+		query += ` ORDER BY {{.DefaultSort}}`
+	}
+	{{- end}}
+
+	if opts != nil && opts.Offset > 0 { //TODO SQL-dialect sensitive
+		query += " OFFSET " + strconv.FormatInt(opts.Offset, 10)
+	}
+
+	if opts != nil && opts.Limit > 0 { //TODO SQL-dialect sensitive
+		query += " LIMIT " + strconv.FormatInt(opts.Limit, 10)
+	}
+
+	rows, err = repo.db.QueryContext(ctx, query, values...)
+	defer rows.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "error": err}).Error("repo.{{.Name}}.List query error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.List query done")
+
+	for rows.Next() {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.List row found")
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.Name}}.List context error")
+			return nil, err
+		}
+
+		var entity {{.Name}}
+		{{range .Fields}}{{range .GetBefore "list"}}{{.}}
+		{{end}}{{end}}
+
+		err = rows.Scan({{.GetStruct "list"}})
+		if err != nil {
+			log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "fields": "{{.GetStruct "list"}}", "error": err}).Error("repo.{{.Name}}.List scan error")
+			return nil, err
+		}
+		
+		{{range .Fields}}{{range .GetAfter "list"}}{{.}}
+		{{end}}{{end}}
+
+		log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.List data scan done")
+		list = append(list, &entity)
+		
+	}
+	{{if .CrudHooks.PostList}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.Name}}.List context error")
+		return nil, err
+	}
+
+	if list, err = repo.postList(ctx, list); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.Name}}.List hook postList error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.List hook postList executed")
+	{{end}}
+
+	return list, nil
+}
+
+// Count returns a count of a query containing {{.Name}} records
+func (repo {{.Name}}Repositorium) Count(ctx context.Context, opts *ListOpts, filters ...*Filter) (int64, error) {
+	var (
+		segments []string
+		values	 []interface{}
+		err		 error
+		rows	 *sql.Rows
+		index	 int = 0
+		count    int64
+	)
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.Count entered")
+	query := `SELECT COUNT(id) FROM {{.Table}} t`
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.Name}}.Count context error")
+		return count, err
+	}
+	for _, filter := range filters {
+		switch filter.Field {
+			default:
+				continue
+			case {{.OrderList}}: 
+				//ok
+		}
+		
+		if filter.Operation == "IN" || filter.Operation == "NOT IN" {
+			seg, val, err := QueryAddIN(segments, values, &index, filter.Field, filter.Value, "NOT IN" == filter.Operation)
+			if err != nil {
+				log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{.Name}}.Count QueryAddIN error")
+				continue
+			}
+			segments = seg
+			values = val
+		} else {
+			index++
+			segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(index))
+			values = append(values, filter.Value)
+		}
+	}
+	if len(segments) != 0 {
+		query += " WHERE " + strings.Join(segments, " AND ")
+	}
+	rows, err = repo.db.QueryContext(ctx, query, values...)
+	defer rows.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "error": err}).Error("repo.{{.Name}}.Count query error")
+		return count, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.Count query done")
+	if rows.Next() {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.Count row found")
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{.Name}}.Count context error")
+			return count, err
+		}
+		err = rows.Scan(&count)
+		log.WithFields(log.Fields{"count": count}).Debug("repo.{{.Name}}.Count result obtained")
+
+		if err != nil {
+			log.WithFields(log.Fields{"opts": opts, "filters": filters, "query": query, "error": err}).Error("repo.{{.Name}}.Count scan error")
+			return count, err
+		}
+	}
+	return count, nil
+}
+
+// ListWithRel returns a slice containing {{.Name}} records; will also load related entities.
+func (repo {{.Name}}Repositorium) ListWithRel(ctx context.Context, opts *ListOpts, filters ...*Filter) ([]*{{.Name}}, error) {
+	var (
+		err error
+		entities []*{{.Name}}
+	)
+
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{.Name}}.ListWithRel entered")
+	entities, err = repo.List(ctx, opts, filters...)
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{.Name}}.ListWithRel get entity error")
+		return nil, err
+	}
+
+	{{range .Relationships}}
+	err = repo.Load{{.Name}}(ctx, entities...)
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Error("repo.{{$entity.Name}}.ListWithRel list related {{.Name}} error")
+		return nil, err
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "filters": filters, "error": err}).Info("repo.{{$entity.Name}}.ListWithRel context error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "filters": filters}).Debug("repo.{{$entity.Name}}.ListWithRel related {{.Name}} listed")
+	{{end}}
+
+	return entities, nil
+}
+
+// Select returns a slice containing {{.Name}} records according to a custom SQL condition
+func (repo {{.Name}}Repositorium) Select(ctx context.Context, opts *ListOpts, condition string, values ...interface{}) ([]*{{.Name}}, error) {
+	var (
+		list     []*{{.Name}}
+		err      error
+		rows     *sql.Rows
+	)
+
+	log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{.Name}}.Select entered")
+	query := `{{.SQLList}} ` + condition
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Info("repo.{{.Name}}.Select context error")
+		return nil, err
+	}
+
+	if opts != nil {
+		query += opts.SortOpts(func(field string) bool {
+			switch field { //TODO SQL-dialect sensitive
+				case {{.OrderList}}: 
+					return true
+			}
+
+			return false
+		})
+	}
+
+	if opts != nil && opts.Offset > 0 { //TODO SQL-dialect sensitive
+		query += " OFFSET " + strconv.FormatInt(opts.Offset, 10)
+	}
+
+	if opts != nil && opts.Limit > 0 { //TODO SQL-dialect sensitive
+		query += " LIMIT " + strconv.FormatInt(opts.Limit, 10)
+	}
+
+	rows, err = repo.db.QueryContext(ctx, query, values...)
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "query": query, "error": err}).Error("repo.{{.Name}}.Select query error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{.Name}}.Select query done")
+
+	defer rows.Close()
+	for rows.Next() {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Info("repo.{{.Name}}.Select context error")
+			return nil, err
+		}
+
+		var entity {{.Name}}
+		{{range .Fields}}{{range .GetBefore "list"}}{{.}}
+		{{end}}{{end}}
+
+		err = rows.Scan({{.GetStruct "list"}})
+		if err != nil {
+			log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "query": query, "fields": "{{.GetStruct "list"}}", "error": err}).Error("repo.{{.Name}}.Select scan error")
+			return nil, err
+		}
+		
+		{{range .Fields}}{{range .GetAfter "list"}}{{.}}
+		{{end}}{{end}}
+
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{.Name}}.Select data scan done")
+		list = append(list, &entity)
+	}
+
+	return list, nil
+}
+
+// SelectWithRel returns a slice containing {{.Name}} records according to a custom SQL condition; will also load related entities.
+func (repo {{.Name}}Repositorium) SelectWithRel(ctx context.Context, opts *ListOpts, condition string, values ...interface{}) ([]*{{.Name}}, error) {
+	var (
+		err error
+		entities []*{{.Name}}
+	)
+
+	log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{.Name}}.SelectWithRel entered")
+	entities, err = repo.Select(ctx, opts, condition, values...)
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Error("repo.{{.Name}}.SelectWithRel get entity error")
+		return nil, err
+	}
+
+	{{range .Relationships}}
+	err = repo.Load{{.Name}}(ctx, entities...)
+	if err != nil {
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Error("repo.{{$entity.Name}}.SelectWithRel list related {{.Name}} error")
+		return nil, err
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values, "error": err}).Info("repo.{{$entity.Name}}.SelectWithRel context error")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"opts": opts, "condition": condition, "values": values}).Debug("repo.{{$entity.Name}}.SelectWithRel related {{.Name}} listed")
+	{{end}}
+
+	return entities, nil
+}
+
+// Delete deletes a {{.Name}} record from database and sets id to nil
+func (repo {{.Name}}Repositorium) Delete(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error {
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+	id := entity.ID
+
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Delete entered")
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Delete context error")
+			return errors.WithStack(err)
+		}
+
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Delete StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Delete context error")
+		return errors.WithStack(err)
+	}
+
+	stmt, err = tx.Prepare("{{.SQLDeleteSingle}}")
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLDeleteSingle}}`, "error": err}).Error("repo.{{.Name}}.Delete query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	{{if .CrudHooks.PreDeleteSingle}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Delete context error")
+		return errors.WithStack(err)
+	}
+
+	if err = repo.preDelete(ctx, tx, id); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Delete hook preDelete error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Delete hook preDelete executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Delete context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	
+	_, err = stmt.Exec(id)
+	if err == nil {
+		entity.ID = {{pkeyPropertyEmptyVal .PrimaryKey}}
+	} else {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Delete query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	
+	{{range .Relationships}}{{if (eq "many-many-owner" .Type) }}
+	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID)
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.Delete save related {{.Name}} error")
+	    tx.Rollback()
+	    return errors.WithStack(err)
+	}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.Delete context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	{{end}}{{end}}
+
+	{{if .CrudHooks.PostDeleteSingle}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Delete context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	
+	if err = repo.postDelete(ctx, tx, id); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Delete hook postDelete error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Delete hook postDelete executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Delete context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Delete commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+// DeleteMany deletes many {{.Name}} records from database using filter
+func (repo {{.Name}}Repositorium) DeleteMany(ctx context.Context, tx *sql.Tx, autocommit bool, filters ...*Filter) error {
+	var (
+		err      error
+		stmt     *sql.Stmt
+		segments []string
+		values   []interface{}
+		query    string
+	)
+
+	log.WithFields(log.Fields{"filters": filters}).Debug("repo.{{.Name}}.DeleteMany entered")
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.Name}}.DeleteMany context error")
+			return errors.WithStack(err)
+		}
+		
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.Name}}.DeleteMany StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+
+	{{if .CrudHooks.PreDeleteMany}}
+    if filters, err = repo.preDeleteMany(ctx, tx, filters); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.Name}}.DeleteMany hook preDelete error")
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"filters": filters}).Debug("repo.{{.Name}}.DeleteMany hook preDelete executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.Name}}.DeleteMany context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	for i, filter := range filters {
+		segments = append(segments, filter.Field+" "+filter.Operation+" $"+strconv.Itoa(i+1))
+		values = append(values, filter.Value)
+	}
+
+	if len(segments) != 0 { //TODO SQL-dialect sensitive
+		query = " WHERE " + strings.Join(segments, " AND ")
+	}
+
+	{{range .SQLDeleteManyJoin}}
+	stmt, err = tx.Prepare("{{.}}"+query+")")
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"filters": filters, "query": "{{.}}"+query+")", "error": err}).Error("repo.{{$entity.Name}}.DeleteMany query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	_, err = stmt.Exec(values...)
+	if err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{$entity.Name}}.DeleteMany query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	{{end}}
+
+	stmt, err = tx.Prepare("{{.SQLDeleteMany}}"+query)
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"filters": filters, "query": "{{.SQLDeleteMany}}"+query+")", "error": err}).Error("repo.{{.Name}}.DeleteMany query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.Name}}.DeleteMany context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	_, err = stmt.Exec(values...)
+	if err != nil {
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{if .CrudHooks.PostDeleteMany}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.Name}}.DeleteMany context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = repo.postDeleteMany(ctx, tx, filters); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.Name}}.DeleteMany hook postDeleteMany error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"filters": filters}).Debug("repo.{{.Name}}.DeleteMany hook postDeleteMany executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.Name}}.DeleteMany context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"filters": filters, "error": err}).Info("repo.{{.Name}}.DeleteMany commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+// Save either inserts or updates a {{.Name}} record based on whether or not id is nil
+func (repo {{.Name}}Repositorium) Save(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error {
+	if entity == nil {
+		return moderrors.SaveEmptyEntityError
+	}
+
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Save entered")
+	{{if pkeyIsAuto .PrimaryKey -}}
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return repo.Insert(ctx, entity, tx, autocommit)
+	}
+	return repo.Update(ctx, entity, tx, autocommit)
+	{{- else -}}
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return entity, errors.New("primary key cannot be nil")
+	}
+	return repo.Merge(ctx, entity, tx, autocommit)
+	{{end -}}
+}
+
+// SaveWithRel either inserts or updates a {{.Name}} record based on whether or not id is nil; will also save related entities
+func (repo {{.Name}}Repositorium) SaveWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error {
+	if entity == nil {
+		return moderrors.SaveEmptyEntityError
+	}
+
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.SaveWithRel entered")
+	{{if pkeyIsAuto .PrimaryKey -}}
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return repo.InsertWithRel(ctx, entity, tx, autocommit)
+	}
+	return repo.UpdateWithRel(ctx, entity, tx, autocommit)
+	{{- else -}}
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return entity, errors.New("primary key cannot be nil")
+	}
+	return repo.MergeWithRel(ctx, entity, tx, autocommit)
+	{{end -}}
+}
+
+// Update Will execute an SQLUpdate Statement for {{.Name}} in the database. Prefer using Save instead of Update directly.
+func (repo {{.Name}}Repositorium) Update(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error {
+	var (
+		err error
+		stmt *sql.Stmt
+	)
+
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Update entered")
+	if entity == nil {
+		log.WithFields(log.Fields{"entity": entity}).Info("repo.{{.Name}}.Update Entity empty error")
+		return moderrors.SaveEmptyEntityError
+	}
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Update context error")
+			return errors.WithStack(err)
+		}
+
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Update StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+	
+	{{range .Fields}}{{range .GetBefore "update"}}{{.}}
+	{{end}}{{end}}
+
+	stmt, err = tx.Prepare(`{{.SQLUpdate}}`)
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLUpdate}}`, "error": err}).Error("repo.{{.Name}}.Update query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Update query done")
+
+	{{range .Fields}}{{range .GetAfter "update"}}{{.}}
+	{{end}}{{end}}
+
+	{{if .CrudHooks.PreSave}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Update context error")
+		return errors.WithStack(err)
+	}
+
+	if err = repo.preSave(ctx, tx, models.Update, entity); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Update hook preSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Update hook preSave executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Update context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	_, err = stmt.Exec({{.GetStruct "update"}})
+	if err != nil {
+		tx.Rollback()
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Update query exec error")
+		return errors.WithStack(err)
+	}
+
+	{{if .CrudHooks.PostSave}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Update context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = repo.postSave(ctx, "UPDATE", entity, tx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Update hook postSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Update hook postSave executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Update context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Update commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+// UpdateWithRel Will execute an SQLUpdate Statement for {{.Name}} in the database; including related entities. Prefer using Save instead of Update directly.
+func (repo {{.Name}}Repositorium) UpdateWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error {
+	var (
+		err error
+		stmt *sql.Stmt
+	)
+
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.UpdateWithRel entered")
+	if entity == nil {
+		log.WithFields(log.Fields{"entity": entity}).Info("repo.{{.Name}}.UpdateWithRel Entity empty error")
+		return moderrors.SaveEmptyEntityError
+	}
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.UpdateWithRel context error")
+			return errors.WithStack(err)
+		}
+
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.UpdateWithRel StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+	
+	{{range .Fields}}{{range .GetBefore "update"}}{{.}}
+	{{end}}{{end}}
+
+	stmt, err = tx.Prepare(`{{.SQLUpdate}}`)
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLUpdate}}`, "error": err}).Error("repo.{{.Name}}.UpdateWithRel query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{range .Fields}}{{range .GetAfter "update"}}{{.}}
+	{{end}}{{end}}
+
+	{{if .CrudHooks.PreSave}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.UpdateWithRel context error")
+		return errors.WithStack(err)
+	}
+
+    if err = repo.preSave(ctx, tx, models.Update, entity); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.UpdateWithRel hook preSave error")
+		tx.Rollback()
+        return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.UpdateWithRel hook preSave executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.UpdateWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	_, err = stmt.Exec({{.GetStruct "update"}})
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.UpdateWithRel query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{range .Relationships}}{{if (eq "many-many-owner" .Type) }}
+	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{.Name}}...)
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.UpdateWithRel save related {{.Name}} error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.UpdateWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	{{end}}{{end}}
+
+	{{if .CrudHooks.PostSave}}
+	if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.UpdateWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = repo.postSave(ctx, "UPDATE", entity, tx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.UpdateWithRel hook postSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.UpdateWithRel hook postSave executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.UpdateWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.UpdateWithRel commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+// Merge performs an SQL merge for {{.Name}} record.
+func (repo {{.Name}}Repositorium) Merge(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error {
+	var (
+		err error
+		stmt *sql.Stmt
+	)
+
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Merge entered")
+	if entity == nil {
+		log.WithFields(log.Fields{"entity": entity}).Info("repo.{{.Name}}.Merge Entity empty error")
+		return moderrors.SaveEmptyEntityError
+	}
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Merge context error")
+			return errors.WithStack(err)
+		}
+		
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Merge StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return {{.Name}}Repo.Insert(ctx, entity, tx, autocommit)
+	}
+
+	{{range .Fields}}{{range .GetBefore "merge"}}{{.}}
+	{{end}}{{end}}
+
+	stmt, err = tx.Prepare(`{{.SQLMerge}}`)
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLMerge}}`, "error": err}).Error("repo.{{.Name}}.Merge query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Merge query done")
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Merge context error")
+		return errors.WithStack(err)
+	}
+	{{if .CrudHooks.PreSave}}
+    if err = repo.preSave(ctx, tx, models.Merge, entity); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Merge hook preSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Merge hook preSave executed")
+	{{end}}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Merge context error")
+		return errors.WithStack(err)
+	}
+	_, err = stmt.Exec({{.GetStruct "merge"}})
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Merge query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{if .CrudHooks.PostSave}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Merge context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	if err = repo.postSave(ctx, "MERGE", entity, tx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Merge hook postSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.Merge hook postSave executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Merge context error")
+		return errors.WithStack(err)
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Merge commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+// MergeWithRel performs an SQL merge for {{.Name}} record.
+func (repo {{.Name}}Repositorium) MergeWithRel(ctx context.Context, entity *{{.Name}}, tx *sql.Tx, autocommit bool) error {
+	var (
+		err error
+		stmt *sql.Stmt
+	)
+
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.MergeWithRel entered")
+	if entity == nil {
+		log.WithFields(log.Fields{"entity": entity}).Info("repo.{{.Name}}.MergeWithRel Entity empty error")
+		return moderrors.SaveEmptyEntityError
+	}
+
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.Merge context error")
+			return errors.WithStack(err)
+		}
+		
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.MergeWithRel StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+
+	if entity.ID == {{pkeyPropertyEmptyVal .PrimaryKey}} {
+		return {{.Name}}Repo.Insert(ctx, entity, tx, autocommit)
+	}
+
+	{{range .Fields}}{{range .GetBefore "merge"}}{{.}}
+	{{end}}{{end}}
+
+	stmt, err = tx.Prepare(`{{.SQLMerge}}`)
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "query": `{{.SQLMerge}}`, "error": err}).Error("repo.{{.Name}}.MergeWithRel query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{if .CrudHooks.PreSave}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.MergeWithRel context error")
+		return errors.WithStack(err)
+	}
+
+    if err = repo.preSave(ctx, tx, models.Merge, entity); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.MergeWithRel hook preSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	{{end}}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.MergeWithRel context error")
+		return errors.WithStack(err)
+	}
+	_, err = stmt.Exec({{.GetStruct "merge"}})
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.MergeWithRel query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	{{range .Relationships}}{{if (eq "many-many-owner" .Type) }}
+	err = repo.Save{{.Name}}(ctx, tx, false, entity.ID, entity.{{.Name}}...)
+	if err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Error("repo.{{$entity.Name}}.MergeWithRel load related {{.Name}} error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{$entity.Name}}.MergeWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	{{end}}{{end}}
+
+	{{if .CrudHooks.PostSave}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.MergeWithRel context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	if err = repo.postSave(ctx, "MERGE", entity, tx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.MergeWithRel hook postSave error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+	log.WithFields(log.Fields{"entity": entity}).Debug("repo.{{.Name}}.MergeWithRel hook postSave executed")
+	{{end}}
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.MergeWithRel context error")
+		return errors.WithStack(err)
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"entity": entity, "error": err}).Info("repo.{{.Name}}.MergeWithRel commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+{{range .Relationships}}
+{{if or (eq "many-many-owner" .Type) (eq "many-many-inverse" .Type) }}
+// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
+func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
+	var (
+		err error
+		placeholder string
+		values  []interface{}
+		indices = make(map[string][]*{{$entity.Name}})
+	)
+
+	log.WithFields(log.Fields{"entities": entities}).Debug("repo.{{$entity.Name}}.Load entered")
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
+		return errors.WithStack(err)
+	} else if len(entities) == 0 {
+		return nil
+	}
+
+	c := 1
+	for _, entity := range entities {
+		placeholder += "$" + strconv.Itoa(c) + ","
+		indices[entity.ID] = append(indices[entity.ID], entity)
+		values = append(values, entity.ID)
+		c++
+	}
+	placeholder = strings.TrimRight(placeholder, ",")
+
+	rows, err := repo.db.QueryContext(ctx, `
+		{{$entity.SQLLoadManyMany .}} (`+placeholder+`)
+	`, values...)
+	defer rows.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadManyMany .}} (`+placeholder+`)`, "error": err}).Error("repo.{{$entity.Name}}.Load query error")
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
+		return errors.WithStack(err)
+	}
+
+	for rows.Next() {
+		var (
+			thisID string
+			entity {{.GetRelated.Name}}
+		)
+		{{range .GetRelated.Fields}}{{range .GetBefore "list"}}{{.}}
+		{{end}}{{end}}
+		err = rows.Scan(&thisID, {{.GetRelated.GetStruct "list"}})
+		if err != nil {
+			log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadManyMany .}} (`+placeholder+`)`, "fields": "{{.GetRelated.GetStruct "list"}}", "error": err}).Error("repo.{{$entity.Name}}.Load scan error")
+			return errors.WithStack(err)
+		}
+		{{range .GetRelated.Fields}}{{range .GetAfter "list"}}{{.}}
+		{{end}}{{end}}
+		
+		for i := range indices[thisID] {
+			indices[thisID][i].{{.Name}} = append(indices[thisID][i].{{.Name}}, &entity)
+		}
+		
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
+			return errors.WithStack(err)
+		}
+	}
+
+	return nil
+}{{/* if or (eq "many-many-owner" .Type) (eq "many-many-inverse" .Type) */}}
+{{else if eq "many-one" .Type}}
+// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
+func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
+	var (
+		err error
+		placeholder string
+		values  []interface{}
+		indices = make(map[string][]*{{$entity.Name}})
+	)
+
+	log.WithFields(log.Fields{"entities": entities}).Debug("repo.{{$entity.Name}}.Load entered")
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
+		return errors.WithStack(err)
+	} else if len(entities) == 0 {
+		return nil
+	}
+
+	c := 1
+	for _, entity := range entities {
+		placeholder += "$" + strconv.Itoa(c) + ","
+		indices[entity.{{.GetRelatedID}}] = append(indices[entity.{{.GetRelatedID}}], entity)
+		values = append(values, entity.{{.GetRelatedID}})
+		c++
+	}
+	placeholder = strings.TrimRight(placeholder, ",")
+	rows, err := repo.db.QueryContext(ctx, `
+		{{$entity.SQLLoadManyOne .}} (`+placeholder+`)
+	`, values...)
+	if err != nil {
+		log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadManyOne .}} (`+placeholder+`)`, "error": err}).Error("repo.{{$entity.Name}}.Load query error")
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
+		return errors.WithStack(err)
+	}
+
+	for rows.Next() {
+		var (
+			thatID string
+			entity {{.GetRelated.Name}}
+		)
+		{{range .GetRelated.Fields}}{{range .GetBefore "list"}}{{.}}
+		{{end}}{{end}}
+		err = rows.Scan(&thatID, {{.GetRelated.GetStruct "list"}})
+		if err != nil {
+			log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadManyOne .}} (`+placeholder+`)`, "fields": "{{.GetRelated.GetStruct "list"}}", "error": err}).Error("repo.{{$entity.Name}}.Load scan error")
+			return errors.WithStack(err)
+		}
+		{{range .GetRelated.Fields}}{{range .GetAfter "list"}}{{.}}
+		{{end}}{{end}}
+
+		for i := range indices[thatID] {
+			indices[thatID][i].{{.Name}} = &entity
+		}
+		
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
+			return errors.WithStack(err)
+		}
+	}
+
+	return nil
+}{{/* else if eq "many-one" .Type */}}
+{{else if eq "one-many" .Type}}
+// Load{{.Name}} is a helper function to load related {{.Name}} entities ({{.Type}} relationship)
+func (repo {{$entity.Name}}Repositorium) Load{{.Name}}(ctx context.Context, entities ...*{{$entity.Name}}) error {
+	var (
+		err error
+		placeholder string
+		values  []interface{}
+		indices = make(map[string][]*{{$entity.Name}})
+	)
+
+	log.WithFields(log.Fields{"entities": entities}).Debug("repo.{{$entity.Name}}.Load entered")
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
+		return errors.WithStack(err)
+	} else if len(entities) == 0 {
+		return nil
+	}
+
+	c := 1
+	for _, entity := range entities {
+		placeholder += "$" + strconv.Itoa(c) + ","
+		indices[entity.ID] = append(indices[entity.ID], entity)
+		values = append(values, entity.ID)
+		c++
+	}
+	placeholder = strings.TrimRight(placeholder, ",")
+
+	rows, err := repo.db.QueryContext(ctx, `
+		{{$entity.SQLLoadOneMany .}} (`+placeholder+`)
+	`, values...)
+	if err != nil {
+		log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadOneMany .}} (`+placeholder+`)`, "error": err}).Error("repo.{{$entity.Name}}.Load query error")
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
+		return errors.WithStack(err)
+	}
+
+	for rows.Next() {
+		var (
+			thisID string
+			entity {{.GetRelated.Name}}
+		)
+		
+		{{range .GetRelated.Fields}}{{range .GetBefore "list"}}{{.}}
+		{{end}}{{end}}
+		err = rows.Scan(&thisID, {{.GetRelated.GetStruct "list"}})
+		if err != nil {
+			log.WithFields(log.Fields{"entities": entities, "query": `{{$entity.SQLLoadOneMany .}} (`+placeholder+`)`, "fields": "{{.GetRelated.GetStruct "list"}}", "error": err}).Error("repo.{{$entity.Name}}.Load scan error")
+			return errors.WithStack(err)
+		}
+		{{range .GetRelated.Fields}}{{range .GetAfter "list"}}{{.}}
+		{{end}}{{end}}
+		
+		for i := range indices[thisID] {
+			indices[thisID][i].{{.Name}} = append(indices[thisID][i].{{.Name}}, &entity)
+		}
+		
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"entities": entities, "error": err}).Info("repo.{{$entity.Name}}.Load context error")
+			return errors.WithStack(err)
+		}
+	}
+
+	return nil
+}
+{{end}}{{/* else if eq "one-many" .Type */}}
+{{if eq "many-many-owner" .Type}}
+// Save{{.Name}} is a helper function to save related {{.Name}} in a pivot table ({{.Type}} relationship)
+func (repo {{$entity.Name}}Repositorium) Save{{.Name}}(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...*{{.Entity}}) error {
+	var (
+		stmt *sql.Stmt
+		err  error
+	)
+
+	log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Debug("repo.{{$entity.Name}}.Save entered")
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save context error")
+			return errors.WithStack(err)
+		}
+
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+
+	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerDelete .}}")
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerDelete .}}", "error": err}).Error("repo.{{$entity.Name}}.Save query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	_, err = stmt.Exec(idthis)
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerInsert .}}")
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerInsert .}}", "error": err}).Error("repo.{{$entity.Name}}.Save query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	for _, rel := range relatives {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save context error")
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+
+		_, err = stmt.Exec(idthis, rel.ID)
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save query exec error")
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+
+// Save{{.Name}}IDs is a helper function to save related {{.Name}} IDs in a pivot table ({{.Type}} relationship)
+func (repo {{$entity.Name}}Repositorium) Save{{.Name}}IDs(ctx context.Context, tx *sql.Tx, autocommit bool, idthis string, relatives ...string) error {
+	var (
+		stmt *sql.Stmt
+		err  error
+	)
+
+	log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Debug("repo.{{$entity.Name}}.Save{{.Name}}IDs entered")
+	if tx == nil {
+		if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs context error")
+			return errors.WithStack(err)
+		}
+
+		tx, err = StartTransaction(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs StartTransaction error")
+			return errors.WithStack(err)
+		}
+	}
+	
+	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerDelete .}}")
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerDelete .}}", "error": err}).Error("repo.{{$entity.Name}}.Save{{.Name}}IDs query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	_, err = stmt.Exec(idthis)
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs query exec error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	if err = util.CheckContext(ctx); err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs context error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	stmt, err = tx.Prepare("{{$entity.SQLSaveManyManyOwnerInsert .}}")
+	defer stmt.Close()
+	if err != nil {
+		log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "query": "{{$entity.SQLSaveManyManyOwnerInsert .}}", "error": err}).Error("repo.{{$entity.Name}}.Save{{.Name}}IDs query error")
+		tx.Rollback()
+		return errors.WithStack(err)
+	}
+
+	for _, relid := range relatives {
+		if err = util.CheckContext(ctx); err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs context error")
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+
+		_, err = stmt.Exec(idthis, relid)
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs query exec " + relid + " error")
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+	}
+
+	if autocommit {
+		err = tx.Commit()
+		if err != nil {
+			log.WithFields(log.Fields{"id": idthis, "relatives": relatives, "error": err}).Info("repo.{{$entity.Name}}.Save{{.Name}}IDs commit error")
+			tx.Rollback()
+		}
+	}
+
+	return errors.WithStack(err)
+}
+{{end}}{{/* if or (eq "many-many-owner" .Type) */}}
+{{end}}{{/* range .Relationships */}}
+
+// [END] {{.Name}}
+{{end}}{{/* range $i, $entity := .Entities */}}

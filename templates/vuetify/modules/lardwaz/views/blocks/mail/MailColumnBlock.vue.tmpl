@@ -1,0 +1,132 @@
+<template>
+    <div class="single-component-wrapper">
+        <v-form v-model="valid">
+            <v-container>
+                <v-layout row wrap>
+                    <v-flex md-12>
+                        <v-expansion-panel popout>
+                            <v-expansion-panel-content v-for="(item, i) in local" :key="i">
+                                <div slot="header">
+                                    Column {{ "{{i + 1}}" }}
+                                </div>
+                                <v-card>
+                                    <v-card-text>
+                                        <v-form v-model="valid">
+                                            <v-layout row>
+                                                <v-flex md-12>
+                                                    <v-text-field
+                                                        label="Image URL"
+                                                        v-model="local[i].image"
+                                                        @keyup="update()"
+                                                    ></v-text-field>
+                                                </v-flex>
+                                            </v-layout>
+                                            <v-layout row>
+                                                <v-flex md-12>
+                                                    <v-text-field
+                                                        label="Heading"
+                                                        v-model="local[i].heading"
+                                                        @keyup="update()"
+                                                    ></v-text-field>
+                                                </v-flex>
+                                            </v-layout>
+                                            <v-layout row>
+                                                <v-flex md-12>
+                                                    <v-text-field
+                                                        label="Description"
+                                                        v-model="local[i].description"
+                                                        @keyup="update()"
+                                                    ></v-text-field>
+                                                </v-flex>
+                                            </v-layout>
+                                            <v-layout row>
+                                                <v-btn color="primary" fab small dark @click="deleteItem(i)">
+                                                    <v-icon>delete</v-icon>
+                                                </v-btn>
+                                            </v-layout>
+                                        </v-form>
+                                    </v-card-text>
+                                </v-card>
+                            </v-expansion-panel-content>
+                        </v-expansion-panel>
+                        <v-spacer></v-spacer>
+                    </v-flex>
+                </v-layout>
+                <v-layout row wrap>
+                    <v-flex md-12>
+                        <v-btn
+                            color="blue-grey"
+                            class="white--text"
+                            block
+                            @click="addItem()"
+                            :disabled="canAddColumns"
+                        >
+                            Add Column
+                        </v-btn>
+                    </v-flex>
+                </v-layout>
+            </v-container>
+            <v-layout row>
+
+            </v-layout>
+        </v-form>
+    </div>
+</template>
+
+<script>
+    import _ from 'lodash'
+
+    export default {
+        props: {
+            value: {
+                type: Array,
+                default: function () {
+                    return []
+                }
+            }
+        },
+        data() {
+            return {
+                local: this.value === null ? [] : this.value,
+                valid: false,
+                canAddColumns: false
+            };
+        },
+        computed: {
+
+        },
+        methods: {
+            update() {
+                console.log('emitting')
+                this.$emit("input", this.local);
+            },
+            addItem () {
+                let column = {
+                    image: '',
+                    heading: '',
+                    description: ''
+                }
+                if (this.canAddColumns === false) {
+                    this.local.push(column)
+                }
+            },
+            deleteItem (item) {
+                let tempLocal = this.local
+                tempLocal.splice(item, 1)
+            }
+        },
+        watch: {
+            local (val) {
+                if (val.length >= 3) {
+                    this.canAddColumns = true
+                } else {
+                    this.canAddColumns = false
+                }
+            },
+        }
+    };
+</script>
+
+<style lang="scss" scoped>
+
+</style>

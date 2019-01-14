@@ -1,0 +1,42 @@
+<template>
+    <div class="footer__container" :style="fontFamily">
+        <link rel="stylesheet" v-if="getSelectedFont !== null" :href="getSelectedFont">
+        <p v-if="content.value && content.value.value">{{ "{{content.value.value}}" }}</p>
+    </div>
+</template>
+<script>
+export default {
+  data() {
+    return {};
+  },
+  mounted() {
+    console.log(this.content);
+  },
+  props: ["content"],
+  computed: {
+    getSelectedFont() {
+      if (
+        this.content.value &&
+        this.content.value.font &&
+        this.content.value.font.family
+      ) {
+        return (
+          "https://fonts.googleapis.com/css?family=" +
+          this.content.value.font.family.replace(" ", "+")
+        );
+      }
+    },
+    fontFamily() {
+      if (
+        this.content.value &&
+        this.content.value.font &&
+        this.content.value.font.family
+      ) {
+        return 'font-family: "' + this.content.value.font.family + '";';
+      }
+    }
+  }
+};
+</script>
+<style lang="scss">
+</style>

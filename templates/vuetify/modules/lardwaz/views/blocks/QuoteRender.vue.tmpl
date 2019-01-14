@@ -1,0 +1,16 @@
+<template>
+    <div>
+        <blockquote v-if="content.value && content.value.quote">
+           <p v-html="content.value.quote"></p>
+        </blockquote>
+        <cite v-if="content.value && content.value.author">- {{ "{{ content.value.author }}" }}</cite>
+    </div>
+</template>
+
+<script>
+export default {
+  props: ["content"]
+};
+</script>
+<style lang="scss">
+</style>

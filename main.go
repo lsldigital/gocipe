@@ -2,8 +2,8 @@ package main
 
 import (
 	rice "github.com/GeertJohan/go.rice"
-	"github.com/fluxynet/gocipe/cmd"
-	"github.com/fluxynet/gocipe/util"
+	"github.com/lsldigital/gocipe/cmd"
+	"github.com/lsldigital/gocipe/util"
 )
 
 //go:generate rice embed-go

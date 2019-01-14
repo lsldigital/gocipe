@@ -341,9 +341,9 @@ func imageProcess(imgDiskPath string, newWidth, newHeight int, landscape bool, f
 
 	outputFile, err := os.Create(newDiskPath)
 	if err != nil {
-		return errors.Wrap(err, "image create error")
+		return errors.Wrap(err, "image get format error")
 	}
 	defer outputFile.Close()
-
+	
 	return imaging.Encode(outputFile, img, imagingFormat)
 }

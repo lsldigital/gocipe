@@ -16,4 +16,5 @@
 .idea/
 gocipe
 gocipe.json
-.vscode/launch.json
+.vscode/*
+rice-box.go
