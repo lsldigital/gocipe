@@ -30,7 +30,7 @@ func Generate(out *output.Output, r *util.Recipe, noSkip bool) {
 
 	adminFolder, _ := util.GetAbsPath("web/admin")
 	if !util.FileExists(adminFolder) {
-		output.GenerateAndSave("Scaffold", "application/preset.json.tmpl", "web/preset.json", output.WithHeader, struct{}{})
-		output.CreateVue("admin")
+		out.GenerateAndSave("Scaffold", "application/preset.json.tmpl", "web/preset.json", output.WithHeader, struct{}{})
+		out.CreateVue("admin")
 	}
 }

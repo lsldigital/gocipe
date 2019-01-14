@@ -377,7 +377,7 @@ func (l *Output) ProcessProto() {
 }
 
 // CreateVue runs "vue create" in web/{subFolder}
-func CreateVue(subFolder string) {
+func (l *Output) CreateVue(subFolder string) {
 	cmd := exec.Command("vue", "create", "--preset", "./preset.json", subFolder)
 	cmd.Dir = util.WorkingDir + "/web"
 	cmd.Stdout = os.Stdout
@@ -385,7 +385,7 @@ func CreateVue(subFolder string) {
 
 	err := cmd.Run()
 	if err != nil {
-		Log(logError+" Could not create Vue project for admin: %s", err)
+		l.Log(LogError, " Could not create Vue project for admin: %s", err)
 		return
 	}
 

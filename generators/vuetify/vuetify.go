@@ -193,17 +193,17 @@ func Generate(out *output.Output, r *util.Recipe) {
 	}
 
 	for src, target := range staticFiles {
-		output.GenerateAndSave("Vuetify Static Files", "vuetify/"+src+".tmpl", filepath.Join(dstPath, target), output.WithHeader, nil)
+		out.GenerateAndSave("Vuetify Static Files", "vuetify/"+src+".tmpl", filepath.Join(dstPath, target), output.WithHeader, nil)
 	}
 
-	output.GenerateAndSave("Vuetify Router", "vuetify/js/router.js.tmpl", filepath.Join(dstPath, "../router.js"), output.WithHeader, nil)
-	output.GenerateAndSave("Vuetify Store", "vuetify/js/store.js.tmpl", filepath.Join(dstPath, "../store.js"), output.WithHeader, nil)
-	output.GenerateAndSave("Vuetify App", "vuetify/shared-ui/App.vue.tmpl", filepath.Join(dstPath, "../App.vue"), output.WithHeader, nil)
+	out.GenerateAndSave("Vuetify Router", "vuetify/js/router.js.tmpl", filepath.Join(dstPath, "../router.js"), output.WithHeader, nil)
+	out.GenerateAndSave("Vuetify Store", "vuetify/js/store.js.tmpl", filepath.Join(dstPath, "../store.js"), output.WithHeader, nil)
+	out.GenerateAndSave("Vuetify App", "vuetify/shared-ui/App.vue.tmpl", filepath.Join(dstPath, "../App.vue"), output.WithHeader, nil)
 
-	// output.GenerateAndSave("Vuetify", "vuetify/store/index.js.tmpl", path+"gocipe/store/index.js", nil, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/actions.js.tmpl", path+"gocipe/store/actions.js", nil, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/getters.js.tmpl", path+"gocipe/store/getters.js", nil, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/mutations.js.tmpl", path+"gocipe/store/mutations.js", nil, false)
-	// output.GenerateAndSave("Vuetify", "vuetify/store/types.js.tmpl", path+"gocipe/store/types.js", nil, false)
+	// out.GenerateAndSave("Vuetify", "vuetify/store/index.js.tmpl", path+"gocipe/store/index.js", nil, false)
+	// out.GenerateAndSave("Vuetify", "vuetify/store/actions.js.tmpl", path+"gocipe/store/actions.js", nil, false)
+	// out.GenerateAndSave("Vuetify", "vuetify/store/getters.js.tmpl", path+"gocipe/store/getters.js", nil, false)
+	// out.GenerateAndSave("Vuetify", "vuetify/store/mutations.js.tmpl", path+"gocipe/store/mutations.js", nil, false)
+	// out.GenerateAndSave("Vuetify", "vuetify/store/types.js.tmpl", path+"gocipe/store/types.js", nil, false)
 
 }
