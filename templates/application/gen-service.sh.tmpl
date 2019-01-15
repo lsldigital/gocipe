@@ -27,16 +27,16 @@ generate_files() {
             npm init --quiet --yes >> $LOG_FILE
         fi
 
-        if [ ! -d "${d}node_modules/@types/google-protobuf" ]; then
-            echo "- npm install --save @types/google-protobuf: protobuf was not found"
-            cd "${d}"
-            npm npm install --quiet --save @types/google-protobuf >> $LOG_FILE
-        fi
-
         if [ ! -f "${d}node_modules/.bin/protoc-gen-ts" ]; then
             echo "- npm install --save-dev ts-protoc-gen: protoc-gen-ts executable was not found"
             cd "${d}"
             npm install --quiet --save-dev ts-protoc-gen >> $LOG_FILE
+        fi
+
+        if [ ! -d "${d}node_modules/@types/google-protobuf" ]; then
+            echo "- npm install --save @types/google-protobuf: protobuf was not found"
+            cd "${d}"
+            npm install --quiet --save @types/google-protobuf >> $LOG_FILE
         fi
 
         if [ ! -d "${d}dist" ]; then
