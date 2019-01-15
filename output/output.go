@@ -304,66 +304,71 @@ func (l *Output) PostProcessGoFiles(r *util.Recipe) {
 // ProcessProto executes protoc to generate go files from protobuf files
 func (l *Output) ProcessProto() {
 	var (
-		cmd    *exec.Cmd
-		err    error
-		mode   os.FileMode = 0755
-		gopath             = os.Getenv("GOPATH") + "/src/"
+		cmd  *exec.Cmd
+		err  error
+		mode os.FileMode = 0755
 	)
 
-	l.Log(LogInfo, "Executing protoc to generate go files...")
+	l.Log(LogInfo, "Executing protoc to generate go and js files...")
 
 	// models.proto
 	if !util.FileExists(util.WorkingDir + "/models") {
 		if err = os.MkdirAll(util.WorkingDir+"/models", mode); err != nil {
-
 			l.Log(LogError, "Could not create folder <%s>: %s", util.WorkingDir+"/models", err)
 			l.failure++
-
 			return
 		}
 		l.Log(LogInfo, "Created folder: <%s>", util.WorkingDir+"/models")
 	}
+
+	// protoc -I="${CURRENT_DIR}/proto" \
+	// 	"${CURRENT_DIR}/proto/models.proto" \
+	// 	--go_out=plugins=grpc,paths=source_relative:${CURRENT_DIR}/models
 	cmd = exec.Command(
 		_tools.Protoc,
 		`-I=`+util.WorkingDir+`/proto`,
 		util.WorkingDir+`/proto/models.proto`,
-		`--go_out=plugins=grpc:`+gopath,
+		`--go_out=plugins=grpc,paths=source_relative:`+util.WorkingDir+"/models",
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
-
 	if err != nil {
-		l.Log(LogError, "Error generating proto from models.proto: %s", err)
+		l.Log(LogError, "Error generating models.pb.go from models.proto using protoc: %s", err)
 		l.failure++
 		return
 	}
+	l.Log(LogInfo, "Generated models.pb.go from models.proto using protoc")
 
-	l.Log(LogInfo, "Folder created <%s>: %s", util.WorkingDir+"/models")
+	// service_admin.proto and service_data.proto, if these services are to be generated
+	services := []string{"admin", "data"}
+	for _, service := range services {
+		if util.FileExists(util.WorkingDir + "/proto/service_" + service + ".proto") {
+			if !util.FileExists(util.WorkingDir + "/services/" + service) {
+				if err = os.MkdirAll(util.WorkingDir+"/services/"+service, mode); err != nil {
+					l.Log(LogError, "Error creating folder <%s>: %s", util.WorkingDir+"/services/"+service, err)
+					return
+				}
 
-	// service_admin.proto, if admin service is to be generated
-	if util.FileExists(util.WorkingDir + `/proto/service_admin.proto`) {
-		if !util.FileExists(util.WorkingDir + "/services/admin") {
-			if err = os.MkdirAll(util.WorkingDir+"/services/admin", mode); err != nil {
-				l.Log(LogError, "Error creating folder <%s>: %s", util.WorkingDir+"/services/admin", err)
+				l.Log(LogError, "Folder created <%s>", util.WorkingDir+"/services/"+service)
+			}
+
+			cmd = exec.Command(
+				_tools.Protoc,
+				`-I=`+util.WorkingDir+`/proto`,
+				util.WorkingDir+"/proto/service_"+service+".proto",
+				`--go_out=plugins=grpc,paths=source_relative:`+util.WorkingDir+"/services/"+service,
+			)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err = cmd.Run()
+			if err != nil {
+				l.Log(LogError, "Error generating service_"+service+".pb.go from service_"+service+".proto: %s", err)
+				l.failure++
 				return
 			}
-			l.Log(LogError, "Folder created <%s>", util.WorkingDir+"/services/admin")
-		}
-		cmd = exec.Command(
-			_tools.Protoc,
-			`-I=`+util.WorkingDir+`/proto`,
-			util.WorkingDir+`/proto/service_admin.proto`,
-			`--go_out=plugins=grpc:`+gopath,
-		)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err = cmd.Run()
 
-		if err != nil {
-			return
+			l.Log(LogInfo, "Generated service_"+service+".pb.go from service_"+service+".proto using protoc")
 		}
-
-		l.Log(LogInfo, `Generated go files from service_admin.proto using protoc`)
 	}
 }

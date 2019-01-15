@@ -8,6 +8,8 @@ import (
 	"google.golang.org/grpc"
 	log "github.com/sirupsen/logrus"
 	"{{.Recipe.ImportPath}}/core"
+	"{{.Recipe.ImportPath}}/models"
+	"{{.Recipe.ImportPath}}/util/grpcx"
 	"{{.Recipe.ImportPath}}/util/web"
 	{{- if .Recipe.Admin.Generate}}
 	"{{.Recipe.ImportPath}}/services/admin"

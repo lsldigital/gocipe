@@ -1,9 +1,6 @@
 package application
 
 import (
-	"os"
-	"strings"
-
 	"github.com/lsldigital/gocipe/output"
 	"github.com/lsldigital/gocipe/util"
 )
@@ -16,7 +13,7 @@ func Generate(out *output.Output, r *util.Recipe, noSkip bool) {
 	out.GenerateAndOverwrite("Scaffold Folder", "", "assets/.gitkeep", output.WithoutHeader, "Place assets in this folder.")
 	out.GenerateAndOverwrite("Scaffold Folder", "", "assets/templates/.gitkeep", output.WithoutHeader, "Place templates in this folder.")
 	out.GenerateAndOverwrite("Scaffold Folder", "", "assets/web/app/.gitkeep", output.WithoutHeader, "Place web assets in this folder.")
-	out.GenerateAndOverwrite("Scaffold GenService", "application/gen-service.sh.tmpl", "gen-service.sh", output.WithoutHeader, struct{ GeneratePath string }{GeneratePath: "$GOPATH" + strings.TrimPrefix(util.WorkingDir, os.Getenv("GOPATH")) + "/services"})
+	out.GenerateAndOverwrite("Scaffold GenService", "application/gen-service.sh.tmpl", "gen-service.sh", output.WithoutHeader, struct{}{})
 
 	if noSkip {
 		out.GenerateAndOverwrite("Scaffold Makefile", "application/makefile.tmpl", "Makefile", output.WithHeader, struct{ AppName string }{util.AppName})

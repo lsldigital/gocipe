@@ -7,6 +7,10 @@ import (
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	log "github.com/sirupsen/logrus"
 	"{{.Recipe.ImportPath}}/util/web"
+	"{{.Recipe.ImportPath}}/util/files"
+	{{- if .Recipe.Admin.Generate}}
+	"{{.Recipe.ImportPath}}/services/admin"
+	{{- end}}
 )
 
 func newProdRouter(g *grpc.Server) *mux.Router {
