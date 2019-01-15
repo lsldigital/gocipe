@@ -30,7 +30,7 @@ generate_files() {
         if [ ! -f "${d}node_modules/.bin/protoc-gen-ts" ]; then
             echo "- npm install --save-dev ts-protoc-gen: protoc-gen-ts executable was not found"
             cd "${d}"
-            npm install --quiet --save-dev ts-protoc-gen >> $LOG_FILE
+            npm install --quiet --save-dev ts-protoc-gen@0.8.0 >> $LOG_FILE
         fi
 
         if [ ! -d "${d}node_modules/@types/google-protobuf" ]; then
