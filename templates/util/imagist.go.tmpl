@@ -209,7 +209,7 @@ func (i Imagist) Add(buf []byte, fileDiskPath string, dimensions *ImageDimension
 
 func (i Imagist) execute(j Job) {
 	for _, format := range j.Dimensions.Formats {
-		if format.Name == "" || format.Width <= 0 || format.Height <= 0 {
+		if format.Name == "" || (format.Width <= 0 && format.Height <= 0) {
 			continue
 		}
 
@@ -222,6 +222,14 @@ func (i Imagist) execute(j Job) {
 		}
 		if format.Height > j.Config.Height {
 			newHeight = j.Config.Height
+		}
+
+		// -1 pixel size does not exist
+		if format.Width < 0 {
+			newWidth = 0
+		}
+		if format.Height < 0 {
+			newHeight = 0
 		}
 
 		landscape := j.Config.Height < j.Config.Width
@@ -242,6 +250,8 @@ func imageProcess(imgDiskPath string, newWidth, newHeight int, landscape bool, f
 	if err != nil {
 		return errors.Wrap(err, "image open error")
 	}
+
+	preserveAspect := newWidth <= 0 || newHeight <= 0
 
 	// Do not crop and resize when using backdrop but downscale
 	if format.Backdrop && !landscape {
@@ -273,6 +283,9 @@ func imageProcess(imgDiskPath string, newWidth, newHeight int, landscape bool, f
 
 		// Overlay image in center on backdrop layer
 		img = imaging.OverlayCenter(back, img, 1.0)
+	} else if preserveAspect {
+		// Resize srcImage to proper width or height preserving the aspect ratio.
+		img = imaging.Resize(img, newWidth, newHeight, imaging.Lanczos)
 	} else {
 		// Resize and crop the image to fill the [newWidth x newHeight] area
 		img = imaging.Fill(img, newWidth, newHeight, imaging.Center, imaging.Lanczos)
