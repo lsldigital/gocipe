@@ -19,7 +19,8 @@ func (s Postgres) SQLInsert() string {
 	)
 
 	for _, f := range s.Fields {
-		fields = append(fields, f.schema.Field)
+
+		fields = append(fields, fmt.Sprintf(`"%s"`, f.schema.Field))
 		placeholders = append(placeholders, "$"+strconv.Itoa(index))
 		index++
 	}
